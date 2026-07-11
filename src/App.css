@@ -1,0 +1,163 @@
+/* =========================
+   DELIVO GLOBAL DESIGN SYSTEM
+   ========================= */
+
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ROOT VARIABLES (THEME) */
+:root {
+  --primary: #f5b301;       /* golden yellow */
+  --primary-dark: #d99a00;
+  --black: #111111;
+  --white: #ffffff;
+  --gray: #f5f5f5;
+  --text-gray: #666666;
+  --orange: #ff7a00;
+
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* BODY */
+body {
+  font-family: "Inter", sans-serif;
+  background: var(--white);
+  color: var(--black);
+  line-height: 1.5;
+}
+
+/* LINKS */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* BUTTON BASE */
+button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* =========================
+   GLOBAL UTILITIES
+   ========================= */
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* FLEX HELPERS */
+.flex {
+  display: flex;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================
+   BUTTON STYLES
+   ========================= */
+
+.btn {
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--black);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-dark {
+  background: var(--black);
+  color: var(--white);
+}
+
+.btn-outline {
+  border: 1px solid var(--black);
+  background: transparent;
+}
+
+/* =========================
+   CARDS
+   ========================= */
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* =========================
+   INPUTS
+   ========================= */
+
+input {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid #ddd;
+  outline: none;
+  width: 100%;
+}
+
+input:focus {
+  border-color: var(--primary);
+}
+
+/* =========================
+   HEADINGS
+   ========================= */
+
+h1, h2, h3 {
+  font-weight: 700;
+}
+
+p {
+  color: var(--text-gray);
+}
+
+/* =========================
+   SCROLLBAR (optional polish)
+   ========================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}

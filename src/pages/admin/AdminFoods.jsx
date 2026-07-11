@@ -1,0 +1,210 @@
+import React, { useState, useEffect } from 'react';
+import { Trash2, Edit, Search, Plus } from 'lucide-react';
+import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
+import AdminEditFoodModal from './AdminEditFoodModal';
+import AdminCreateFoodModal from './AdminCreateFoodModal';
+import { getAllFoods, deleteFood, updateFood, createFood, getAllRestaurants } from '../../services/api';
+import '../pages.css';
+import './AdminFoods.css';
+
+const AdminFoods = () => {
+  const [foods, setFoods] = useState([]);
+  const [filteredFoods, setFilteredFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingFood, setEditingFood] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [restaurants, setRestaurants] = useState([]);
+
+  useEffect(() => {
+    fetchFoods();
+    fetchRestaurants();
+  }, []);
+
+  const fetchFoods = async () => {
+    try {
+      setLoading(true);
+      const res = await getAllFoods();
+      const data = Array.isArray(res) ? res : res.data || [];
+      setFoods(data);
+      setFilteredFoods(data);
+    } catch (error) {
+      console.error('Error fetching foods:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRestaurants = async () => {
+    try {
+      const res = await getAllRestaurants();
+      const data = Array.isArray(res) ? res : res.data || [];
+      setRestaurants(data);
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+    }
+  };
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    const filtered = foods.filter(
+      (food) =>
+        food.name?.toLowerCase().includes(value.toLowerCase()) ||
+        food.category?.toLowerCase().includes(value.toLowerCase()) ||
+        food.restaurant?.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredFoods(filtered);
+  };
+
+  const handleEdit = (food) => {
+    setEditingFood(food);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (updatedData) => {
+    try {
+      await updateFood(editingFood._id, updatedData);
+      
+      // Close modal and reset state first
+      setIsEditModalOpen(false);
+      setEditingFood(null);
+      
+      // Refetch foods to ensure data consistency
+      await fetchFoods();
+      
+      alert('Food item updated successfully!');
+      return true;
+    } catch (error) {
+      console.error('Error updating food:', error);
+      alert(`Failed to update food: ${error.response?.data?.message || error.message}`);
+      return false;
+    }
+  };
+
+  const handleCreateFood = async (newFoodData) => {
+    try {
+      console.log('🍔 Creating food with data:', newFoodData);
+      await createFood(newFoodData);
+      setIsCreateModalOpen(false);
+      await fetchFoods();
+      alert('Food item created successfully!');
+      return true;
+    } catch (error) {
+      console.error('❌ Error creating food:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+      alert(`Failed to create food: ${errorMsg}`);
+      return false;
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this food item?')) {
+      try {
+        await deleteFood(id);
+        setFoods(foods.filter((f) => f._id !== id));
+        setFilteredFoods(filteredFoods.filter((f) => f._id !== id));
+        alert('Food item deleted successfully');
+      } catch (error) {
+        console.error('Error deleting food:', error);
+        alert('Failed to delete food item');
+      }
+    }
+  };
+
+  return (
+    <AdminDashboardLayout pageTitle="Foods Management">
+      <div className="admin-foods">
+        <div className="foods-header">
+          <div className="search-box">
+            <Search size={20} />
+            <input
+              type="text"
+              placeholder="Search foods by name, category or restaurant..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </div>
+          <button className="add-btn" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus size={20} />
+            Add Food
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading foods...</p>
+          </div>
+        ) : (
+          <div className="foods-grid">
+            {filteredFoods.length > 0 ? (
+              filteredFoods.map((food) => (
+                <div key={food._id} className="food-item-card">
+                  <div
+                    className="food-image"
+                    style={{
+                      backgroundImage: `url(${food.image || 'https://placehold.co/250x200'})`,
+                    }}
+                  >
+                    <span className="food-rating">⭐ {food.rating || 4.5}</span>
+                  </div>
+
+                  <div className="food-details">
+                    <h3>{food.name}</h3>
+                    <p className="category">{food.category}</p>
+                    <p className="restaurant">
+                      🏪 {typeof food.restaurant === 'object' ? food.restaurant?.name : food.restaurant}
+                    </p>
+
+                    <div className="food-price">KES {food.price?.toFixed(2) || '0.00'}</div>
+
+                    <div className="food-actions">
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => handleEdit(food)}
+                        title="Edit food"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={() => handleDelete(food._id)}
+                        title="Delete food"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                <p>No foods found</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <AdminEditFoodModal
+          isOpen={isEditModalOpen}
+          food={editingFood}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingFood(null);
+          }}
+          onSave={handleSaveEdit}
+        />
+
+        <AdminCreateFoodModal
+          isOpen={isCreateModalOpen}
+          restaurants={restaurants}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleCreateFood}
+        />
+      </div>
+    </AdminDashboardLayout>
+  );
+};
+
+export default AdminFoods;

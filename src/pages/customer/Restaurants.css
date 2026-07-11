@@ -1,0 +1,770 @@
+@import url('https://fonts.googleapis.com/css2 family=Poppins:wght@400;500;600;700;800&display=swap');
+
+/* GLOBAL CORE RESET FOR PAGESpace */
+.res-page-shell {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+  padding-bottom: 120px;
+  opacity: 0;
+}
+
+/* 7. ANIMATION: ENTRY FADE IN */
+.page-fade-in {
+  opacity: 1;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 1. RESTAURANT HEADER SECTION */
+.res-hero-wrapper {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 80px;
+  box-sizing: border-box;
+  color: #ffffff;
+}
+
+.res-hero-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.res-action-circle {
+  background: #ffffff;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.res-action-circle:hover {
+  transform: scale(1.1);
+}
+
+.res-action-circle:active {
+  transform: scale(0.95);
+}
+
+.res-hero-caption {
+  max-width: 900px;
+}
+
+.res-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.res-status-tag {
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.res-status-tag.open {
+  background: #00cc66;
+  color: #ffffff;
+}
+
+.res-status-tag.closed {
+  background: #ff4d4f;
+  color: #ffffff;
+}
+
+.res-delivery-badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.res-brand-title {
+  font-size: 40px;
+  font-weight: 800;
+  margin: 12px 0 4px 0;
+  letter-spacing: -1px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.res-cuisine-subtext {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.95;
+  margin: 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* 6. UX: STICKY RESTAURANT HEADER ON SCROLL */
+.res-sticky-navigation-hub {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 100;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.res-metadata-strip {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 80px 8px 80px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13.5px;
+  color: #222222;
+}
+
+.res-meta-unit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.res-weight-bold {
+  font-weight: 700;
+  color: #000000;
+}
+
+.res-text-muted {
+  color: #666666;
+}
+
+.res-star-icon {
+  fill: #f5b301;
+  color: #f5b301;
+}
+
+.res-clock-icon {
+  color: #555555;
+}
+
+.res-meta-pipe {
+  width: 1px;
+  height: 12px;
+  background-color: #e3e3e3;
+}
+
+/* 2. MENU CATEGORIES NAVIGATION DESIGN */
+.res-category-navbar {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 80px 18px 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.res-category-scroll-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.res-category-scroll-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.res-category-pill-trigger {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 8px 18px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #555555;
+  border-radius: 100px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.res-category-pill-trigger:hover {
+  color: #000000;
+  background: #f5f5f5;
+}
+
+/* Gold Accent Highlight Logic (#f5b301) */
+.res-category-pill-trigger.is-active {
+  color: #000000;
+  background: #f5b301;
+  box-shadow: 0 4px 14px rgba(245, 179, 1, 0.25);
+}
+
+.res-menu-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.res-search-glyph {
+  position: absolute;
+  left: 14px;
+  color: #777777;
+}
+
+.res-search-field {
+  width: 200px;
+  height: 36px;
+  background: #f5f5f5;
+  border: 1px solid transparent;
+  border-radius: 100px;
+  padding: 0 16px 0 38px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.res-search-field:focus {
+  width: 240px;
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 3. FOOD ITEMS GRID FEED */
+.res-menu-feed-container {
+  max-width: 1280px;
+  margin: 32px auto 0 auto;
+  padding: 0 80px;
+  box-sizing: border-box;
+}
+
+.res-category-grouping {
+  margin-bottom: 40px;
+}
+
+.res-grouping-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.4px;
+}
+
+.res-food-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* 5. DESIGN STYLE: INDIVIDUAL FOOD CARD */
+.res-food-card {
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.005);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 5. CARD LIFT & 7. HOVER SCALE EFFECTS */
+.res-food-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(245, 179, 1, 0.25);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.05);
+}
+
+.res-food-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.res-food-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0 0 4px 0;
+}
+
+.res-food-summary {
+  font-size: 12.5px;
+  color: #666666;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.res-food-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  margin-top: auto;
+}
+
+.res-food-photo-box {
+  position: relative;
+  width: 115px;
+  height: 115px;
+  flex-shrink: 0;
+}
+
+.res-food-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  background-color: #fafafa;
+}
+
+/* 4. ADD TO CART FRONTEND ACTIONS AND STEPPERS */
+.res-cart-button-placement {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+}
+
+.res-card-cta-btn {
+  width: 100%;
+  height: 32px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  border-radius: 100px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* 7. CLICK ANIMATION micro-responses */
+.res-card-cta-btn:hover {
+  background: #f5b301;
+  border-color: #f5b301;
+  transform: scale(1.02);
+}
+
+.res-card-cta-btn:active {
+  transform: scale(0.97);
+}
+
+.res-quantity-stepper {
+  width: 100%;
+  height: 32px;
+  background: #000000;
+  border-radius: 100px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+}
+
+.res-stepper-node {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.res-stepper-node:active {
+  transform: scale(0.85);
+}
+
+.res-stepper-digit {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* PERSISTENT BASKET MODAL OVERLAY SHEET */
+.res-basket-float-sheet {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 540px;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 14px 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+  z-index: 999;
+  box-sizing: border-box;
+  animation: resSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.res-basket-sheet-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.res-basket-sheet-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.res-basket-bag-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.res-basket-badge-counter {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #f5b301;
+  color: #000000;
+  font-weight: 700;
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.res-basket-sheet-msg {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.res-basket-checkout-trigger {
+  background: transparent;
+  border: none;
+  color: #f5b301;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.res-basket-checkout-trigger:hover {
+  opacity: 0.85;
+}
+
+/* ===== CART CONTROLS & CHECKOUT MODAL ===== */
+
+.cart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cart-btn {
+  background: #D4AF37;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cart-btn:hover {
+  background: #c9a32f;
+  transform: scale(1.05);
+}
+
+.cart-qty {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 25px;
+  text-align: center;
+}
+
+.add-to-cart-btn {
+  background: #D4AF37;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.add-to-cart-btn:hover {
+  background: #c9a32f;
+  transform: translateY(-2px);
+}
+
+/* CART MODAL */
+.cart-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.cart-modal {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: 24px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.cart-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.cart-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+}
+
+.cart-modal-items {
+  margin-bottom: 20px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 16px 0;
+}
+
+.cart-modal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-modal-item h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.cart-modal-item p {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.remove-btn {
+  background: #f5f5f5;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.remove-btn:hover {
+  background: #ff6b6b;
+  color: white;
+}
+
+.cart-modal-total {
+  margin-bottom: 20px;
+  font-size: 16px;
+  text-align: right;
+}
+
+.cart-modal-btn {
+  width: 100%;
+  background: #D4AF37;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cart-modal-btn:hover:not(:disabled) {
+  background: #c9a32f;
+  transform: translateY(-2px);
+}
+
+.cart-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* SPIN ANIMATION */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .cart-modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+  }
+}
+
+@keyframes resSlideUp {
+  from { transform: translate(-50%, 30px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* 6. UX / UI BEHAVIOR RESPONSIVE GRID LAYOUT OUTLINE SYSTEM */
+@media (max-width: 1024px) {
+  .res-hero-wrapper {
+    padding: 30px 40px;
+    height: 300px;
+  }
+  .res-metadata-strip, .res-category-navbar, .res-menu-feed-container {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+  .res-brand-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .res-food-grid {
+    grid-template-columns: 1fr; /* Stack into single list views for mobile */
+  }
+  .res-menu-search-wrapper {
+    display: none; /* Safely strips non-essential elements on standard small touchview screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .res-hero-wrapper {
+    padding: 20px;
+    height: 240px;
+  }
+  .res-brand-title {
+    font-size: 22px;
+  }
+  .res-metadata-strip, .res-category-navbar, .res-menu-feed-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .res-metadata-strip {
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .res-meta-pipe {
+    display: none;
+  }
+  .res-food-card {
+    padding: 12px;
+  }
+  .res-food-title {
+    font-size: 14.5px;
+  }
+  .res-food-photo-box {
+    width: 95px;
+    height: 95px;
+  }
+}

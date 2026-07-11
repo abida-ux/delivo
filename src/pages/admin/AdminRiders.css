@@ -1,0 +1,292 @@
+.admin-riders {
+  width: 100%;
+  padding: 24px;
+}
+
+.riders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-box svg {
+  color: #999;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+}
+
+.search-box input::placeholder {
+  color: #999;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ff6b35, #ff8555);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.riders-table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.riders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.riders-table thead {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f1f3 100%);
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.riders-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #333;
+  letter-spacing: 0.5px;
+}
+
+.riders-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  color: #333;
+}
+
+.riders-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.rider-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.rider-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b35, #ff8555);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.action-btn:hover {
+  background: #f0f1f3;
+}
+
+.action-btn.edit-btn:hover {
+  border-color: #ff6b35;
+  color: #ff6b35;
+}
+
+.action-btn.delete-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  color: #999;
+}
+
+.empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin-bottom: 24px;
+  color: #666;
+}
+
+.loading-state {
+  padding: 60px 24px;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f1f3;
+  border-top-color: #ff6b35;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .riders-table {
+    font-size: 13px;
+  }
+
+  .riders-table th,
+  .riders-table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-riders {
+    padding: 16px;
+  }
+
+  .riders-header {
+    flex-direction: column;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .riders-table {
+    font-size: 12px;
+  }
+
+  .riders-table th,
+  .riders-table td {
+    padding: 8px;
+  }
+
+  .rider-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .action-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-riders {
+    padding: 12px;
+  }
+
+  .riders-table-container {
+    overflow-x: auto;
+  }
+
+  .riders-table {
+    min-width: 600px;
+  }
+
+  .riders-table th,
+  .riders-table td {
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .rider-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .action-btn {
+    width: 28px;
+    height: 28px;
+  }
+}

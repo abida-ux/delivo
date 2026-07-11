@@ -1,0 +1,136 @@
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import './AdminEditOrderModal.css';
+
+const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    status: 'pending',
+    paymentStatus: 'pending',
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (order) {
+      setFormData({
+        status: order.status || 'pending',
+        paymentStatus: order.paymentStatus || 'pending',
+      });
+    }
+  }, [order]);
+
+  if (!isOpen) return null;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await onSave(formData);
+      onClose();
+    } catch (error) {
+      console.error('Error saving order:', error);
+      alert('Failed to save changes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Update Order Status</h2>
+          <button className="modal-close" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="edit-form">
+          <div className="order-info">
+            <p><strong>Order ID:</strong> {order?._id}</p>
+            <p><strong>Customer:</strong> {order?.customer?.name || 'N/A'}</p>
+            <p><strong>Total Price:</strong> KES {order?.totalPrice?.toFixed(2) || '0.00'}</p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="status">Order Status *</label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              required
+            >
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="preparing">Preparing</option>
+              <option value="on-delivery">On Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="paymentStatus">Payment Status *</label>
+            <select
+              id="paymentStatus"
+              name="paymentStatus"
+              value={formData.paymentStatus}
+              onChange={handleChange}
+              required
+            >
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+
+          <div className="status-timeline">
+            <div className="timeline-label">Order Progress:</div>
+            <div className="timeline">
+              <div className={`timeline-step ${['pending', 'confirmed', 'preparing', 'on-delivery', 'delivered'].includes(formData.status) ? 'active' : ''}`}>
+                <div className="step-circle">1</div>
+                <div className="step-label">Pending</div>
+              </div>
+              <div className={`timeline-step ${['confirmed', 'preparing', 'on-delivery', 'delivered'].includes(formData.status) ? 'active' : ''}`}>
+                <div className="step-circle">2</div>
+                <div className="step-label">Confirmed</div>
+              </div>
+              <div className={`timeline-step ${['preparing', 'on-delivery', 'delivered'].includes(formData.status) ? 'active' : ''}`}>
+                <div className="step-circle">3</div>
+                <div className="step-label">Preparing</div>
+              </div>
+              <div className={`timeline-step ${['on-delivery', 'delivered'].includes(formData.status) ? 'active' : ''}`}>
+                <div className="step-circle">4</div>
+                <div className="step-label">On Delivery</div>
+              </div>
+              <div className={`timeline-step ${formData.status === 'delivered' ? 'active' : ''}`}>
+                <div className="step-circle">5</div>
+                <div className="step-label">Delivered</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button type="button" className="btn-cancel" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-save" disabled={loading}>
+              {loading ? 'Saving...' : 'Update Order'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AdminEditOrderModal;

@@ -1,0 +1,70 @@
+/* =========================
+   GLOBAL RESET + BASE LAYER
+   ========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Smooth font rendering */
+html {
+  scroll-behavior: smooth;
+}
+
+/* BODY BASE */
+body {
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background: #ffffff;
+  color: #111111;
+  min-height: 100vh;
+}
+
+/* REMOVE DEFAULT BUTTON STYLES */
+button {
+  font-family: inherit;
+  background: none;
+}
+
+/* REMOVE LIST STYLES */
+ul {
+  list-style: none;
+}
+
+/* LINKS */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* IMAGE SAFETY */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* INPUT BASE RESET */
+input {
+  font-family: inherit;
+}
+
+/* FOCUS OUTLINE (ACCESSIBLE BUT CLEAN) */
+:focus {
+  outline: 2px solid #f5b301;
+  outline-offset: 2px;
+}
+
+/* SCROLLBAR CLEAN LOOK */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f5b301;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f3f3;
+}

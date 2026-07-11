@@ -1,0 +1,209 @@
+/* Favorites Page Styles */
+.favorites-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.favorites-header {
+  margin-bottom: 30px;
+}
+
+.favorites-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 5px;
+}
+
+.favorites-header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.favorite-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.card-image-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.favorite-card:hover .card-image {
+  transform: scale(1.1);
+}
+
+.remove-favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 107, 53, 0.9);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.remove-favorite-btn:hover {
+  background: #ff6b35;
+  transform: scale(1.1);
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.restaurant-name {
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 4px;
+}
+
+.cuisines {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.rating-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #333;
+}
+
+.rating svg {
+  color: #ffc107;
+}
+
+.reviews {
+  font-size: 12px;
+  color: #999;
+  margin-left: 4px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.info-item svg {
+  color: #ff6b35;
+}
+
+.view-btn {
+  width: 100%;
+  padding: 10px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.view-btn:hover {
+  background: #f25417;
+  transform: translateY(-2px);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.empty-state svg {
+  margin-bottom: 20px;
+  color: #ddd;
+}
+
+.empty-state h2 {
+  font-size: 20px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: #999;
+  margin-bottom: 24px;
+}
+
+.explore-btn {
+  padding: 12px 32px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.explore-btn:hover {
+  background: #f25417;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .favorites-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .card-image-container {
+    height: 150px;
+  }
+
+  .card-content {
+    padding: 12px;
+  }
+}

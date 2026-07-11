@@ -1,0 +1,288 @@
+import React, { useState, useContext } from 'react';
+import { X, AlertCircle, Check } from 'lucide-react';
+import { AuthContext } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import { createOrder } from '../../services/api';
+import './CheckoutModal.css';
+
+const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }) => {
+  const { user } = useContext(AuthContext);
+  const { clearCart } = useCart();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [errors, setErrors] = useState({});
+  const [deliveryInfo, setDeliveryInfo] = useState({
+    address: '',
+    email: '',
+    phone: '',
+    notes: ''
+  });
+
+  const deliveryFee = 5;
+  const tax = (cartTotal * 0.1).toFixed(2);
+  const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!deliveryInfo.address.trim()) {
+      newErrors.address = 'Delivery address is required';
+    }
+    if (!deliveryInfo.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\+?[\d\s\-()]{7,}$/.test(deliveryInfo.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
+    
+    // ✅ For guest users, email is required
+    if (!user && !deliveryInfo.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (deliveryInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryInfo.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const items = cartItems.map(item => ({
+        foodId: item.foodId._id || item.foodId,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      // ✅ Support both authenticated and guest users
+      const orderData = {
+        items,
+        deliveryAddress: deliveryInfo.address,
+        paymentMethod,
+        specialInstructions: deliveryInfo.notes,
+      };
+
+      // Add userId if user is logged in
+      if (user && user.id) {
+        orderData.userId = user.id;
+      } else {
+        // For guest checkout
+        orderData.guestEmail = deliveryInfo.email || 'guest@delivo.com';
+        orderData.guestPhone = deliveryInfo.phone;
+      }
+
+      console.log('🛒 Creating order with data:', orderData);
+
+      const response = await createOrder(orderData);
+
+      console.log('✅ Order created successfully:', response);
+      
+      clearCart();
+      onOrderSuccess(response);
+      onClose();
+    } catch (error) {
+      console.error('❌ Error creating order:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to place order';
+      setErrors({ submit: errorMsg });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="checkout-modal-overlay">
+      <div className="checkout-modal-container">
+        {/* Header */}
+        <div className="checkout-modal-header">
+          <h2>Complete Your Order</h2>
+          <button className="close-btn" onClick={onClose} disabled={isProcessing}>
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="checkout-modal-content">
+          {/* Error Alert */}
+          {errors.submit && (
+            <div className="error-alert">
+              <AlertCircle size={20} />
+              <span>{errors.submit}</span>
+            </div>
+          )}
+
+          {/* Order Summary */}
+          <div className="checkout-summary">
+            <h3>📋 Order Summary</h3>
+            <div className="summary-items">
+              {cartItems.map(item => {
+                // ✅ Extract foodId properly (handles both string and object)
+                const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+                return (
+                  <div key={foodId} className="summary-item">
+                    <div className="item-info">
+                      <span className="item-name">{item.name}</span>
+                      <span className="item-qty">x{item.quantity}</span>
+                    </div>
+                    <span className="item-total">${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="summary-totals">
+              <div className="total-row">
+                <span>Subtotal</span>
+                <span>${cartTotal.toFixed(2)}</span>
+              </div>
+              <div className="total-row">
+                <span>Delivery Fee</span>
+                <span>${deliveryFee.toFixed(2)}</span>
+              </div>
+              <div className="total-row">
+                <span>Tax (10%)</span>
+                <span>${tax}</span>
+              </div>
+              <div className="total-row grand-total">
+                <span>Total</span>
+                <span className="grand-total-amount">${grandTotal}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Checkout Form */}
+          <form className="checkout-form" onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(); }}>
+            <div className="form-section">
+              <h4>🏠 Delivery Address</h4>
+              <div className="form-group">
+                <label>Address *</label>
+                <input
+                  type="text"
+                  value={deliveryInfo.address}
+                  onChange={(e) => {
+                    setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
+                    if (errors.address) setErrors({ ...errors, address: '' });
+                  }}
+                  placeholder="Street address, apartment, etc."
+                  disabled={isProcessing}
+                  className={errors.address ? 'error' : ''}
+                />
+                {errors.address && <span className="field-error">{errors.address}</span>}
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h4>📞 Contact Information</h4>
+              <div className="form-group">
+                <label>Phone Number *</label>
+                <input
+                  type="tel"
+                  value={deliveryInfo.phone}
+                  onChange={(e) => {
+                    setDeliveryInfo({ ...deliveryInfo, phone: e.target.value });
+                    if (errors.phone) setErrors({ ...errors, phone: '' });
+                  }}
+                  placeholder="+1 (555) 123-4567"
+                  disabled={isProcessing}
+                  className={errors.phone ? 'error' : ''}
+                />
+                {errors.phone && <span className="field-error">{errors.phone}</span>}
+              </div>
+              {/* ✅ Email field for guest users */}
+              {!user && (
+                <div className="form-group">
+                  <label>Email {!user && '*'}</label>
+                  <input
+                    type="email"
+                    value={deliveryInfo.email}
+                    onChange={(e) => {
+                      setDeliveryInfo({ ...deliveryInfo, email: e.target.value });
+                      if (errors.email) setErrors({ ...errors, email: '' });
+                    }}
+                    placeholder="your.email@example.com"
+                    disabled={isProcessing}
+                    className={errors.email ? 'error' : ''}
+                  />
+                  {errors.email && <span className="field-error">{errors.email}</span>}
+                </div>
+              )}
+            </div>
+
+            <div className="form-section">
+              <h4>💳 Payment Method</h4>
+              <div className="payment-options">
+                {['cash', 'card', 'mpesa'].map(method => (
+                  <label key={method} className="payment-option">
+                    <input
+                      type="radio"
+                      value={method}
+                      checked={paymentMethod === method}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      disabled={isProcessing}
+                    />
+                    <span className="payment-label">
+                      {method === 'cash' && '💰 Cash on Delivery'}
+                      {method === 'card' && '💳 Credit/Debit Card'}
+                      {method === 'mpesa' && '📱 M-Pesa'}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h4>📝 Special Instructions (Optional)</h4>
+              <div className="form-group">
+                <textarea
+                  value={deliveryInfo.notes}
+                  onChange={(e) =>
+                    setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })
+                  }
+                  placeholder="Add allergies, preferences, or delivery instructions..."
+                  rows="3"
+                  disabled={isProcessing}
+                  maxLength="200"
+                />
+                <span className="char-count">{deliveryInfo.notes.length}/200</span>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={onClose}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="confirm-btn"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <span className="spinner"></span>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Place Order - ${grandTotal}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CheckoutModal;

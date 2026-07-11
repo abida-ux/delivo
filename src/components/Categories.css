@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.categories-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 40px 80px;
+  background-color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* HEADER DESIGN */
+.categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.categories-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: -0.5px;
+  margin: 0 0 4px 0;
+}
+
+.categories-subtitle {
+  font-size: 14px;
+  color: #666666;
+  margin: 0;
+}
+
+/* CAROUSEL ARROWS */
+.carousel-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.control-btn {
+  background: #f7f7f7;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  color: #000000;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  background: #000000;
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+/* HORIZONTAL CAROUSEL TRACK */
+.categories-slider-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 10px 4px;
+  -webkit-overflow-scrolling: touch; /* Mobile physics momentum */
+}
+
+/* Hide Scrollbar Standard browser logic */
+.categories-slider-container::-webkit-scrollbar {
+  display: none;
+}
+
+.categories-slider-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* PREMIUM PILL CARD DESIGN */
+.category-pill-card {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 10px 24px 10px 12px;
+  border-radius: 100px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  background-color: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.category-icon {
+  color: #333;
+  stroke-width: 1.5;
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+  white-space: nowrap;
+}
+
+/* HOVER EFFECTS & GESTURES */
+.category-pill-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #ff6b35;
+  box-shadow: 0 12px 24px rgba(255, 107, 53, 0.12);
+}
+
+.category-pill-card:hover .category-icon-wrapper {
+  background-color: transparent;
+}
+
+.category-pill-card:hover .category-icon {
+  color: #ff6b35;
+}
+
+/* SELECTED STATE */
+.category-pill-card.selected {
+  background: #ff6b35;
+  border-color: #ff6b35;
+  color: white;
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.25);
+}
+
+.category-pill-card.selected .category-icon {
+  color: white;
+}
+
+.category-pill-card.selected .category-name {
+  color: white;
+}
+
+/* RESPONSIVE LAYOUT RESPONSES */
+@media (max-width: 1200px) {
+  .categories-section {
+    padding: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-controls {
+    display: none; /* Hide controls on touch displays */
+  }
+  
+  .categories-section {
+    padding: 30px 16px;
+  }
+
+  .categories-title {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
+  
+  .category-pill-card {
+    padding: 8px 16px 8px 10px;
+  }
+
+  .category-icon-wrapper {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .category-name {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .categories-section {
+    padding: 24px 12px;
+  }
+
+  .categories-title {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  
+  .category-pill-card {
+    padding: 6px 12px 6px 8px;
+  }
+
+  .category-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .category-name {
+    font-size: 11px;
+  }
+}
