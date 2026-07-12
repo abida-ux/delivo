@@ -2,28 +2,11 @@ import axios from 'axios';
 
 // Determine API URL based on environment
 const getAPIUrl = () => {
-  // Try to get from environment variables first
   if (import.meta.env.VITE_API_URL) {
-    console.log('🔧 DEBUG: VITE_API_URL is set to:', import.meta.env.VITE_API_URL);
     return import.meta.env.VITE_API_URL;
   }
-  
-  // Fallback: detect from current domain
-  if (typeof window !== 'undefined') {
-    console.log('🔧 DEBUG: window.location.hostname =', window.location.hostname);
-    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-    console.log('🔧 DEBUG: isProduction =', isProduction);
-    
-    if (isProduction) {
-      const url = `${window.location.protocol}//${window.location.hostname}/api`;
-      console.log('🔧 DEBUG: Using production API:', url);
-      return url;
-    }
-  }
-  
-  // Development default
-  console.log('🔧 DEBUG: Using development API: http://localhost:5000/api');
-  return 'http://localhost:5000/api';
+
+  return '/api';
 };
 
 const API_BASE_URL = getAPIUrl();

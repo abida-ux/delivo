@@ -39,24 +39,24 @@ app.use((req, res, next) => {
 });
 
 // CORS configuration - Works for BOTH development and production
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+]);
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.add(process.env.FRONTEND_URL);
+}
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests from localhost (any port) for development
-    if (origin && origin.includes('localhost')) {
-      console.log(`✅ CORS: Allowed localhost origin: ${origin}`);
+    if (!origin || allowedOrigins.has(origin) || origin.includes('localhost') || /^https:\/\/.*\.vercel\.app$/i.test(origin)) {
+      console.log(`✅ CORS: Allowed origin: ${origin || 'no-origin'}`);
       return callback(null, true);
     }
-    // Allow requests from production domain
-    if (origin && origin.includes('delivo.co.ke')) {
-      console.log(`✅ CORS: Allowed delivo.co.ke origin: ${origin}`);
-      return callback(null, true);
-    }
-    // Allow requests with no origin (like mobile apps, curl, Postman)
-    if (!origin) {
-      console.log(`✅ CORS: Allowed no-origin request (mobile/curl/postman)`);
-      return callback(null, true);
-    }
-    // Reject other origins
+
     console.log(`❌ CORS: Rejected origin: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
