@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Clock, MapPin, DollarSign, Phone, ChevronRight, Filter } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Clock, MapPin, DollarSign } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { getUserOrders } from '../../services/api';
 import '../pages.css';
 import './Orders.css';
@@ -12,6 +13,13 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [searchParams] = useSearchParams();
+  const { addItem } = useCart();
+
+  useEffect(() => {
+    const filter = searchParams.get('filter') || 'all';
+    setFilterStatus(filter);
+  }, [searchParams]);
 
   useEffect(() => {
     fetchUserOrders();
@@ -41,8 +49,10 @@ const Orders = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
+  const getStatusColor = (order) => {
+    if (order.paymentStatus === 'failed') return '#ef4444';
+
+    switch (order.status) {
       case 'pending': return '#f59e0b';
       case 'confirmed': return '#3b82f6';
       case 'preparing': return '#8b5cf6';
@@ -53,8 +63,10 @@ const Orders = () => {
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
+  const getStatusText = (order) => {
+    if (order.paymentStatus === 'failed') return 'Failed';
+
+    switch (order.status) {
       case 'pending': return 'Pending';
       case 'confirmed': return 'Confirmed';
       case 'preparing': return 'Preparing';
@@ -65,9 +77,11 @@ const Orders = () => {
     }
   };
 
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === filterStatus);
+  const filteredOrders = orders.filter((order) => {
+    if (filterStatus === 'all') return true;
+    if (filterStatus === 'failed') return order.paymentStatus === 'failed' || order.status === 'cancelled';
+    return order.status === filterStatus;
+  });
 
   return (
     <div className="orders-container">
@@ -132,9 +146,9 @@ const Orders = () => {
                 </div>
                 <div 
                   className="status-badge"
-                  style={{ backgroundColor: getStatusColor(order.status) }}
+                  style={{ backgroundColor: getStatusColor(order) }}
                 >
-                  {getStatusText(order.status)}
+                  {getStatusText(order)}
                 </div>
               </div>
 
@@ -148,7 +162,7 @@ const Orders = () => {
                   <span>{order.deliveryAddress}</span>
                 </div>
                 <div className="detail-item">
-                  <span>{order.items?.length || 0} items • ${order.totalPrice.toFixed(2)}</span>
+                  <span>{order.items?.length || 0} items • KES {order.totalPrice.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -159,8 +173,23 @@ const Orders = () => {
                 >
                   View Details
                 </button>
-                {order.status === 'delivered' && (
-                  <button className="reorder-btn">Reorder</button>
+                {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
+                  <button
+                    className="reorder-btn"
+                    onClick={async () => {
+                      for (const item of order.items) {
+                        await addItem({
+                          _id: item.foodId._id || item.foodId,
+                          name: item.foodId.name || item.foodId,
+                          price: item.price,
+                          image: item.foodId.image || '',
+                        }, item.quantity);
+                      }
+                      navigate('/customer/cart');
+                    }}
+                  >
+                    Reorder
+                  </button>
                 )}
               </div>
             </div>

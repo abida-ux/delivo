@@ -44,11 +44,36 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     enum: ['mpesa', 'cash', 'card'],
     required: true,
+    default: 'mpesa',
+  },
+  whatsappNumber: {
+    type: String,
+    required: true,
+  },
+  mpesaNumber: {
+    type: String,
+    required: true,
   },
   paymentStatus: {
     type: String,
     enum: ['pending', 'completed', 'failed'],
     default: 'pending',
+  },
+  failureReason: {
+    type: String,
+    default: '',
+  },
+  deliveryFee: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 20,
+  },
+  tax: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0,
   },
   deliveryAddress: {
     type: String,
@@ -65,6 +90,10 @@ const OrderSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
+  },
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 60 * 1000),
   },
 });
 

@@ -54,7 +54,7 @@ const FoodCard = ({ food }) => {
         </div>
 
         <div className="food-action-row">
-          <span className="food-price">${food.price}</span>
+          <span className="food-price">KES {food.price}</span>
 
           {added ? (
             <button

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
-import api from '../../services/api';
+import api, { getAppSettings, updateAppSettings } from '../../services/api';
 import './AdminSettings.css';
 
 const AdminSettings = () => {
@@ -23,8 +23,11 @@ const AdminSettings = () => {
     promoNotifications: true,
     freeDeliveryEnabled: false,
     freeDeliveryMinimum: 2500,
+    deliveryFeeEnabled: true,
+    deliveryFeeAmount: 20,
     notificationMessage: 'Free delivery for orders above KES 2,500!',
   });
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const [promoCodes, setPromoCodes] = useState([]);
   const [newPromo, setNewPromo] = useState({
@@ -52,10 +55,25 @@ const AdminSettings = () => {
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem('adminSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    const loadSettings = async () => {
+      try {
+        const appSettings = await getAppSettings();
+        setSettings({
+          promoNotifications: appSettings.promoNotifications ?? true,
+          freeDeliveryEnabled: appSettings.freeDeliveryEnabled ?? false,
+          freeDeliveryMinimum: appSettings.freeDeliveryMinimum ?? 2500,
+          deliveryFeeEnabled: appSettings.deliveryFeeEnabled ?? true,
+          deliveryFeeAmount: appSettings.deliveryFeeAmount ?? 20,
+          notificationMessage: appSettings.notificationMessage || 'Free delivery for orders above KES 2,500!',
+        });
+      } catch (error) {
+        console.error('Error loading app settings:', error);
+      } finally {
+        setSettingsLoaded(true);
+      }
+    };
+
+    loadSettings();
 
     const savedPromos = localStorage.getItem('promoCodes');
     if (savedPromos) {
@@ -120,12 +138,16 @@ const AdminSettings = () => {
   };
 
   // Save settings to localStorage
-  const saveSettings = () => {
-    localStorage.setItem('adminSettings', JSON.stringify(settings));
-    alert('Settings saved successfully!');
-    // Here you would also send notification to all users
-    if (settings.promoNotifications) {
-      sendNotificationToUsers(settings.notificationMessage);
+  const saveSettings = async () => {
+    try {
+      await updateAppSettings(settings);
+      alert('Settings saved successfully!');
+      if (settings.promoNotifications) {
+        sendNotificationToUsers(settings.notificationMessage);
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
     }
   };
 
@@ -415,6 +437,55 @@ const AdminSettings = () => {
           </div>
         </section>
 
+        {/* Delivery Fee Section */}
+        <section className="settings-section">
+          <div className="section-header">
+            <Truck size={24} className="section-icon" />
+            <h2>Delivery Fee Settings</h2>
+          </div>
+
+          <div className="settings-content">
+            <div className="setting-item">
+              <div className="setting-label">
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.deliveryFeeEnabled}
+                    onChange={(e) =>
+                      handleSettingChange('deliveryFeeEnabled', e.target.checked)
+                    }
+                  />
+                  <span className="toggle-switch"></span>
+                  Enable Delivery Fee
+                </label>
+                <p className="setting-desc">
+                  Toggle the fixed delivery fee for all orders.
+                </p>
+              </div>
+            </div>
+
+            {settings.deliveryFeeEnabled && (
+              <div className="setting-item">
+                <label htmlFor="delivery-fee-amount">Delivery Fee Amount (KES)</label>
+                <input
+                  type="number"
+                  id="delivery-fee-amount"
+                  value={settings.deliveryFeeAmount}
+                  onChange={(e) =>
+                    handleSettingChange('deliveryFeeAmount', parseFloat(e.target.value))
+                  }
+                  placeholder="20"
+                  min="0"
+                  step="1"
+                />
+                <p className="setting-desc">
+                  Current delivery fee applied at checkout: KES {settings.deliveryFeeAmount}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Promo Codes Section */}
         <section className="settings-section">
           <div className="section-header">
@@ -589,7 +660,7 @@ const AdminSettings = () => {
 
         {/* Save Button */}
         <div className="settings-footer">
-          <button className="save-settings-btn" onClick={saveSettings}>
+          <button className="save-settings-btn" onClick={saveSettings} disabled={!settingsLoaded}>
             <Save size={20} />
             Save All Settings
           </button>

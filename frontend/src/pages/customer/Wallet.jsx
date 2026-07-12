@@ -75,7 +75,7 @@ const WalletPage = () => {
             <p className="balance-label">Wallet Balance</p>
             <div className="balance-display">
               <h2 className="balance-amount">
-                {showBalance ? `$${balance.toFixed(2)}` : '••••••'}
+                {showBalance ? `KES ${balance.toFixed(2)}` : '••••••'}
               </h2>
               <button 
                 className="toggle-balance-btn"
@@ -117,17 +117,17 @@ const WalletPage = () => {
               min="0"
             />
             <div className="quick-amounts">
-              <button onClick={() => setAddAmount('10')}>$10</button>
-              <button onClick={() => setAddAmount('25')}>$25</button>
-              <button onClick={() => setAddAmount('50')}>$50</button>
-              <button onClick={() => setAddAmount('100')}>$100</button>
+              <button onClick={() => setAddAmount('10')}>KES 10</button>
+              <button onClick={() => setAddAmount('25')}>KES 25</button>
+              <button onClick={() => setAddAmount('50')}>KES 50</button>
+              <button onClick={() => setAddAmount('100')}>KES 100</button>
             </div>
             <button 
               className="proceed-btn"
               onClick={handleAddMoney}
               disabled={!addAmount}
             >
-              Add ${addAmount || '0'}
+              Add KES {addAmount || '0'}
             </button>
           </div>
         )}
@@ -155,7 +155,7 @@ const WalletPage = () => {
               <p className="tx-amount" style={{
                 color: tx.type === 'credit' ? '#22c55e' : '#ef4444'
               }}>
-                {tx.type === 'credit' ? '+' : ''}{tx.amount > 0 ? '$' : ''}{Math.abs(tx.amount).toFixed(2)}
+                {tx.type === 'credit' ? '+' : '-'}KES {Math.abs(tx.amount).toFixed(2)}
               </p>
             </div>
           ))}

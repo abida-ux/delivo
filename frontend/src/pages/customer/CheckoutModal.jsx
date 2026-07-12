@@ -1,24 +1,44 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { X, AlertCircle, Check } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { createOrder } from '../../services/api';
+import { createOrder, getAppSettings } from '../../services/api';
 import './CheckoutModal.css';
 
 const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }) => {
   const { user } = useContext(AuthContext);
   const { clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [errors, setErrors] = useState({});
+  const [deliverySettings, setDeliverySettings] = useState({ enabled: true, amount: 20 });
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: '',
     email: '',
     phone: '',
+    whatsapp: '',
+    mpesaNumber: '',
     notes: ''
   });
 
-  const deliveryFee = 5;
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getAppSettings();
+        setDeliverySettings({
+          enabled: settings.deliveryFeeEnabled !== false,
+          amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
+        });
+      } catch (error) {
+        console.error('Error loading app settings:', error);
+      }
+    };
+
+    if (isOpen) {
+      loadSettings();
+    }
+  }, [isOpen]);
+
+  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
   const tax = (cartTotal * 0.1).toFixed(2);
   const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
 
@@ -30,10 +50,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     }
     if (!deliveryInfo.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^\+?[\d\s\-()]{7,}$/.test(deliveryInfo.phone)) {
+    } else if (!/^[0-9\s\-+]{7,}$/.test(deliveryInfo.phone)) {
       newErrors.phone = 'Please enter a valid phone number';
     }
-    
+    if (!deliveryInfo.whatsapp.trim()) {
+      newErrors.whatsapp = 'WhatsApp number is required';
+    } else if (!/^07[0-9]{8}$/.test(deliveryInfo.whatsapp.replace(/\s+/g, '')) && !/^\+2547[0-9]{8}$/.test(deliveryInfo.whatsapp.replace(/\s+/g, '')) ) {
+      newErrors.whatsapp = 'Please enter a valid Kenyan WhatsApp number';
+    }
+    if (!deliveryInfo.mpesaNumber.trim()) {
+      newErrors.mpesaNumber = 'M-Pesa number is required';
+    } else if (!/^07[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) && !/^\+2547[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) ) {
+      newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number';
+    }
     // ✅ For guest users, email is required
     if (!user && !deliveryInfo.email.trim()) {
       newErrors.email = 'Email is required';
@@ -62,13 +91,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
       const orderData = {
         items,
         deliveryAddress: deliveryInfo.address,
-        paymentMethod,
+        paymentMethod: 'mpesa',
+        whatsappNumber: deliveryInfo.whatsapp,
+        mpesaNumber: deliveryInfo.mpesaNumber,
+        deliveryFee,
+        tax: Number(tax),
         specialInstructions: deliveryInfo.notes,
       };
 
       // Add userId if user is logged in
       if (user && user.id) {
         orderData.userId = user.id;
+        orderData.guestPhone = deliveryInfo.phone;
       } else {
         // For guest checkout
         orderData.guestEmail = deliveryInfo.email || 'guest@delivo.com';
@@ -98,7 +132,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
   return (
     <div className="checkout-modal-overlay">
       <div className="checkout-modal-container">
-        {/* Header */}
         <div className="checkout-modal-header">
           <h2>Complete Your Order</h2>
           <button className="close-btn" onClick={onClose} disabled={isProcessing}>
@@ -106,9 +139,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
           </button>
         </div>
 
-        {/* Content */}
         <div className="checkout-modal-content">
-          {/* Error Alert */}
           {errors.submit && (
             <div className="error-alert">
               <AlertCircle size={20} />
@@ -116,12 +147,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
             </div>
           )}
 
-          {/* Order Summary */}
           <div className="checkout-summary">
             <h3>📋 Order Summary</h3>
             <div className="summary-items">
-              {cartItems.map(item => {
-                // ✅ Extract foodId properly (handles both string and object)
+              {cartItems.map((item) => {
                 const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
                 return (
                   <div key={foodId} className="summary-item">
@@ -129,35 +158,35 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                       <span className="item-name">{item.name}</span>
                       <span className="item-qty">x{item.quantity}</span>
                     </div>
-                    <span className="item-total">${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="item-total">KES {(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 );
               })}
             </div>
+
             <div className="summary-totals">
               <div className="total-row">
                 <span>Subtotal</span>
-                <span>${cartTotal.toFixed(2)}</span>
+                <span>KES {cartTotal.toFixed(2)}</span>
               </div>
               <div className="total-row">
                 <span>Delivery Fee</span>
-                <span>${deliveryFee.toFixed(2)}</span>
+                <span>KES {deliveryFee.toFixed(2)}</span>
               </div>
               <div className="total-row">
                 <span>Tax (10%)</span>
-                <span>${tax}</span>
+                <span>KES {tax}</span>
               </div>
               <div className="total-row grand-total">
                 <span>Total</span>
-                <span className="grand-total-amount">${grandTotal}</span>
+                <span className="grand-total-amount">KES {grandTotal}</span>
               </div>
             </div>
           </div>
 
-          {/* Checkout Form */}
           <form className="checkout-form" onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(); }}>
             <div className="form-section">
-              <h4>🏠 Delivery Address</h4>
+              <h4>Delivery Address</h4>
               <div className="form-group">
                 <label>Address *</label>
                 <input
@@ -167,7 +196,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                     setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
                     if (errors.address) setErrors({ ...errors, address: '' });
                   }}
-                  placeholder="Street address, apartment, etc."
+                  placeholder="Street address, building name, or campus landmark"
                   disabled={isProcessing}
                   className={errors.address ? 'error' : ''}
                 />
@@ -176,7 +205,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
             </div>
 
             <div className="form-section">
-              <h4>📞 Contact Information</h4>
+              <h4>Contact Information</h4>
               <div className="form-group">
                 <label>Phone Number *</label>
                 <input
@@ -186,16 +215,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                     setDeliveryInfo({ ...deliveryInfo, phone: e.target.value });
                     if (errors.phone) setErrors({ ...errors, phone: '' });
                   }}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="0722 000 000"
                   disabled={isProcessing}
                   className={errors.phone ? 'error' : ''}
                 />
                 {errors.phone && <span className="field-error">{errors.phone}</span>}
               </div>
-              {/* ✅ Email field for guest users */}
+
               {!user && (
                 <div className="form-group">
-                  <label>Email {!user && '*'}</label>
+                  <label>Email *</label>
                   <input
                     type="email"
                     value={deliveryInfo.email}
@@ -203,7 +232,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                       setDeliveryInfo({ ...deliveryInfo, email: e.target.value });
                       if (errors.email) setErrors({ ...errors, email: '' });
                     }}
-                    placeholder="your.email@example.com"
+                    placeholder="name@example.com"
                     disabled={isProcessing}
                     className={errors.email ? 'error' : ''}
                   />
@@ -213,42 +242,57 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
             </div>
 
             <div className="form-section">
-              <h4>💳 Payment Method</h4>
-              <div className="payment-options">
-                {['cash', 'card', 'mpesa'].map(method => (
-                  <label key={method} className="payment-option">
-                    <input
-                      type="radio"
-                      value={method}
-                      checked={paymentMethod === method}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      disabled={isProcessing}
-                    />
-                    <span className="payment-label">
-                      {method === 'cash' && '💰 Cash on Delivery'}
-                      {method === 'card' && '💳 Credit/Debit Card'}
-                      {method === 'mpesa' && '📱 M-Pesa'}
-                    </span>
-                  </label>
-                ))}
+              <h4>M-Pesa Payment</h4>
+              <div className="form-group">
+                <label>M-Pesa Number *</label>
+                <input
+                  type="tel"
+                  value={deliveryInfo.mpesaNumber}
+                  onChange={(e) => {
+                    setDeliveryInfo({ ...deliveryInfo, mpesaNumber: e.target.value });
+                    if (errors.mpesaNumber) setErrors({ ...errors, mpesaNumber: '' });
+                  }}
+                  placeholder="0722 000 000"
+                  disabled={isProcessing}
+                  className={errors.mpesaNumber ? 'error' : ''}
+                />
+                {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
+              </div>
+              <div className="payment-note">
+                We will send an M-Pesa STK push to this number. Your order stays pending until payment is confirmed.
               </div>
             </div>
 
             <div className="form-section">
-              <h4>📝 Special Instructions (Optional)</h4>
+              <h4>Contact Details</h4>
               <div className="form-group">
-                <textarea
-                  value={deliveryInfo.notes}
-                  onChange={(e) =>
-                    setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })
-                  }
-                  placeholder="Add allergies, preferences, or delivery instructions..."
-                  rows="3"
+                <label>WhatsApp Number *</label>
+                <input
+                  type="tel"
+                  value={deliveryInfo.whatsapp}
+                  onChange={(e) => {
+                    setDeliveryInfo({ ...deliveryInfo, whatsapp: e.target.value });
+                    if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
+                  }}
+                  placeholder="0722 000 000"
                   disabled={isProcessing}
-                  maxLength="200"
+                  className={errors.whatsapp ? 'error' : ''}
                 />
-                <span className="char-count">{deliveryInfo.notes.length}/200</span>
+                {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
               </div>
+            </div>
+
+            <div className="form-section">
+              <h4>Special Instructions (Optional)</h4>
+              <textarea
+                value={deliveryInfo.notes}
+                onChange={(e) => setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })}
+                placeholder="Add allergies, preferences, or delivery instructions..."
+                rows="3"
+                disabled={isProcessing}
+                maxLength="200"
+              />
+              <span className="char-count">{deliveryInfo.notes.length}/200</span>
             </div>
 
             <div className="form-actions">
@@ -273,7 +317,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 ) : (
                   <>
                     <Check size={18} />
-                    Place Order - ${grandTotal}
+                    Place Order - KES {grandTotal}
                   </>
                 )}
               </button>

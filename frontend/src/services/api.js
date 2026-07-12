@@ -69,6 +69,16 @@ export const createOrder = async (orderData) => {
   return res.data.data;
 };
 
+export const getAppSettings = async () => {
+  const res = await api.get('/settings');
+  return res.data.data || {};
+};
+
+export const updateAppSettings = async (settings) => {
+  const res = await api.put('/settings', settings);
+  return res.data.data;
+};
+
 export const getUserOrders = async (userId) => {
   const res = await api.get(`/orders/user/${userId}`);
   return res.data.data || [];

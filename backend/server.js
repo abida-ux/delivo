@@ -12,6 +12,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const storeRoutes = require('./routes/storeRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const appSettingsRoutes = require('./routes/appSettingsRoutes');
 
 // Initialize Express app
 const app = express();
@@ -74,6 +75,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/settings', appSettingsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -113,6 +115,39 @@ const server = app.listen(PORT, () => {
   ╚═══════════════════════════════════════════════╝
   `);
 });
+
+// Periodic cleanup: expire unpaid pending orders older than 1 minute
+const cleanupExpiredOrders = async () => {
+  try {
+    const now = new Date();
+    const expiredOrders = await require('./models/Order').find({
+      status: 'pending',
+      paymentStatus: 'pending',
+      expiresAt: { $lte: now },
+    });
+
+    if (expiredOrders.length > 0) {
+      console.log(`⌛ Expiring ${expiredOrders.length} unpaid pending order(s)`);
+      await require('./models/Order').updateMany(
+        {
+          status: 'pending',
+          paymentStatus: 'pending',
+          expiresAt: { $lte: now },
+        },
+        {
+          status: 'cancelled',
+          paymentStatus: 'failed',
+          failureReason: 'Payment timeout',
+          updatedAt: now,
+        }
+      );
+    }
+  } catch (error) {
+    console.error('❌ Error during expired order cleanup:', error);
+  }
+};
+
+setInterval(cleanupExpiredOrders, 30 * 1000);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

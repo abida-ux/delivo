@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import {
   Search,
   ShoppingCart,
+  ShoppingBag,
   Bell,
   MapPin,
   User,
@@ -103,7 +104,8 @@ const Navbar = () => {
     const routeToLinkMap = {
       '/': 'Home',
       '/menu': 'Menu',
-      '/about': 'About'
+      '/wishlist': 'Wishlist',
+      '/customer/orders': 'Orders'
     };
 
     const currentLink = routeToLinkMap[location.pathname] || 'Home';
@@ -125,20 +127,20 @@ const Navbar = () => {
     setShowLogoutConfirm(false);
   };
 
-  const navLinks = ['Home', 'Menu', 'Wishlist', 'About'];
+  const navLinks = ['Home', 'Menu', 'Wishlist', 'Orders'];
 
   const iconMap = {
     Home: <Home size={18} />,
     Menu: <UtensilsCrossed size={18} />,
     Wishlist: <HeartPulse size={18} />,
-    About: <Info size={18} />
+    Orders: <ShoppingBag size={18} />
   };
 
   const routeMap = {
     Home: "/",
     Menu: "/menu",
     Wishlist: "/wishlist",
-    About: "/about"
+    Orders: "/customer/orders"
   };
 
   const handleNavigate = (link) => {

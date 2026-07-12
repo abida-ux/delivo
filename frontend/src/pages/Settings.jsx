@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, RotateCcw, Bell, Lock, Eye, Globe } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './pages.css';
 import './Settings.css';
@@ -65,6 +65,10 @@ const Settings = () => {
       localStorage.setItem('delivo_settings', JSON.stringify(defaultSettings));
       setHasChanges(false);
     }
+  };
+
+  const handleViewOrders = (filter) => {
+    navigate(`/customer/orders${filter ? `?filter=${filter}` : ''}`);
   };
 
   return (
@@ -204,6 +208,17 @@ const Settings = () => {
         </div>
 
         {/* Action Buttons */}
+        <div className="settings-section">
+          <div className="section-header">
+            <Package size={20} />
+            <h2>Orders & Quick Actions</h2>
+          </div>
+          <div className="orders-actions">
+            <button className="quick-order-btn" onClick={() => handleViewOrders()}>View All Orders</button>
+            <button className="quick-order-btn" onClick={() => handleViewOrders('failed')}>View Failed Orders</button>
+          </div>
+        </div>
+
         <div className="settings-actions">
           <button className="save-btn" onClick={handleSaveSettings}>
             <Save size={18} />

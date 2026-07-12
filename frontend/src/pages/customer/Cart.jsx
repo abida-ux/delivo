@@ -1,9 +1,10 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { AuthContext } from '../../context/AuthContext';
 import CheckoutModal from './CheckoutModal';
+import { getAppSettings } from '../../services/api';
 import '../pages.css';
 import './Cart.css';
 
@@ -57,7 +58,25 @@ const Cart = () => {
   };
 
   const cartTotal = getCartTotal();
-  const deliveryFee = cartItems.length > 0 ? 5 : 0;
+  const [deliverySettings, setDeliverySettings] = useState({ enabled: true, amount: 20 });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await getAppSettings();
+        setDeliverySettings({
+          enabled: settings.deliveryFeeEnabled !== false,
+          amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
+        });
+      } catch (error) {
+        console.error('Error loading delivery settings:', error);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
   const tax = (cartTotal * 0.1).toFixed(2);
   const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
 
@@ -107,7 +126,7 @@ const Cart = () => {
                     {item.restaurant && (
                       <p className="item-restaurant">{item.restaurant}</p>
                     )}
-                    <p className="item-price">${item.price.toFixed(2)}</p>
+                    <p className="item-price">KES {item.price.toFixed(2)}</p>
                   </div>
                   <div className="item-controls">
                     <button
@@ -125,7 +144,7 @@ const Cart = () => {
                     </button>
                   </div>
                   <div className="item-total">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    KES {(item.price * item.quantity).toFixed(2)}
                   </div>
                   <button
                     className="remove-btn"
@@ -143,20 +162,20 @@ const Cart = () => {
             <div className="summary-box">
               <div className="summary-row">
                 <span>Subtotal</span>
-                <span>${cartTotal.toFixed(2)}</span>
+                <span>KES {cartTotal.toFixed(2)}</span>
               </div>
               <div className="summary-row">
                 <span>Delivery Fee</span>
-                <span>${deliveryFee.toFixed(2)}</span>
+                <span>KES {deliveryFee.toFixed(2)}</span>
               </div>
               <div className="summary-row">
                 <span>Tax (10%)</span>
-                <span>${tax}</span>
+                <span>KES {tax}</span>
               </div>
               <div className="summary-divider"></div>
               <div className="summary-row total">
                 <span>Total</span>
-                <span>${grandTotal}</span>
+                <span>KES {grandTotal}</span>
               </div>
             </div>
 

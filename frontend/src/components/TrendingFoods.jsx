@@ -208,7 +208,7 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
 
                   <div className="food-action-row">
                     <span className="food-price">
-                      ${item.price}
+                      KES {item.price}
                     </span>
 
                     {cartItemIds.includes(item._id) ? (

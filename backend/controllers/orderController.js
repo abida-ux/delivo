@@ -5,15 +5,30 @@ const Food = require('../models/Food');
 // @route POST /api/orders
 exports.createOrder = async (req, res, next) => {
   try {
-    const { userId, guestEmail, guestPhone, items, deliveryAddress, paymentMethod, specialInstructions } = req.body;
+    const {
+      userId,
+      guestEmail,
+      guestPhone,
+      items,
+      deliveryAddress,
+      specialInstructions,
+      whatsappNumber,
+      mpesaNumber,
+      deliveryFee = 20,
+      tax = 0,
+    } = req.body;
 
     console.log('🛒 Creating order with data:', {
       userId,
       isGuest: !userId,
       guestEmail,
+      guestPhone,
       itemsCount: items?.length,
       deliveryAddress,
-      paymentMethod,
+      whatsappNumber,
+      mpesaNumber,
+      deliveryFee,
+      tax,
     });
 
     // ✅ Allow either userId (authenticated) or guest info (guest checkout)
@@ -38,15 +53,22 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    if (!paymentMethod) {
+    if (!whatsappNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Payment method is required',
+        message: 'WhatsApp number is required',
+      });
+    }
+
+    if (!mpesaNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'M-Pesa number is required',
       });
     }
 
     // Calculate total price and verify items exist
-    let totalPrice = 0;
+    let subtotal = 0;
     const populatedItems = [];
 
     for (const item of items) {
@@ -60,7 +82,7 @@ exports.createOrder = async (req, res, next) => {
       }
 
       const itemTotal = food.price * item.quantity;
-      totalPrice += itemTotal;
+      subtotal += itemTotal;
 
       populatedItems.push({
         foodId: food._id,
@@ -69,6 +91,10 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
+    const parsedDeliveryFee = Number(deliveryFee) || 0;
+    const parsedTax = Number(tax) || 0;
+    const totalPrice = subtotal + parsedDeliveryFee + parsedTax;
+
     // ✅ Create order with userId (if authenticated) or guest info (if guest)
     const order = await Order.create({
       userId: userId || undefined,
@@ -76,9 +102,15 @@ exports.createOrder = async (req, res, next) => {
       guestPhone: guestPhone || undefined,
       items: populatedItems,
       totalPrice,
+      deliveryFee: parsedDeliveryFee,
+      tax: parsedTax,
       deliveryAddress,
-      paymentMethod,
+      paymentMethod: 'mpesa',
+      whatsappNumber,
+      mpesaNumber,
+      paymentStatus: 'pending',
       specialInstructions: specialInstructions || '',
+      expiresAt: new Date(Date.now() + 60 * 1000),
     });
 
     await order.populate('items.foodId');
@@ -141,22 +173,20 @@ exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { status, paymentStatus } = req.body;
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      {
-        status: status || order?.status,
-        paymentStatus: paymentStatus || order?.paymentStatus,
-        updatedAt: Date.now(),
-      },
-      { new: true, runValidators: true }
-    ).populate('items.foodId');
-
+    const order = await Order.findById(req.params.id);
     if (!order) {
       return res.status(404).json({
         success: false,
         message: 'Order not found',
       });
     }
+
+    order.status = status || order.status;
+    order.paymentStatus = paymentStatus || order.paymentStatus;
+    order.updatedAt = Date.now();
+
+    await order.save();
+    await order.populate('items.foodId');
 
     res.status(200).json({
       success: true,

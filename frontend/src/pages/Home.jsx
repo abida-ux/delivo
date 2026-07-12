@@ -31,8 +31,8 @@ export default function Home() {
   };
 
   const promos = [
-    { id: 1, title: "50% OFF on First Order", discount: "50%", minOrder: "$10", buttonText: "Order Now" },
-    { id: 2, title: "Free Delivery on Orders Above $30", discount: "FREE", minOrder: "$30+", buttonText: "Shop Now" },
+    { id: 1, title: "50% OFF on First Order", discount: "50%", minOrder: "KES 10", buttonText: "Order Now" },
+    { id: 2, title: "Free Delivery on Orders Above KES 30", discount: "FREE", minOrder: "KES 30+", buttonText: "Shop Now" },
     { id: 3, title: "Double Points Weekend", discount: "2x", minOrder: "All orders", buttonText: "Learn More" },
   ];
 
@@ -74,7 +74,7 @@ export default function Home() {
               <p className="promo-subtitle">Minimum order: {promos[activePromoIndex].minOrder}</p>
             </div>
             <div className="promo-badge">{promos[activePromoIndex].discount}</div>
-            <button className="promo-btn">{promos[activePromoIndex].buttonText}</button>
+            <button className="promo-btn" onClick={handleOrderNow}>{promos[activePromoIndex].buttonText}</button>
           </div>
 
           <div className="promo-indicators">
@@ -94,24 +94,28 @@ export default function Home() {
 
       {/* ===== 4. FLASH DEALS SECTION ===== */}
       <section className="flash-deals-section">
-        <div className="flash-header">
-          <div className="flash-title">
-            <Flame size={28} className="flame-icon" />
-            <h2>Crave-Worthy Flash Deals</h2>
+        <div className="section-inner">
+          <div className="flash-header">
+            <div className="flash-title">
+              <Flame size={28} className="flame-icon" />
+              <h2>Crave-Worthy Flash Deals</h2>
+            </div>
+            <div className="countdown-timer">
+              <Clock size={20} />
+              <span>{formatTime(timeLeft)}</span>
+            </div>
           </div>
-          <div className="countdown-timer">
-            <Clock size={20} />
-            <span>{formatTime(timeLeft)}</span>
-          </div>
+          <TrendingFoods searchTerm={searchTerm} selectedCategory={selectedCategory} onClearFilter={handleClearFilter} isFlashDeal={true} />
         </div>
-        <TrendingFoods searchTerm={searchTerm} selectedCategory={selectedCategory} onClearFilter={handleClearFilter} isFlashDeal={true} />
       </section>
 
       {/* ===== 5. POPULAR ITEMS GRID ===== */}
       <section className="popular-meals-section">
-        <h2 className="section-title">Popular Near You</h2>
-        <p className="section-subtitle">Most ordered meals in your area</p>
-        <TrendingFoods searchTerm={searchTerm} selectedCategory={selectedCategory} onClearFilter={handleClearFilter} />
+        <div className="section-inner">
+          <h2 className="section-title">Popular Near You</h2>
+          <p className="section-subtitle">Most ordered meals in your area</p>
+          <TrendingFoods searchTerm={searchTerm} selectedCategory={selectedCategory} onClearFilter={handleClearFilter} />
+        </div>
       </section>
 
       {/* ===== 6. POPULAR RESTAURANTS ===== */}
@@ -136,61 +140,29 @@ export default function Home() {
 
       {/* ===== 9. FOOTER ===== */}
       <footer className="footer">
-        <div className="footer-content">
+        <div className="footer-content simplified-footer">
           <div className="footer-column">
-            <h4>About Delivo</h4>
+            <h4>Delivo Kenya</h4>
+            <p>Fast food delivery across Nairobi and beyond.</p>
+          </div>
+          <div className="footer-column">
+            <h4>Support</h4>
             <ul>
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#careers">Careers</a></li>
-              <li><a href="#press">Press</a></li>
-              <li><a href="#blog">Blog</a></li>
+              <li><a href="mailto:support@delivo.co.ke">support@delivo.co.ke</a></li>
+              <li><a href="tel:+254700000000">+254 700 000 000</a></li>
             </ul>
           </div>
           <div className="footer-column">
-            <h4>For Customers</h4>
+            <h4>Quick Links</h4>
             <ul>
-              <li><a href="#help">Help Center</a></li>
-              <li><a href="#account">Account Settings</a></li>
-              <li><a href="#orders">My Orders</a></li>
-              <li><a href="#favorites">Favorites</a></li>
-            </ul>
-          </div>
-          <div className="footer-column">
-            <h4>For Partners</h4>
-            <ul>
-              <li><a href="#restaurant">Restaurant Signup</a></li>
-              <li><a href="#delivery">Delivery Partner</a></li>
-              <li><a href="#merchant">Merchant Center</a></li>
-              <li><a href="#support">Partner Support</a></li>
-            </ul>
-          </div>
-          <div className="footer-column">
-            <h4>Legal</h4>
-            <ul>
-              <li><a href="#privacy">Privacy Policy</a></li>
-              <li><a href="#terms">Terms of Service</a></li>
-              <li><a href="#cookies">Cookie Policy</a></li>
-              <li><a href="#contact">Contact Us</a></li>
+              <li><a href="/menu">Menu</a></li>
+              <li><a href="/customer/cart">My Cart</a></li>
+              <li><a href="/settings">Settings</a></li>
             </ul>
           </div>
         </div>
-
-        <div className="footer-apps">
-          <h4>Download Our App</h4>
-          <div className="app-links">
-            <a href="#ios" className="app-store">App Store</a>
-            <a href="#android" className="app-store">Google Play</a>
-          </div>
-        </div>
-
         <div className="footer-bottom">
-          <p>&copy; 2024 Delivo. All rights reserved.</p>
-          <div className="social-links">
-            <a href="#fb">Facebook</a>
-            <a href="#tw">Twitter</a>
-            <a href="#ig">Instagram</a>
-            <a href="#linked">LinkedIn</a>
-          </div>
+          <p>&copy; 2024 Delivo. Built for Kenya.</p>
         </div>
       </footer>
     </div>

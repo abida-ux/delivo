@@ -19,7 +19,7 @@ const Favorites = () => {
         location: '2.5 km away',
         cuisines: 'Italian, Pizza',
         deliveryTime: '25-35 min',
-        deliveryFee: '$2.99',
+        deliveryFee: 'KES 2.99',
         image: 'https://placehold.co/300x200?text=Pizza+Palace'
       },
       {
@@ -30,7 +30,7 @@ const Favorites = () => {
         location: '1.8 km away',
         cuisines: 'American, Burgers',
         deliveryTime: '20-30 min',
-        deliveryFee: '$1.99',
+        deliveryFee: 'KES 1.99',
         image: 'https://placehold.co/300x200?text=Burger+House'
       },
       {
@@ -41,7 +41,7 @@ const Favorites = () => {
         location: '3.2 km away',
         cuisines: 'Japanese, Sushi',
         deliveryTime: '30-40 min',
-        deliveryFee: '$3.99',
+        deliveryFee: 'KES 3.99',
         image: 'https://placehold.co/300x200?text=Sushi+Delight'
       }
     ];
@@ -110,7 +110,7 @@ const Favorites = () => {
                     <span>⏱ {restaurant.deliveryTime}</span>
                   </div>
                   <div className="info-item">
-                    <span>${restaurant.deliveryFee}</span>
+                    <span>{restaurant.deliveryFee}</span>
                   </div>
                 </div>
 
