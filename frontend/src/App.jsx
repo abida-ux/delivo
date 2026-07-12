@@ -20,7 +20,7 @@ function App() {
       {isLoading && <Loader />}
       <AuthModal />
       {!isAdminRoute && <Navbar />}
-      <main style={{ flex: 1, width: '100%' }}>
+      <main className={isAdminRoute ? 'admin-main' : ''}>
         <AppRoutes />
       </main>
     </div>

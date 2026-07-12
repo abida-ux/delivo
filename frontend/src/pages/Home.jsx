@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, ArrowRight, Clock, Zap, Star, Flame, Truck } from "lucide-react";
+import { Clock, Zap, Star, Flame, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
@@ -9,7 +9,6 @@ import TrendingFoods from "../components/TrendingFoods";
 import HowItWorks from "../components/HowItWorks";
 
 export default function Home() {
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
@@ -66,69 +65,6 @@ export default function Home() {
 
   return (
     <div className="home-wrapper">
-      {/* ===== 1. HERO SECTION ===== */}
-      <section className="hero-section">
-        <div className="hero-bg-blob blob-1"></div>
-        <div className="hero-bg-blob blob-2"></div>
-
-        <div className="hero-container">
-          <div className="hero-left">
-            <h1 className="hero-headline">
-              Delicious food <br />
-              delivered to your <br />
-              <span className="gradient-text">door.</span>
-            </h1>
-
-            <p className="hero-subtext">
-              Order from your favorite restaurants, stores, and local chefs in minutes.
-            </p>
-
-            <div className={`hero-search-bar ${isSearchFocused ? "focused" : ""}`}>
-              <MapPin size={22} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search for restaurants, meals or cuisines..."
-                className="hero-input"
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleFindFood()}
-              />
-              <button className="hero-search-btn" onClick={handleFindFood}>
-                <Search size={20} />
-              </button>
-            </div>
-
-            <div className="hero-cta-group">
-              <button className="btn-primary" onClick={handleOrderNow}>
-                Order Now <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-
-          <div className="hero-right">
-            <div className="showcase-scene">
-              <div className="shadow-floor"></div>
-              <div className="floating-item food-pizza placeholder-item">
-                <span>Pizza</span>
-              </div>
-              <div className="floating-item food-burger placeholder-item">
-                <span>Burger</span>
-              </div>
-              <div className="floating-item food-fries placeholder-item">
-                <span>Fries</span>
-              </div>
-              <div className="floating-item food-drink placeholder-item">
-                <span>Drink</span>
-              </div>
-              <div className="accent-circle circle-gold"></div>
-              <div className="accent-circle circle-orange"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ===== 2. PROMOTIONS CAROUSEL ===== */}
       <section className="promotions-section">
         <div className="promotions-container">

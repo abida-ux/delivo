@@ -23,3 +23,7 @@ Backend:
 
 - Frontend uses VITE_API_URL for the API base URL.
 - Backend uses its own .env file with MONGO_URI, PORT, JWT_SECRET, and FRONTEND_URL.
+
+## Deployment
+
+See `DEPLOYMENT.md` for Vercel frontend and Render backend deployment instructions.
