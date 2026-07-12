@@ -21,7 +21,7 @@ This repo is split into:
 5. Add the environment variables in Render Dashboard:
    - `MONGO_URI` = your MongoDB connection string
    - `JWT_SECRET` = a strong random secret
-   - `FRONTEND_URL` = `https://<your-vercel-domain>`
+   - `FRONTEND_URL` = `https://<your-vercel-domain>` (recommended but not required for startup)
 6. Optionally add:
    - `NODE_ENV=production`
    - `PORT=10000` (Render provides a port automatically, but this can be left unset)
