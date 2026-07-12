@@ -50,10 +50,6 @@ export default function Home() {
     navigate('/menu');
   };
 
-  const handleBecomePartner = () => {
-    navigate('/business');
-  };
-
   const handleCategorySelect = (categoryName) => {
     setSelectedCategory(categoryName);
     setTimeout(() => {
@@ -108,26 +104,23 @@ export default function Home() {
               <button className="btn-primary" onClick={handleOrderNow}>
                 Order Now <ArrowRight size={18} />
               </button>
-              <button className="btn-secondary" onClick={handleBecomePartner}>
-                Become a Partner
-              </button>
             </div>
           </div>
 
           <div className="hero-right">
             <div className="showcase-scene">
               <div className="shadow-floor"></div>
-              <div className="floating-item food-pizza">
-                <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591" alt="pizza" />
+              <div className="floating-item food-pizza placeholder-item">
+                <span>Pizza</span>
               </div>
-              <div className="floating-item food-burger">
-                <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd" alt="burger" />
+              <div className="floating-item food-burger placeholder-item">
+                <span>Burger</span>
               </div>
-              <div className="floating-item food-fries">
-                <img src="https://images.unsplash.com/photo-1573080496219-bb080dd4f877" alt="fries" />
+              <div className="floating-item food-fries placeholder-item">
+                <span>Fries</span>
               </div>
-              <div className="floating-item food-drink">
-                <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87" alt="drink" />
+              <div className="floating-item food-drink placeholder-item">
+                <span>Drink</span>
               </div>
               <div className="accent-circle circle-gold"></div>
               <div className="accent-circle circle-orange"></div>

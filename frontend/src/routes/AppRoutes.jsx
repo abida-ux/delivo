@@ -1,51 +1,53 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import Home from "../pages/Home";
-import Menu from "../pages/Menu";
-import AllRestaurants from "../pages/customer/AllRestaurants";
-import Restaurants from "../pages/customer/Restaurants";
-import StoresByType from "../pages/customer/StoresByType";
-import StoreProducts from "../pages/customer/StoreProducts";
-import Cart from "../pages/customer/Cart";
-import Orders from "../pages/customer/Orders";
-import Settings from "../pages/Settings";
-import Stores from "../pages/Stores";
-import About from "../pages/About";
-import Business from "../pages/Business";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import AdminUsers from "../pages/admin/AdminUsers";
-import AdminRestaurants from "../pages/admin/Restaurants";
-import AdminFoods from "../pages/admin/AdminFoods";
-import AdminRiders from "../pages/admin/AdminRiders";
-import AdminOrders from "../pages/admin/AdminOrders";
-import AdminStoreTypes from "../pages/admin/AdminStoreTypes";
-import AdminStores from "../pages/admin/AdminStores";
-import AdminNotifications from "../pages/admin/AdminNotifications";
-import Analytics from "../pages/admin/Analytics";
-import AdminSettings from "../pages/admin/AdminSettings";
-import RiderDashboard from "../pages/rider/RiderDashboard";
-import RiderStores from "../pages/rider/RiderStores";
-import AvailableDeliveries from "../pages/rider/AvailableDeliveries";
-import DeliveryHistory from "../pages/rider/DeliveryHistory";
-import RiderEarnings from "../pages/rider/Earnings";
-import RestaurantDashboard from "../pages/restaurant/RestaurantDashboard";
+import Loader from "../components/Loader";
 import { ProtectedRoute } from "../components/ProtectedRoute";
+
+const Home = lazy(() => import("../pages/Home"));
+const Menu = lazy(() => import("../pages/Menu"));
+const AllRestaurants = lazy(() => import("../pages/customer/AllRestaurants"));
+const Restaurants = lazy(() => import("../pages/customer/Restaurants"));
+const StoresByType = lazy(() => import("../pages/customer/StoresByType"));
+const StoreProducts = lazy(() => import("../pages/customer/StoreProducts"));
+const Cart = lazy(() => import("../pages/customer/Cart"));
+const Orders = lazy(() => import("../pages/customer/Orders"));
+const Settings = lazy(() => import("../pages/Settings"));
+const About = lazy(() => import("../pages/About"));
+const Wishlist = lazy(() => import("../pages/Wishlist"));
+const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
+const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
+const AdminFoods = lazy(() => import("../pages/admin/AdminFoods"));
+const AdminRiders = lazy(() => import("../pages/admin/AdminRiders"));
+const AdminOrders = lazy(() => import("../pages/admin/AdminOrders"));
+const AdminStoreTypes = lazy(() => import("../pages/admin/AdminStoreTypes"));
+const AdminStores = lazy(() => import("../pages/admin/AdminStores"));
+const AdminNotifications = lazy(() => import("../pages/admin/AdminNotifications"));
+const Analytics = lazy(() => import("../pages/admin/Analytics"));
+const AdminSettings = lazy(() => import("../pages/admin/AdminSettings"));
+const RiderDashboard = lazy(() => import("../pages/rider/RiderDashboard"));
+const RiderStores = lazy(() => import("../pages/rider/RiderStores"));
+const AvailableDeliveries = lazy(() => import("../pages/rider/AvailableDeliveries"));
+const DeliveryHistory = lazy(() => import("../pages/rider/DeliveryHistory"));
+const RiderEarnings = lazy(() => import("../pages/rider/Earnings"));
+const RestaurantDashboard = lazy(() => import("../pages/restaurant/RestaurantDashboard"));
 
 export default function AppRoutes() {
   return (
+    <Suspense fallback={<Loader />}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/restaurants" element={<AllRestaurants />} />
       <Route path="/restaurants/:id" element={<Restaurants />} />
-      <Route path="/stores" element={<Stores />} />
       <Route path="/stores/:typeId" element={<StoresByType />} />
       <Route path="/store/:storeId" element={<StoreProducts />} />
       <Route path="/customer/cart" element={<Cart />} />
       <Route path="/customer/orders" element={<Orders />} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/wishlist" element={<Wishlist />} />
       <Route path="/about" element={<About />} />
-      <Route path="/business" element={<Business />} />
 
       {/* Admin Routes - Protected */}
       <Route
@@ -189,5 +191,6 @@ export default function AppRoutes() {
         }
       />
     </Routes>
+    </Suspense>
   );
 }

@@ -4,7 +4,7 @@ import { CartProvider } from './context/CartContext'
 import { CartUIProvider } from './context/CartUIContext'
 import { LoaderProvider } from './context/LoaderContext'
 import { AuthModalProvider } from './context/AuthModalContext'
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext'
 import './index.css'
 import App from './App.jsx'
 

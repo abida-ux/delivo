@@ -15,7 +15,8 @@ import {
   Trash2,
   LogIn,
   LogOut,
-  AlertCircle
+  AlertCircle,
+  HeartPulse
 } from 'lucide-react';
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -120,8 +121,6 @@ const Navbar = () => {
     const routeToLinkMap = {
       '/': 'Home',
       '/menu': 'Menu',
-      '/stores': 'Stores',
-      '/business': 'Business',
       '/about': 'About'
     };
 
@@ -144,21 +143,19 @@ const Navbar = () => {
     setShowLogoutConfirm(false);
   };
 
-  const navLinks = ['Home', 'Menu', 'Stores', 'Business', 'About'];
+  const navLinks = ['Home', 'Menu', 'Wishlist', 'About'];
 
   const iconMap = {
     Home: <Home size={18} />,
     Menu: <UtensilsCrossed size={18} />,
-    Stores: <Store size={18} />,
-    Business: <Briefcase size={18} />,
+    Wishlist: <HeartPulse size={18} />,
     About: <Info size={18} />
   };
 
   const routeMap = {
     Home: "/",
     Menu: "/menu",
-    Stores: "/stores",
-    Business: "/business",
+    Wishlist: "/wishlist",
     About: "/about"
   };
 
@@ -247,11 +244,7 @@ const Navbar = () => {
 
             {/* OPTIONAL: avatar stays */}
             <div className="avatar-wrapper">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-                alt="User profile"
-                className="avatar-img"
-              />
+              <div className="avatar-placeholder">U</div>
             </div>
 
           </div>
