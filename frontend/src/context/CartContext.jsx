@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContext } from './AuthContext';
-import { getAPIUrl } from '../services/api';
+import api from '../services/api';
 
 const CartContext = createContext();
 const GUEST_CART_KEY = 'delivo_guest_cart';
@@ -46,75 +46,49 @@ export const CartProvider = ({ children }) => {
 
     try {
       setLoading(true);
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/cart`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const { data } = await api.get('/cart');
+      let dbCartItems = data.cart?.items || [];
 
-      if (response.ok) {
-        const data = await response.json();
-        let dbCartItems = data.cart?.items || [];
+      // ✅ Check if there's a guest cart to merge
+      const guestCart = localStorage.getItem(GUEST_CART_KEY);
+      if (guestCart) {
+        try {
+          const guestItems = JSON.parse(guestCart);
+          console.log(`📦 Found guest cart with ${guestItems.length} items, merging with database cart...`);
 
-        // ✅ Check if there's a guest cart to merge
-        const guestCart = localStorage.getItem(GUEST_CART_KEY);
-        if (guestCart) {
-          try {
-            const guestItems = JSON.parse(guestCart);
-            console.log(`📦 Found guest cart with ${guestItems.length} items, merging with database cart...`);
+          // ✅ Merge guest items with database items
+          for (const guestItem of guestItems) {
+            const guestFoodId = getNormalizedFoodId(guestItem);
+            const existingItem = dbCartItems.find((item) => getNormalizedFoodId(item) === guestFoodId);
 
-            // ✅ Merge guest items with database items
-            for (const guestItem of guestItems) {
-              const guestFoodId = getNormalizedFoodId(guestItem);
-              const existingItem = dbCartItems.find((item) => getNormalizedFoodId(item) === guestFoodId);
-
-              if (existingItem) {
-                existingItem.quantity += guestItem.quantity;
-              } else {
-                dbCartItems.push(guestItem);
-              }
+            if (existingItem) {
+              existingItem.quantity += guestItem.quantity;
+            } else {
+              dbCartItems.push(guestItem);
             }
-
-            // ✅ Clear backend cart before rewriting
-            await fetch(`${apiUrl}/cart/clear`, {
-              method: 'DELETE',
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-            });
-
-            // ✅ Re-add all merged items to database
-            for (const item of dbCartItems) {
-              const foodId = getNormalizedFoodId(item);
-              await fetch(`${apiUrl}/cart/add`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  foodId,
-                  quantity: item.quantity,
-                }),
-              });
-            }
-
-            localStorage.removeItem(GUEST_CART_KEY);
-            console.log('✅ Guest cart merged and cleared');
-          } catch (error) {
-            console.error('❌ Error merging guest cart:', error);
           }
-        }
 
-        setCartItems(dbCartItems);
-        console.log(`✅ Cart loaded from database: ${dbCartItems.length} items`);
-      } else {
-        console.error('❌ Failed to fetch cart:', response.status);
-        setCartItems([]);
+          // ✅ Clear backend cart before rewriting
+          await api.delete('/cart/clear');
+
+          // ✅ Re-add all merged items to database
+          for (const item of dbCartItems) {
+            const foodId = getNormalizedFoodId(item);
+            await api.post('/cart/add', {
+              foodId,
+              quantity: item.quantity,
+            });
+          }
+
+          localStorage.removeItem(GUEST_CART_KEY);
+          console.log('✅ Guest cart merged and cleared');
+        } catch (error) {
+          console.error('❌ Error merging guest cart:', error);
+        }
       }
+
+      setCartItems(dbCartItems);
+      console.log(`✅ Cart loaded from database: ${dbCartItems.length} items`);
     } catch (error) {
       console.error('❌ Error fetching cart from database:', error);
       setCartItems([]);
@@ -128,26 +102,13 @@ export const CartProvider = ({ children }) => {
     try {
       if (user && token) {
         // ✅ Add to database for authenticated users
-        const apiUrl = getAPIUrl();
-        const response = await fetch(`${apiUrl}/cart/add`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            foodId: food._id,
-            quantity,
-          }),
+        const { data } = await api.post('/cart/add', {
+          foodId: food._id,
+          quantity,
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setCartItems(data.cart?.items || []);
-          console.log('✅ Item added to cart:', food.name);
-        } else {
-          console.error('❌ Failed to add item:', response.status);
-        }
+        setCartItems(data.cart?.items || []);
+        console.log('✅ Item added to cart:', food.name);
       } else {
         // ✅ Add to localStorage for guest users
         const updatedCart = [...cartItems];
@@ -184,23 +145,9 @@ export const CartProvider = ({ children }) => {
         setCartItems((prevItems) => prevItems.filter((item) => getNormalizedFoodId(item) !== foodId));
 
         // ✅ Remove from database for authenticated users
-        const apiUrl = getAPIUrl();
-        const response = await fetch(`${apiUrl}/cart/remove/${foodId}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setCartItems(data.cart?.items || []);
-          console.log('🗑️ Item removed from cart');
-        } else {
-          console.error('❌ Failed to remove from server cart');
-          fetchCartFromDatabase(); // Rollback on error
-        }
+        const { data } = await api.delete(`/cart/remove/${foodId}`);
+        setCartItems(data.cart?.items || []);
+        console.log('🗑️ Item removed from cart');
       } else {
         // ✅ Remove from localStorage for guest users
         const updatedCart = cartItems.filter((item) => getNormalizedFoodId(item) !== foodId);
@@ -230,24 +177,9 @@ export const CartProvider = ({ children }) => {
         );
 
         // ✅ Update in database for authenticated users
-        const apiUrl = getAPIUrl();
-        const response = await fetch(`${apiUrl}/cart/update/${foodId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ quantity }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setCartItems(data.cart?.items || []);
-          console.log('📝 Cart updated in database');
-        } else {
-          console.error('❌ Failed to update cart on server');
-          fetchCartFromDatabase(); // Rollback on error
-        }
+        const { data } = await api.put(`/cart/update/${foodId}`, { quantity });
+        setCartItems(data.cart?.items || []);
+        console.log('📝 Cart updated in database');
       } else {
         // ✅ Update in localStorage for guest users
         const updatedCart = cartItems.map((item) =>
@@ -267,19 +199,9 @@ export const CartProvider = ({ children }) => {
     try {
       if (user && token) {
         // ✅ Clear database for authenticated users
-        const apiUrl = getAPIUrl();
-        const response = await fetch(`${apiUrl}/cart/clear`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          setCartItems([]);
-          console.log('🧹 Cart cleared in database');
-        }
+        await api.delete('/cart/clear');
+        setCartItems([]);
+        console.log('🧹 Cart cleared in database');
       } else {
         // ✅ Clear localStorage for guest users
         setCartItems([]);

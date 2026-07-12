@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
-import { getAPIUrl } from '../../services/api';
+import api from '../../services/api';
 import './AdminSettings.css';
 
 const AdminSettings = () => {
@@ -70,14 +70,8 @@ const AdminSettings = () => {
 
   const fetchNotifications = async () => {
     try {
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-      }
+      const { data } = await api.get('/notifications');
+      setNotifications(data.notifications || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -94,31 +88,17 @@ const AdminSettings = () => {
 
     setNotificationLoading(true);
     try {
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/notifications/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: notificationForm.title,
-          message: notificationForm.message,
-          type: notificationForm.type,
-          userId: notificationForm.userId || null,
-        }),
+      await api.post('/notifications/create', {
+        title: notificationForm.title,
+        message: notificationForm.message,
+        type: notificationForm.type,
+        userId: notificationForm.userId || null,
       });
 
-      if (response.ok) {
-        setNotificationMessage('✅ Notification sent successfully!');
-        setNotificationForm({ title: '', message: '', type: 'system', userId: '' });
-        setTimeout(() => setNotificationMessage(''), 3000);
-        fetchNotifications();
-      } else {
-        const error = await response.json();
-        setNotificationMessage('❌ Failed to send notification');
-        setTimeout(() => setNotificationMessage(''), 3000);
-      }
+      setNotificationMessage('✅ Notification sent successfully!');
+      setNotificationForm({ title: '', message: '', type: 'system', userId: '' });
+      setTimeout(() => setNotificationMessage(''), 3000);
+      fetchNotifications();
     } catch (error) {
       console.error('Error sending notification:', error);
       setNotificationMessage('❌ Error sending notification');
@@ -132,15 +112,8 @@ const AdminSettings = () => {
     if (!window.confirm('Delete this notification?')) return;
     
     try {
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        fetchNotifications();
-      }
+      await api.delete(`/notifications/${notificationId}`);
+      fetchNotifications();
     } catch (error) {
       console.error('Error deleting notification:', error);
     }

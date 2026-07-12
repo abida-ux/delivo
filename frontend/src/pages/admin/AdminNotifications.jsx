@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Send, AlertCircle } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
-import { getAPIUrl } from '../../services/api';
+import api from '../../services/api';
 import './AdminNotifications.css';
 
 const AdminNotifications = () => {
@@ -50,44 +50,27 @@ const AdminNotifications = () => {
     setErrorMessage('');
 
     try {
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/notifications/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          message: formData.message,
-          type: formData.type,
-          userId: formData.userId || null, // null = broadcast
-        }),
+      await api.post('/notifications/create', {
+        title: formData.title,
+        message: formData.message,
+        type: formData.type,
+        userId: formData.userId || null,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setSuccessMessage(
-          formData.userId
-            ? `✅ Notification sent to user!`
-            : `✅ Notification broadcast to all users!`
-        );
-        // Reset form
-        setFormData({
-          title: '',
-          message: '',
-          type: 'system',
-          userId: '',
-        });
+      setSuccessMessage(
+        formData.userId
+          ? `✅ Notification sent to user!`
+          : `✅ Notification broadcast to all users!`
+      );
 
-        // Clear message after 3 seconds
-        setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        const errorData = await response.json();
-        setErrorMessage(
-          errorData.message || 'Failed to send notification'
-        );
-      }
+      setFormData({
+        title: '',
+        message: '',
+        type: 'system',
+        userId: '',
+      });
+
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error sending notification:', error);
       setErrorMessage('Error sending notification. Please try again.');

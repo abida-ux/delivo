@@ -25,7 +25,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import CheckoutModal from '../pages/customer/CheckoutModal';
-import { getAPIUrl } from '../services/api';
+import api from '../services/api';
 import './Navbar.css';
 import './NotificationModal.css';
 
@@ -68,17 +68,8 @@ const Navbar = () => {
     if (!token || !user) return;
 
     try {
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/notifications`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-      }
+      const { data } = await api.get('/notifications');
+      setNotifications(data.notifications || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -89,17 +80,8 @@ const Navbar = () => {
     if (!token) return;
 
     try {
-      const apiUrl = getAPIUrl();
-      const response = await fetch(`${apiUrl}/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setNotifications(notifications.filter(n => n._id !== notificationId));
-      }
+      await api.delete(`/notifications/${notificationId}`);
+      setNotifications((current) => current.filter((n) => n._id !== notificationId));
     } catch (error) {
       console.error('Error deleting notification:', error);
     }

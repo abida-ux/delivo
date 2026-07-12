@@ -1,16 +1,21 @@
 import axios from 'axios';
 
 // Determine API URL based on environment
+const PRODUCTION_API_URL = 'https://delivo-d5r8.onrender.com/api';
+
 const getAPIUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
+  }
+
+  if (import.meta.env.PROD) {
+    return PRODUCTION_API_URL;
   }
 
   return '/api';
 };
 
 const API_BASE_URL = getAPIUrl();
-console.log('✅ API_BASE_URL set to:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
