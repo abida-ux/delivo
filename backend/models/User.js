@@ -32,6 +32,80 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationCode: {
+    type: String,
+    select: false,
+  },
+  verificationCodeExpires: {
+    type: Date,
+    select: false,
+  },
+  verificationCodeUsed: {
+    type: Boolean,
+    default: false,
+    select: false,
+  },
+  verificationAttempts: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  verificationLockedUntil: {
+    type: Date,
+    select: false,
+  },
+  verificationResendCount: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  verificationResendWindowStart: {
+    type: Date,
+    select: false,
+  },
+  lastVerificationResend: {
+    type: Date,
+    select: false,
+  },
+  resetPasswordCode: {
+    type: String,
+    select: false,
+  },
+  resetPasswordExpires: {
+    type: Date,
+    select: false,
+  },
+  resetPasswordUsed: {
+    type: Boolean,
+    default: false,
+    select: false,
+  },
+  resetPasswordAttempts: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  resetPasswordLockedUntil: {
+    type: Date,
+    select: false,
+  },
+  passwordResetRequestCount: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  passwordResetWindowStart: {
+    type: Date,
+    select: false,
+  },
+  lastPasswordResetRequestedAt: {
+    type: Date,
+    select: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

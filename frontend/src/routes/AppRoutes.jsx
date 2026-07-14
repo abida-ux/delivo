@@ -14,6 +14,9 @@ const Orders = lazy(() => import("../pages/customer/Orders"));
 const OrderDetails = lazy(() => import("../pages/customer/OrderDetails"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Wishlist = lazy(() => import("../pages/Wishlist"));
+const Login = lazy(() => import("../pages/auth/Login"));
+const Signup = lazy(() => import("../pages/auth/Signup"));
+const VerifyEmail = lazy(() => import("../pages/auth/VerifyEmail"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
@@ -48,6 +51,7 @@ export default function AppRoutes() {
       <Route path="/customer/orders/:orderId" element={<OrderDetails />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Admin Routes - Protected */}
       <Route

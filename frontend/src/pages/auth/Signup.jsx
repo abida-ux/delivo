@@ -2,15 +2,12 @@ import { useState, useContext, useEffect } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { registerUser } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import './Auth.css';
 
 const Signup = ({ isModal = false }) => {
   const navigate = useNavigate();
 
-  // Use AuthContext for signup/login (SINGLE SOURCE OF TRUTH)
-  const { login } = useContext(AuthContext);
   // Use AuthModalContext only to close modal
   const { closeModal } = useContext(AuthModalContext);
 
@@ -66,21 +63,15 @@ const Signup = ({ isModal = false }) => {
 
       console.log('SIGNUP RESPONSE:', res);
 
-      // ✅ UPDATE AUTHCONTEXT (SINGLE SOURCE OF TRUTH)
-      login(res.user, res.token);
-
-      // ✅ CLOSE MODAL IF OPENED FROM NAVBAR
       if (isModal && closeModal) {
         closeModal();
       }
 
-      // ✅ RESET FORM
       setFormData(emptyForm);
       setError('');
 
-      // ✅ NAVIGATE HOME (300ms delay for modal animation)
       setTimeout(() => {
-        navigate('/');
+        navigate('/verify-email', { state: { email: payload.email } });
       }, 300);
 
     } catch (err) {

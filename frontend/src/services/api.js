@@ -106,6 +106,26 @@ export const registerUser = async (data) => {
   return res.data;
 };
 
+export const verifyEmail = async (data) => {
+  const res = await api.post('/users/verify-email', data);
+  return res.data;
+};
+
+export const resendVerificationCode = async (data) => {
+  const res = await api.post('/users/resend-verification-code', data);
+  return res.data;
+};
+
+export const requestPasswordReset = async (data) => {
+  const res = await api.post('/users/request-password-reset', data);
+  return res.data;
+};
+
+export const resetPassword = async (data) => {
+  const res = await api.post('/users/reset-password', data);
+  return res.data;
+};
+
 export const createUser = async (data) => {
   const res = await api.post('/users', data);
   return res.data;

@@ -3,6 +3,10 @@ const router = express.Router();
 const {
   registerUser,
   loginUser,
+  verifyEmail,
+  resendVerificationCode,
+  requestPasswordReset,
+  resetPassword,
   getUserProfile,
   updateUserProfile,
   getAllUsers,
@@ -12,6 +16,10 @@ const {
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-verification-code', resendVerificationCode);
+router.post('/request-password-reset', requestPasswordReset);
+router.post('/reset-password', resetPassword);
 router.post('/', createUser);
 router.get('/', getAllUsers);
 router.get('/:id', getUserProfile);

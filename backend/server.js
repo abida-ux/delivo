@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const transporter = require('./config/mail');
 const errorHandler = require('./middleware/errorMiddleware');
 
 // Import routes
@@ -114,6 +115,15 @@ const server = app.listen(PORT, () => {
   ║                                               ║
   ╚═══════════════════════════════════════════════╝
   `);
+
+  transporter.verify((error) => {
+    if (error) {
+      console.log('❌ SMTP Error');
+      console.log(error);
+    } else {
+      console.log('✅ SpaceMail SMTP Connected');
+    }
+  });
 });
 
 // Periodic cleanup: expire unpaid pending orders older than 1 minute
