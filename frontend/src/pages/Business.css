@@ -37,7 +37,16 @@
   margin-bottom: 25px;
 }
 
+.hero-actions {
+  display: flex;
+  justify-content: center;
+}
+
 .hero-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 12px 28px;
   background: var(--accent-yellow);
   color: var(--text-main);
@@ -48,12 +57,59 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Poppins', sans-serif;
+  text-decoration: none;
 }
 
 .hero-cta-btn:hover {
   background: #ffb700;
   box-shadow: 0 4px 12px rgba(255, 199, 0, 0.3);
   transform: translateY(-1px);
+}
+
+.partner-support-card {
+  background: white;
+  padding: 32px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 30px;
+}
+
+.partner-support-card h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+.partner-support-card p {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+
+.support-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.support-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.support-list li::before {
+  content: '•';
+  color: var(--accent-yellow);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .business-stats {
@@ -207,6 +263,18 @@
     margin-bottom: 20px;
   }
 
+  .partner-support-card {
+    padding: 24px 18px;
+  }
+
+  .partner-support-card h2 {
+    font-size: 20px;
+  }
+
+  .partner-support-card p {
+    font-size: 14px;
+  }
+
   .stat-item {
     flex-direction: column;
     text-align: center;
@@ -272,6 +340,26 @@
   .hero-content p {
     font-size: 13px;
     margin-bottom: 16px;
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
+  }
+
+  .partner-support-card {
+    padding: 20px 14px;
+  }
+
+  .partner-support-card h2 {
+    font-size: 18px;
+  }
+
+  .partner-support-card p {
+    font-size: 13px;
+  }
+
+  .support-list li {
+    font-size: 13px;
   }
 
   .hero-cta-btn {

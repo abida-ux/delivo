@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Clock, Zap, Star, Flame, Truck } from "lucide-react";
+import { Clock, Zap, Star, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
@@ -124,21 +124,7 @@ export default function Home() {
       {/* ===== 7. HOW IT WORKS STEPPER ===== */}
       <HowItWorks />
 
-      {/* ===== 8. CORPORATE BANNER ===== */}
-      <section className="corporate-banner">
-        <div className="corporate-content">
-          <div className="corporate-left">
-            <h2>Ordering for Your Team?</h2>
-            <p>Set up a corporate account and get exclusive benefits for your business</p>
-            <button className="corporate-btn">Setup Corporate Account</button>
-          </div>
-          <div className="corporate-right">
-            <Truck size={80} className="corporate-icon" />
-          </div>
-        </div>
-      </section>
-
-      {/* ===== 9. FOOTER ===== */}
+      {/* ===== 8. FOOTER ===== */}
       <footer className="footer">
         <div className="footer-content simplified-footer">
           <div className="footer-column">
