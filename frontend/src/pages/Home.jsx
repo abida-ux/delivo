@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Clock, Zap, Star, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
@@ -59,6 +59,9 @@ export default function Home() {
     navigate('/menu');
   };
 
+  const promoTouchStartXRef = useRef(null);
+  const promoTouchEndXRef = useRef(null);
+
   const handleCategorySelect = (categoryName) => {
     setSelectedCategory(categoryName);
     setTimeout(() => {
@@ -73,6 +76,34 @@ export default function Home() {
     setSelectedCategory(null);
   };
 
+  const handlePromoTouchStart = (event) => {
+    promoTouchStartXRef.current = event.touches[0]?.clientX;
+    setIsPromoPaused(true);
+  };
+
+  const handlePromoTouchMove = (event) => {
+    promoTouchEndXRef.current = event.touches[0]?.clientX;
+  };
+
+  const handlePromoTouchEnd = () => {
+    const startX = promoTouchStartXRef.current;
+    const endX = promoTouchEndXRef.current;
+    const minSwipeDistance = 50;
+
+    if (startX != null && endX != null) {
+      const deltaX = startX - endX;
+      if (deltaX > minSwipeDistance) {
+        setActivePromoIndex(prev => (prev + 1) % promos.length);
+      } else if (deltaX < -minSwipeDistance) {
+        setActivePromoIndex(prev => (prev - 1 + promos.length) % promos.length);
+      }
+    }
+
+    promoTouchStartXRef.current = null;
+    promoTouchEndXRef.current = null;
+    setIsPromoPaused(false);
+  };
+
   return (
     <div className="home-wrapper">
       {/* ===== 2. PROMOTIONS CAROUSEL ===== */}
@@ -81,6 +112,9 @@ export default function Home() {
           className="promotions-container"
           onMouseEnter={() => setIsPromoPaused(true)}
           onMouseLeave={() => setIsPromoPaused(false)}
+          onTouchStart={handlePromoTouchStart}
+          onTouchMove={handlePromoTouchMove}
+          onTouchEnd={handlePromoTouchEnd}
         >
           <div className="promo-viewport">
             <div
