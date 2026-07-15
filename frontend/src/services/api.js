@@ -179,6 +179,16 @@ export const verifyEmail = async (data) => {
   return res.data;
 };
 
+export const savePushSubscription = async (subscriptionData) => {
+  const res = await api.post('/notifications/push/subscribe', subscriptionData);
+  return res.data;
+};
+
+export const sendTestPush = async (payload = {}) => {
+  const res = await api.post('/notifications/push/send', payload);
+  return res.data;
+};
+
 export const resendVerificationCode = async (data) => {
   const res = await api.post('/users/resend-verification-code', data);
   return res.data;

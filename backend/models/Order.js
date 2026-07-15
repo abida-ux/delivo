@@ -14,6 +14,10 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  customerName: {
+    type: String,
+    required: false,
+  },
   items: [{
     foodId: {
       type: mongoose.Schema.Types.ObjectId,

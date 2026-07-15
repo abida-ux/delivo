@@ -6,6 +6,8 @@ const {
   markAsRead,
   deleteNotification,
   deleteAllNotifications,
+  savePushSubscription,
+  sendPushNotification,
 } = require('../controllers/notificationController');
 const { authenticate } = require('../middleware/authMiddleware');
 
@@ -26,5 +28,9 @@ router.delete('/:notificationId', deleteNotification);
 
 // Delete all notifications
 router.delete('/', deleteAllNotifications);
+
+// Browser push subscription management
+router.post('/push/subscribe', savePushSubscription);
+router.post('/push/send', sendPushNotification);
 
 module.exports = router;
