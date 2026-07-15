@@ -1,7 +1,7 @@
 const transporter = require('../config/mail');
 
 const buildMailOptions = (to, subject, html) => ({
-  from: process.env.MAIL_FROM || 'Delivo <info@delivo.buzz>',
+  from: process.env.MAIL_FROM,
   to,
   subject,
   html,
@@ -29,19 +29,33 @@ const buildEmailTemplate = (title, body, otp) => `
 `;
 
 const sendVerificationOTP = async (email, otp) => {
-  const subject = 'Verify Your Email Address';
-  const body = `Your verification code is:`;
-  const html = buildEmailTemplate('Verify Your Email Address', body, otp);
-
-  return transporter.sendMail(buildMailOptions(email, subject, html));
+  try {
+    const subject = 'Verify Your Email Address';
+    const body = `Your verification code is:`;
+    const html = buildEmailTemplate('Verify Your Email Address', body, otp);
+    
+    const result = await transporter.sendMail(buildMailOptions(email, subject, html));
+    console.log(`✅ Verification OTP sent to ${email} (Message ID: ${result.messageId})`);
+    return result;
+  } catch (error) {
+    console.error(`❌ Failed to send verification OTP to ${email}:`, error.message);
+    throw error;
+  }
 };
 
 const sendPasswordResetOTP = async (email, otp) => {
-  const subject = 'Password Reset Code';
-  const body = `Your password reset code is:`;
-  const html = buildEmailTemplate('Password Reset Code', body, otp);
-
-  return transporter.sendMail(buildMailOptions(email, subject, html));
+  try {
+    const subject = 'Password Reset Code';
+    const body = `Your password reset code is:`;
+    const html = buildEmailTemplate('Password Reset Code', body, otp);
+    
+    const result = await transporter.sendMail(buildMailOptions(email, subject, html));
+    console.log(`✅ Password reset OTP sent to ${email} (Message ID: ${result.messageId})`);
+    return result;
+  } catch (error) {
+    console.error(`❌ Failed to send password reset OTP to ${email}:`, error.message);
+    throw error;
+  }
 };
 
 module.exports = {

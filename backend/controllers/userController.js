@@ -172,6 +172,11 @@ exports.loginUser = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Account not verified. Please verify your email first.',
+        verification: {
+          required: true,
+          resendEndpoint: '/api/users/resend-verification-code',
+          instructions: 'POST your email to the resend endpoint to receive a new code',
+        },
       });
     }
 

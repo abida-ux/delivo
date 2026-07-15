@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { loginUser } from '../../services/api';
+import { loginUser, verifyEmail, resendVerificationCode } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { AuthModalContext } from '../../context/AuthModalContext';
@@ -16,6 +16,11 @@ const Login = ({ isModal = false }) => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showVerifySection, setShowVerifySection] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [verifyMessage, setVerifyMessage] = useState('');
 
   const emptyForm = {
     email: '',
@@ -79,9 +84,60 @@ const Login = ({ isModal = false }) => {
 
     } catch (err) {
       console.error('LOGIN ERROR:', err);
-      alert(err.response?.data?.message || 'Login failed');
+      const remote = err.response?.data;
+      if (remote?.verification?.required) {
+        setShowVerifySection(true);
+        setVerifyMessage(remote?.message || 'Account not verified.');
+        // ensure email field is set
+        setFormData((f) => ({ ...f, email: formData.email }));
+      } else {
+        alert(remote?.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifySubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.email || !otp) return alert('Email and code are required');
+
+    try {
+      setVerifyLoading(true);
+      const res = await verifyEmail({ email: formData.email, code: otp });
+      setVerifyMessage(res.message || 'Email verified');
+
+      // Try logging in again automatically
+      const loginRes = await loginUser(formData);
+      login(loginRes.user, loginRes.token);
+      if (isModal) closeModal();
+      setShowVerifySection(false);
+      setFormData(emptyForm);
+      setTimeout(() => {
+        if (loginRes.user?.role === 'admin') navigate('/admin');
+        else if (loginRes.user?.role === 'restaurant') navigate('/restaurant-dashboard');
+        else if (loginRes.user?.role === 'rider') navigate('/rider-dashboard');
+        else navigate('/');
+      }, 300);
+    } catch (error) {
+      console.error('VERIFY ERROR', error);
+      alert(error.response?.data?.message || 'Verification failed');
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!formData.email) return alert('Please enter your email to resend code');
+    try {
+      setResendLoading(true);
+      const res = await resendVerificationCode({ email: formData.email });
+      setVerifyMessage(res.message || 'If an account exists, a code was sent');
+    } catch (err) {
+      console.error('RESEND ERROR', err);
+      alert(err.response?.data?.message || 'Resend failed');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -138,6 +194,46 @@ const Login = ({ isModal = false }) => {
         </button>
 
       </form>
+
+      {showVerifySection && (
+        <div className="verify-section">
+          <p className="verify-message">{verifyMessage}</p>
+          <form onSubmit={handleVerifySubmit} className="verify-form">
+            <div className="form-group">
+              <label htmlFor="verify-email">Email</label>
+              <input
+                id="verify-email"
+                name="verify-email"
+                value={formData.email}
+                onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
+                placeholder="Email used to register"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="otp">Verification Code</label>
+              <input
+                id="otp"
+                name="otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter code from email"
+                required
+              />
+            </div>
+
+            <div className="verify-actions">
+              <button type="submit" className="auth-submit-btn" disabled={verifyLoading}>
+                {verifyLoading ? 'Verifying...' : 'Verify Email'}
+              </button>
+              <button type="button" className="auth-link-btn" onClick={handleResend} disabled={resendLoading}>
+                {resendLoading ? 'Resending...' : 'Resend Code'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {!isModal && (
         <p className="auth-footer">
