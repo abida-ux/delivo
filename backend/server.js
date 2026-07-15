@@ -1,16 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const envPath = path.join(__dirname, '.env');
 
+const envPath = path.join(__dirname, '.env');
 if (fs.existsSync(envPath)) {
-  const envResult = dotenv.config({ path: envPath, override: true });
-  if (envResult.error) {
-    console.warn('⚠️ Failed to load backend .env:', envResult.error);
-  }
-} else {
-  console.warn('⚠️ Backend .env file not found, continuing with environment variables only.');
+  dotenv.config({ path: envPath });
 }
+
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -122,18 +118,50 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-const server = app.listen(PORT, () => {
+const LISTEN_HOST = '0.0.0.0';
+const server = app.listen(PORT, LISTEN_HOST, () => {
   console.log(`
   ╔═══════════════════════════════════════════════╗
   ║                                               ║
   ║   🍕 DELIVO BACKEND SERVER                   ║
   ║   ✅ Server running on port ${PORT}               ║
   ║   🗄️  Environment: ${NODE_ENV}                    ║
+  ║   🌐 Listening on ${LISTEN_HOST}                   ║
   ║   🔐 CORS enabled for: localhost & delivo.co.ke
   ║                                               ║
   ╚═══════════════════════════════════════════════╝
   `);
   console.log('🚀 Render startup complete');
+});
+
+server.on('error', (error) => {
+  if (error.syscall !== 'listen') {
+    console.error('❌ Server error:', error);
+    process.exit(1);
+  }
+
+  const bind = typeof PORT === 'string' ? `Pipe ${PORT}` : `Port ${PORT}`;
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`❌ ${bind} requires elevated privileges.`);
+      break;
+    case 'EADDRINUSE':
+      console.error(`❌ ${bind} is already in use.`);
+      break;
+    default:
+      console.error('❌ Server listen error:', error);
+  }
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
 });
 
 // Periodic cleanup: expire unpaid pending orders older than 1 minute
