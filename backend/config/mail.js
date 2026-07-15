@@ -13,15 +13,22 @@ const normalizeMailPort = (value) => {
   return Number.isInteger(port) && port > 0 ? port : 465;
 };
 
-const mailPort = normalizeMailPort(process.env.MAIL_PORT || 465);
+const getEnv = (primary, fallback) => process.env[primary] || process.env[fallback];
+const mailHost = getEnv('MAIL_HOST', 'SMTP_HOST');
+const mailPort = normalizeMailPort(getEnv('MAIL_PORT', 'SMTP_PORT') || 465);
+const mailSecure = normalizeMailSecureOption(getEnv('MAIL_SECURE', 'SMTP_SECURE'));
+const mailUser = getEnv('MAIL_USER', 'SMTP_USER');
+const mailPass = getEnv('MAIL_PASS', 'SMTP_PASS');
+const mailFrom = getEnv('MAIL_FROM', 'SMTP_FROM') || 'Delivo <info@delivo.buzz>';
+
 const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
+  host: mailHost,
   port: mailPort,
-  secure: normalizeMailSecureOption(process.env.MAIL_SECURE),
-  auth: process.env.MAIL_USER && process.env.MAIL_PASS
+  secure: mailSecure,
+  auth: mailUser && mailPass
     ? {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
+        user: mailUser,
+        pass: mailPass,
       }
     : undefined,
   pool: true,
@@ -33,7 +40,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const verifyTransporter = async () => {
-  if (!process.env.MAIL_HOST || !process.env.MAIL_USER || !process.env.MAIL_PASS) {
+  if (!mailHost || !mailUser || !mailPass) {
     console.warn('⚠️ SMTP credentials are incomplete. Email delivery will be skipped until configured.');
     return false;
   }
@@ -46,7 +53,7 @@ const verifyTransporter = async () => {
     console.error('❌ SpaceMail SMTP verification failed:', {
       message: error.message,
       code: error.code,
-      host: process.env.MAIL_HOST,
+      host: mailHost,
     });
     return false;
   }

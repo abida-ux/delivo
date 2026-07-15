@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Food = require('../models/Food');
+const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 
 // @desc Create order
@@ -92,9 +93,19 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    const parsedDeliveryFee = Number(deliveryFee) || 0;
+    const appSettings = (await AppSettings.findOne()) || {};
+    const freeDeliveryEnabled = appSettings.freeDeliveryEnabled !== false;
+    const freeDeliveryMinimum = Number(appSettings.freeDeliveryMinimum) || 0;
+    const isFreeDelivery = freeDeliveryEnabled && subtotal >= freeDeliveryMinimum;
+
+    let parsedDeliveryFee = Number(deliveryFee);
+    if (Number.isNaN(parsedDeliveryFee) || parsedDeliveryFee < 0) {
+      parsedDeliveryFee = 0;
+    }
+    const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 0;
+    const finalDeliveryFee = isFreeDelivery ? 0 : (deliveryFee !== undefined ? parsedDeliveryFee : deliveryFeeFromSettings);
     const parsedTax = Number(tax) || 0;
-    const totalPrice = subtotal + parsedDeliveryFee + parsedTax;
+    const totalPrice = subtotal + finalDeliveryFee + parsedTax;
 
     // ✅ Create order with userId (if authenticated) or guest info (if guest)
     const order = await Order.create({
@@ -103,7 +114,7 @@ exports.createOrder = async (req, res, next) => {
       guestPhone: guestPhone || undefined,
       items: populatedItems,
       totalPrice,
-      deliveryFee: parsedDeliveryFee,
+      deliveryFee: finalDeliveryFee,
       tax: parsedTax,
       deliveryAddress,
       paymentMethod: 'mpesa',
@@ -111,6 +122,7 @@ exports.createOrder = async (req, res, next) => {
       mpesaNumber,
       paymentStatus: 'pending',
       specialInstructions: specialInstructions || '',
+      freeDeliveryApplied: isFreeDelivery,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
 

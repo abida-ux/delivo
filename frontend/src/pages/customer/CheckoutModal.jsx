@@ -14,7 +14,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     enabled: true,
     amount: 20,
     freeDeliveryEnabled: false,
-    freeDeliveryMinimum: 2500,
+    freeDeliveryMinimum: 0,
   });
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: '',
@@ -38,8 +38,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
         setDeliverySettings({
           enabled: settings.deliveryFeeEnabled !== false,
           amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
-          freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
-          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
+          freeDeliveryEnabled: settings.freeDeliveryEnabled !== false,
+          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 0,
         });
       } catch (error) {
         console.error('Error loading app settings:', error);
@@ -49,17 +49,29 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     if (isOpen) {
       loadSettings();
     }
+
+    const onSettingsUpdated = () => {
+      if (isOpen) loadSettings();
+    };
+
+    const storageHandler = (e) => {
+      if (e.key === 'app_settings_updated') onSettingsUpdated();
+    };
+    window.addEventListener('storage', storageHandler);
+    window.addEventListener('app_settings_updated', onSettingsUpdated);
+
+    return () => {
+      window.removeEventListener('app_settings_updated', onSettingsUpdated);
+      window.removeEventListener('storage', storageHandler);
+    };
   }, [isOpen]);
 
-  const isFreeDeliveryEligible =
+<<<<<<< HEAD
+  const isFreeDelivery =
     cartItems.length > 0 &&
-    deliverySettings.enabled &&
     deliverySettings.freeDeliveryEnabled &&
     cartTotal >= deliverySettings.freeDeliveryMinimum;
-
-  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled
-    ? (isFreeDeliveryEligible ? 0 : deliverySettings.amount)
-    : 0;
+  const deliveryFee = cartItems.length > 0 && !isFreeDelivery && deliverySettings.enabled ? deliverySettings.amount : 0;
   const tax = (cartTotal * 0.1).toFixed(2);
   const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
 
@@ -81,8 +93,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     }
     if (!deliveryInfo.mpesaNumber.trim()) {
       newErrors.mpesaNumber = 'M-Pesa number is required';
-    } else if (!/^07[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) && !/^\+2547[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) ) {
-      newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number';
+    } else {
+      const normalizedMpesaNumber = deliveryInfo.mpesaNumber.replace(/\s+/g, '');
+      if (
+        !/^0[17][0-9]{8}$/.test(normalizedMpesaNumber) &&
+        !/^\+254[17][0-9]{8}$/.test(normalizedMpesaNumber) &&
+        !/^254[17][0-9]{8}$/.test(normalizedMpesaNumber)
+      ) {
+        newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number starting with 07 or 01';
+      }
     }
     if (!user && !deliveryInfo.email.trim()) {
       newErrors.email = 'Email is required for guest checkout';

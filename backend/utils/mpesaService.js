@@ -2,10 +2,24 @@ const axios = require('axios');
 
 const normalizePhone = (phone = '') => {
   const digits = phone.replace(/\D/g, '');
-  if (digits.length === 10 && digits.startsWith('0')) return `254${digits.slice(1)}`;
-  if (digits.length === 12 && digits.startsWith('254')) return digits;
-  if (digits.length === 9 && digits.startsWith('7')) return `254${digits}`;
-  throw new Error('Invalid M-Pesa phone number. Use 07XXXXXXXX or +2547XXXXXXXX.');
+
+  if (digits.length === 10 && digits.startsWith('0')) {
+    return `254${digits.slice(1)}`;
+  }
+
+  if (digits.length === 9 && (digits.startsWith('7') || digits.startsWith('1'))) {
+    return `254${digits}`;
+  }
+
+  if (digits.length === 12 && (digits.startsWith('2547') || digits.startsWith('2541'))) {
+    return digits;
+  }
+
+  if (digits.length === 14 && (digits.startsWith('002547') || digits.startsWith('002541'))) {
+    return digits.slice(2);
+  }
+
+  throw new Error('Invalid M-Pesa phone number. Use a Kenyan number starting with 07 or 01, such as 0712345678, 0112345678, +254712345678, or +254112345678.');
 };
 
 const getBaseUrl = () => {
