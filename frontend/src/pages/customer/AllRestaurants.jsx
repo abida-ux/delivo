@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Star, MapPin, Clock, Search } from 'lucide-react';
 import { getAllRestaurants } from '../../services/api';
+import { resolveImageUrl, handleImageError } from '../../utils/placeholderImage';
 import './AllRestaurants.css';
 
 const AllRestaurants = () => {
@@ -126,8 +127,9 @@ const AllRestaurants = () => {
             >
               <div className="restaurant-image">
                 <img
-                  src={restaurant.image || 'https://placehold.co/300x200'}
+                  src={resolveImageUrl(restaurant.image)}
                   alt={restaurant.name}
+                  onError={handleImageError}
                 />
                 <div className="restaurant-badge">
                   <Star size={16} fill="currentColor" />

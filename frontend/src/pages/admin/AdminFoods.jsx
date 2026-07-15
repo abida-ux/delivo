@@ -4,6 +4,7 @@ import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import AdminEditFoodModal from './AdminEditFoodModal';
 import AdminCreateFoodModal from './AdminCreateFoodModal';
 import { getAllFoods, deleteFood, updateFood, createFood, getAllRestaurants } from '../../services/api';
+import { resolveImageUrl } from '../../utils/placeholderImage';
 import '../pages.css';
 import './AdminFoods.css';
 
@@ -144,7 +145,7 @@ const AdminFoods = () => {
                   <div
                     className="food-image"
                     style={{
-                      backgroundImage: `url(${food.image || 'https://placehold.co/250x200'})`,
+                      backgroundImage: `url(${resolveImageUrl(food.image)})`,
                     }}
                   >
                     <span className="food-rating">⭐ {food.rating || 4.5}</span>

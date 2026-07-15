@@ -3,6 +3,7 @@ import { Star, Search, Plus, Check, Coffee, Utensils, UtensilsCrossed, Flame, Ma
 import { getAllFoods } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
+import { resolveImageUrl, handleImageError } from '../utils/placeholderImage';
 import './Menu.css';
 
 const Menu = () => {
@@ -154,9 +155,10 @@ const Menu = () => {
                   onClick={() => handleSelectSuggestion(food)}
                 >
                   <img
-                    src={food.image || 'https://placehold.co/40x40'}
+                    src={resolveImageUrl(food.image)}
                     alt={food.name}
                     className="suggestion-image"
+                    onError={handleImageError}
                   />
                   <div className="suggestion-content">
                     <div className="suggestion-name">{food.name}</div>
@@ -197,8 +199,9 @@ const Menu = () => {
             <div key={food._id} className="food-menu-card">
               <div className="food-image-wrapper">
                 <img
-                  src={food.image || 'https://placehold.co/300x200'}
+                  src={resolveImageUrl(food.image)}
                   alt={food.name}
+                  onError={handleImageError}
                 />
                 <div className="food-badge">
                   <Star size={16} fill="currentColor" />

@@ -4,6 +4,7 @@ import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllRestaurants, deleteRestaurant, updateRestaurant, createRestaurant } from '../../services/api';
 import AdminEditRestaurantModal from './AdminEditRestaurantModal';
 import AdminCreateRestaurantModal from './AdminCreateRestaurantModal';
+import { resolveImageUrl } from '../../utils/placeholderImage';
 import '../pages.css';
 import './Restaurants.css';
 
@@ -132,7 +133,7 @@ const Restaurants = () => {
                     <div
                       className="restaurant-image"
                       style={{
-                        backgroundImage: `url(${restaurant.bannerImage || 'https://placehold.co/300x200'})`,
+                        backgroundImage: `url(${resolveImageUrl(restaurant.bannerImage)})`,
                       }}
                     >
                       <div className="restaurant-status">

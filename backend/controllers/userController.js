@@ -137,7 +137,14 @@ exports.registerUser = async (req, res, next) => {
   try {
     const { name, email, password, role, phone } = req.body;
 
+    console.log('[auth] registration request received', {
+      email,
+      phone: phone ? 'provided' : 'missing',
+      role: role || 'customer',
+    });
+
     if (!name || !email || !password || !phone) {
+      console.warn('[auth] registration validation failed: missing required fields', { email });
       return res.status(400).json({
         success: false,
         message: 'Name, email, phone, and password are required.',
@@ -146,6 +153,7 @@ exports.registerUser = async (req, res, next) => {
 
     const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
     if (!emailRegex.test(email)) {
+      console.warn('[auth] registration validation failed: invalid email', { email });
       return res.status(400).json({
         success: false,
         message: 'Please provide a valid email address.',
@@ -153,13 +161,17 @@ exports.registerUser = async (req, res, next) => {
     }
 
     if (password.length < 6) {
+      console.warn('[auth] registration validation failed: password too short', { email });
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 6 characters.',
       });
     }
 
+    console.log('[auth] registration input validation passed', { email });
+
     const existingUser = await User.findOne({ email });
+    console.log('[auth] registration user lookup completed', { email, existingUser: !!existingUser });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -186,37 +198,55 @@ exports.registerUser = async (req, res, next) => {
       verificationAttempts: 0,
     });
 
+    console.log('[auth] user saved to database', { userId: user._id, email: user.email });
+
+    let emailDelivered = false;
     try {
       console.log('[auth] backend -> creating verification code', { userId: user._id, email: user.email });
       await createVerificationCode(user);
       console.log('[auth] backend <- verification code created and email flow completed', { userId: user._id, email: user.email });
-
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully. A verification code has been sent to your email.',
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      });
+      emailDelivered = true;
     } catch (error) {
-      console.error('[auth] backend registration email flow failed', {
+      console.error('[auth] registration email flow failed', {
         userId: user._id,
         email: user.email,
-        error: error.message,
-      });
-      await User.findByIdAndDelete(user._id).catch((cleanupError) => {
-        console.error('[auth] failed to rollback newly created user after email delivery failure', cleanupError);
-      });
-
-      return res.status(503).json({
-        success: false,
-        message: 'We couldn\'t send your verification email at the moment. Please try again in a few moments.',
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        command: error.command,
+        response: error.response,
       });
     }
+
+    console.log('[auth] registration completed', {
+      userId: user._id,
+      email: user.email,
+      emailDelivered,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: emailDelivered
+        ? 'User registered successfully. A verification code has been sent to your email.'
+        : 'User registered successfully. Your account was created, but we could not send the verification email right now. Please try the resend option later.',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      verification: {
+        required: true,
+        emailDelivered,
+        resendEndpoint: '/api/users/resend-verification-code',
+      },
+    });
   } catch (error) {
+    console.error('[auth] registration controller crashed', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+    });
     next(error);
   }
 };

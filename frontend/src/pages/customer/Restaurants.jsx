@@ -3,6 +3,7 @@ import { Star, Clock, ShoppingBag, Plus, Minus, Heart, Share2, ShieldCheck, X, L
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRestaurantById, getFoodsByRestaurant, createOrder } from '../../services/api';
 import { useCart } from '../../context/CartContext';
+import { resolveImageUrl, handleImageError } from '../../utils/placeholderImage';
 import './Restaurants.css';
 
 const Restaurants = () => {
@@ -172,7 +173,7 @@ const Restaurants = () => {
       <div
         className="res-hero-wrapper"
         style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.75)), url(${restaurant.bannerImage})`
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.75)), url(${resolveImageUrl(restaurant.bannerImage)})`
         }}
       >
         <div className="res-hero-top-actions">
@@ -239,7 +240,7 @@ const Restaurants = () => {
                       </div>
 
                       <div>
-                        <img src={item.image} alt={item.name} />
+                        <img src={resolveImageUrl(item.image)} alt={item.name} onError={handleImageError} />
 
                         {cart[item._id] ? (
                           <div className="cart-controls">
