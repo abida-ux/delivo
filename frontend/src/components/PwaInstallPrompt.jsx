@@ -5,24 +5,24 @@ const PwaInstallPrompt = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isStandalone) {
+      return undefined;
+    }
+
     if (!('serviceWorker' in navigator)) {
       return undefined;
     }
 
     const registerServiceWorker = async () => {
       try {
-        await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`);
       } catch (error) {
         console.error('Service worker registration failed', error);
       }
     };
 
     const handleBeforeInstallPrompt = (event) => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      if (isStandalone) {
-        return;
-      }
-
       event.preventDefault();
       setDeferredPrompt(event);
       setIsVisible(true);
@@ -38,11 +38,18 @@ const PwaInstallPrompt = () => {
 
     registerServiceWorker();
 
+    const timer = window.setTimeout(() => {
+      if (!deferredPrompt) {
+        setIsVisible(true);
+      }
+    }, 8000);
+
     return () => {
+      window.clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
