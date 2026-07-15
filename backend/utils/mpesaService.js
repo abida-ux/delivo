@@ -123,8 +123,38 @@ const sendMpesaStkPush = async ({ phoneNumber, amount, accountReference, transac
   }
 };
 
+const queryMpesaStkStatus = async ({ checkoutRequestId }) => {
+  if (!checkoutRequestId) throw new Error('Checkout request ID is required');
+
+  const timestamp = getTimestamp();
+  const password = getPassword(timestamp);
+  const shortcode = process.env.MPESA_BUSINESS_SHORTCODE || process.env.SHORTCODE;
+
+  const payload = {
+    BusinessShortCode: shortcode,
+    Password: password,
+    Timestamp: timestamp,
+    CheckoutRequestID: checkoutRequestId,
+  };
+
+  const token = await getAccessToken();
+  const url = `${getBaseUrl()}/mpesa/stkpushquery/v1/query`;
+  const headers = { Authorization: `Bearer ${token}` };
+
+  try {
+    const response = await axios.post(url, payload, { headers });
+    return response.data;
+  } catch (error) {
+    const details = error.response?.data || error.message;
+    const status = error.response?.status;
+    const message = `STK status query failed${status ? ` (${status})` : ''}: ${JSON.stringify(details)}`;
+    throw new Error(message);
+  }
+};
+
 module.exports = {
   sendMpesaStkPush,
+  queryMpesaStkStatus,
   normalizePhone,
   getBaseUrl,
 };

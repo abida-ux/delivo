@@ -11,13 +11,13 @@ exports.createOrder = async (req, res, next) => {
       userId,
       guestEmail,
       guestPhone,
+      customerName,
       items,
       deliveryAddress,
       specialInstructions,
       whatsappNumber,
       mpesaNumber,
       deliveryFee = 20,
-      tax = 0,
     } = req.body;
 
     console.log('🛒 Creating order with data:', {
@@ -25,19 +25,19 @@ exports.createOrder = async (req, res, next) => {
       isGuest: !userId,
       guestEmail,
       guestPhone,
+      customerName,
       itemsCount: items?.length,
       deliveryAddress,
       whatsappNumber,
       mpesaNumber,
       deliveryFee,
-      tax,
     });
 
     // ✅ Allow either userId (authenticated) or guest info (guest checkout)
-    if (!userId && !guestEmail) {
+    if (!userId && !customerName) {
       return res.status(400).json({
         success: false,
-        message: 'Either User ID or guest email is required',
+        message: 'Either a logged-in user or a customer name is required',
       });
     }
 
@@ -104,8 +104,7 @@ exports.createOrder = async (req, res, next) => {
     }
     const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 0;
     const finalDeliveryFee = isFreeDelivery ? 0 : (deliveryFee !== undefined ? parsedDeliveryFee : deliveryFeeFromSettings);
-    const parsedTax = Number(tax) || 0;
-    const totalPrice = subtotal + finalDeliveryFee + parsedTax;
+    const totalPrice = subtotal + finalDeliveryFee;
 
     // ✅ Create order with userId (if authenticated) or guest info (if guest)
     const order = await Order.create({
@@ -115,11 +114,12 @@ exports.createOrder = async (req, res, next) => {
       items: populatedItems,
       totalPrice,
       deliveryFee: finalDeliveryFee,
-      tax: parsedTax,
+      tax: 0,
       deliveryAddress,
       paymentMethod: 'mpesa',
       whatsappNumber,
       mpesaNumber,
+      customerName: customerName || undefined,
       paymentStatus: 'pending',
       specialInstructions: specialInstructions || '',
       freeDeliveryApplied: isFreeDelivery,
@@ -141,16 +141,21 @@ exports.createOrder = async (req, res, next) => {
 
       console.log('✅ M-Pesa STK push initiated:', order.checkoutRequestId);
     } catch (pushError) {
+      const errorDetail = pushError.message || 'Unknown M-Pesa error';
+      const isDuplicateSession = /Duplicated MSISDN|USSD Session|existing USSD/i.test(errorDetail);
+
       order.paymentStatus = 'failed';
       order.status = 'cancelled';
-      order.failureReason = pushError.message || 'M-Pesa STK push failed';
+      order.failureReason = errorDetail;
       await order.save();
 
-      const errorDetail = pushError.message || 'Unknown M-Pesa error';
       console.error('❌ M-Pesa STK push failed:', errorDetail);
+
       return res.status(502).json({
         success: false,
-        message: 'Payment request failed. Please try again.',
+        message: isDuplicateSession
+          ? 'M-Pesa is already processing a request for this number. Please complete or cancel the existing prompt first, then try again.'
+          : 'Payment request failed. Please try again.',
         error: errorDetail,
       });
     }
