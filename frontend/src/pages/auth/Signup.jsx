@@ -81,31 +81,22 @@ const Signup = ({ isModal = false }) => {
       sessionStorage.setItem('pendingVerificationEmail', payload.email);
       setVerificationEmail(payload.email);
       setVerificationSuccess(false);
-      setVerifyMessage('Preparing your verification code...');
+      setVerifyMessage('A verification email is being prepared for your inbox. Please check your email and return here to enter the code.');
       setOtp('');
       setError('');
 
-<<<<<<< HEAD
-      navigate('/verify-email', {
-        state: {
-          email: payload.email,
-          expiresAt: Date.now() + 10 * 60 * 1000,
-          message: 'We\'ve sent a 6-digit verification code to your email.',
-        },
-      });
-=======
+      console.log('[auth] signup submit starting', { email: payload.email, isModal });
       const res = await registerUser(payload);
+      console.log('[auth] signup submit completed', { message: res?.message, email: payload.email });
       const elapsed = Date.now() - startedAt;
       const remainingDelay = Math.max(0, 1000 - elapsed);
->>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
 
       if (remainingDelay > 0) {
         await new Promise((resolve) => setTimeout(resolve, remainingDelay));
       }
 
       setShowVerification(true);
-      const fallbackCode = res?.verificationCode ? ` Verification code: ${res.verificationCode}` : '';
-      setVerifyMessage((res?.message || 'Account created. Enter the 6-digit code sent to your email to finish verification.') + fallbackCode);
+      setVerifyMessage(res?.message || 'A verification email has been sent to your inbox. Please enter the 6-digit code from that email to finish verifying your account.');
       setFormData((prev) => ({ ...emptyForm, email: payload.email }));
       setTimeout(() => {
         otpInputRef.current?.focus();
@@ -115,7 +106,7 @@ const Signup = ({ isModal = false }) => {
       if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('user already exists')) {
         setVerificationEmail(formData.email);
         setShowVerification(true);
-        setVerifyMessage('An account with this email already exists. Please enter the verification code sent to your email.');
+        setVerifyMessage('An account with this email already exists. Please enter the verification code from the email sent to your inbox.');
         setOtp('');
         setError('');
       } else {
@@ -162,8 +153,7 @@ const Signup = ({ isModal = false }) => {
     try {
       setResendLoading(true);
       const res = await resendVerificationCode({ email: verificationEmail });
-      const fallbackCode = res?.verificationCode ? ` Verification code: ${res.verificationCode}` : '';
-      setVerifyMessage((res?.message || 'A new verification code was sent.') + fallbackCode);
+      setVerifyMessage(res?.message || 'A new verification email has been sent to your inbox.');
       setError('');
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Could not resend code';

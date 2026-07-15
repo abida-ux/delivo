@@ -98,8 +98,9 @@ const createVerificationCode = async (user) => {
   await applyVerificationOTP(user, otp, false);
 
   try {
+    console.log('[auth] backend -> sending verification email', { email: user.email });
     await sendVerificationEmail(user.email, otp);
-    console.log('[auth] verification email delivered');
+    console.log('[auth] backend <- verification email delivered', { email: user.email });
     return { delivered: true };
   } catch (error) {
     console.error('[auth] verification email delivery failed', {
@@ -166,7 +167,12 @@ exports.registerUser = async (req, res, next) => {
       });
     }
 
-    console.log('[auth] registration request received');
+    console.log('[auth] backend <- registration request', {
+      name,
+      email,
+      phone,
+      role: role || 'customer',
+    });
 
     const user = await User.create({
       name,
@@ -181,7 +187,9 @@ exports.registerUser = async (req, res, next) => {
     });
 
     try {
+      console.log('[auth] backend -> creating verification code', { userId: user._id, email: user.email });
       await createVerificationCode(user);
+      console.log('[auth] backend <- verification code created and email flow completed', { userId: user._id, email: user.email });
 
       res.status(201).json({
         success: true,
@@ -194,6 +202,11 @@ exports.registerUser = async (req, res, next) => {
         },
       });
     } catch (error) {
+      console.error('[auth] backend registration email flow failed', {
+        userId: user._id,
+        email: user.email,
+        error: error.message,
+      });
       await User.findByIdAndDelete(user._id).catch((cleanupError) => {
         console.error('[auth] failed to rollback newly created user after email delivery failure', cleanupError);
       });
@@ -376,15 +389,18 @@ exports.resendVerificationCode = async (req, res, next) => {
       const otp = generateOTP();
       console.log('[auth] resending verification OTP');
       await applyVerificationOTP(user, otp, true);
-<<<<<<< HEAD
+
       try {
+        console.log('[auth] backend -> resending verification email', { email: user.email });
         await sendVerificationEmail(user.email, otp);
-        console.log('[auth] verification resend email delivered');
+        console.log('[auth] backend <- verification resend email delivered', { email: user.email });
       } catch (error) {
         console.error('[auth] verification resend email delivery failed', {
           email: user.email,
           error: error.message,
           code: error.code,
+          command: error.command,
+          response: error.response,
         });
         await clearVerificationOTP(user);
         return res.status(503).json({
@@ -392,28 +408,6 @@ exports.resendVerificationCode = async (req, res, next) => {
           message: 'We couldn\'t send your verification email at the moment. Please try again in a few moments.',
         });
       }
-=======
-
-      let delivered = true;
-      try {
-        await Promise.race([
-          sendVerificationEmail(user.email, otp),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Email delivery timed out')), EMAIL_SEND_TIMEOUT_MS)),
-        ]);
-      } catch (error) {
-        delivered = false;
-        console.error(`⚠️ Resend verification email could not be sent to ${user.email}:`, error.message);
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: delivered
-          ? 'If an account exists, a new verification code has been sent'
-          : 'We could not send the email right now, but your verification code is below.',
-        verificationCode: delivered ? undefined : otp,
-        emailDeliveryFailed: !delivered,
-      });
->>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
     }
 
     res.status(200).json({

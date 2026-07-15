@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const transporter = require('./config/mail');
+const { isAllowedOrigin } = require('./config/cors');
 const errorHandler = require('./middleware/errorMiddleware');
 
 // Import routes
@@ -47,20 +48,9 @@ app.use((req, res, next) => {
 });
 
 // CORS configuration - Works for BOTH development and production
-const allowedOrigins = new Set([
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5174',
-]);
-
-if (process.env.FRONTEND_URL) {
-  allowedOrigins.add(process.env.FRONTEND_URL);
-}
-
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.has(origin) || origin.includes('localhost') || /^https:\/\/.*\.vercel\.app$/i.test(origin)) {
+    if (isAllowedOrigin(origin)) {
       console.log(`✅ CORS: Allowed origin: ${origin || 'no-origin'}`);
       return callback(null, true);
     }

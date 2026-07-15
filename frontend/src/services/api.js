@@ -21,8 +21,10 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    Accept: 'application/json',
   },
   timeout: 30000,
+  withCredentials: true,
 });
 
 let foodsCache = null;
@@ -150,7 +152,18 @@ export const loginUser = async (data) => {
 };
 
 export const registerUser = async (data) => {
+  console.log('[auth] frontend -> register request', {
+    endpoint: '/users/register',
+    baseURL: API_BASE_URL,
+    payload: {
+      name: data?.name,
+      email: data?.email,
+      phone: data?.phone,
+    },
+  });
+
   const res = await api.post('/users/register', data);
+  console.log('[auth] frontend <- register response', res?.data);
   return res.data;
 };
 
