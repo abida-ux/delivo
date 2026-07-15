@@ -95,7 +95,8 @@
 
 /* CONTROLS ARROWS */
 .trending-slider-controls {
-  display: none;
+  display: flex;
+  gap: 8px;
 }
 
 .arrow-btn {
@@ -118,15 +119,18 @@
   transform: scale(1.05);
 }
 
-/* RESPONSIVE GRID LAYOUT */
+/* HORIZONTAL SCROLL LAYOUT */
 .trending-carousel-track {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0;
+  padding: 8px 2px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -142,8 +146,8 @@
 
 /* MODERN MINIMALIST FOOD CARD */
 .food-card {
-  flex: none;
-  width: 100%;
+  flex: 0 0 260px;
+  width: 260px;
   background: #ffffff;
   border-radius: 16px;
   overflow: hidden;
@@ -322,8 +326,12 @@
   }
   
   .trending-carousel-track {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 14px;
+  }
+
+  .food-card {
+    flex-basis: 240px;
+    width: 240px;
   }
 }
 
@@ -342,8 +350,12 @@
   }
   
   .trending-carousel-track {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 12px;
+  }
+
+  .food-card {
+    flex-basis: 220px;
+    width: 220px;
   }
 
   .food-image-wrapper {
@@ -370,8 +382,12 @@
   }
   
   .trending-carousel-track {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 10px;
+  }
+
+  .food-card {
+    flex-basis: 180px;
+    width: 180px;
   }
 
   .food-image-wrapper {
