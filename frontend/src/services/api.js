@@ -160,7 +160,7 @@ export const verifyEmail = async (data) => {
 };
 
 export const resendVerificationCode = async (data) => {
-  const res = await api.post('/users/resend-verification', data);
+  const res = await api.post('/users/resend-verification-code', data);
   return res.data;
 };
 

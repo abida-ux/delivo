@@ -319,7 +319,9 @@ exports.resendVerificationCode = async (req, res, next) => {
 
       const otp = generateOTP();
       await applyVerificationOTP(user, otp, true);
-      await sendVerificationEmail(user.email, otp);
+      sendVerificationEmail(user.email, otp).catch((error) => {
+        console.error(`⚠️ Resend verification email could not be sent to ${user.email}:`, error.message);
+      });
     }
 
     res.status(200).json({
