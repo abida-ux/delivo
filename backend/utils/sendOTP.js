@@ -1,7 +1,7 @@
 const transporter = require('../config/mail');
 
 const buildMailOptions = (to, subject, html) => ({
-  from: process.env.MAIL_FROM || 'Delivo <info@delivo.buzz>',
+  from: process.env.MAIL_FROM || process.env.SMTP_FROM || 'Delivo <info@delivo.buzz>',
   to,
   subject,
   html,

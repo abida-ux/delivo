@@ -41,7 +41,8 @@ exports.updateSettings = async (req, res) => {
       deliveryFeeEnabled: req.body.deliveryFeeEnabled,
       deliveryFeeAmount: req.body.deliveryFeeAmount,
       freeDeliveryEnabled: req.body.freeDeliveryEnabled,
-      freeDeliveryMinimum: req.body.freeDeliveryMinimum,
+      // If admin enables free delivery, apply to ALL orders by setting minimum to 0
+      freeDeliveryMinimum: req.body.freeDeliveryEnabled ? 0 : req.body.freeDeliveryMinimum,
       promoNotifications: req.body.promoNotifications,
       notificationMessage: req.body.notificationMessage,
       updatedAt: Date.now(),

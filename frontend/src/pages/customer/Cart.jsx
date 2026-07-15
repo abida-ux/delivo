@@ -65,7 +65,7 @@ const Cart = () => {
     enabled: true,
     amount: 20,
     freeDeliveryEnabled: false,
-    freeDeliveryMinimum: 2500,
+    freeDeliveryMinimum: 0,
   });
 
   useEffect(() => {
@@ -75,8 +75,8 @@ const Cart = () => {
         setDeliverySettings({
           enabled: settings.deliveryFeeEnabled !== false,
           amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
-          freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
-          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
+          freeDeliveryEnabled: settings.freeDeliveryEnabled !== false,
+          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 0,
         });
       } catch (error) {
         console.error('Error loading delivery settings:', error);
@@ -84,17 +84,29 @@ const Cart = () => {
     };
 
     loadSettings();
+
+    const onSettingsUpdated = () => {
+      loadSettings();
+    };
+
+    // Listen for storage events (cross-tab) and custom event (same tab)
+    const storageHandler = (e) => {
+      if (e.key === 'app_settings_updated') onSettingsUpdated();
+    };
+    window.addEventListener('storage', storageHandler);
+    window.addEventListener('app_settings_updated', onSettingsUpdated);
+
+    return () => {
+      window.removeEventListener('app_settings_updated', onSettingsUpdated);
+      window.removeEventListener('storage', storageHandler);
+    };
   }, []);
 
-  const isFreeDeliveryEligible =
+  const isFreeDelivery =
     cartItems.length > 0 &&
-    deliverySettings.enabled &&
     deliverySettings.freeDeliveryEnabled &&
     cartTotal >= deliverySettings.freeDeliveryMinimum;
-
-  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled
-    ? (isFreeDeliveryEligible ? 0 : deliverySettings.amount)
-    : 0;
+  const deliveryFee = cartItems.length > 0 && !isFreeDelivery && deliverySettings.enabled ? deliverySettings.amount : 0;
   const tax = (cartTotal * 0.1).toFixed(2);
   const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
 

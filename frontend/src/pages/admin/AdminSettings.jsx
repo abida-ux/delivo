@@ -58,9 +58,27 @@ const AdminSettings = () => {
       try {
         const appSettings = await getAppSettings();
         setSettings({
-          promoNotifications: appSettings.promoNotifications ?? true,
-          freeDeliveryEnabled: appSettings.freeDeliveryEnabled ?? false,
-          freeDeliveryMinimum: appSettings.freeDeliveryMinimum ?? 2500,
+        // Persist a broadcast notification (so clients can fetch it)
+        if (settings.promoNotifications) {
+          try {
+            await api.post('/notifications/create', {
+              title: 'Announcement',
+              message: settings.notificationMessage,
+              type: 'promotion',
+              userId: null,
+            });
+          } catch (err) {
+            console.error('Failed to create broadcast notification:', err);
+          }
+        }
+
+        // Signal other open app pages to reload app settings immediately
+        try {
+          localStorage.setItem('app_settings_updated', Date.now().toString());
+          window.dispatchEvent(new Event('app_settings_updated'));
+        } catch (e) {
+          // ignore storage errors
+        }
           deliveryFeeEnabled: appSettings.deliveryFeeEnabled ?? true,
           deliveryFeeAmount: appSettings.deliveryFeeAmount ?? 20,
           notificationMessage: appSettings.notificationMessage || 'Free delivery for orders above KES 2,500!',
