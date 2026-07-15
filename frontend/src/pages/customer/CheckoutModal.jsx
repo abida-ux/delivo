@@ -291,7 +291,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
               </div>
               <div className="payment-note">
-                We will send an M-Pesa prompt to this number. Please approve it to complete your order.
+                M-Pesa prompt will be sent to this number.
               </div>
             </div>
 
@@ -312,19 +312,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 />
                 {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
               </div>
-            </div>
-
-            <div className="form-section">
-              <h4>Special Instructions (Optional)</h4>
-              <textarea
-                value={deliveryInfo.notes}
-                onChange={(e) => setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })}
-                placeholder="Add delivery instructions..."
-                rows="3"
-                disabled={isProcessing}
-                maxLength="200"
-              />
-              <span className="char-count">{deliveryInfo.notes.length}/200</span>
             </div>
 
             <div className="form-actions">
