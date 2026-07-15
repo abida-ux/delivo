@@ -67,12 +67,16 @@ const Signup = ({ isModal = false }) => {
         closeModal();
       }
 
+      sessionStorage.setItem('pendingVerificationEmail', payload.email);
       setFormData(emptyForm);
       setError('');
 
-      setTimeout(() => {
-        navigate('/verify-email', { state: { email: payload.email } });
-      }, 300);
+      navigate('/verify-email', {
+        state: {
+          email: payload.email,
+          expiresAt: Date.now() + 10 * 60 * 1000,
+        },
+      });
 
     } catch (err) {
       console.log('SIGNUP ERROR:', err);
