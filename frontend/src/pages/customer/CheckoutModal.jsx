@@ -10,7 +10,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
   const { clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState({});
-  const [deliverySettings, setDeliverySettings] = useState({ enabled: true, amount: 20 });
+  const [deliverySettings, setDeliverySettings] = useState({
+    enabled: true,
+    amount: 20,
+    freeDeliveryEnabled: false,
+    freeDeliveryMinimum: 2500,
+  });
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: '',
     email: '',
@@ -33,6 +38,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
         setDeliverySettings({
           enabled: settings.deliveryFeeEnabled !== false,
           amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
+          freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
+          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
         });
       } catch (error) {
         console.error('Error loading app settings:', error);
@@ -44,7 +51,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     }
   }, [isOpen]);
 
-  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
+  const isFreeDeliveryEligible =
+    cartItems.length > 0 &&
+    deliverySettings.enabled &&
+    deliverySettings.freeDeliveryEnabled &&
+    cartTotal >= deliverySettings.freeDeliveryMinimum;
+
+  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled
+    ? (isFreeDeliveryEligible ? 0 : deliverySettings.amount)
+    : 0;
   const tax = (cartTotal * 0.1).toFixed(2);
   const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
 

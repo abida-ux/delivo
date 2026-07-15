@@ -40,7 +40,6 @@ const AdminSettings = () => {
   });
 
   const [showPromoForm, setShowPromoForm] = useState(false);
-  const [notificationPreview, setNotificationPreview] = useState('');
   
   // Notification states
   const [notifications, setNotifications] = useState([]);
@@ -137,25 +136,29 @@ const AdminSettings = () => {
     }
   };
 
-  // Save settings to localStorage
+  // Save settings to the backend and publish a broadcast notification when enabled
   const saveSettings = async () => {
     try {
       await updateAppSettings(settings);
-      alert('Settings saved successfully!');
-      if (settings.promoNotifications) {
-        sendNotificationToUsers(settings.notificationMessage);
+
+      if (settings.promoNotifications && settings.notificationMessage?.trim()) {
+        try {
+          await api.post('/notifications/create', {
+            title: 'New offer',
+            message: settings.notificationMessage,
+            type: 'promotion',
+            userId: null,
+          });
+        } catch (notificationError) {
+          console.error('Error creating promo notification:', notificationError);
+        }
       }
+
+      alert('Settings saved successfully!');
     } catch (error) {
       console.error('Error saving settings:', error);
       alert('Failed to save settings. Please try again.');
     }
-  };
-
-  // Send notification to users (mock)
-  const sendNotificationToUsers = (message) => {
-    console.log('📢 Push Notification sent to all users:', message);
-    // In a real app, this would call an API endpoint to send push notifications
-    alert(`✅ Notification sent to all users: "${message}"`);
   };
 
   const handleSettingChange = (key, value) => {

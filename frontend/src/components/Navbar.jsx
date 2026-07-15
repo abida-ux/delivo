@@ -26,7 +26,7 @@ import { AuthContext } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import CheckoutModal from '../pages/customer/CheckoutModal';
-import api from '../services/api';
+import api, { getAppSettings } from '../services/api';
 import './Navbar.css';
 import './NotificationModal.css';
 
@@ -47,11 +47,32 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [promoNotificationsEnabled, setPromoNotificationsEnabled] = useState(true);
 
   // ✅ DERIVED DATA
   const cartItems = getCartItems();
   const isAuthenticated = !!user;
   const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const visibleNotifications = notifications.filter((notif) => {
+    if (notif.type !== 'promotion') {
+      return true;
+    }
+
+    return promoNotificationsEnabled;
+  });
+
+  useEffect(() => {
+    const loadAppSettings = async () => {
+      try {
+        const settings = await getAppSettings();
+        setPromoNotificationsEnabled(settings.promoNotifications !== false);
+      } catch (error) {
+        console.error('Error loading app settings for notifications:', error);
+      }
+    };
+
+    loadAppSettings();
+  }, []);
 
   // ✅ FETCH NOTIFICATIONS FROM BACKEND
   useEffect(() => {
@@ -192,8 +213,8 @@ const Navbar = () => {
 
             <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)} title="Notifications">
               <Bell size={20} />
-              {notifications.length > 0 && (
-                <span className="notification-badge">{notifications.length}</span>
+              {visibleNotifications.length > 0 && (
+                <span className="notification-badge">{visibleNotifications.length}</span>
               )}
             </button>
 
@@ -261,8 +282,8 @@ const Navbar = () => {
               </div>
 
               <div className="notifications-modal-items">
-                {notifications.length > 0 ? (
-                  notifications.map((notif) => (
+                {visibleNotifications.length > 0 ? (
+                  visibleNotifications.map((notif) => (
                     <div key={notif._id} className="notification-item">
                       <div className="notification-content">
                         <p className="notification-title">{notif.title}</p>
