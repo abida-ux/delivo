@@ -2,13 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const transporter = require('./config/mail');
+const { initializeMailer } = require('./config/mailer');
 const errorHandler = require('./middleware/errorMiddleware');
 
 // Import routes
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const foodRoutes = require('./routes/foodRoutes');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orderRoutes');
 const storeRoutes = require('./routes/storeRoutes');
 const cartRoutes = require('./routes/cartRoutes');
@@ -28,6 +29,11 @@ console.log(`  ✓ JWT_SECRET: ${process.env.JWT_SECRET ? '✓ Set' : '❌ MISSI
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize SMTP at startup
+initializeMailer().catch((error) => {
+  console.warn('⚠️ Mailer initialization warning:', error.message || error);
+});
 
 // ==================== MIDDLEWARE ====================
 // JSON parsing with size limits
@@ -72,6 +78,7 @@ app.use(cors(corsOptions));
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/cart', cartRoutes);
@@ -105,6 +112,7 @@ const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 let server;
 
+<<<<<<< HEAD
 const startServer = async () => {
   const mailReady = await transporter.verifyTransporter();
   if (!mailReady) {
@@ -131,6 +139,19 @@ const startServer = async () => {
 startServer().catch((error) => {
   console.error('❌ Failed to start server:', error);
   process.exit(1);
+=======
+const server = app.listen(PORT, () => {
+  console.log(`
+  ╔═══════════════════════════════════════════════╗
+  ║                                               ║
+  ║   🍕 DELIVO BACKEND SERVER                   ║
+  ║   ✅ Server running on port ${PORT}               ║
+  ║   🗄️  Environment: ${NODE_ENV}                    ║
+  ║   🔐 CORS enabled for: localhost & delivo.co.ke
+  ║                                               ║
+  ╚═══════════════════════════════════════════════╝
+  `);
+>>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
 });
 
 // Periodic cleanup: expire unpaid pending orders older than 1 minute

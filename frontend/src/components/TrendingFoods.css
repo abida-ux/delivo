@@ -2,11 +2,13 @@
 
 .trending-section {
   width: 100%;
+  max-width: 100%;
   margin: 0;
-  padding: 40px 80px;
+  padding: 40px 0;
   background-color: #ffffff;
   font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* SECTION HEADER CONFIGURATION */
@@ -14,16 +16,19 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 28px;
+  margin: 0 0 28px;
+  padding: 0 clamp(16px, 3.5vw, 40px);
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 /* FILTER INDICATOR */
 .trending-filter-indicator {
   background: #f9f9f9;
   border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 14px 16px;
-  margin-bottom: 20px;
+  margin: 0 clamp(16px, 3.5vw, 40px) 20px;
 }
 
 .filter-info {
@@ -72,10 +77,10 @@
 }
 
 .trending-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  color: #000000;
-  letter-spacing: -0.5px;
+  color: #111111;
+  letter-spacing: -0.02em;
   margin: 0 0 4px 0;
 }
 
@@ -83,6 +88,7 @@
   font-size: 14px;
   color: #666666;
   margin: 0;
+  line-height: 1.5;
 }
 
 /* CONTROLS ARROWS */
@@ -116,9 +122,13 @@
   display: flex;
   gap: 24px;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
-  padding: 12px 4px;
-  -webkit-overflow-scrolling: touch; /* Momentum scroll implementation for iOS */
+  padding: 12px clamp(16px, 3.5vw, 40px);
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
+  scroll-snap-type: x proximity;
 }
 
 /* Hide Track Scrollbars */
@@ -133,14 +143,17 @@
 
 /* MODERN MINIMALIST FOOD CARD */
 .food-card {
-  flex: 0 0 auto;
+  flex: 0 0 290px;
   width: 290px;
+  min-width: 290px;
+  max-width: 290px;
   background: #ffffff;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  scroll-snap-align: start;
 }
 
 .food-image-wrapper {
@@ -296,7 +309,7 @@
 /* RESPONSIVE LAYOUT SYSTEMS */
 @media (max-width: 1200px) {
   .trending-section {
-    padding: 40px;
+    padding: 40px 0;
   }
 }
 
@@ -306,7 +319,14 @@
   }
 
   .trending-section {
-    padding: 30px 16px;
+    padding: 30px 0;
+  }
+
+  .trending-header,
+  .trending-filter-indicator,
+  .trending-carousel-track {
+    margin-left: 16px;
+    margin-right: 16px;
   }
 
   .trending-title {
@@ -333,7 +353,14 @@
 
 @media (max-width: 480px) {
   .trending-section {
-    padding: 24px 12px;
+    padding: 24px 0;
+  }
+
+  .trending-header,
+  .trending-filter-indicator,
+  .trending-carousel-track {
+    margin-left: 12px;
+    margin-right: 12px;
   }
 
   .trending-title {

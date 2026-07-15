@@ -106,14 +106,14 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
       <div className="trending-header">
         <div className="header-left">
           <h2 className="trending-title">
-            {selectedCategory ? `${selectedCategory} Foods` : 'Popular Near You'}
+            {selectedCategory ? `${selectedCategory} Foods` : 'Handpicked for You'}
           </h2>
           <p className="trending-subtitle">
             {selectedCategory 
               ? `Showing ${selectedCategory.toLowerCase()} items` 
               : searchTerm 
               ? `Search results for "${searchTerm}"` 
-              : 'Most ordered meals in your area'}
+              : 'Top-rated meals from trusted local kitchens'}
           </p>
         </div>
 

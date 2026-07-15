@@ -22,6 +22,7 @@ const MAX_VERIFICATION_ATTEMPTS = 5;
 const MAX_RESET_ATTEMPTS = 5;
 const VERIFICATION_LOCK_MS = 15 * 60 * 1000;
 const RESET_LOCK_MS = 15 * 60 * 1000;
+const EMAIL_SEND_TIMEOUT_MS = 1500;
 
 const resetVerificationResendWindow = (user) => {
   const now = Date.now();
@@ -96,6 +97,7 @@ const createVerificationCode = async (user) => {
   const otp = generateOTP();
   console.log('[auth] generating verification OTP');
   await applyVerificationOTP(user, otp, false);
+<<<<<<< HEAD
   try {
     await sendVerificationEmail(user.email, otp);
     console.log('[auth] verification email delivered');
@@ -107,6 +109,19 @@ const createVerificationCode = async (user) => {
     });
     await clearVerificationOTP(user);
     throw error;
+=======
+
+  try {
+    await Promise.race([
+      sendVerificationEmail(user.email, otp),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Email delivery timed out')), EMAIL_SEND_TIMEOUT_MS)),
+    ]);
+
+    return { otp, delivered: true };
+  } catch (error) {
+    console.error(`⚠️ Verification email could not be sent to ${user.email}:`, error.message);
+    return { otp, delivered: false };
+>>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
   }
 };
 
@@ -176,6 +191,7 @@ exports.registerUser = async (req, res, next) => {
       verificationAttempts: 0,
     });
 
+<<<<<<< HEAD
     try {
       await createVerificationCode(user);
 
@@ -199,6 +215,24 @@ exports.registerUser = async (req, res, next) => {
         message: 'We couldn\'t send your verification email at the moment. Please try again in a few moments.',
       });
     }
+=======
+    const { otp, delivered } = await createVerificationCode(user);
+
+    res.status(201).json({
+      success: true,
+      message: delivered
+        ? 'User registered successfully. A verification code has been sent to your email.'
+        : 'User registered successfully. We could not send the email right now, but your verification code is below.',
+      verificationCode: delivered ? undefined : otp,
+      emailDeliveryFailed: !delivered,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+>>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
   } catch (error) {
     next(error);
   }
@@ -227,6 +261,11 @@ exports.loginUser = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Account not verified. Please verify your email first.',
+        verification: {
+          required: true,
+          resendEndpoint: '/api/users/resend-verification-code',
+          instructions: 'POST your email to the resend endpoint to receive a new code',
+        },
       });
     }
 
@@ -367,6 +406,7 @@ exports.resendVerificationCode = async (req, res, next) => {
       const otp = generateOTP();
       console.log('[auth] resending verification OTP');
       await applyVerificationOTP(user, otp, true);
+<<<<<<< HEAD
       try {
         await sendVerificationEmail(user.email, otp);
         console.log('[auth] verification resend email delivered');
@@ -382,6 +422,28 @@ exports.resendVerificationCode = async (req, res, next) => {
           message: 'We couldn\'t send your verification email at the moment. Please try again in a few moments.',
         });
       }
+=======
+
+      let delivered = true;
+      try {
+        await Promise.race([
+          sendVerificationEmail(user.email, otp),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Email delivery timed out')), EMAIL_SEND_TIMEOUT_MS)),
+        ]);
+      } catch (error) {
+        delivered = false;
+        console.error(`⚠️ Resend verification email could not be sent to ${user.email}:`, error.message);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: delivered
+          ? 'If an account exists, a new verification code has been sent'
+          : 'We could not send the email right now, but your verification code is below.',
+        verificationCode: delivered ? undefined : otp,
+        emailDeliveryFailed: !delivered,
+      });
+>>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
     }
 
     res.status(200).json({

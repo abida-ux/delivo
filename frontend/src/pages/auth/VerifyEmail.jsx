@@ -153,7 +153,7 @@ const VerifyEmail = () => {
       const res = await verifyEmail({ email, code });
       setMessage(res.message || 'Email verified successfully.');
       sessionStorage.removeItem('pendingVerificationEmail');
-      window.setTimeout(() => navigate('/login'), 1500);
+      navigate('/login');
     } catch (err) {
       const backendMessage = err.response?.data?.message || 'Verification failed.';
       setError(backendMessage === 'Verification code has expired'
