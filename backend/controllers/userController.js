@@ -77,7 +77,12 @@ const applyPasswordResetOTP = async (user, otp) => {
 const createVerificationCode = async (user) => {
   const otp = generateOTP();
   await applyVerificationOTP(user, otp, false);
-  await sendVerificationEmail(user.email, otp);
+
+  try {
+    await sendVerificationEmail(user.email, otp);
+  } catch (error) {
+    console.error(`⚠️ Verification email could not be sent to ${user.email}:`, error.message);
+  }
 };
 
 const createPasswordResetCode = async (user) => {

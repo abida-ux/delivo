@@ -70,6 +70,8 @@ const Signup = ({ isModal = false }) => {
     }
 
     try {
+      if (loading) return;
+
       setLoading(true);
       const { confirmPassword, ...payload } = formData;
       const startedAt = Date.now();
@@ -97,8 +99,16 @@ const Signup = ({ isModal = false }) => {
       }, 0);
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Signup failed';
-      setShowVerification(false);
-      setError(errorMsg);
+      if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('user already exists')) {
+        setVerificationEmail(formData.email);
+        setShowVerification(true);
+        setVerifyMessage('An account with this email already exists. Please enter the verification code sent to your email.');
+        setOtp('');
+        setError('');
+      } else {
+        setShowVerification(false);
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
