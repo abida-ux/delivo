@@ -139,6 +139,13 @@ export const getOrderById = async (orderId) => {
   return res.data.data;
 };
 
+export const getMpesaStatus = async (checkoutRequestId) => {
+  const res = await api.get('/mpesa/status', {
+    params: { checkoutRequestId },
+  });
+  return res.data.data;
+};
+
 export const getAllOrders = async () => {
   const res = await api.get('/orders');
   return res.data.data || [];
