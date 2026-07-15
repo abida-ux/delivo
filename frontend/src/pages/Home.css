@@ -25,6 +25,18 @@
   box-sizing: border-box;
 }
 
+/* Force the inner section to span the full viewport (edge-to-edge) while
+   keeping content padded on small screens. This ensures carousels inside
+   appear full-width like the local dev view. */
+.section-inner.full-width-section {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
 .btn-primary {
   background: #000000;
   color: #ffffff;
