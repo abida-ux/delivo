@@ -5,6 +5,7 @@ import { CartUIProvider } from './context/CartUIContext'
 import { LoaderProvider } from './context/LoaderContext'
 import { AuthModalProvider } from './context/AuthModalContext'
 import { AuthProvider } from './context/AuthContext'
+import PwaInstallPrompt from './components/PwaInstallPrompt'
 import './index.css'
 import App from './App.jsx'
 
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')).render(
           <CartProvider>
             <CartUIProvider>
               <App />
+              <PwaInstallPrompt />
             </CartUIProvider>
           </CartProvider>
         </AuthModalProvider>
