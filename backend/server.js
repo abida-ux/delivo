@@ -116,14 +116,8 @@ const server = app.listen(PORT, () => {
   ╚═══════════════════════════════════════════════╝
   `);
 
-  transporter.verify((error) => {
-    if (error) {
-      console.log('❌ SMTP Error');
-      console.log(error);
-    } else {
-      console.log('✅ SpaceMail SMTP Connected');
-    }
-  });
+  transporter.verifyTransporter();
+  console.log('🚀 Render startup complete');
 });
 
 // Periodic cleanup: expire unpaid pending orders older than 1 minute

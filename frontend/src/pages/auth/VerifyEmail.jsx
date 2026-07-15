@@ -29,6 +29,7 @@ const VerifyEmail = () => {
   const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN_SECONDS);
   const [expiresIn, setExpiresIn] = useState(DEFAULT_EXPIRY_SECONDS);
   const [verificationExpired, setVerificationExpired] = useState(false);
+  const [pageMessage, setPageMessage] = useState('');
 
   useEffect(() => {
     const emailFromState = location.state?.email || '';
@@ -39,6 +40,12 @@ const VerifyEmail = () => {
     if (resolvedEmail) {
       setEmail(resolvedEmail);
       sessionStorage.setItem('pendingVerificationEmail', resolvedEmail);
+    }
+
+    if (location.state?.message) {
+      setPageMessage(location.state.message);
+    } else {
+      setPageMessage('We\'ve sent a 6-digit verification code to your email.');
     }
 
     const expiresAt = Number(location.state?.expiresAt || 0);
@@ -184,7 +191,7 @@ const VerifyEmail = () => {
     <div className="auth-container verify-email-page">
       <h1 className="auth-page-title">Verify Your Email</h1>
       <p className="auth-subtitle">
-        Enter the 6-digit verification code sent to your email address.
+        {pageMessage || 'Enter the 6-digit verification code sent to your email address.'}
       </p>
 
       {message && <div className="auth-message success">{message}</div>}

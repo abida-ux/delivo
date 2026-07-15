@@ -74,16 +74,26 @@ const applyPasswordResetOTP = async (user, otp) => {
   await user.save({ validateBeforeSave: false });
 };
 
+const dispatchEmailInBackground = (promise, label) => {
+  promise.catch((error) => {
+    console.error(`[auth] ${label} delivery failed`, {
+      error: error.message,
+    });
+  });
+};
+
 const createVerificationCode = async (user) => {
   const otp = generateOTP();
+  console.log('[auth] generating verification OTP');
   await applyVerificationOTP(user, otp, false);
-  await sendVerificationEmail(user.email, otp);
+  dispatchEmailInBackground(sendVerificationEmail(user.email, otp), 'verification');
 };
 
 const createPasswordResetCode = async (user) => {
   const otp = generateOTP();
+  console.log('[auth] generating password reset OTP');
   await applyPasswordResetOTP(user, otp);
-  await sendPasswordResetEmail(user.email, otp);
+  dispatchEmailInBackground(sendPasswordResetEmail(user.email, otp), 'password reset');
 };
 
 exports.registerUser = async (req, res, next) => {
@@ -120,6 +130,8 @@ exports.registerUser = async (req, res, next) => {
       });
     }
 
+    console.log('[auth] registration request received');
+
     const user = await User.create({
       name,
       email,
@@ -136,7 +148,7 @@ exports.registerUser = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully. A verification code has been sent to your email.',
+      message: 'User registered successfully. A verification code is being sent to your email.',
       user: {
         id: user._id,
         name: user.name,
@@ -229,6 +241,8 @@ exports.verifyEmail = async (req, res, next) => {
       });
     }
 
+    console.log('[auth] verification attempt received');
+
     const now = Date.now();
     if (user.verificationLockedUntil && user.verificationLockedUntil.getTime() > now) {
       return res.status(429).json({
@@ -308,13 +322,14 @@ exports.resendVerificationCode = async (req, res, next) => {
       }
 
       const otp = generateOTP();
+      console.log('[auth] resending verification OTP');
       await applyVerificationOTP(user, otp, true);
-      await sendVerificationEmail(user.email, otp);
+      dispatchEmailInBackground(sendVerificationEmail(user.email, otp), 'verification resend');
     }
 
     res.status(200).json({
       success: true,
-      message: 'If an account exists, a new verification code has been sent',
+      message: 'If an account exists, a new verification code is being sent',
     });
   } catch (error) {
     next(error);

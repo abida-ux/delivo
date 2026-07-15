@@ -7,6 +7,24 @@ const buildMailOptions = (to, subject, html) => ({
   html,
 });
 
+const sendMailWithLogging = async (mailOptions, label) => {
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 ${label} email delivered`, {
+      to: mailOptions.to,
+      messageId: info.messageId,
+    });
+    return info;
+  } catch (error) {
+    console.error(`❌ ${label} email delivery failed`, {
+      to: mailOptions.to,
+      error: error.message,
+      code: error.code,
+    });
+    throw error;
+  }
+};
+
 const buildEmailTemplate = (title, body, otp) => `
   <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background: #fff;">
@@ -30,18 +48,18 @@ const buildEmailTemplate = (title, body, otp) => `
 
 const sendVerificationOTP = async (email, otp) => {
   const subject = 'Verify Your Email Address';
-  const body = `Your verification code is:`;
+  const body = 'Your verification code is:';
   const html = buildEmailTemplate('Verify Your Email Address', body, otp);
 
-  return transporter.sendMail(buildMailOptions(email, subject, html));
+  return sendMailWithLogging(buildMailOptions(email, subject, html), 'Verification');
 };
 
 const sendPasswordResetOTP = async (email, otp) => {
   const subject = 'Password Reset Code';
-  const body = `Your password reset code is:`;
+  const body = 'Your password reset code is:';
   const html = buildEmailTemplate('Password Reset Code', body, otp);
 
-  return transporter.sendMail(buildMailOptions(email, subject, html));
+  return sendMailWithLogging(buildMailOptions(email, subject, html), 'Password reset');
 };
 
 module.exports = {
