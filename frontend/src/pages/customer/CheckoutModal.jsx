@@ -1,8 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { X, AlertCircle, Check } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { createOrder, getAppSettings } from '../../services/api';
+import { createOrder, getAppSettings, getOrderById } from '../../services/api';
 import './CheckoutModal.css';
 
 const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }) => {
@@ -19,6 +19,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     mpesaNumber: '',
     notes: ''
   });
+  const [orderId, setOrderId] = useState(null);
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null);
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [orderPending, setOrderPending] = useState(false);
+  const pollInterval = useRef(null);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -74,6 +80,60 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     return Object.keys(newErrors).length === 0;
   };
 
+  const clearPolling = () => {
+    if (pollInterval.current) {
+      clearInterval(pollInterval.current);
+      pollInterval.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPolling();
+    };
+  }, []);
+
+  const checkOrderStatus = async (id) => {
+    try {
+      const updatedOrder = await getOrderById(id);
+      setPaymentStatus(updatedOrder.paymentStatus);
+
+      if (updatedOrder.paymentStatus === 'completed') {
+        clearPolling();
+        setPaymentMessage('Payment confirmed. Thank you! Redirecting to your orders...');
+        setOrderPending(false);
+        clearCart();
+        onOrderSuccess(updatedOrder);
+        return;
+      }
+
+      if (updatedOrder.paymentStatus === 'failed') {
+        clearPolling();
+        setPaymentMessage('Payment failed. Please retry the M-Pesa prompt or close this window.');
+        setOrderPending(false);
+        return;
+      }
+
+      setPaymentMessage('M-Pesa prompt sent. Waiting for payment confirmation...');
+    } catch (error) {
+      console.error('Error polling order status:', error);
+      setPaymentMessage('Waiting for payment confirmation... Please keep this screen open.');
+    }
+  };
+
+  const startPaymentPolling = async (id) => {
+    if (pollInterval.current) {
+      clearPolling();
+    }
+
+    setOrderPending(true);
+    setPaymentMessage('M-Pesa prompt sent. Waiting for payment confirmation...');
+    await checkOrderStatus(id);
+    pollInterval.current = setInterval(() => {
+      checkOrderStatus(id);
+    }, 5000);
+  };
+
   const handlePlaceOrder = async () => {
     if (!validateForm()) {
       return;
@@ -87,7 +147,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
         price: item.price,
       }));
 
-      // ✅ Support both authenticated and guest users
       const orderData = {
         items,
         deliveryAddress: deliveryInfo.address,
@@ -99,12 +158,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
         specialInstructions: deliveryInfo.notes,
       };
 
-      // Add userId if user is logged in
       if (user && user.id) {
         orderData.userId = user.id;
         orderData.guestPhone = deliveryInfo.phone;
       } else {
-        // For guest checkout
         orderData.guestEmail = deliveryInfo.email || 'guest@delivo.com';
         orderData.guestPhone = deliveryInfo.phone;
       }
@@ -114,10 +171,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
       const response = await createOrder(orderData);
 
       console.log('✅ Order created successfully:', response);
-      
-      clearCart();
-      onOrderSuccess(response);
-      onClose();
+      setOrderId(response._id);
+      setCheckoutRequestId(response.checkoutRequestId);
+      setPaymentStatus(response.paymentStatus);
+      setErrors({});
+      startPaymentPolling(response._id);
     } catch (error) {
       console.error('❌ Error creating order:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Failed to place order';
@@ -134,7 +192,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
       <div className="checkout-modal-container">
         <div className="checkout-modal-header">
           <h2>Complete Your Order</h2>
-          <button className="close-btn" onClick={onClose} disabled={isProcessing}>
+          <button className="close-btn" onClick={onClose} disabled={isProcessing || orderPending}>
             <X size={24} />
           </button>
         </div>
@@ -197,7 +255,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                     if (errors.address) setErrors({ ...errors, address: '' });
                   }}
                   placeholder="Street address, building name, or campus landmark"
-                  disabled={isProcessing}
+                  disabled={isProcessing || orderPending}
                   className={errors.address ? 'error' : ''}
                 />
                 {errors.address && <span className="field-error">{errors.address}</span>}
@@ -216,7 +274,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                     if (errors.phone) setErrors({ ...errors, phone: '' });
                   }}
                   placeholder="0722 000 000"
-                  disabled={isProcessing}
+                  disabled={isProcessing || orderPending}
                   className={errors.phone ? 'error' : ''}
                 />
                 {errors.phone && <span className="field-error">{errors.phone}</span>}
@@ -233,7 +291,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                       if (errors.email) setErrors({ ...errors, email: '' });
                     }}
                     placeholder="name@example.com"
-                    disabled={isProcessing}
+                    disabled={isProcessing || orderPending}
                     className={errors.email ? 'error' : ''}
                   />
                   {errors.email && <span className="field-error">{errors.email}</span>}
@@ -253,7 +311,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                     if (errors.mpesaNumber) setErrors({ ...errors, mpesaNumber: '' });
                   }}
                   placeholder="0722 000 000"
-                  disabled={isProcessing}
+                  disabled={isProcessing || orderPending}
                   className={errors.mpesaNumber ? 'error' : ''}
                 />
                 {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
@@ -275,7 +333,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                     if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
                   }}
                   placeholder="0722 000 000"
-                  disabled={isProcessing}
+                  disabled={isProcessing || orderPending}
                   className={errors.whatsapp ? 'error' : ''}
                 />
                 {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
@@ -300,14 +358,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 type="button"
                 className="cancel-btn"
                 onClick={onClose}
-                disabled={isProcessing}
+                disabled={isProcessing || orderPending}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="confirm-btn"
-                disabled={isProcessing}
+                disabled={isProcessing || orderPending}
               >
                 {isProcessing ? (
                   <>
@@ -323,6 +381,17 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
               </button>
             </div>
           </form>
+
+          {paymentMessage && (
+            <div className="payment-status-box">
+              <div className="payment-status-title">Payment Status</div>
+              <p>{paymentMessage}</p>
+              {checkoutRequestId && (
+                <p className="payment-subtext">Checkout Request ID: {checkoutRequestId}</p>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
     </div>

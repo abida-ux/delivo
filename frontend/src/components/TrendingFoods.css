@@ -2,13 +2,11 @@
 
 .trending-section {
   width: 100%;
-  max-width: 100%;
   margin: 0;
-  padding: 40px 0;
+  padding: 40px 16px;
   background-color: #ffffff;
   font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 /* SECTION HEADER CONFIGURATION */
@@ -16,19 +14,24 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin: 0 0 28px;
-  padding: 0 clamp(16px, 3.5vw, 40px);
-  gap: 16px;
-  flex-wrap: wrap;
+  margin-bottom: 28px;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* FILTER INDICATOR */
 .trending-filter-indicator {
   background: #f9f9f9;
   border: 1px solid #e0e0e0;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 14px 16px;
-  margin: 0 clamp(16px, 3.5vw, 40px) 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .filter-info {
@@ -77,10 +80,10 @@
 }
 
 .trending-title {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
-  color: #111111;
-  letter-spacing: -0.02em;
+  color: #000000;
+  letter-spacing: -0.5px;
   margin: 0 0 4px 0;
 }
 
@@ -88,13 +91,11 @@
   font-size: 14px;
   color: #666666;
   margin: 0;
-  line-height: 1.5;
 }
 
 /* CONTROLS ARROWS */
 .trending-slider-controls {
-  display: flex;
-  gap: 10px;
+  display: none;
 }
 
 .arrow-btn {
@@ -117,18 +118,16 @@
   transform: scale(1.05);
 }
 
-/* HORIZONTAL SCROLL CAROUSEL TRACK */
+/* RESPONSIVE GRID LAYOUT */
 .trending-carousel-track {
-  display: flex;
-  gap: 24px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth;
-  padding: 12px clamp(16px, 3.5vw, 40px);
-  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
   width: 100%;
-  box-sizing: border-box;
-  scroll-snap-type: x proximity;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Hide Track Scrollbars */
@@ -137,29 +136,34 @@
 }
 
 .trending-carousel-track {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* MODERN MINIMALIST FOOD CARD */
 .food-card {
-  flex: 0 0 290px;
-  width: 290px;
-  min-width: 290px;
-  max-width: 290px;
+  flex: none;
+  width: 100%;
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.food-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
 .food-image-wrapper {
   position: relative;
   width: 100%;
-  height: 190px;
+  height: 160px;
   overflow: hidden;
   background-color: #f3f3f3;
 }
@@ -171,11 +175,15 @@
   transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.food-card:hover .food-image {
+  transform: scale(1.05);
+}
+
 /* RATING FLOATING TAG */
 .food-rating-tag {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -197,18 +205,19 @@
 
 /* CARD DETAILS STYLING */
 .food-info {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  flex-grow: 1;
 }
 
 .food-meta-head {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .food-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #000000;
   margin: 0 0 2px 0;
@@ -309,82 +318,86 @@
 /* RESPONSIVE LAYOUT SYSTEMS */
 @media (max-width: 1200px) {
   .trending-section {
-    padding: 40px 0;
+    padding: 32px 20px;
+  }
+  
+  .trending-carousel-track {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
   }
 }
 
 @media (max-width: 768px) {
   .trending-slider-controls {
-    display: none; /* Rely on mobile touch swiping mechanisms */
+    display: none;
   }
 
   .trending-section {
-    padding: 30px 0;
-  }
-
-  .trending-header,
-  .trending-filter-indicator,
-  .trending-carousel-track {
-    margin-left: 16px;
-    margin-right: 16px;
+    padding: 24px 16px;
   }
 
   .trending-title {
     font-size: 22px;
     margin-bottom: 16px;
   }
-
-  .food-card {
-    width: 250px;
+  
+  .trending-carousel-track {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
   }
 
   .food-image-wrapper {
-    height: 160px;
+    height: 140px;
   }
 
   .food-name {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .food-price {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .trending-section {
-    padding: 24px 0;
-  }
-
-  .trending-header,
-  .trending-filter-indicator,
-  .trending-carousel-track {
-    margin-left: 12px;
-    margin-right: 12px;
+    padding: 20px 12px;
   }
 
   .trending-title {
-    font-size: 18px;
+    font-size: 20px;
     margin-bottom: 12px;
   }
-
-  .food-card {
-    width: 140px;
+  
+  .trending-carousel-track {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
   }
 
   .food-image-wrapper {
-    height: 110px;
+    height: 120px;
+  }
+
+  .food-info {
+    padding: 12px;
   }
 
   .food-name {
-    font-size: 12px;
+    font-size: 13px;
+    margin-bottom: 2px;
   }
 
   .food-price {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .food-vendor {
     font-size: 11px;
+  }
+  
+  .add-to-cart-ui,
+  .go-to-cart-ui {
+    font-size: 12px;
+    padding: 5px 10px;
   }
 }

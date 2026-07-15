@@ -19,7 +19,7 @@ const connectDB = async () => {
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
     console.error('🔧 Troubleshooting tips:');
     console.error('1. Check if your IP is whitelisted in MongoDB Atlas (Security -> IP Whitelist)');
-    console.error('2. Verify MONGO_URI in .env file');
+    console.error('2. Verify the MONGO_URI environment variable');
     console.error('3. Ensure MongoDB Atlas cluster is active');
     process.exit(1);
   }

@@ -15,7 +15,7 @@ if (missing.length > 0) {
   console.error('\n❌ SMTP CONFIGURATION ERROR\n');
   console.error('Missing required environment variables:');
   missing.forEach((key) => console.error(`   - ${key}`));
-  console.error('\nAdd these to your .env file:');
+  console.error('\nSet these environment variables:');
   console.error('   SMTP_HOST=mail.spacemail.com');
   console.error('   SMTP_PORT=465');
   console.error('   SMTP_SECURE=true');
