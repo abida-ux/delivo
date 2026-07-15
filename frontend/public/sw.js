@@ -1,5 +1,5 @@
 const CACHE_NAME = 'delivo-cache-v1';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.svg', '/icon-512.svg'];
+const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/ion.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
