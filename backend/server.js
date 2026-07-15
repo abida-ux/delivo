@@ -103,21 +103,34 @@ app.use(errorHandler);
 // ==================== START SERVER ====================
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+let server;
 
-const server = app.listen(PORT, () => {
-  console.log(`
-  ╔═══════════════════════════════════════════════╗
-  ║                                               ║
-  ║   🍕 DELIVO BACKEND SERVER                   ║
-  ║   ✅ Server running on port ${PORT}               ║
-  ║   🗄️  Environment: ${NODE_ENV}                    ║
-  ║   🔐 CORS enabled for: localhost & delivo.co.ke
-  ║                                               ║
-  ╚═══════════════════════════════════════════════╝
-  `);
+const startServer = async () => {
+  const mailReady = await transporter.verifyTransporter();
+  if (!mailReady) {
+    console.warn('⚠️ SMTP verification reported an issue during startup. Email delivery may still fail until configured correctly.');
+  }
 
-  transporter.verifyTransporter();
-  console.log('🚀 Render startup complete');
+  server = app.listen(PORT, () => {
+    console.log(`
+    ╔═══════════════════════════════════════════════╗
+    ║                                               ║
+    ║   🍕 DELIVO BACKEND SERVER                   ║
+    ║   ✅ Server running on port ${PORT}               ║
+    ║   🗄️  Environment: ${NODE_ENV}                    ║
+    ║   🔐 CORS enabled for: localhost & delivo.co.ke
+    ║                                               ║
+    ╚═══════════════════════════════════════════════╝
+    `);
+    console.log('🚀 Render startup complete');
+  });
+
+  return server;
+};
+
+startServer().catch((error) => {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
 });
 
 // Periodic cleanup: expire unpaid pending orders older than 1 minute

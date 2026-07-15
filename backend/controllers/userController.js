@@ -74,26 +74,58 @@ const applyPasswordResetOTP = async (user, otp) => {
   await user.save({ validateBeforeSave: false });
 };
 
-const dispatchEmailInBackground = (promise, label) => {
-  promise.catch((error) => {
-    console.error(`[auth] ${label} delivery failed`, {
-      error: error.message,
-    });
-  });
+const clearVerificationOTP = async (user) => {
+  user.verificationCode = undefined;
+  user.verificationCodeExpires = undefined;
+  user.verificationCodeUsed = false;
+  user.verificationAttempts = 0;
+  user.verificationLockedUntil = undefined;
+  await user.save({ validateBeforeSave: false });
+};
+
+const clearPasswordResetOTP = async (user) => {
+  user.resetPasswordCode = undefined;
+  user.resetPasswordExpires = undefined;
+  user.resetPasswordUsed = false;
+  user.resetPasswordAttempts = 0;
+  user.resetPasswordLockedUntil = undefined;
+  await user.save({ validateBeforeSave: false });
 };
 
 const createVerificationCode = async (user) => {
   const otp = generateOTP();
   console.log('[auth] generating verification OTP');
   await applyVerificationOTP(user, otp, false);
-  dispatchEmailInBackground(sendVerificationEmail(user.email, otp), 'verification');
+  try {
+    await sendVerificationEmail(user.email, otp);
+    console.log('[auth] verification email delivered');
+  } catch (error) {
+    console.error('[auth] verification email delivery failed', {
+      email: user.email,
+      error: error.message,
+      code: error.code,
+    });
+    await clearVerificationOTP(user);
+    throw error;
+  }
 };
 
 const createPasswordResetCode = async (user) => {
   const otp = generateOTP();
   console.log('[auth] generating password reset OTP');
   await applyPasswordResetOTP(user, otp);
-  dispatchEmailInBackground(sendPasswordResetEmail(user.email, otp), 'password reset');
+  try {
+    await sendPasswordResetEmail(user.email, otp);
+    console.log('[auth] password reset email delivered');
+  } catch (error) {
+    console.error('[auth] password reset email delivery failed', {
+      email: user.email,
+      error: error.message,
+      code: error.code,
+    });
+    await clearPasswordResetOTP(user);
+    throw error;
+  }
 };
 
 exports.registerUser = async (req, res, next) => {
@@ -144,18 +176,29 @@ exports.registerUser = async (req, res, next) => {
       verificationAttempts: 0,
     });
 
-    await createVerificationCode(user);
+    try {
+      await createVerificationCode(user);
 
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully. A verification code is being sent to your email.',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully. A verification code has been sent to your email.',
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      await User.findByIdAndDelete(user._id).catch((cleanupError) => {
+        console.error('[auth] failed to rollback newly created user after email delivery failure', cleanupError);
+      });
+
+      return res.status(503).json({
+        success: false,
+        message: 'We couldn\'t send your verification email at the moment. Please try again in a few moments.',
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -324,12 +367,26 @@ exports.resendVerificationCode = async (req, res, next) => {
       const otp = generateOTP();
       console.log('[auth] resending verification OTP');
       await applyVerificationOTP(user, otp, true);
-      dispatchEmailInBackground(sendVerificationEmail(user.email, otp), 'verification resend');
+      try {
+        await sendVerificationEmail(user.email, otp);
+        console.log('[auth] verification resend email delivered');
+      } catch (error) {
+        console.error('[auth] verification resend email delivery failed', {
+          email: user.email,
+          error: error.message,
+          code: error.code,
+        });
+        await clearVerificationOTP(user);
+        return res.status(503).json({
+          success: false,
+          message: 'We couldn\'t send your verification email at the moment. Please try again in a few moments.',
+        });
+      }
     }
 
     res.status(200).json({
       success: true,
-      message: 'If an account exists, a new verification code is being sent',
+      message: 'If an account exists, a new verification code has been sent',
     });
   } catch (error) {
     next(error);
@@ -375,7 +432,14 @@ exports.requestPasswordReset = async (req, res, next) => {
         });
       }
 
-      await createPasswordResetCode(user);
+      try {
+        await createPasswordResetCode(user);
+      } catch (error) {
+        return res.status(503).json({
+          success: false,
+          message: 'We couldn\'t send your password reset email at the moment. Please try again in a few moments.',
+        });
+      }
     }
 
     res.status(200).json({
