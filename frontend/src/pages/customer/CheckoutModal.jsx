@@ -13,7 +13,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
   const [deliverySettings, setDeliverySettings] = useState({ enabled: true, amount: 20 });
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: '',
-    email: '',
     phone: '',
     whatsapp: '',
     mpesaNumber: '',
@@ -69,13 +68,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     } else if (!/^07[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) && !/^\+2547[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) ) {
       newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number';
     }
-    // ✅ For guest users, email is required
-    if (!user && !deliveryInfo.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (deliveryInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryInfo.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -162,7 +154,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
         orderData.userId = user.id;
         orderData.guestPhone = deliveryInfo.phone;
       } else {
-        orderData.guestEmail = deliveryInfo.email || 'guest@delivo.com';
         orderData.guestPhone = deliveryInfo.phone;
       }
 
@@ -280,23 +271,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 {errors.phone && <span className="field-error">{errors.phone}</span>}
               </div>
 
-              {!user && (
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input
-                    type="email"
-                    value={deliveryInfo.email}
-                    onChange={(e) => {
-                      setDeliveryInfo({ ...deliveryInfo, email: e.target.value });
-                      if (errors.email) setErrors({ ...errors, email: '' });
-                    }}
-                    placeholder="name@example.com"
-                    disabled={isProcessing || orderPending}
-                    className={errors.email ? 'error' : ''}
-                  />
-                  {errors.email && <span className="field-error">{errors.email}</span>}
-                </div>
-              )}
             </div>
 
             <div className="form-section">
@@ -317,7 +291,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
               </div>
               <div className="payment-note">
-                We will send an M-Pesa STK push to this number. Your order stays pending until payment is confirmed.
+                We will send an M-Pesa prompt to this number. Please approve it to complete your order.
               </div>
             </div>
 
@@ -345,7 +319,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
               <textarea
                 value={deliveryInfo.notes}
                 onChange={(e) => setDeliveryInfo({ ...deliveryInfo, notes: e.target.value })}
-                placeholder="Add allergies, preferences, or delivery instructions..."
+                placeholder="Add delivery instructions..."
                 rows="3"
                 disabled={isProcessing}
                 maxLength="200"
