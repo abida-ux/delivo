@@ -1,8 +1,15 @@
+const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const envResult = dotenv.config({ path: path.join(__dirname, '.env'), override: true });
-if (envResult.error) {
-  console.warn('⚠️ Failed to load backend .env:', envResult.error);
+const envPath = path.join(__dirname, '.env');
+
+if (fs.existsSync(envPath)) {
+  const envResult = dotenv.config({ path: envPath, override: true });
+  if (envResult.error) {
+    console.warn('⚠️ Failed to load backend .env:', envResult.error);
+  }
+} else {
+  console.warn('⚠️ Backend .env file not found, continuing with environment variables only.');
 }
 const express = require('express');
 const cors = require('cors');
