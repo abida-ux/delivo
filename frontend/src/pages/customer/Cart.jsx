@@ -50,11 +50,14 @@ const Cart = () => {
   const handleOrderSuccess = (orderData) => {
     console.log('✅ Order placed successfully:', orderData);
     setOrderConfirmation(orderData);
-    
-    // Show confirmation for 3 seconds then redirect
-    setTimeout(() => {
-      navigate('/customer/orders');
-    }, 3000);
+    setShowCheckoutModal(false);
+
+    if (orderData.paymentStatus === 'completed') {
+      // Show confirmation then redirect after payment confirmation
+      setTimeout(() => {
+        navigate('/customer/orders');
+      }, 3000);
+    }
   };
 
   const cartTotal = getCartTotal();
@@ -87,9 +90,28 @@ const Cart = () => {
         <div className="confirmation-toast">
           <div className="toast-icon">✓</div>
           <div className="toast-content">
-            <h3>Order Confirmed!</h3>
-            <p>Order ID: {orderConfirmation._id.slice(-8).toUpperCase()}</p>
-            <p className="toast-redirect">Redirecting to orders...</p>
+            <h3>Order Placed!</h3>
+            <p>Order ID: {orderConfirmation._id?.slice(-8).toUpperCase()}</p>
+            <p>
+              {orderConfirmation.paymentStatus === 'completed'
+                ? 'Payment confirmed. Redirecting to your orders...'
+                : 'M-Pesa prompt sent. Please approve the payment on your phone.'}
+            </p>
+            {orderConfirmation.paymentCallbackPayload?.CustomerMessage && (
+              <p className="toast-subtext">
+                {orderConfirmation.paymentCallbackPayload.CustomerMessage}
+              </p>
+            )}
+            {orderConfirmation.checkoutRequestId && (
+              <p className="toast-subtext">
+                Checkout Request: {orderConfirmation.checkoutRequestId}
+              </p>
+            )}
+            {orderConfirmation.paymentStatus === 'completed' ? (
+              <p className="toast-redirect">Redirecting to orders...</p>
+            ) : (
+              <p className="toast-redirect">Keep this screen open until payment is confirmed.</p>
+            )}
           </div>
         </div>
       )}

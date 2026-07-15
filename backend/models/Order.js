@@ -63,6 +63,26 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  checkoutRequestId: {
+    type: String,
+    required: false,
+  },
+  merchantRequestId: {
+    type: String,
+    required: false,
+  },
+  mpesaReceiptNumber: {
+    type: String,
+    required: false,
+  },
+  transactionDate: {
+    type: String,
+    required: false,
+  },
+  paymentCallbackPayload: {
+    type: mongoose.Schema.Types.Mixed,
+    required: false,
+  },
   deliveryFee: {
     type: Number,
     required: true,
@@ -93,7 +113,7 @@ const OrderSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    default: () => new Date(Date.now() + 60 * 1000),
+    default: () => new Date(Date.now() + 15 * 60 * 1000),
   },
 });
 

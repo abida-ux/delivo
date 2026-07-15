@@ -12,9 +12,8 @@
 }
 
 .section-inner {
-  width: 100%;
-  margin: 0;
-  padding: 0;
+  width: min(1440px, calc(100% - 48px));
+  margin: 0 auto;
 }
 
 .btn-primary {
@@ -23,22 +22,22 @@
   border: none;
   font-weight: 600;
   font-size: 16px;
-  padding: 14px 32px;
+  padding: 16px 36px;
   border-radius: 200px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   white-space: nowrap;
 }
 
 .btn-primary:hover {
-  background: #1a1a1a;
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 0 20px rgba(255, 107, 74, 0.08);
+  background: #222222;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
 }
 
 .btn-secondary {
@@ -47,19 +46,16 @@
   border: 2px solid #000000;
   font-weight: 600;
   font-size: 16px;
-  padding: 12px 30px;
+  padding: 14px 34px;
   border-radius: 100px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s ease, background 0.25s ease;
   white-space: nowrap;
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 0, 0, 0.06);
-  transform: translateY(-3px);
-  border-color: #FF6B4A;
-  color: #FF6B4A;
-  box-shadow: 0 8px 16px rgba(255, 107, 74, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 480px) {
@@ -82,7 +78,7 @@
 .hero-image-card {
   position: relative;
   width: 100%;
-  height: 360px;
+  height: 550px;
   border-radius: 40px;
   overflow: hidden;
   background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.8) 100%);
@@ -266,65 +262,54 @@
 /* ===== PROMOTIONS CAROUSEL ===== */
 .promotions-section {
   width: 100%;
-  padding: 24px 0 20px 0;
+  padding: 40px 16px;
   box-sizing: border-box;
   background: #f8f9fa;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
   .promotions-section {
-    padding: 40px 0 28px 0;
+    padding: 32px 16px;
   }
 }
 
 @media (max-width: 480px) {
   .promotions-section {
-    padding: 28px 0 20px 0;
+    padding: 24px 16px;
   }
 }
 
 .promotions-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  touch-action: pan-y;
-}
-
-.promo-viewport {
   width: 100%;
-  overflow: hidden;
-}
-
-.promo-track {
-  display: flex;
-  gap: 0;
-  transition: transform 1.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .promo-card {
-  flex: 0 0 100%;
-  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
   background: linear-gradient(135deg, #FF6B4A 0%, #ff5630 100%);
-  padding: 36px 40px;
+  padding: 42px 48px;
   border-radius: 28px;
   color: #ffffff;
+  animation: slideIn 0.5s ease;
 }
 
 @media (max-width: 768px) {
   .promo-card {
     grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 28px;
+    gap: 22px;
+    padding: 32px;
   }
 }
 
 @media (max-width: 480px) {
   .promo-card {
-    padding: 20px 16px;
+    padding: 26px 20px;
   }
 }
 
@@ -346,10 +331,30 @@
 }
 
 @media (max-width: 480px) {
-  .promo-btn {
-    width: 100%;
-    padding: 10px 16px;
-    font-size: 12px;
+  .promo-content h3 {
+    font-size: 20px;
+  }
+}
+
+.promo-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.promo-badge {
+  font-size: 32px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 20px 30px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .promo-badge {
+    font-size: 24px;
+    padding: 15px 20px;
   }
 }
 
@@ -359,22 +364,29 @@
   border: none;
   font-weight: 700;
   font-size: 14px;
-  padding: 10px 24px;
+  padding: 12px 28px;
   border-radius: 100px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
   white-space: nowrap;
 }
 
+@media (max-width: 480px) {
+  .promo-btn {
+    width: 100%;
+    padding: 12px 20px;
+  }
+}
+
 .promo-btn:hover {
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18), 0 0 16px rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .promo-indicators {
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 24px;
   justify-content: center;
 }
 
@@ -396,26 +408,28 @@
 /* ===== FLASH DEALS SECTION ===== */
 .flash-deals-section {
   width: 100%;
-  padding: 20px 60px 16px;
+  padding: 40px 16px;
   box-sizing: border-box;
   background: #ffffff;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
   .flash-deals-section {
-    padding: 28px 20px;
+    padding: 32px 16px;
   }
 }
 
 @media (max-width: 480px) {
   .flash-deals-section {
-    padding: 20px 12px;
+    padding: 24px 16px;
   }
 }
 
 .flash-header {
-  max-width: 1440px;
-  margin: 0 auto 16px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 40px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -426,7 +440,7 @@
   .flash-header {
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
   }
 }
 
@@ -473,11 +487,10 @@
 
 /* ===== SECTION TITLES & SUBTITLES ===== */
 .section-title {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 700;
-  color: #111111;
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
+  color: #000000;
+  margin: 0 0 8px 0;
 }
 
 @media (max-width: 480px) {
@@ -487,28 +500,29 @@
 }
 
 .section-subtitle {
-  font-size: 15px;
+  font-size: 16px;
   color: #666666;
-  margin: 0 0 16px 0;
+  margin: 0 0 32px 0;
 }
 
 /* ===== POPULAR MEALS SECTION ===== */
 .popular-meals-section {
   width: 100%;
-  padding: 20px 60px 24px;
+  padding: 40px 16px;
   box-sizing: border-box;
   background: #f8f9fa;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
   .popular-meals-section {
-    padding: 28px 20px;
+    padding: 32px 20px;
   }
 }
 
 @media (max-width: 480px) {
   .popular-meals-section {
-    padding: 20px 12px;
+    padding: 24px 16px;
   }
 }
 
@@ -519,48 +533,140 @@
   margin-right: auto;
 }
 
+/* ===== CORPORATE BANNER ===== */
+.corporate-banner {
+  width: 100%;
+  padding: 60px 24px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+}
+
+@media (max-width: 768px) {
+  .corporate-banner {
+    padding: 48px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .corporate-banner {
+    padding: 32px 16px;
+  }
+}
+
+.corporate-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+}
+
+@media (max-width: 768px) {
+  .corporate-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.corporate-left h2 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 16px 0;
+}
+
+@media (max-width: 480px) {
+  .corporate-left h2 {
+    font-size: 26px;
+  }
+}
+
+.corporate-left p {
+  font-size: 16px;
+  color: #cccccc;
+  line-height: 1.8;
+  margin: 0 0 32px 0;
+  max-width: 500px;
+}
+
+.corporate-btn {
+  background: #FF6B4A;
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px 36px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.corporate-btn:hover {
+  background: #ff5630;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(255, 107, 74, 0.3);
+}
+
+.corporate-icon {
+  color: #FF6B4A;
+  opacity: 0.2;
+}
+
+.corporate-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .corporate-right {
+    display: none;
+  }
+}
+
 /* ===== FOOTER ===== */
 .footer {
   background: #000000;
   color: #ffffff;
-  padding: 36px 60px 24px 60px;
+  padding: 60px 24px 40px 24px;
   box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
   .footer {
-    padding: 40px 32px 20px 32px;
+    padding: 48px 20px 30px 20px;
   }
 }
 
 @media (max-width: 480px) {
   .footer {
-    padding: 28px 16px 16px 16px;
+    padding: 32px 16px 24px 16px;
   }
 }
 
 .footer-content {
-  max-width: 1200px;
-  margin: 0 auto 40px;
+  max-width: 1400px;
+  margin: 0 auto 48px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 40px;
-  padding: 0 24px;
+  gap: 32px;
+  padding: 0;
 }
 
 @media (max-width: 768px) {
   .footer-content {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
-    margin-bottom: 28px;
+    margin-bottom: 32px;
   }
 }
 
 @media (max-width: 480px) {
   .footer-content {
     grid-template-columns: 1fr;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 20px;
+    margin-bottom: 24px;
   }
 }
 
@@ -1125,54 +1231,3 @@
   }
   .circle-gold { width: 200px; height: 200px; }
 }
-
-/* ===== SMOOTH SCROLL ANIMATIONS ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Card hover scale effect for premium feel */
-.flash-deals-section .food-card,
-.popular-meals-section .food-card {
-  animation: fadeInUp 0.6s ease-out backwards;
-}
-
-.restaurant-card {
-  animation: fadeInScale 0.5s ease-out backwards;
-}
-
-/* Stagger effect for cards */
-.flash-deals-section .food-card:nth-child(1) { animation-delay: 0.05s; }
-.flash-deals-section .food-card:nth-child(2) { animation-delay: 0.1s; }
-.flash-deals-section .food-card:nth-child(3) { animation-delay: 0.15s; }
-.flash-deals-section .food-card:nth-child(4) { animation-delay: 0.2s; }
-.flash-deals-section .food-card:nth-child(5) { animation-delay: 0.25s; }
-.flash-deals-section .food-card:nth-child(6) { animation-delay: 0.3s; }
-
-.popular-meals-section .food-card:nth-child(1) { animation-delay: 0.05s; }
-.popular-meals-section .food-card:nth-child(2) { animation-delay: 0.1s; }
-.popular-meals-section .food-card:nth-child(3) { animation-delay: 0.15s; }
-.popular-meals-section .food-card:nth-child(4) { animation-delay: 0.2s; }
-
-.restaurants-section .restaurant-card:nth-child(1) { animation-delay: 0.1s; }
-.restaurants-section .restaurant-card:nth-child(2) { animation-delay: 0.15s; }
-.restaurants-section .restaurant-card:nth-child(3) { animation-delay: 0.2s; }
-.restaurants-section .restaurant-card:nth-child(4) { animation-delay: 0.25s; }

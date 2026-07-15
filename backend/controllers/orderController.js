@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Food = require('../models/Food');
+const { sendMpesaStkPush } = require('../utils/mpesaService');
 
 // @desc Create order
 // @route POST /api/orders
@@ -110,8 +111,37 @@ exports.createOrder = async (req, res, next) => {
       mpesaNumber,
       paymentStatus: 'pending',
       specialInstructions: specialInstructions || '',
-      expiresAt: new Date(Date.now() + 60 * 1000),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     });
+
+    try {
+      const pushResponse = await sendMpesaStkPush({
+        phoneNumber: mpesaNumber,
+        amount: totalPrice,
+        accountReference: order._id.toString(),
+        transactionDesc: `Payment for Delivo order ${order._id.toString().slice(-8)}`,
+      });
+
+      order.checkoutRequestId = pushResponse.CheckoutRequestID || null;
+      order.merchantRequestId = pushResponse.MerchantRequestID || null;
+      order.paymentCallbackPayload = pushResponse;
+      await order.save();
+
+      console.log('✅ M-Pesa STK push initiated:', order.checkoutRequestId);
+    } catch (pushError) {
+      order.paymentStatus = 'failed';
+      order.status = 'cancelled';
+      order.failureReason = pushError.message || 'M-Pesa STK push failed';
+      await order.save();
+
+      const errorDetail = pushError.message || 'Unknown M-Pesa error';
+      console.error('❌ M-Pesa STK push failed:', errorDetail);
+      return res.status(502).json({
+        success: false,
+        message: 'Payment request failed. Please try again.',
+        error: errorDetail,
+      });
+    }
 
     await order.populate('items.foodId');
 
