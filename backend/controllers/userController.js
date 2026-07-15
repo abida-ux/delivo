@@ -216,6 +216,22 @@ exports.registerUser = async (req, res, next) => {
         command: error.command,
         response: error.response,
       });
+
+      try {
+        await User.findByIdAndDelete(user._id);
+        console.log('[auth] registration cleanup completed', { userId: user._id, email: user.email });
+      } catch (cleanupError) {
+        console.error('[auth] registration cleanup failed', {
+          userId: user._id,
+          email: user.email,
+          message: cleanupError.message,
+        });
+      }
+
+      return res.status(503).json({
+        success: false,
+        message: 'We could not send the verification email right now. Please try again shortly.',
+      });
     }
 
     console.log('[auth] registration completed', {
@@ -226,9 +242,7 @@ exports.registerUser = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: emailDelivered
-        ? 'User registered successfully. A verification code has been sent to your email.'
-        : 'User registered successfully. Your account was created, but we could not send the verification email right now. Please try the resend option later.',
+      message: 'User registered successfully. A verification code has been sent to your email.',
       user: {
         id: user._id,
         name: user.name,
