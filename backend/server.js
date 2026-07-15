@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const { initializeMailer } = require('./config/mailer');
+const transporter = require('./config/mail');
 const errorHandler = require('./middleware/errorMiddleware');
 
 // Import routes
@@ -31,7 +31,7 @@ console.log(`  ✓ JWT_SECRET: ${process.env.JWT_SECRET ? '✓ Set' : '❌ MISSI
 connectDB();
 
 // Initialize SMTP at startup
-initializeMailer().catch((error) => {
+transporter.verifyTransporter().catch((error) => {
   console.warn('⚠️ Mailer initialization warning:', error.message || error);
 });
 
@@ -112,35 +112,7 @@ const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 let server;
 
-<<<<<<< HEAD
-const startServer = async () => {
-  const mailReady = await transporter.verifyTransporter();
-  if (!mailReady) {
-    console.warn('⚠️ SMTP verification reported an issue during startup. Email delivery may still fail until configured correctly.');
-  }
-
-  server = app.listen(PORT, () => {
-    console.log(`
-    ╔═══════════════════════════════════════════════╗
-    ║                                               ║
-    ║   🍕 DELIVO BACKEND SERVER                   ║
-    ║   ✅ Server running on port ${PORT}               ║
-    ║   🗄️  Environment: ${NODE_ENV}                    ║
-    ║   🔐 CORS enabled for: localhost & delivo.co.ke
-    ║                                               ║
-    ╚═══════════════════════════════════════════════╝
-    `);
-    console.log('🚀 Render startup complete');
-  });
-
-  return server;
-};
-
-startServer().catch((error) => {
-  console.error('❌ Failed to start server:', error);
-  process.exit(1);
-=======
-const server = app.listen(PORT, () => {
+server = app.listen(PORT, () => {
   console.log(`
   ╔═══════════════════════════════════════════════╗
   ║                                               ║
@@ -151,7 +123,7 @@ const server = app.listen(PORT, () => {
   ║                                               ║
   ╚═══════════════════════════════════════════════╝
   `);
->>>>>>> 745c3f51e46feacea2dbabdbc04695b633a497a5
+  console.log('🚀 Render startup complete');
 });
 
 // Periodic cleanup: expire unpaid pending orders older than 1 minute
