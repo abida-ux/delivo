@@ -21,6 +21,7 @@ const Signup = ({ isModal = false }) => {
   const [verifyMessage, setVerifyMessage] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const otpInputRef = useRef(null);
+  const isSubmittingRef = useRef(false);
 
   const emptyForm = {
     name: '',
@@ -70,7 +71,8 @@ const Signup = ({ isModal = false }) => {
     }
 
     try {
-      if (loading) return;
+      if (isSubmittingRef.current) return;
+      isSubmittingRef.current = true;
 
       setLoading(true);
       const { confirmPassword, ...payload } = formData;
@@ -111,6 +113,7 @@ const Signup = ({ isModal = false }) => {
       }
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 

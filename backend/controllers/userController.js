@@ -78,11 +78,9 @@ const createVerificationCode = async (user) => {
   const otp = generateOTP();
   await applyVerificationOTP(user, otp, false);
 
-  try {
-    await sendVerificationEmail(user.email, otp);
-  } catch (error) {
+  sendVerificationEmail(user.email, otp).catch((error) => {
     console.error(`⚠️ Verification email could not be sent to ${user.email}:`, error.message);
-  }
+  });
 };
 
 const createPasswordResetCode = async (user) => {
@@ -137,7 +135,9 @@ exports.registerUser = async (req, res, next) => {
       verificationAttempts: 0,
     });
 
-    await createVerificationCode(user);
+    createVerificationCode(user).catch((error) => {
+      console.error('⚠️ Verification setup failed after registration:', error.message);
+    });
 
     res.status(201).json({
       success: true,

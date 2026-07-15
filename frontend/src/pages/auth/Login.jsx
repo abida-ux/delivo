@@ -48,6 +48,7 @@ const Login = ({ isModal = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
 
     try {
       setLoading(true);
@@ -86,7 +87,6 @@ const Login = ({ isModal = false }) => {
       if (remote?.verification?.required) {
         setShowVerifySection(true);
         setVerifyMessage(remote?.message || 'Account not verified.');
-        // ensure email field is set
         setFormData((f) => ({ ...f, email: formData.email }));
       } else {
         alert(remote?.message || 'Login failed');
