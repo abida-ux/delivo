@@ -13,6 +13,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
   const [deliverySettings, setDeliverySettings] = useState({ enabled: true, amount: 20 });
   const [deliveryInfo, setDeliveryInfo] = useState({
     address: '',
+    email: '',
     phone: '',
     whatsapp: '',
     mpesaNumber: '',
@@ -67,6 +68,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
       newErrors.mpesaNumber = 'M-Pesa number is required';
     } else if (!/^07[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) && !/^\+2547[0-9]{8}$/.test(deliveryInfo.mpesaNumber.replace(/\s+/g, '')) ) {
       newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number';
+    }
+    if (!user && !deliveryInfo.email.trim()) {
+      newErrors.email = 'Email is required for guest checkout';
+    } else if (deliveryInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryInfo.email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -154,6 +160,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
         orderData.userId = user.id;
         orderData.guestPhone = deliveryInfo.phone;
       } else {
+        orderData.guestEmail = deliveryInfo.email || 'guest@delivo.com';
         orderData.guestPhone = deliveryInfo.phone;
       }
 
@@ -271,6 +278,23 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
                 {errors.phone && <span className="field-error">{errors.phone}</span>}
               </div>
 
+              {!user && (
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={deliveryInfo.email}
+                    onChange={(e) => {
+                      setDeliveryInfo({ ...deliveryInfo, email: e.target.value });
+                      if (errors.email) setErrors({ ...errors, email: '' });
+                    }}
+                    placeholder="name@example.com"
+                    disabled={isProcessing || orderPending}
+                    className={errors.email ? 'error' : ''}
+                  />
+                  {errors.email && <span className="field-error">{errors.email}</span>}
+                </div>
+              )}
             </div>
 
             <div className="form-section">
