@@ -16,6 +16,15 @@
   margin: 0 auto;
 }
 
+/* When a section needs to span the full viewport width (no centered container) */
+.full-width-section {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 16px; /* keep some horizontal padding on small screens */
+  box-sizing: border-box;
+}
+
 .btn-primary {
   background: #000000;
   color: #ffffff;

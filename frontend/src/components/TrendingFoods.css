@@ -134,6 +134,22 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* When the trending list is placed in a full-width section, use a responsive grid
+   so food cards span the available width and are left-aligned instead of centered */
+/* Keep the carousel one-line when inside a full-width section
+   - maintain horizontal scroll behavior
+   - left-align items and let the track expand to available width */
+.full-width-section .trending-carousel-track {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  padding: 8px 0 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  justify-content: flex-start;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Hide Track Scrollbars */
 .trending-carousel-track::-webkit-scrollbar {
   display: none;
@@ -158,6 +174,9 @@
   flex-direction: column;
   height: 100%;
 }
+
+/* In grid mode let cards expand to fill column width */
+/* Ensure cards keep their fixed width in carousel mode */
 
 .food-card:hover {
   transform: translateY(-4px);

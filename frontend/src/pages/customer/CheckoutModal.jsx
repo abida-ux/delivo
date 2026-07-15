@@ -65,8 +65,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
       window.removeEventListener('storage', storageHandler);
     };
   }, [isOpen]);
-
-<<<<<<< HEAD
   const isFreeDelivery =
     cartItems.length > 0 &&
     deliverySettings.freeDeliveryEnabled &&
