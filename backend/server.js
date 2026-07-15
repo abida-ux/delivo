@@ -2,13 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const mailTransporter = require('./config/mail');
+const { initializeMailer } = require('./config/mailer');
 const errorHandler = require('./middleware/errorMiddleware');
 
 // Import routes
 const restaurantRoutes = require('./routes/restaurantRoutes');
 const foodRoutes = require('./routes/foodRoutes');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orderRoutes');
 const storeRoutes = require('./routes/storeRoutes');
 const cartRoutes = require('./routes/cartRoutes');
@@ -28,6 +29,11 @@ console.log(`  ✓ JWT_SECRET: ${process.env.JWT_SECRET ? '✓ Set' : '❌ MISSI
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize SMTP at startup
+initializeMailer().catch((error) => {
+  console.warn('⚠️ Mailer initialization warning:', error.message || error);
+});
 
 // ==================== MIDDLEWARE ====================
 // JSON parsing with size limits
@@ -72,6 +78,7 @@ app.use(cors(corsOptions));
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/cart', cartRoutes);

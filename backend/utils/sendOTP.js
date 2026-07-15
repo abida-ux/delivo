@@ -1,11 +1,4 @@
-const transporter = require('../config/mail');
-
-const buildMailOptions = (to, subject, html) => ({
-  from: process.env.MAIL_FROM,
-  to,
-  subject,
-  html,
-});
+const { sendMailWithFallback, buildMailOptions } = require('../config/mailer');
 
 const buildEmailTemplate = (title, body, otp) => `
   <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
@@ -29,12 +22,14 @@ const buildEmailTemplate = (title, body, otp) => `
 `;
 
 const sendVerificationOTP = async (email, otp) => {
+  const mailOptions = buildMailOptions(
+    email,
+    'Verify Your Email Address',
+    buildEmailTemplate('Verify Your Email Address', 'Your verification code is:', otp)
+  );
+
   try {
-    const subject = 'Verify Your Email Address';
-    const body = `Your verification code is:`;
-    const html = buildEmailTemplate('Verify Your Email Address', body, otp);
-    
-    const result = await transporter.sendMail(buildMailOptions(email, subject, html));
+    const result = await sendMailWithFallback(mailOptions);
     console.log(`✅ Verification OTP sent to ${email} (Message ID: ${result.messageId})`);
     return result;
   } catch (error) {

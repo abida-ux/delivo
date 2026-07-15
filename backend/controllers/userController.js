@@ -22,6 +22,7 @@ const MAX_VERIFICATION_ATTEMPTS = 5;
 const MAX_RESET_ATTEMPTS = 5;
 const VERIFICATION_LOCK_MS = 15 * 60 * 1000;
 const RESET_LOCK_MS = 15 * 60 * 1000;
+const EMAIL_SEND_TIMEOUT_MS = 1500;
 
 const resetVerificationResendWindow = (user) => {
   const now = Date.now();
@@ -78,9 +79,17 @@ const createVerificationCode = async (user) => {
   const otp = generateOTP();
   await applyVerificationOTP(user, otp, false);
 
-  sendVerificationEmail(user.email, otp).catch((error) => {
+  try {
+    await Promise.race([
+      sendVerificationEmail(user.email, otp),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Email delivery timed out')), EMAIL_SEND_TIMEOUT_MS)),
+    ]);
+
+    return { otp, delivered: true };
+  } catch (error) {
     console.error(`⚠️ Verification email could not be sent to ${user.email}:`, error.message);
-  });
+    return { otp, delivered: false };
+  }
 };
 
 const createPasswordResetCode = async (user) => {
@@ -135,13 +144,15 @@ exports.registerUser = async (req, res, next) => {
       verificationAttempts: 0,
     });
 
-    createVerificationCode(user).catch((error) => {
-      console.error('⚠️ Verification setup failed after registration:', error.message);
-    });
+    const { otp, delivered } = await createVerificationCode(user);
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully. A verification code has been sent to your email.',
+      message: delivered
+        ? 'User registered successfully. A verification code has been sent to your email.'
+        : 'User registered successfully. We could not send the email right now, but your verification code is below.',
+      verificationCode: delivered ? undefined : otp,
+      emailDeliveryFailed: !delivered,
       user: {
         id: user._id,
         name: user.name,
@@ -319,8 +330,25 @@ exports.resendVerificationCode = async (req, res, next) => {
 
       const otp = generateOTP();
       await applyVerificationOTP(user, otp, true);
-      sendVerificationEmail(user.email, otp).catch((error) => {
+
+      let delivered = true;
+      try {
+        await Promise.race([
+          sendVerificationEmail(user.email, otp),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Email delivery timed out')), EMAIL_SEND_TIMEOUT_MS)),
+        ]);
+      } catch (error) {
+        delivered = false;
         console.error(`⚠️ Resend verification email could not be sent to ${user.email}:`, error.message);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: delivered
+          ? 'If an account exists, a new verification code has been sent'
+          : 'We could not send the email right now, but your verification code is below.',
+        verificationCode: delivered ? undefined : otp,
+        emailDeliveryFailed: !delivered,
       });
     }
 

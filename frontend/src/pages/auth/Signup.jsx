@@ -94,7 +94,8 @@ const Signup = ({ isModal = false }) => {
       }
 
       setShowVerification(true);
-      setVerifyMessage(res?.message || 'Account created. Enter the 6-digit code sent to your email to finish verification.');
+      const fallbackCode = res?.verificationCode ? ` Verification code: ${res.verificationCode}` : '';
+      setVerifyMessage((res?.message || 'Account created. Enter the 6-digit code sent to your email to finish verification.') + fallbackCode);
       setFormData((prev) => ({ ...emptyForm, email: payload.email }));
       setTimeout(() => {
         otpInputRef.current?.focus();
@@ -151,7 +152,8 @@ const Signup = ({ isModal = false }) => {
     try {
       setResendLoading(true);
       const res = await resendVerificationCode({ email: verificationEmail });
-      setVerifyMessage(res?.message || 'A new verification code was sent.');
+      const fallbackCode = res?.verificationCode ? ` Verification code: ${res.verificationCode}` : '';
+      setVerifyMessage((res?.message || 'A new verification code was sent.') + fallbackCode);
       setError('');
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Could not resend code';
