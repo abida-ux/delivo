@@ -3,7 +3,7 @@
 .restaurants-section {
   max-width: 100%;
   margin: 0;
-  padding: 60px 80px;
+  padding: 40px 60px;
   background-color: #ffffff;
   font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
@@ -14,7 +14,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .section-main-title {
@@ -99,7 +99,7 @@
   display: flex !important;
   flex-direction: row;
   flex-wrap: nowrap;
-  gap: 20px;
+  gap: 16px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
@@ -150,23 +150,23 @@
 /* PREMIUM CARD COMPONENT DESIGN */
 .restaurant-card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  flex: 0 0 320px !important;
-  width: 320px;
-  min-width: 320px;
-  max-width: 320px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex: 0 0 300px !important;
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
 
 .restaurant-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
 }
 
 .card-image-container {
@@ -222,7 +222,7 @@
 
 /* CARD INTERNAL CONTENT ELEMENTS */
 .card-details {
-  padding: 20px;
+  padding: 16px;
 }
 
 .card-title-row {

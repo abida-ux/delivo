@@ -22,8 +22,31 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
 });
 
+let foodsCache = null;
+let foodsPromise = null;
+
+const getCachedFoods = () => {
+  try {
+    const cached = sessionStorage.getItem('delivo_foods_cache');
+    if (!cached) return null;
+
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const setCachedFoods = (data) => {
+  try {
+    sessionStorage.setItem('delivo_foods_cache', JSON.stringify(data));
+  } catch {
+    // ignore storage errors
+  }
+};
 
 // ================= TOKEN ATTACHMENT (IMPORTANT) =================
 api.interceptors.request.use((config) => {
@@ -51,8 +74,33 @@ export const getRestaurantById = async (id) => {
 
 // ================= FOODS =================
 export const getAllFoods = async () => {
-  const res = await api.get('/foods');
-  return res.data.data || [];
+  const cached = getCachedFoods();
+  if (cached) {
+    foodsCache = cached;
+    return cached;
+  }
+
+  if (foodsCache) {
+    return foodsCache;
+  }
+
+  if (foodsPromise) {
+    return foodsPromise;
+  }
+
+  foodsPromise = api.get('/foods')
+    .then((res) => {
+      const data = res.data.data || [];
+      foodsCache = data;
+      setCachedFoods(data);
+      return data;
+    })
+    .catch((error) => {
+      foodsPromise = null;
+      throw error;
+    });
+
+  return foodsPromise;
 };
 
 export const getFoodsByRestaurant = async (restaurantId) => {
@@ -112,17 +160,7 @@ export const verifyEmail = async (data) => {
 };
 
 export const resendVerificationCode = async (data) => {
-  const res = await api.post('/users/resend-verification-code', data);
-  return res.data;
-};
-
-export const requestPasswordReset = async (data) => {
-  const res = await api.post('/users/request-password-reset', data);
-  return res.data;
-};
-
-export const resetPassword = async (data) => {
-  const res = await api.post('/users/reset-password', data);
+  const res = await api.post('/users/resend-verification', data);
   return res.data;
 };
 

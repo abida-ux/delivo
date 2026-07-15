@@ -3,7 +3,7 @@
 .how-it-works-section {
   position: relative;
   width: 100%;
-  padding: 80px 40px;
+  padding: 60px 40px;
   background-color: #ffffff;
   font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
@@ -24,7 +24,7 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  margin-bottom: 64px;
+  margin-bottom: 48px;
 }
 
 .section-title {
@@ -102,7 +102,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
@@ -130,9 +130,9 @@
 
 .step-card-wrapper {
   position: relative;
-  flex: 0 0 260px;
-  width: 260px;
-  min-width: 260px;
+  flex: 0 0 240px;
+  width: 240px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
 }

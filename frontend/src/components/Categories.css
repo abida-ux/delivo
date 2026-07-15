@@ -3,7 +3,7 @@
 .categories-section {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 40px 80px;
+  padding: 28px 60px;
   background-color: #ffffff;
   font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
@@ -15,7 +15,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .categories-title {
@@ -61,10 +61,10 @@
 /* HORIZONTAL CAROUSEL TRACK */
 .categories-slider-container {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   overflow-x: auto;
   scroll-behavior: smooth;
-  padding: 10px 4px;
+  padding: 8px 2px;
   -webkit-overflow-scrolling: touch; /* Mobile physics momentum */
 }
 
@@ -83,19 +83,19 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 10px 24px 10px 12px;
+  padding: 8px 20px 8px 10px;
   border-radius: 100px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .category-icon-wrapper {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   background-color: transparent;
   border-radius: 50%;
   display: flex;

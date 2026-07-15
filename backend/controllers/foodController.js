@@ -18,9 +18,10 @@ exports.getAllFoods = async (req, res) => {
     }
 
     const foods = await query
+      .select('name description price image category rating restaurant')
       .populate({
         path: 'restaurant',
-        select: 'name bannerImage rating deliveryTime cuisine isOpen',
+        select: 'name',
       })
       .lean()
       .maxTimeMS(5000); // prevent hanging on cPanel

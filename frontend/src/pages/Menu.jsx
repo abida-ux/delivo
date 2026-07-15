@@ -8,7 +8,14 @@ import './Menu.css';
 const Menu = () => {
   const [foods, setFoods] = useState([]);
   const [filteredFoods, setFilteredFoods] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('delivo_foods_cache');
+      return !cached;
+    } catch {
+      return true;
+    }
+  });
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -37,9 +44,7 @@ const Menu = () => {
 
   const fetchFoods = async () => {
     try {
-      setLoading(true);
       const response = await getAllFoods();
-      // Randomize foods
       const randomized = [...response].sort(() => Math.random() - 0.5);
       setFoods(randomized);
       setFilteredFoods(randomized);

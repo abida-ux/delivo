@@ -69,18 +69,16 @@ const Login = ({ isModal = false }) => {
       // Reset form
       setFormData(emptyForm);
 
-      // Navigate based on user role
-      setTimeout(() => {
-        if (res.user?.role === 'admin') {
-          navigate('/admin');
-        } else if (res.user?.role === 'restaurant') {
-          navigate('/restaurant-dashboard');
-        } else if (res.user?.role === 'rider') {
-          navigate('/rider-dashboard');
-        } else {
-          navigate('/');
-        }
-      }, 500);
+      // Navigate based on user role immediately
+      if (res.user?.role === 'admin') {
+        navigate('/admin');
+      } else if (res.user?.role === 'restaurant') {
+        navigate('/restaurant-dashboard');
+      } else if (res.user?.role === 'rider') {
+        navigate('/rider-dashboard');
+      } else {
+        navigate('/');
+      }
 
     } catch (err) {
       console.error('LOGIN ERROR:', err);
@@ -113,12 +111,10 @@ const Login = ({ isModal = false }) => {
       if (isModal) closeModal();
       setShowVerifySection(false);
       setFormData(emptyForm);
-      setTimeout(() => {
-        if (loginRes.user?.role === 'admin') navigate('/admin');
-        else if (loginRes.user?.role === 'restaurant') navigate('/restaurant-dashboard');
-        else if (loginRes.user?.role === 'rider') navigate('/rider-dashboard');
-        else navigate('/');
-      }, 300);
+      if (loginRes.user?.role === 'admin') navigate('/admin');
+      else if (loginRes.user?.role === 'restaurant') navigate('/restaurant-dashboard');
+      else if (loginRes.user?.role === 'rider') navigate('/rider-dashboard');
+      else navigate('/');
     } catch (error) {
       console.error('VERIFY ERROR', error);
       alert(error.response?.data?.message || 'Verification failed');

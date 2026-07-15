@@ -16,8 +16,11 @@ export const CartProvider = ({ children }) => {
     return typeof item.foodId === 'object' && item.foodId !== null ? item.foodId._id : item.foodId;
   };
 
-  // ✅ Load guest cart from localStorage on initial mount
+  // ✅ Load guest cart from localStorage only when the user is not signed in
   useEffect(() => {
+    if (authLoading) return;
+    if (user && token) return;
+
     const guestCart = localStorage.getItem(GUEST_CART_KEY);
     if (guestCart) {
       try {
@@ -27,8 +30,22 @@ export const CartProvider = ({ children }) => {
         console.error('❌ Error parsing guest cart:', error);
         localStorage.removeItem(GUEST_CART_KEY);
       }
+    } else {
+      setCartItems([]);
     }
-  }, []);
+  }, [user, token, authLoading]);
+
+  // ✅ Persist the current cart locally when the user is signed out
+  useEffect(() => {
+    if (authLoading) return;
+    if (user && token) return;
+
+    if (cartItems.length > 0) {
+      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem(GUEST_CART_KEY);
+    }
+  }, [cartItems, user, token, authLoading]);
 
   // ✅ Fetch cart from database when user logs in
   useEffect(() => {
@@ -99,42 +116,60 @@ export const CartProvider = ({ children }) => {
 
   // ✅ Add item to cart (works for both authenticated and guest users)
   const addItem = async (food, quantity = 1) => {
-    try {
-      if (user && token) {
-        // ✅ Add to database for authenticated users
+    if (user && token) {
+      const optimisticCart = [...cartItems];
+      const existingItem = optimisticCart.find(
+        (item) => getNormalizedFoodId(item) === food._id
+      );
+
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        optimisticCart.push({
+          foodId: food._id,
+          name: food.name,
+          price: food.price,
+          image: food.image,
+          quantity,
+        });
+      }
+
+      setCartItems(optimisticCart);
+
+      try {
         const { data } = await api.post('/cart/add', {
           foodId: food._id,
           quantity,
         });
 
-        setCartItems(data.cart?.items || []);
-        console.log('✅ Item added to cart:', food.name);
-      } else {
-        // ✅ Add to localStorage for guest users
-        const updatedCart = [...cartItems];
-        const existingItem = updatedCart.find(
-          (item) => getNormalizedFoodId(item) === food._id
-        );
-
-        if (existingItem) {
-          existingItem.quantity += quantity;
-        } else {
-          updatedCart.push({
-            foodId: food._id,
-            name: food.name,
-            price: food.price,
-            image: food.image,
-            quantity,
-          });
-        }
-
-        setCartItems(updatedCart);
-        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updatedCart));
-        console.log('✅ Item added to cart (guest):', food.name);
+        setCartItems(data.cart?.items || optimisticCart);
+        console.log('✅ Item added to account cart:', food.name);
+      } catch (error) {
+        console.error('❌ Error adding to cart:', error);
       }
-    } catch (error) {
-      console.error('❌ Error adding to cart:', error);
+      return;
     }
+
+    const optimisticCart = [...cartItems];
+    const existingItem = optimisticCart.find(
+      (item) => getNormalizedFoodId(item) === food._id
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      optimisticCart.push({
+        foodId: food._id,
+        name: food.name,
+        price: food.price,
+        image: food.image,
+        quantity,
+      });
+    }
+
+    setCartItems(optimisticCart);
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(optimisticCart));
+    console.log('✅ Item added to guest cart:', food.name);
   };
 
   // ✅ Remove item from cart (works for both authenticated and guest users)

@@ -27,7 +27,7 @@ button:focus {
   top: 0;
   left: 0;
   width: 100%;
-  padding: 24px 40px;
+  padding: 16px 32px;
   box-sizing: border-box;
   z-index: 1000;
   transition: padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -35,36 +35,36 @@ button:focus {
 
 @media (max-width: 768px) {
   .navbar-container {
-    padding: 12px 20px;
+    padding: 10px 16px;
   }
 }
 
 @media (max-width: 480px) {
   .navbar-container {
-    padding: 8px 12px;
+    padding: 6px 10px;
   }
 }
 
 .navbar-container.scrolled {
-  padding: 16px 40px;
+  padding: 12px 32px;
 }
 
 @media (max-width: 768px) {
   .navbar-container.scrolled {
-    padding: 10px 20px;
+    padding: 8px 16px;
   }
 }
 
 @media (max-width: 480px) {
   .navbar-container.scrolled {
-    padding: 8px 12px;
+    padding: 6px 10px;
   }
 }
 
 .navbar-glass {
   max-width: 1440px;
   margin: 0 auto;
-  height: 72px;
+  height: 64px;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -74,7 +74,7 @@ button:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 20px;
   transition: background 0.4s ease, border-color 0.4s ease;
 }
 
