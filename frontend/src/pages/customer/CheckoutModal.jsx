@@ -77,7 +77,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
 
   const validateForm = () => {
     const newErrors = {};
-    const phonePattern = /^(?:0[0-9][0-9]{7}|\+254[0-9]{9}|254[0-9]{9})$/;
+    const phonePattern = /^(?:0(?:1|7)\d{8}|(?:\+|00)254(?:1|7)\d{8}|254(?:1|7)\d{8})$/;
 
     if (!deliveryInfo.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
@@ -89,15 +89,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     }
     if (!deliveryInfo.whatsapp.trim()) {
       newErrors.whatsapp = 'WhatsApp number is required';
-    } else if (!phonePattern.test(deliveryInfo.whatsapp.replace(/\s+/g, ''))) {
-      newErrors.whatsapp = 'Please enter a valid Kenyan WhatsApp number starting with 01, 07, or +254';
+    } else {
+      const normalizedWhatsApp = deliveryInfo.whatsapp.replace(/[^0-9+]/g, '');
+      if (!phonePattern.test(normalizedWhatsApp)) {
+        newErrors.whatsapp = 'Enter a valid Kenyan WhatsApp number like 0712345678, 0112345678, or +254712345678';
+      }
     }
     if (!deliveryInfo.mpesaNumber.trim()) {
       newErrors.mpesaNumber = 'M-Pesa number is required';
     } else {
-      const normalizedMpesaNumber = deliveryInfo.mpesaNumber.replace(/\s+/g, '');
+      const normalizedMpesaNumber = deliveryInfo.mpesaNumber.replace(/[^0-9+]/g, '');
       if (!phonePattern.test(normalizedMpesaNumber)) {
-        newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number starting with 01, 07, or +254';
+        newErrors.mpesaNumber = 'Enter a valid Kenyan M-Pesa number like 0712345678, 0112345678, or +254712345678';
       }
     }
     setErrors(newErrors);
