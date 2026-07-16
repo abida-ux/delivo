@@ -113,6 +113,32 @@
   color: #ff6b35;
 }
 
+.tracking-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.tracking-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tracking-pill.done {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.tracking-pill.active {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
 .order-actions {
   display: flex;
   gap: 12px;

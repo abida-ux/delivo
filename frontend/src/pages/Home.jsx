@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Clock, Zap, Star, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCartUI } from '../context/CartUIContext';
 import "./Home.css";
 
 import FeaturedRestaurants from "../components/RestaurantCard";
@@ -14,6 +15,7 @@ export default function Home() {
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(3600); // 1 hour countdown
   const navigate = useNavigate();
+  const { openCart } = useCartUI();
 
   // Countdown timer for flash deals
   useEffect(() => {
@@ -142,7 +144,11 @@ export default function Home() {
             <h4>Quick Links</h4>
             <ul>
               <li><a href="/menu">Menu</a></li>
-              <li><a href="/customer/cart">My Cart</a></li>
+              <li>
+                <button className="footer-link-button" type="button" onClick={openCart}>
+                  My Cart
+                </button>
+              </li>
               <li><a href="/settings">Settings</a></li>
             </ul>
           </div>

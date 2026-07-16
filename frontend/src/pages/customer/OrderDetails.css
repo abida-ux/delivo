@@ -91,6 +91,58 @@
   font-size: 14px;
 }
 
+.tracking-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.tracking-card h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.tracking-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.tracking-step {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.tracking-step.done {
+  border-color: #8dd8a7;
+  background: #f0fdf4;
+}
+
+.tracking-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: #d1d5db;
+  flex-shrink: 0;
+}
+
+.tracking-step.done .tracking-dot {
+  background: #22c55e;
+}
+
+.tracking-step p {
+  margin: 2px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
 .order-failure-note {
   display: flex;
   align-items: center;

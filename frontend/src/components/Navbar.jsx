@@ -204,7 +204,12 @@ const Navbar = () => {
           {/* RIGHT: ACTIONS */}
           <div className="navbar-right">
 
-            <button className="icon-btn cart-icon-btn" onClick={openCart}>
+            <button
+              className="icon-btn cart-icon-btn"
+              onClick={() => {
+                openCart();
+              }}
+            >
               <ShoppingCart size={20} />
               {cartItems.length > 0 && (
                 <span className="cart-badge">{cartItems.length}</span>
