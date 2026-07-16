@@ -1,4 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
 
 const normalizeMailSecureOption = (value) => {
   if (typeof value === 'boolean') return value;
@@ -21,10 +29,10 @@ const mailUser = getEnv('MAIL_USER', 'SMTP_USER');
 const mailPass = getEnv('MAIL_PASS', 'SMTP_PASS');
 const mailFrom = getEnv('MAIL_FROM', 'SMTP_FROM') || 'Delivo <info@delivo.buzz>';
 
-const transporter = nodemailer.createTransport({
-  host: mailHost,
-  port: mailPort,
-  secure: mailSecure,
+const createTransportOptions = ({ host, port, secure }) => ({
+  host,
+  port,
+  secure,
   auth: mailUser && mailPass
     ? {
         user: mailUser,
@@ -36,32 +44,120 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 15000,
   greetingTimeout: 15000,
   socketTimeout: 20000,
-  requireTLS: true,
+  requireTLS: false,
+  tls: {
+    rejectUnauthorized: false,
+    minVersion: 'TLSv1.2',
+  },
 });
 
-const verifyTransporter = async () => {
-  if (!mailHost || !mailUser || !mailPass) {
-    console.warn('⚠️ SMTP credentials are incomplete. Email delivery will be skipped until configured.');
-    return false;
+const getMailTransportCandidates = () => {
+  const candidates = [];
+  const seen = new Set();
+
+  const addCandidate = (port, secure, label) => {
+    const key = `${port}:${secure}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push({
+      label,
+      host: mailHost,
+      port,
+      secure,
+    });
+  };
+
+  addCandidate(mailPort, mailSecure, 'primary');
+
+  const fallbackPort = normalizeMailPort(getEnv('MAIL_PORT_FALLBACK', 'SMTP_FALLBACK_PORT'));
+  const fallbackSecure = normalizeMailSecureOption(getEnv('MAIL_SECURE_FALLBACK', 'SMTP_SECURE_FALLBACK'));
+  if (fallbackPort && fallbackPort !== mailPort) {
+    addCandidate(fallbackPort, fallbackSecure, 'fallback');
   }
 
-  try {
-    await transporter.verify();
-    console.log('✅ SpaceMail SMTP connection verified');
-    return true;
-  } catch (error) {
-    console.error('❌ SpaceMail SMTP verification failed:', {
-      message: error.message,
-      code: error.code,
-      host: mailHost,
-    });
-    return false;
+  if (mailSecure && mailPort !== 587) {
+    addCandidate(587, false, 'starttls');
   }
+
+  if (!mailSecure && mailPort !== 465) {
+    addCandidate(465, true, 'ssl');
+  }
+
+  return candidates;
 };
 
-transporter.verifyTransporter = verifyTransporter;
-transporter.normalizeMailSecureOption = normalizeMailSecureOption;
+const createTransporter = (candidate) => nodemailer.createTransport(createTransportOptions(candidate));
+const transportCandidates = getMailTransportCandidates().map((candidate) => ({
+  ...candidate,
+  transporter: createTransporter(candidate),
+}));
+
+const transportImplementation = {
+  sendMail: async (mailOptions) => {
+    let lastError;
+
+    for (const candidate of transportCandidates) {
+      try {
+        const info = await candidate.transporter.sendMail({
+          ...mailOptions,
+          from: mailOptions.from || mailFrom,
+        });
+        console.log(`📧 Email delivered via ${candidate.label} (${candidate.host}:${candidate.port})`);
+        return info;
+      } catch (error) {
+        lastError = error;
+        console.warn(`⚠️ Email delivery failed for ${candidate.label} (${candidate.host}:${candidate.port})`, {
+          message: error.message,
+          code: error.code,
+          command: error.command,
+          response: error.response,
+        });
+      }
+    }
+
+    throw lastError;
+  },
+  verifyTransporter: async () => {
+    if (!mailHost || !mailUser || !mailPass) {
+      console.warn('⚠️ SMTP credentials are incomplete. Email delivery will be skipped until configured.');
+      return false;
+    }
+
+    let lastError;
+    for (const candidate of transportCandidates) {
+      try {
+        await candidate.transporter.verify();
+        console.log(`✅ SMTP connection verified via ${candidate.label} (${candidate.host}:${candidate.port})`);
+        return true;
+      } catch (error) {
+        lastError = error;
+        console.warn(`⚠️ SMTP verification failed for ${candidate.label} (${candidate.host}:${candidate.port})`, {
+          message: error.message,
+          code: error.code,
+          host: candidate.host,
+          port: candidate.port,
+        });
+      }
+    }
+
+    console.error('❌ SMTP verification failed:', {
+      message: lastError?.message,
+      code: lastError?.code,
+      host: mailHost,
+      port: mailPort,
+    });
+    return false;
+  },
+};
+
+const transporter = {
+  sendMail: async (mailOptions) => transportImplementation.sendMail(mailOptions),
+  verifyTransporter: async () => transportImplementation.verifyTransporter(),
+  normalizeMailSecureOption,
+  getMailTransportCandidates,
+};
 
 module.exports = transporter;
-module.exports.verifyTransporter = verifyTransporter;
+module.exports.verifyTransporter = transporter.verifyTransporter;
 module.exports.normalizeMailSecureOption = normalizeMailSecureOption;
+module.exports.getMailTransportCandidates = getMailTransportCandidates;
