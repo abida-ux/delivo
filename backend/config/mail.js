@@ -18,19 +18,19 @@ const normalizeMailSecureOption = (value) => {
 
 const normalizeMailPort = (value) => {
   const port = Number(value);
-  return Number.isInteger(port) && port > 0 ? port : 465;
+  return Number.isInteger(port) && port > 0 ? port : 587;
 };
 
 const getEnv = (primary, fallback) => process.env[primary] || process.env[fallback];
 const mailHost = getEnv('MAIL_HOST', 'SMTP_HOST');
-const mailPort = normalizeMailPort(getEnv('MAIL_PORT', 'SMTP_PORT') || 465);
+const mailPort = normalizeMailPort(getEnv('MAIL_PORT', 'SMTP_PORT') || 587);
 const mailSecure = normalizeMailSecureOption(getEnv('MAIL_SECURE', 'SMTP_SECURE'));
 const mailUser = getEnv('MAIL_USER', 'SMTP_USER');
 const mailPass = getEnv('MAIL_PASS', 'SMTP_PASS');
 const mailFrom = getEnv('MAIL_FROM', 'SMTP_FROM') || 'Delivo <info@delivo.buzz>';
 
-const resolvedSecure = mailPort === 465 ? true : mailSecure;
-const resolvedPort = mailPort || (resolvedSecure ? 465 : 587);
+const resolvedSecure = mailPort === 465 ? true : false;
+const resolvedPort = mailPort || 587;
 
 const transporter = nodemailer.createTransport({
   host: mailHost,
@@ -44,9 +44,9 @@ const transporter = nodemailer.createTransport({
     : undefined,
   pool: true,
   maxConnections: 3,
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
+  connectionTimeout: 20000,
+  greetingTimeout: 20000,
+  socketTimeout: 30000,
   requireTLS: false,
   tls: {
     rejectUnauthorized: false,

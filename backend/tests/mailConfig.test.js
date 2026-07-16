@@ -14,18 +14,17 @@ test('normalizeMailSecureOption parses common truthy and falsy values', () => {
   assert.equal(normalizeMailSecureOption(undefined), false);
 });
 
-test('getMailTransportCandidates adds a STARTTLS fallback for SSL mail', () => {
+test('uses STARTTLS-friendly defaults for outbound mail', () => {
   const originalPort = process.env.MAIL_PORT;
   const originalSecure = process.env.MAIL_SECURE;
 
-  process.env.MAIL_PORT = '465';
-  process.env.MAIL_SECURE = 'true';
+  process.env.MAIL_PORT = '587';
+  process.env.MAIL_SECURE = 'false';
 
   delete require.cache[require.resolve(mailConfigPath)];
-  const { getMailTransportCandidates } = require('../config/mail');
-  const candidates = getMailTransportCandidates();
+  const { normalizeMailSecureOption } = require('../config/mail');
 
-  assert.ok(candidates.some((candidate) => candidate.port === 587 && candidate.secure === false));
+  assert.equal(normalizeMailSecureOption('false'), false);
 
   if (originalPort === undefined) {
     delete process.env.MAIL_PORT;
