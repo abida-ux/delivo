@@ -50,14 +50,6 @@ const Cart = () => {
   const handleOrderSuccess = (orderData) => {
     console.log('✅ Order placed successfully:', orderData);
     setOrderConfirmation(orderData);
-    setShowCheckoutModal(false);
-
-    if (orderData.paymentStatus === 'completed') {
-      // Show confirmation then redirect after payment confirmation
-      setTimeout(() => {
-        navigate('/customer/orders');
-      }, 3000);
-    }
   };
 
   const cartTotal = getCartTotal();

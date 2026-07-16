@@ -29,16 +29,27 @@ const mailUser = getEnv('MAIL_USER', 'SMTP_USER');
 const mailPass = getEnv('MAIL_PASS', 'SMTP_PASS');
 const mailFrom = getEnv('MAIL_FROM', 'SMTP_FROM') || 'Delivo <info@delivo.buzz>';
 
+<<<<<<< HEAD
 const createTransportOptions = ({ host, port, secure }) => ({
   host,
   port,
   secure,
+=======
+const resolvedSecure = mailPort === 465 ? true : mailSecure;
+const resolvedPort = mailPort || (resolvedSecure ? 465 : 587);
+
+const transporter = nodemailer.createTransport({
+  host: mailHost,
+  port: resolvedPort,
+  secure: resolvedSecure,
+>>>>>>> 1427c5bc4e5fa7f8907cf1e66e6d2f46342a916a
   auth: mailUser && mailPass
     ? {
         user: mailUser,
         pass: mailPass,
       }
     : undefined,
+<<<<<<< HEAD
   pool: true,
   maxConnections: 3,
   connectionTimeout: 15000,
@@ -77,6 +88,76 @@ const getMailTransportCandidates = () => {
 
   if (mailSecure && mailPort !== 587) {
     addCandidate(587, false, 'starttls');
+=======
+  pool: false,
+  connectionTimeout: 20000,
+  greetingTimeout: 20000,
+  socketTimeout: 30000,
+  dnsTimeout: 10000,
+  requireTLS: resolvedSecure,
+  tls: {
+    rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== 'false',
+    minVersion: 'TLSv1.2',
+  },
+  family: 4,
+});
+
+const describeTransport = () => ({
+  host: mailHost,
+  port: resolvedPort,
+  secure: resolvedSecure,
+  user: mailUser ? '[configured]' : '[missing]',
+  from: mailFrom,
+});
+
+const verifyTransporter = async () => {
+  if (!mailHost || !mailUser || !mailPass) {
+    const error = new Error('SMTP credentials are incomplete: SMTP_HOST, SMTP_USER, and SMTP_PASS must be set.');
+    console.warn('⚠️ SMTP credentials are incomplete. Email delivery will be skipped until configured.', error.message);
+    return { ok: false, error };
+  }
+
+  try {
+    await transporter.verify();
+    console.log('✅ SMTP connection verified', describeTransport());
+    return { ok: true, transport: transporter };
+  } catch (error) {
+    console.error('❌ SMTP verification failed', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      transport: describeTransport(),
+    });
+    return { ok: false, error };
+  }
+};
+
+const sendMailWithDiagnostics = async (mailOptions) => {
+  const verification = await verifyTransporter();
+  if (!verification.ok) {
+    throw verification.error;
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('📧 Email delivered', {
+      to: mailOptions.to,
+      messageId: info.messageId,
+      transport: describeTransport(),
+    });
+    return info;
+  } catch (error) {
+    console.error('❌ Email delivery failed', {
+      to: mailOptions.to,
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      transport: describeTransport(),
+    });
+    throw error;
+>>>>>>> 1427c5bc4e5fa7f8907cf1e66e6d2f46342a916a
   }
 
   if (!mailSecure && mailPort !== 465) {
@@ -86,6 +167,7 @@ const getMailTransportCandidates = () => {
   return candidates;
 };
 
+<<<<<<< HEAD
 const createTransporter = (candidate) => nodemailer.createTransport(createTransportOptions(candidate));
 const transportCandidates = getMailTransportCandidates().map((candidate) => ({
   ...candidate,
@@ -161,3 +243,13 @@ module.exports = transporter;
 module.exports.verifyTransporter = transporter.verifyTransporter;
 module.exports.normalizeMailSecureOption = normalizeMailSecureOption;
 module.exports.getMailTransportCandidates = getMailTransportCandidates;
+=======
+transporter.verifyTransporter = verifyTransporter;
+transporter.normalizeMailSecureOption = normalizeMailSecureOption;
+transporter.sendMailWithDiagnostics = sendMailWithDiagnostics;
+
+module.exports = transporter;
+module.exports.verifyTransporter = verifyTransporter;
+module.exports.normalizeMailSecureOption = normalizeMailSecureOption;
+module.exports.sendMailWithDiagnostics = sendMailWithDiagnostics;
+>>>>>>> 1427c5bc4e5fa7f8907cf1e66e6d2f46342a916a

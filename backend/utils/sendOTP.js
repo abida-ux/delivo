@@ -9,7 +9,7 @@ const buildMailOptions = (to, subject, html) => ({
 
 const sendMailWithLogging = async (mailOptions, label) => {
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMailWithDiagnostics(mailOptions);
     console.log(`📧 ${label} email delivered`, {
       to: mailOptions.to,
       messageId: info.messageId,

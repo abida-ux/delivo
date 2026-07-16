@@ -139,6 +139,13 @@ export const getOrderById = async (orderId) => {
   return res.data.data;
 };
 
+export const getMpesaStatus = async (checkoutRequestId) => {
+  const res = await api.get('/mpesa/status', {
+    params: { checkoutRequestId },
+  });
+  return res.data.data;
+};
+
 export const getAllOrders = async () => {
   const res = await api.get('/orders');
   return res.data.data || [];
@@ -169,6 +176,16 @@ export const registerUser = async (data) => {
 
 export const verifyEmail = async (data) => {
   const res = await api.post('/users/verify-email', data);
+  return res.data;
+};
+
+export const savePushSubscription = async (subscriptionData) => {
+  const res = await api.post('/notifications/push/subscribe', subscriptionData);
+  return res.data;
+};
+
+export const sendTestPush = async (payload = {}) => {
+  const res = await api.post('/notifications/push/send', payload);
   return res.data;
 };
 
