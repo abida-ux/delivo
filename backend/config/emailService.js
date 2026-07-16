@@ -1,12 +1,9 @@
-const {
-  sendVerificationOTP,
-  sendPasswordResetOTP,
-} = require('../utils/sendOTP');
+const { sendVerification, sendPasswordReset } = require('../services/emailClient');
 
 exports.sendVerificationEmail = async (email, verificationCode) => {
-  return sendVerificationOTP(email, verificationCode);
+  return sendVerification({ email, token: verificationCode });
 };
 
 exports.sendPasswordResetEmail = async (email, resetCode) => {
-  return sendPasswordResetOTP(email, resetCode);
+  return sendPasswordReset({ email, token: resetCode });
 };

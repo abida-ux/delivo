@@ -4,9 +4,10 @@ import { X, AlertCircle, Check } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { createOrder, getAppSettings, getMpesaStatus } from '../../services/api';
+import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
 
-const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }) => {
+const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, inline = false }) => {
   const { user } = useContext(AuthContext);
   const { clearCart } = useCart();
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [paymentStage, setPaymentStage] = useState('idle');
   const [orderPending, setOrderPending] = useState(false);
+  const [redirectingToOrders, setRedirectingToOrders] = useState(false);
   const pollInterval = useRef(null);
 
   useEffect(() => {
@@ -75,7 +77,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
 
   const validateForm = () => {
     const newErrors = {};
-    
+    const phonePattern = /^(?:0[0-9][0-9]{7}|\+254[0-9]{9}|254[0-9]{9})$/;
+
     if (!deliveryInfo.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
@@ -86,19 +89,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
     }
     if (!deliveryInfo.whatsapp.trim()) {
       newErrors.whatsapp = 'WhatsApp number is required';
-    } else if (!/^07[0-9]{8}$/.test(deliveryInfo.whatsapp.replace(/\s+/g, '')) && !/^\+2547[0-9]{8}$/.test(deliveryInfo.whatsapp.replace(/\s+/g, '')) ) {
-      newErrors.whatsapp = 'Please enter a valid Kenyan WhatsApp number';
+    } else if (!phonePattern.test(deliveryInfo.whatsapp.replace(/\s+/g, ''))) {
+      newErrors.whatsapp = 'Please enter a valid Kenyan WhatsApp number starting with 01, 07, or +254';
     }
     if (!deliveryInfo.mpesaNumber.trim()) {
       newErrors.mpesaNumber = 'M-Pesa number is required';
     } else {
       const normalizedMpesaNumber = deliveryInfo.mpesaNumber.replace(/\s+/g, '');
-      if (
-        !/^0[17][0-9]{8}$/.test(normalizedMpesaNumber) &&
-        !/^\+254[17][0-9]{8}$/.test(normalizedMpesaNumber) &&
-        !/^254[17][0-9]{8}$/.test(normalizedMpesaNumber)
-      ) {
-        newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number starting with 07 or 01';
+      if (!phonePattern.test(normalizedMpesaNumber)) {
+        newErrors.mpesaNumber = 'Please enter a valid Kenyan M-Pesa number starting with 01, 07, or +254';
       }
     }
     setErrors(newErrors);
@@ -128,13 +127,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
       if (updatedOrder.paymentStatus === 'completed') {
         clearPolling();
         setPaymentStage('success');
-        setPaymentMessage('Your order has been confirmed and payment was completed successfully.');
+        setPaymentMessage('Payment confirmed. Redirecting to your orders page...');
+        setRedirectingToOrders(true);
         setOrderPending(false);
+        if (!user) {
+          saveGuestOrder(updatedOrder);
+        }
         clearCart();
         onOrderSuccess(updatedOrder);
         window.setTimeout(() => {
+          onClose?.();
           navigate('/customer/orders');
-        }, 1600);
+        }, 1800);
         return;
       }
 
@@ -222,186 +226,193 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess }
 
   if (!isOpen) return null;
 
-  return (
-    <div className="checkout-modal-overlay">
-      <div className="checkout-modal-container">
-        <div className="checkout-modal-header">
-          <h2>Complete Your Order</h2>
-          <button className="close-btn" onClick={onClose} disabled={isProcessing || orderPending}>
-            <X size={24} />
-          </button>
+  const renderCheckoutContent = () => (
+    <>
+      <div className="checkout-modal-header">
+        <h2>Complete Your Order</h2>
+        <button className="close-btn" onClick={onClose} disabled={isProcessing || orderPending}>
+          <X size={24} />
+        </button>
+      </div>
+
+      <div className="checkout-modal-content">
+        {errors.submit && (
+          <div className="error-alert">
+            <AlertCircle size={20} />
+            <span>{errors.submit}</span>
+          </div>
+        )}
+
+        <div className="checkout-summary">
+          <h3>📋 Order Summary</h3>
+          <div className="summary-items">
+            {cartItems.map((item) => {
+              const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+              return (
+                <div key={foodId} className="summary-item">
+                  <div className="item-info">
+                    <span className="item-name">{item.name}</span>
+                    <span className="item-qty">x{item.quantity}</span>
+                  </div>
+                  <span className="item-total">KES {(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="summary-totals">
+            <div className="total-row">
+              <span>Subtotal</span>
+              <span>KES {cartTotal.toFixed(2)}</span>
+            </div>
+            <div className="total-row">
+              <span>Delivery Fee</span>
+              <span>KES {deliveryFee.toFixed(2)}</span>
+            </div>
+            <div className="total-row grand-total">
+              <span>Total</span>
+              <span className="grand-total-amount">KES {grandTotal}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="checkout-modal-content">
-          {errors.submit && (
-            <div className="error-alert">
-              <AlertCircle size={20} />
-              <span>{errors.submit}</span>
-            </div>
-          )}
-
-          <div className="checkout-summary">
-            <h3>📋 Order Summary</h3>
-            <div className="summary-items">
-              {cartItems.map((item) => {
-                const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
-                return (
-                  <div key={foodId} className="summary-item">
-                    <div className="item-info">
-                      <span className="item-name">{item.name}</span>
-                      <span className="item-qty">x{item.quantity}</span>
-                    </div>
-                    <span className="item-total">KES {(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="summary-totals">
-              <div className="total-row">
-                <span>Subtotal</span>
-                <span>KES {cartTotal.toFixed(2)}</span>
-              </div>
-              <div className="total-row">
-                <span>Delivery Fee</span>
-                <span>KES {deliveryFee.toFixed(2)}</span>
-              </div>
-              <div className="total-row grand-total">
-                <span>Total</span>
-                <span className="grand-total-amount">KES {grandTotal}</span>
-              </div>
+        <form className="checkout-form" onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(); }}>
+          <div className="form-section">
+            <h4>Customer Details</h4>
+            <div className="form-group">
+              <label>Full Name *</label>
+              <input
+                type="text"
+                value={deliveryInfo.fullName}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, fullName: e.target.value });
+                  if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                }}
+                placeholder="Enter your full name"
+                disabled={isProcessing || orderPending}
+                className={errors.fullName ? 'error' : ''}
+              />
+              {errors.fullName && <span className="field-error">{errors.fullName}</span>}
             </div>
           </div>
 
-          <form className="checkout-form" onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(); }}>
-            <div className="form-section">
-              <h4>Customer Details</h4>
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input
-                  type="text"
-                  value={deliveryInfo.fullName}
-                  onChange={(e) => {
-                    setDeliveryInfo({ ...deliveryInfo, fullName: e.target.value });
-                    if (errors.fullName) setErrors({ ...errors, fullName: '' });
-                  }}
-                  placeholder="Enter your full name"
-                  disabled={isProcessing || orderPending}
-                  className={errors.fullName ? 'error' : ''}
-                />
-                {errors.fullName && <span className="field-error">{errors.fullName}</span>}
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h4>Delivery Location</h4>
-              <div className="form-group">
-                <label>Precise delivery location *</label>
-                <input
-                  type="text"
-                  value={deliveryInfo.address}
-                  onChange={(e) => {
-                    setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
-                    if (errors.address) setErrors({ ...errors, address: '' });
-                  }}
-                  placeholder="House number, apartment, gate, landmark, or street"
-                  disabled={isProcessing || orderPending}
-                  className={errors.address ? 'error' : ''}
-                />
-                {errors.address && <span className="field-error">{errors.address}</span>}
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h4>M-Pesa Payment</h4>
-              <div className="form-group">
-                <label>M-Pesa Number *</label>
-                <input
-                  type="tel"
-                  value={deliveryInfo.mpesaNumber}
-                  onChange={(e) => {
-                    setDeliveryInfo({ ...deliveryInfo, mpesaNumber: e.target.value });
-                    if (errors.mpesaNumber) setErrors({ ...errors, mpesaNumber: '' });
-                  }}
-                  placeholder="0722 000 000"
-                  disabled={isProcessing || orderPending}
-                  className={errors.mpesaNumber ? 'error' : ''}
-                />
-                {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
-              </div>
-              <div className="payment-note">
-                M-Pesa prompt will be sent to this number.
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h4>Contact Details</h4>
-              <div className="form-group">
-                <label>WhatsApp Number *</label>
-                <input
-                  type="tel"
-                  value={deliveryInfo.whatsapp}
-                  onChange={(e) => {
-                    setDeliveryInfo({ ...deliveryInfo, whatsapp: e.target.value });
-                    if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
-                  }}
-                  placeholder="0722 000 000"
-                  disabled={isProcessing || orderPending}
-                  className={errors.whatsapp ? 'error' : ''}
-                />
-                {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={onClose}
+          <div className="form-section">
+            <h4>Delivery Location</h4>
+            <div className="form-group">
+              <label>Precise delivery location *</label>
+              <input
+                type="text"
+                value={deliveryInfo.address}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
+                  if (errors.address) setErrors({ ...errors, address: '' });
+                }}
+                placeholder="House number, apartment, gate, landmark, or street"
                 disabled={isProcessing || orderPending}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="confirm-btn"
-                disabled={isProcessing || orderPending}
-              >
-                {isProcessing ? (
-                  <>
-                    <span className="spinner"></span>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Check size={18} />
-                    Place Order - KES {grandTotal}
-                  </>
-                )}
-              </button>
+                className={errors.address ? 'error' : ''}
+              />
+              {errors.address && <span className="field-error">{errors.address}</span>}
             </div>
-          </form>
+          </div>
 
-          {paymentStage === 'success' ? (
-            <div className="payment-success-state">
-              <div className="payment-success-ring">
-                <Check size={28} />
-              </div>
-              <h3>Payment Completed</h3>
-              <p>{paymentMessage}</p>
-              <p className="payment-success-subtext">You will be taken to your orders page shortly.</p>
+          <div className="form-section">
+            <h4>M-Pesa Payment</h4>
+            <div className="form-group">
+              <label>M-Pesa Number *</label>
+              <input
+                type="tel"
+                value={deliveryInfo.mpesaNumber}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, mpesaNumber: e.target.value });
+                  if (errors.mpesaNumber) setErrors({ ...errors, mpesaNumber: '' });
+                }}
+                placeholder="0722 000 000"
+                disabled={isProcessing || orderPending}
+                className={errors.mpesaNumber ? 'error' : ''}
+              />
+              {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
             </div>
-          ) : paymentMessage ? (
-            <div className="payment-status-box">
-              <div className="payment-status-title">Payment Status</div>
-              <p>{paymentMessage}</p>
-              {checkoutRequestId && (
-                <p className="payment-subtext">Checkout Request ID: {checkoutRequestId}</p>
+            <div className="payment-note">
+              M-Pesa prompt will be sent to this number.
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h4>Contact Details</h4>
+            <div className="form-group">
+              <label>WhatsApp Number *</label>
+              <input
+                type="tel"
+                value={deliveryInfo.whatsapp}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, whatsapp: e.target.value });
+                  if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
+                }}
+                placeholder="0722 000 000"
+                disabled={isProcessing || orderPending}
+                className={errors.whatsapp ? 'error' : ''}
+              />
+              {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={onClose}
+              disabled={isProcessing || orderPending}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="confirm-btn"
+              disabled={isProcessing || orderPending}
+            >
+              {isProcessing ? (
+                <>
+                  <span className="spinner"></span>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Check size={18} />
+                  Place Order - KES {grandTotal}
+                </>
               )}
-            </div>
-          ) : null}
+            </button>
+          </div>
+        </form>
 
-        </div>
+        {paymentStage === 'success' ? (
+          <div className="payment-success-state">
+            <div className="payment-success-ring">
+              <Check size={28} />
+            </div>
+            <h3>Payment Completed</h3>
+            <p>{paymentMessage}</p>
+            <p className="payment-success-subtext">
+              {redirectingToOrders ? 'Please wait while we open your orders page.' : 'You will be taken to your orders page shortly.'}
+            </p>
+          </div>
+        ) : paymentMessage ? (
+          <div className="payment-status-box">
+            <div className="payment-status-title">Payment Status</div>
+            <p>{paymentMessage}</p>
+            {checkoutRequestId && (
+              <p className="payment-subtext">Checkout Request ID: {checkoutRequestId}</p>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </>
+  );
+
+  return (
+    <div className={`checkout-modal-overlay ${inline ? 'inline' : ''}`}>
+      <div className={`checkout-modal-container ${inline ? 'inline' : ''}`}>
+        {renderCheckoutContent()}
       </div>
     </div>
   );

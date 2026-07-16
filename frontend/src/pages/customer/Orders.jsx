@@ -3,18 +3,61 @@ import { Clock, MapPin, DollarSign } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useCartUI } from '../../context/CartUIContext';
 import { getUserOrders } from '../../services/api';
+import { getGuestOrders } from '../../utils/orderStorage';
 import '../pages.css';
 import './Orders.css';
 
 const Orders = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { openCart } = useCartUI();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchParams] = useSearchParams();
-  const { addItem } = useCart();
+  const { addItem, clearCart } = useCart();
+
+  const resolveOrderFood = (item) => {
+    if (!item) return null;
+    if (typeof item.foodId === 'object' && item.foodId !== null) return item.foodId;
+    if (typeof item.food === 'object' && item.food !== null) return item.food;
+    return null;
+  };
+
+  const getOrderItemName = (item) => {
+    const food = resolveOrderFood(item);
+    return food?.name || food?.title || item.name || item.foodName || 'Food item';
+  };
+
+  const getOrderItemImage = (item) => {
+    const food = resolveOrderFood(item);
+    return food?.image || item.image || '';
+  };
+
+  const getOrderItemsPreview = (order) => {
+    const names = (order.items || []).map(getOrderItemName);
+    return names.length === 0 ? 'No items' : names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2} more` : '');
+  };
+
+  const handleReorder = async (order) => {
+    if (!order?.items?.length) return;
+
+    await clearCart();
+
+    for (const item of order.items) {
+      const food = resolveOrderFood(item);
+      await addItem({
+        _id: food?._id || item.foodId || item.food || item._id,
+        name: getOrderItemName(item),
+        price: item.price || food?.price || 0,
+        image: getOrderItemImage(item),
+      }, item.quantity);
+    }
+
+    openCart();
+  };
 
   useEffect(() => {
     const filter = searchParams.get('filter') || 'all';
@@ -29,15 +72,15 @@ const Orders = () => {
     try {
       setLoading(true);
       if (!user) {
-        console.log('❌ No user logged in');
-        setOrders([]);
+        const guestOrders = getGuestOrders();
+        console.log('🧾 Guest orders loaded from storage:', guestOrders);
+        setOrders(guestOrders);
         return;
       }
 
       console.log('📝 Fetching orders for user:', user.id);
       const ordersData = await getUserOrders(user.id);
-      
-      // Handle both array and object responses
+
       const ordersList = Array.isArray(ordersData) ? ordersData : (ordersData.data || []);
       console.log('✅ Orders fetched:', ordersList);
       setOrders(ordersList);
@@ -75,6 +118,22 @@ const Orders = () => {
       case 'cancelled': return 'Cancelled';
       default: return 'Unknown';
     }
+  };
+
+  const getTrackingSteps = (order) => {
+    const paymentCompleted = order.paymentStatus === 'completed';
+    const hasOrderReceived = paymentCompleted || ['confirmed', 'preparing', 'on-delivery', 'delivered'].includes(order.status);
+    const isPreparing = ['preparing', 'on-delivery', 'delivered'].includes(order.status);
+    const isOnDelivery = ['on-delivery', 'delivered'].includes(order.status);
+    const isDelivered = order.status === 'delivered';
+
+    return [
+      { label: 'Payment received', completed: paymentCompleted },
+      { label: 'Order received', completed: hasOrderReceived },
+      { label: 'Preparing', completed: isPreparing },
+      { label: 'On the way', completed: isOnDelivery },
+      { label: 'Delivered', completed: isDelivered },
+    ];
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -127,10 +186,6 @@ const Orders = () => {
         <div className="loading-state">
           <p>Loading your orders...</p>
         </div>
-      ) : !user ? (
-        <div className="empty-state">
-          <p>Please log in to view your orders</p>
-        </div>
       ) : filteredOrders.length === 0 ? (
         <div className="empty-state">
           <p>No orders found</p>
@@ -166,6 +221,22 @@ const Orders = () => {
                 </div>
               </div>
 
+              <p className="order-items-preview">{getOrderItemsPreview(order)}</p>
+
+              <div className="tracking-strip">
+                {getTrackingSteps(order).map((step, index) => {
+                  const isActive = !step.completed && index === 1 && order.paymentStatus === 'completed';
+                  return (
+                    <div
+                      key={step.label}
+                      className={`tracking-pill ${step.completed ? 'done' : isActive ? 'active' : ''}`}
+                    >
+                      {step.label}
+                    </div>
+                  );
+                })}
+              </div>
+
               <div className="order-actions">
                 <button 
                   className="detail-btn"
@@ -176,17 +247,7 @@ const Orders = () => {
                 {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
                   <button
                     className="reorder-btn"
-                    onClick={async () => {
-                      for (const item of order.items) {
-                        await addItem({
-                          _id: item.foodId._id || item.foodId,
-                          name: item.foodId.name || item.foodId,
-                          price: item.price,
-                          image: item.foodId.image || '',
-                        }, item.quantity);
-                      }
-                      navigate('/customer/cart');
-                    }}
+                    onClick={() => handleReorder(order)}
                   >
                     Reorder
                   </button>

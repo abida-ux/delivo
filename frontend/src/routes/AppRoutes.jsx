@@ -9,14 +9,10 @@ const AllRestaurants = lazy(() => import("../pages/customer/AllRestaurants"));
 const Restaurants = lazy(() => import("../pages/customer/Restaurants"));
 const StoresByType = lazy(() => import("../pages/customer/StoresByType"));
 const StoreProducts = lazy(() => import("../pages/customer/StoreProducts"));
-const Cart = lazy(() => import("../pages/customer/Cart"));
 const Orders = lazy(() => import("../pages/customer/Orders"));
 const OrderDetails = lazy(() => import("../pages/customer/OrderDetails"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Wishlist = lazy(() => import("../pages/Wishlist"));
-const Login = lazy(() => import("../pages/auth/Login"));
-const Signup = lazy(() => import("../pages/auth/Signup"));
-const VerifyEmail = lazy(() => import("../pages/auth/VerifyEmail"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
@@ -46,12 +42,10 @@ export default function AppRoutes() {
       <Route path="/restaurants/:id" element={<Restaurants />} />
       <Route path="/stores/:typeId" element={<StoresByType />} />
       <Route path="/store/:storeId" element={<StoreProducts />} />
-      <Route path="/customer/cart" element={<Cart />} />
       <Route path="/customer/orders" element={<Orders />} />
       <Route path="/customer/orders/:orderId" element={<OrderDetails />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/wishlist" element={<Wishlist />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Admin Routes - Protected */}
       <Route

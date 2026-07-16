@@ -10,7 +10,6 @@ if (fs.existsSync(envPath)) {
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const transporter = require('./config/mail');
 const { isAllowedOrigin } = require('./config/cors');
 const errorHandler = require('./middleware/errorMiddleware');
 
@@ -46,11 +45,6 @@ console.log(`  MPESA_SECRET loaded: ${process.env.MPESA_SECRET || process.env.SE
 
 // Connect to MongoDB
 connectDB();
-
-// Initialize SMTP at startup
-transporter.verifyTransporter().catch((error) => {
-  console.warn('⚠️ Mailer initialization warning:', error.message || error);
-});
 
 // ==================== MIDDLEWARE ====================
 // JSON parsing with size limits

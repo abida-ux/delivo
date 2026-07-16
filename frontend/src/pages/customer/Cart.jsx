@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { AuthContext } from '../../context/AuthContext';
 import CheckoutModal from './CheckoutModal';
@@ -10,6 +10,7 @@ import './Cart.css';
 
 const Cart = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useContext(AuthContext);
   const { removeItem, updateQuantity, getCartItems, getCartTotal, clearCart } = useCart();
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -59,6 +60,19 @@ const Cart = () => {
     freeDeliveryEnabled: false,
     freeDeliveryMinimum: 0,
   });
+
+  useEffect(() => {
+    if (!showCheckoutModal) {
+      return;
+    }
+
+    const handlePopState = () => {
+      setShowCheckoutModal(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showCheckoutModal]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -230,7 +244,9 @@ const Cart = () => {
       {/* Checkout Modal */}
       <CheckoutModal
         isOpen={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
+        onClose={() => {
+          setShowCheckoutModal(false);
+        }}
         cartItems={cartItems}
         cartTotal={cartTotal}
         onOrderSuccess={handleOrderSuccess}

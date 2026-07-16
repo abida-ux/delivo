@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Star, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useCartUI } from '../context/CartUIContext';
 import './FoodCard.css';
 
 const FoodCard = ({ food }) => {
   const { addItem } = useCart();
-  const navigate = useNavigate();
+  const { openCart } = useCartUI();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
@@ -30,7 +30,7 @@ const FoodCard = ({ food }) => {
   };
 
   const handleGoToCart = () => {
-    navigate('/customer/cart');
+    openCart();
   };
 
   return (
