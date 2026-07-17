@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
-import { registerUser } from '../../services/api';
+import { registerUser, verifyEmail, resendVerificationCode } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import './Auth.css';
@@ -13,7 +13,13 @@ const Signup = ({ isModal = false }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifyMessage, setVerifyMessage] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const otpInputRef = useRef(null);
   const isSubmittingRef = useRef(false);
 
@@ -113,7 +119,52 @@ const Signup = ({ isModal = false }) => {
     }
   };
 
-  // Verification flow removed for local development. Backend may still enforce verification based on environment.
+  const handleVerifySubmit = async (e) => {
+    e.preventDefault();
+    if (!verificationEmail) {
+      setError('No email available for verification.');
+      return;
+    }
+
+    if (!otp) {
+      setError('Please enter the verification code.');
+      return;
+    }
+
+    setVerifyLoading(true);
+    setError('');
+
+    try {
+      await verifyEmail({ email: verificationEmail, code: otp });
+      setVerificationSuccess(true);
+      setShowVerification(false);
+      setVerifyMessage('');
+      setOtp('');
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Verification failed';
+      setError(errorMsg);
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!verificationEmail) return;
+
+    setResendLoading(true);
+    setError('');
+
+    try {
+      await resendVerificationCode({ email: verificationEmail });
+      setVerifyMessage('A new verification code has been sent to your email.');
+      setOtp('');
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to resend verification code';
+      setError(errorMsg);
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   return (
     <div className={`auth-container ${isModal ? 'modal-mode' : ''}`}>
