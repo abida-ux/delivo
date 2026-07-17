@@ -30,7 +30,7 @@ const app = express();
 
 // ==================== ENVIRONMENT VALIDATION ====================
 console.log('🔧 ENVIRONMENT CHECK:');
-console.log(`  ✓ PORT: ${process.env.PORT || 5000}`);
+console.log(`  ✓ PORT: ${process.env.BACKEND_PORT || process.env.PORT || 5000}`);
 console.log(`  ✓ NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 console.log(`  ✓ MONGO_URI: ${process.env.MONGO_URI ? '✓ Set' : '❌ MISSING'}`);
 console.log(`  ✓ FRONTEND_URL: ${process.env.FRONTEND_URL || 'http://localhost:5174'}`);
@@ -109,10 +109,14 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // ==================== START SERVER ====================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.BACKEND_PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const LISTEN_HOST = '0.0.0.0';
+
+if (process.env.PORT && !process.env.BACKEND_PORT) {
+  console.warn('⚠️ Using BACKEND_PORT is recommended to avoid conflicts with other local services.');
+}
 const server = app.listen(PORT, LISTEN_HOST, () => {
   console.log(`
   ╔═══════════════════════════════════════════════╗
