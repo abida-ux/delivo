@@ -100,21 +100,21 @@ const Transactions = () => {
             <TrendingUp size={24} className="stat-icon" />
             <div className="stat-content">
               <p className="stat-label">Total Revenue</p>
-              <h3>KES {stats.totalRevenue?.toFixed(2) || '0'}</h3>
+              <h3>Ksh {stats.totalRevenue?.toFixed(2) || '0'}</h3>
             </div>
           </div>
           <div className="stat-card">
             <span className="stat-icon">💰</span>
             <div className="stat-content">
               <p className="stat-label">Total Commission</p>
-              <h3>KES {stats.totalCommission?.toFixed(2) || '0'}</h3>
+              <h3>Ksh {stats.totalCommission?.toFixed(2) || '0'}</h3>
             </div>
           </div>
           <div className="stat-card">
             <span className="stat-icon">📊</span>
             <div className="stat-content">
               <p className="stat-label">Avg Transaction</p>
-              <h3>KES {stats.averageTransaction || '0'}</h3>
+              <h3>Ksh {stats.averageTransaction || '0'}</h3>
             </div>
           </div>
           <div className="stat-card">
@@ -172,9 +172,9 @@ const Transactions = () => {
             <div className="cell">{tx.id}</div>
             <div className="cell">{tx.orderId}</div>
             <div className="cell">{tx.restaurant}</div>
-            <div className="cell">KES {tx.amount?.toFixed(2) || '0'}</div>
-            <div className="cell">KES {tx.commission?.toFixed(2) || '0'}</div>
-            <div className="cell highlight">KES {tx.netAmount?.toFixed(2) || '0'}</div>
+            <div className="cell">Ksh {tx.amount?.toFixed(2) || '0'}</div>
+            <div className="cell">Ksh {tx.commission?.toFixed(2) || '0'}</div>
+            <div className="cell highlight">Ksh {tx.netAmount?.toFixed(2) || '0'}</div>
             <div className="cell">
               <span 
                 className="type-badge"

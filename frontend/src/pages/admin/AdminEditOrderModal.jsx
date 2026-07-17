@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { formatCurrency } from '../../utils/currency';
 import './AdminEditOrderModal.css';
 
 const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
@@ -43,6 +44,24 @@ const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
     }
   };
 
+  const resolveOrderFood = (item) => {
+    if (!item) return null;
+    if (typeof item.foodId === 'object' && item.foodId !== null) return item.foodId;
+    if (typeof item.food === 'object' && item.food !== null) return item.food;
+    return null;
+  };
+
+  const getOrderItemName = (item) => {
+    const food = resolveOrderFood(item);
+    return food?.name || food?.title || item?.name || item?.foodName || 'Food item';
+  };
+
+  const getOrderItemPrice = (item) => {
+    const unitPrice = Number(item?.price ?? item?.unitPrice ?? 0);
+    const quantity = Number(item?.quantity ?? 1);
+    return unitPrice * quantity;
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -56,8 +75,53 @@ const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
         <form onSubmit={handleSubmit} className="edit-form">
           <div className="order-info">
             <p><strong>Order ID:</strong> {order?._id}</p>
-            <p><strong>Customer:</strong> {order?.customer?.name || 'N/A'}</p>
-            <p><strong>Total Price:</strong> KES {order?.totalPrice?.toFixed(2) || '0.00'}</p>
+            <p><strong>Customer:</strong> {order?.customerName || order?.customer?.name || 'N/A'}</p>
+            <p><strong>Total Price:</strong> {formatCurrency(order?.totalPrice || 0)}</p>
+          </div>
+
+          <div className="details-grid">
+            <div className="detail-card">
+              <h3>Delivery</h3>
+              <p><strong>Address:</strong> {order?.deliveryAddress || 'Not provided'}</p>
+              <p><strong>Instructions:</strong> {order?.specialInstructions || 'None'}</p>
+            </div>
+            <div className="detail-card">
+              <h3>Contact</h3>
+              <p><strong>Name:</strong> {order?.customerName || 'Not provided'}</p>
+              <p><strong>Phone:</strong> {order?.guestPhone || order?.whatsappNumber || 'Not provided'}</p>
+              <p><strong>Email:</strong> {order?.guestEmail || 'Not provided'}</p>
+              <p><strong>WhatsApp:</strong> {order?.whatsappNumber || 'Not provided'}</p>
+            </div>
+            <div className="detail-card">
+              <h3>Payment</h3>
+              <p><strong>Method:</strong> {order?.paymentMethod?.toUpperCase() || 'MPESA'}</p>
+              <p><strong>Status:</strong> {order?.paymentStatus || 'Pending'}</p>
+              <p><strong>Receipt:</strong> {order?.mpesaReceiptNumber || 'Not provided'}</p>
+            </div>
+            <div className="detail-card">
+              <h3>Breakdown</h3>
+              <p><strong>Items:</strong> {order?.items?.length || 0}</p>
+              <p><strong>Delivery Fee:</strong> {formatCurrency(order?.deliveryFee || 0)}</p>
+              <p><strong>Tax:</strong> {formatCurrency(order?.tax || 0)}</p>
+            </div>
+            <div className="detail-card full-width">
+              <h3>Food Items</h3>
+              <div className="item-list">
+                {(order?.items || []).length > 0 ? (
+                  order.items.map((item, index) => (
+                    <div key={`${item?.foodId || item?.food || index}`} className="item-row">
+                      <div>
+                        <p className="item-name">{getOrderItemName(item)}</p>
+                        <p className="item-meta">Qty: {item?.quantity || 1}</p>
+                      </div>
+                      <p className="item-total">{formatCurrency(getOrderItemPrice(item))}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="item-meta">No items recorded</p>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="form-group">

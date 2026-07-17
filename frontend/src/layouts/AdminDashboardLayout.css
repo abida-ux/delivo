@@ -1,7 +1,9 @@
 .admin-layout {
   display: flex;
+  min-height: 100vh;
   height: 100vh;
-  background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+  overflow: hidden;
+  background: #eff8f1;
 }
 
 .admin-main {
@@ -10,26 +12,32 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+  background: #f8fbf6;
+  min-height: 100vh;
+  height: 100vh;
+}
+
+.admin-content {
+  flex: 1;
 }
 
 .admin-topbar {
-  background: linear-gradient(135deg, rgba(26, 35, 50, 0.95) 0%, rgba(15, 20, 25, 0.95) 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #d9ead5;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   position: sticky;
   top: 0;
   z-index: 100;
-  height: 70px;
+  min-height: 70px;
   backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(33, 83, 54, 0.08);
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 18px;
 }
 
 .hamburger-btn {
@@ -37,21 +45,20 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #fff;
+  color: #2f855a;
   padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
 
 .hamburger-btn:hover {
-  background: rgba(255, 255, 0.1);
-  color: #00d4ff;
+  background: rgba(82, 173, 115, 0.15);
 }
 
 .page-title {
   font-size: 28px;
   font-weight: 700;
-  color: #ffffff;
+  color: #1f4338;
   margin: 0;
 }
 
@@ -104,4 +111,145 @@
     padding: 12px;
     padding-bottom: 120px;
   }
+}
+
+/* Global admin theme overrides */
+.admin-layout {
+  --admin-bg: #eff8f1;
+  --admin-surface: #ffffff;
+  --admin-surface-soft: #f7fcf6;
+  --admin-border: #d9ead5;
+  --admin-foreground: #1f4338;
+  --admin-muted: #4a6d56;
+  --admin-primary: #2f855a;
+  --admin-primary-strong: #276749;
+  --admin-primary-soft: rgba(72, 187, 120, 0.16);
+  --admin-accent: #68d391;
+}
+
+.admin-layout,
+.admin-layout .admin-main,
+.admin-layout .admin-content,
+.admin-layout .admin-sidebar,
+.admin-layout .admin-topbar,
+.admin-layout .admin-settings,
+.admin-layout .admin-dashboard,
+.admin-layout .admin-foods,
+.admin-layout .admin-orders,
+.admin-layout .admin-notifications,
+.admin-layout .admin-users,
+.admin-layout .admin-riders,
+.admin-layout .admin-analytics,
+.admin-layout .admin-stores,
+.admin-layout .admin-restaurants,
+.admin-layout .modal-content {
+  background: var(--admin-surface) !important;
+  color: var(--admin-foreground) !important;
+  border-color: var(--admin-border) !important;
+}
+
+.admin-layout .admin-content {
+  background: var(--admin-bg) !important;
+}
+
+.admin-layout .admin-topbar,
+.admin-layout .admin-sidebar,
+.admin-layout .admin-navbar,
+.admin-layout .admin-bottom-nav {
+  background: #f8fbf6 !important;
+}
+
+.admin-layout .section-header,
+.admin-layout .stat-card,
+.admin-layout .info-box,
+.admin-layout .notification-form,
+.admin-layout .promo-form,
+.admin-layout .foods-header,
+.admin-layout .food-item-card,
+.admin-layout .order-info,
+.admin-layout .timeline,
+.admin-layout .metrics-grid .metric-card,
+.admin-layout .chart-card,
+.admin-layout .restaurants-list .restaurant-row {
+  background: var(--admin-surface) !important;
+  border-color: var(--admin-border) !important;
+}
+
+.admin-layout .stat-card,
+.admin-layout .info-box,
+.admin-layout .food-item-card,
+.admin-layout .promo-row,
+.admin-layout .notification-item,
+.admin-layout .form-group input,
+.admin-layout .form-group textarea,
+.admin-layout .form-group select,
+.admin-layout .add-promo-btn,
+.admin-layout .search-box,
+.admin-layout .filter-btn,
+.admin-layout .download-btn,
+.admin-layout .modal-content,
+.admin-layout .order-info {
+  box-shadow: 0 12px 30px rgba(39, 87, 64, 0.06) !important;
+}
+
+.admin-layout .btn-save,
+.admin-layout .add-btn,
+.admin-layout .send-notification-btn,
+.admin-layout .save-settings-btn,
+.admin-layout .filter-btn.active,
+.admin-layout .download-btn,
+.admin-layout .toggle-btn:not(.inactive),
+.admin-layout .action-btn.edit-btn {
+  background: var(--admin-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--admin-primary) !important;
+}
+
+.admin-layout .btn-cancel,
+.admin-layout .toggle-btn.inactive,
+.admin-layout .filter-btn,
+.admin-layout .download-btn,
+.admin-layout .modal-close,
+.admin-layout .promo-actions .delete-btn {
+  background: var(--admin-surface-soft) !important;
+  color: var(--admin-foreground) !important;
+  border-color: var(--admin-border) !important;
+}
+
+.admin-layout .food-price,
+.admin-layout .metric-value,
+.admin-layout .stat-value,
+.admin-layout .promo-code strong,
+.admin-layout .setting-desc,
+.admin-layout .notification-meta,
+.admin-layout .preview-content,
+.admin-layout .table-row .highlight,
+.admin-layout .status-badge.completed {
+  color: var(--admin-foreground) !important;
+}
+
+.admin-layout .food-price {
+  color: var(--admin-primary) !important;
+}
+
+.admin-layout .timeline-step.active .step-circle,
+.admin-layout .type-badge {
+  background: var(--admin-primary-soft) !important;
+  color: var(--admin-primary-strong) !important;
+  border-color: var(--admin-primary) !important;
+}
+
+.admin-layout .status-badge.completed {
+  background: rgba(72, 187, 120, 0.12) !important;
+  color: var(--admin-primary-strong) !important;
+}
+
+.admin-layout .bottom-nav-item.active,
+.admin-layout .bottom-nav-item:hover {
+  background: var(--admin-primary-soft) !important;
+  color: var(--admin-primary-strong) !important;
+}
+
+.admin-layout .bottom-nav-item {
+  color: #2f855a !important;
 }

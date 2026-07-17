@@ -5,6 +5,7 @@ import AdminEditFoodModal from './AdminEditFoodModal';
 import AdminCreateFoodModal from './AdminCreateFoodModal';
 import { getAllFoods, deleteFood, updateFood, createFood, getAllRestaurants } from '../../services/api';
 import { resolveImageUrl } from '../../utils/placeholderImage';
+import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminFoods.css';
 
@@ -158,7 +159,7 @@ const AdminFoods = () => {
                       🏪 {typeof food.restaurant === 'object' ? food.restaurant?.name : food.restaurant}
                     </p>
 
-                    <div className="food-price">KES {food.price?.toFixed(2) || '0.00'}</div>
+                    <div className="food-price">{formatCurrency(food.price || 0)}</div>
 
                     <div className="food-actions">
                       <button

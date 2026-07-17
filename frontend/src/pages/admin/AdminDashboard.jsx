@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllUsers, getAllRestaurants, getAllFoods, getAllOrders } from '../../services/api';
+import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminDashboard.css';
 
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
       label: 'Total Users',
       value: stats.users,
       icon: Users,
-      color: '#3b82f6',
+      color: '#2f855a',
       change: '+12%',
       isPositive: true,
     },
@@ -73,7 +74,7 @@ const AdminDashboard = () => {
       label: 'Active Restaurants',
       value: stats.restaurants,
       icon: Store,
-      color: '#22c55e',
+      color: '#38a169',
       change: '+5%',
       isPositive: true,
     },
@@ -81,7 +82,7 @@ const AdminDashboard = () => {
       label: 'Total Orders',
       value: stats.orders,
       icon: ShoppingCart,
-      color: '#f59e0b',
+      color: '#68d391',
       change: '+23%',
       isPositive: true,
     },
@@ -89,15 +90,15 @@ const AdminDashboard = () => {
       label: 'Menu Items',
       value: stats.foods,
       icon: UtensilsCrossed,
-      color: '#8b5cf6',
+      color: '#4fd1c5',
       change: '+8%',
       isPositive: true,
     },
     {
       label: 'Total Revenue',
-      value: `$${stats.revenue.toLocaleString()}`,
+      value: formatCurrency(stats.revenue),
       icon: DollarSign,
-      color: '#ec4899',
+      color: '#276749',
       change: '+18%',
       isPositive: true,
     },
@@ -146,9 +147,9 @@ const AdminDashboard = () => {
 
           <div className="info-box">
             <h3>💰 Revenue Info</h3>
-            <p>Total Revenue: <strong>KES {stats.revenue?.toLocaleString() || '0'}</strong></p>
+            <p>Total Revenue: <strong>{formatCurrency(stats.revenue)}</strong></p>
             <p>Total Menu Items: <strong>{stats.foods}</strong></p>
-            <p>Avg Order Value: <strong>KES {stats.orders > 0 ? Math.round(stats.revenue / stats.orders) : '0'}</strong></p>
+            <p>Avg Order Value: <strong>{formatCurrency(stats.orders > 0 ? Math.round(stats.revenue / stats.orders) : 0)}</strong></p>
           </div>
         </div>
       </div>

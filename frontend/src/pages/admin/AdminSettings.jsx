@@ -25,7 +25,7 @@ const AdminSettings = () => {
     freeDeliveryMinimum: 2500,
     deliveryFeeEnabled: true,
     deliveryFeeAmount: 20,
-    notificationMessage: 'Free delivery for orders above KES 2,500!',
+    notificationMessage: 'Free delivery for orders above Ksh 2,500!',
   });
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
@@ -63,14 +63,14 @@ const AdminSettings = () => {
           freeDeliveryMinimum: appSettings.freeDeliveryMinimum ?? 2500,
           deliveryFeeEnabled: appSettings.deliveryFeeEnabled ?? true,
           deliveryFeeAmount: appSettings.deliveryFeeAmount ?? 20,
-          notificationMessage: appSettings.notificationMessage || 'Free delivery for orders above KES 2,500!',
+          notificationMessage: appSettings.notificationMessage || 'Free delivery for orders above Ksh 2,500!',
         });
 
         if (appSettings.promoNotifications) {
           try {
             await api.post('/notifications/create', {
               title: 'Announcement',
-              message: appSettings.notificationMessage || 'Free delivery for orders above KES 2,500!',
+              message: appSettings.notificationMessage || 'Free delivery for orders above Ksh 2,500!',
               type: 'promotion',
               userId: null,
             });
@@ -441,7 +441,7 @@ const AdminSettings = () => {
 
             {settings.freeDeliveryEnabled && (
               <div className="setting-item">
-                <label htmlFor="min-amount">Minimum Order Amount (KES)</label>
+                <label htmlFor="min-amount">Minimum Order Amount (Ksh)</label>
                 <input
                   type="number"
                   id="min-amount"
@@ -453,7 +453,7 @@ const AdminSettings = () => {
                   min="0"
                 />
                 <p className="setting-desc">
-                  Orders above KES {settings.freeDeliveryMinimum} will get free delivery
+                  Orders above Ksh {settings.freeDeliveryMinimum} will get free delivery
                 </p>
               </div>
             )}
@@ -489,7 +489,7 @@ const AdminSettings = () => {
 
             {settings.deliveryFeeEnabled && (
               <div className="setting-item">
-                <label htmlFor="delivery-fee-amount">Delivery Fee Amount (KES)</label>
+                <label htmlFor="delivery-fee-amount">Delivery Fee Amount (Ksh)</label>
                 <input
                   type="number"
                   id="delivery-fee-amount"
@@ -502,7 +502,7 @@ const AdminSettings = () => {
                   step="1"
                 />
                 <p className="setting-desc">
-                  Current delivery fee applied at checkout: KES {settings.deliveryFeeAmount}
+                  Current delivery fee applied at checkout: Ksh {settings.deliveryFeeAmount}
                 </p>
               </div>
             )}
@@ -568,7 +568,7 @@ const AdminSettings = () => {
                       }
                     >
                       <option value="percentage">Percentage (%)</option>
-                      <option value="fixed">Fixed Amount (KES)</option>
+                      <option value="fixed">Fixed Amount (Ksh)</option>
                     </select>
                   </div>
                 </div>
@@ -634,7 +634,7 @@ const AdminSettings = () => {
                         <div className="promo-details">
                           <span>
                             {promo.discount}
-                            {promo.type === 'percentage' ? '%' : ' KES'} off
+                            {promo.type === 'percentage' ? '%' : ' Ksh'} off
                           </span>
                           {promo.maxUses && (
                             <span>• Max {promo.maxUses} uses</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Clock, MapPin, DollarSign } from 'lucide-react';
+import { Clock, MapPin, CreditCard } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -34,6 +34,23 @@ const Orders = () => {
   const getOrderItemImage = (item) => {
     const food = resolveOrderFood(item);
     return food?.image || item.image || '';
+  };
+
+  const formatCurrency = (value) => {
+    const amount = Number(value ?? 0);
+    return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const getOrderTotal = (order) => {
+    const subtotal = (order?.items || []).reduce((sum, item) => {
+      const unitPrice = Number(item?.price ?? item?.unitPrice ?? 0);
+      const quantity = Number(item?.quantity ?? 1);
+      return sum + unitPrice * quantity;
+    }, 0);
+
+    const deliveryFee = Number(order?.deliveryFee ?? 0);
+    const tax = Number(order?.tax ?? 0);
+    return subtotal + deliveryFee + tax;
   };
 
   const getOrderItemsPreview = (order) => {
@@ -73,16 +90,12 @@ const Orders = () => {
       setLoading(true);
       if (!user) {
         const guestOrders = getGuestOrders();
-        console.log('🧾 Guest orders loaded from storage:', guestOrders);
         setOrders(guestOrders);
         return;
       }
 
-      console.log('📝 Fetching orders for user:', user.id);
       const ordersData = await getUserOrders(user.id);
-
       const ordersList = Array.isArray(ordersData) ? ordersData : (ordersData.data || []);
-      console.log('✅ Orders fetched:', ordersList);
       setOrders(ordersList);
     } catch (error) {
       console.error('❌ Error fetching orders:', error);
@@ -146,7 +159,7 @@ const Orders = () => {
     <div className="orders-container">
       <div className="orders-header">
         <h1>My Orders</h1>
-        <p>Track and manage your food orders</p>
+        <p>Track and manage all your food orders in one place</p>
       </div>
 
       <div className="orders-filters">
@@ -214,14 +227,18 @@ const Orders = () => {
                 </div>
                 <div className="detail-item">
                   <MapPin size={16} />
-                  <span>{order.deliveryAddress}</span>
+                  <span>{order.deliveryAddress || 'Address not provided'}</span>
                 </div>
                 <div className="detail-item">
-                  <span>{order.items?.length || 0} items • KES {order.totalPrice.toFixed(2)}</span>
+                  <CreditCard size={16} />
+                  <span>{order.paymentMethod?.toUpperCase() || 'PAYMENT'} • {formatCurrency(getOrderTotal(order))}</span>
                 </div>
               </div>
 
               <p className="order-items-preview">{getOrderItemsPreview(order)}</p>
+              <p className="order-contact-preview">
+                Contact: {order.whatsappNumber || order.guestPhone || 'Not provided'} • {order.items?.length || 0} items
+              </p>
 
               <div className="tracking-strip">
                 {getTrackingSteps(order).map((step, index) => {
@@ -242,7 +259,7 @@ const Orders = () => {
                   className="detail-btn"
                   onClick={() => navigate(`/customer/orders/${order._id}`)}
                 >
-                  View Details
+                  View Full Details
                 </button>
                 {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
                   <button

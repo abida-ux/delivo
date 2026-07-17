@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Trash2, Search, DollarSign } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllOrders, updateOrder } from '../../services/api';
 import AdminEditOrderModal from './AdminEditOrderModal';
+import { formatCurrency } from '../../utils/currency';
+import { getAllStores, getAllRestaurants } from '../../services/api';
 import '../pages.css';
 import './AdminOrders.css';
 
@@ -13,6 +15,8 @@ const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingOrder, setEditingOrder] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [storesMap, setStoresMap] = useState({});
+  const [restaurantsMap, setRestaurantsMap] = useState({});
 
   useEffect(() => {
     fetchOrders();
@@ -24,6 +28,26 @@ const AdminOrders = () => {
       const data = await getAllOrders();
       setOrders(data);
       setFilteredOrders(data);
+
+      // Bulk fetch all stores and restaurants once to avoid many per-id requests
+      try {
+        const [storesList, restaurantsList] = await Promise.all([getAllStores(), getAllRestaurants()]);
+        const storesObj = {};
+        (storesList || []).forEach((s) => {
+          if (s && s._id) storesObj[String(s._id)] = s;
+        });
+
+        const restsObj = {};
+        (restaurantsList || []).forEach((r) => {
+          if (r && r._id) restsObj[String(r._id)] = r;
+        });
+
+        setStoresMap(storesObj);
+        setRestaurantsMap(restsObj);
+      } catch (innerErr) {
+        // If bulk fetch fails, continue without maps
+        console.warn('Failed to fetch stores/restaurants in bulk:', innerErr);
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -31,15 +55,53 @@ const AdminOrders = () => {
     }
   };
 
+  const resolveRestaurantName = (order) => {
+    const explicit = ((order && order.restaurant && order.restaurant.name) || order.restaurantName || '');
+    if (explicit) return explicit;
+
+    const firstItem = (order.items && order.items[0]) || null;
+    const food = firstItem?.foodId || null;
+    if (!food) return 'N/A';
+
+    const storeId = food.store ? String(food.store) : null;
+    const restId = food.restaurant ? String(food.restaurant) : null;
+
+    if (storeId && storesMap[storeId]) return storesMap[storeId].name || 'N/A';
+    if (restId && restaurantsMap[restId]) return restaurantsMap[restId].name || 'N/A';
+
+    return 'N/A';
+  };
+
   const handleSearch = (value) => {
-    setSearchTerm(value);
-    const filtered = orders.filter(
-      (order) =>
-        order._id?.includes(value.toUpperCase()) ||
-        order.customer?.name?.toLowerCase().includes(value.toLowerCase()) ||
-        order.status?.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredOrders(filtered);
+    try {
+      console.debug('[AdminOrders] search:', value);
+      setSearchTerm(value);
+      const q = String(value || '').trim().toLowerCase();
+      if (!q) {
+        setFilteredOrders(orders);
+        return;
+      }
+
+      const filtered = orders.filter((order) => {
+        const customerName = ((order && order.customer && order.customer.name) || order.customerName || order.guestEmail || order.guestPhone || '').toString();
+        const restaurantName = (resolveRestaurantName(order) || '').toString();
+        const id = String(order?._id || '').toString();
+        const status = String(order?.status || '');
+
+        return (
+          id.toLowerCase().includes(q) ||
+          customerName.toLowerCase().includes(q) ||
+          restaurantName.toLowerCase().includes(q) ||
+          status.toLowerCase().includes(q)
+        );
+      });
+
+      // if nothing matched, keep filtered empty so UI shows "No orders found"
+      setFilteredOrders(filtered);
+    } catch (err) {
+      console.error('Search error:', err);
+      setFilteredOrders(orders);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -113,11 +175,10 @@ const AdminOrders = () => {
                   {filteredOrders.map((order) => (
                     <tr key={order._id}>
                       <td className="order-id">#{order._id?.slice(-6).toUpperCase()}</td>
-                      <td>{order.customer?.name || 'N/A'}</td>
-                      <td>{order.restaurant?.name || 'N/A'}</td>
+                      <td>{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'N/A'}</td>
+                      <td>{resolveRestaurantName(order)}</td>
                       <td className="amount">
-                        <DollarSign size={16} />
-                        {order.totalAmount?.toFixed(2) || '0.00'}
+                        {formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}
                       </td>
                       <td>
                         <span
@@ -130,7 +191,7 @@ const AdminOrders = () => {
                           {order.status || 'Pending'}
                         </span>
                       </td>
-                      <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td>{order?.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</td>
                       <td className="actions-cell">
                         <button
                           className="action-btn view-btn"

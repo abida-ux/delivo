@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Clock, MapPin, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, XCircle, AlertTriangle, Phone, Mail, CreditCard } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useCartUI } from '../../context/CartUIContext';
@@ -36,6 +36,27 @@ const OrderDetails = () => {
     return food?.image || item.image || '';
   };
 
+  const formatCurrency = (value) => {
+    const amount = Number(value ?? 0);
+    return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const getOrderSubtotal = () => {
+    if (!order?.items?.length) return 0;
+    return order.items.reduce((sum, item) => {
+      const unitPrice = Number(item?.price ?? item?.unitPrice ?? 0);
+      const quantity = Number(item?.quantity ?? 1);
+      return sum + unitPrice * quantity;
+    }, 0);
+  };
+
+  const getOrderTotal = () => {
+    const subtotal = getOrderSubtotal();
+    const deliveryFee = Number(order?.deliveryFee ?? 0);
+    const tax = Number(order?.tax ?? 0);
+    return subtotal + deliveryFee + tax;
+  };
+
   useEffect(() => {
     if (!orderId) return;
 
@@ -63,8 +84,6 @@ const OrderDetails = () => {
 
     fetchOrder();
   }, [orderId, user]);
-
-  const isFailed = order?.paymentStatus === 'failed' || order?.status === 'cancelled';
 
   const getStatusLabel = () => {
     if (!order) return 'Unknown';
@@ -173,25 +192,30 @@ const OrderDetails = () => {
 
         <div className="order-summary-grid">
           <div className="order-summary-item">
-            <h3>Delivery Address</h3>
-            <p><MapPin size={16} /> {order.deliveryAddress}</p>
+            <h3>Delivery</h3>
+            <p><MapPin size={16} /> {order.deliveryAddress || 'Address not provided'}</p>
+            {order.specialInstructions ? <p>Note: {order.specialInstructions}</p> : null}
           </div>
           <div className="order-summary-item">
             <h3>Customer</h3>
             <p>{order.customerName || order.guestEmail || 'Guest'}</p>
-            {order.whatsappNumber && <p>WhatsApp: {order.whatsappNumber}</p>}
+            {order.guestPhone ? <p><Phone size={14} /> {order.guestPhone}</p> : null}
+            {order.whatsappNumber ? <p><Phone size={14} /> WhatsApp: {order.whatsappNumber}</p> : null}
+            {order.guestEmail ? <p><Mail size={14} /> {order.guestEmail}</p> : null}
           </div>
           <div className="order-summary-item">
             <h3>Payment</h3>
-            <p>{order.paymentMethod?.toUpperCase()}</p>
-            <p>{order.paymentStatus === 'failed' ? 'Failed' : order.paymentStatus}</p>
+            <p><CreditCard size={16} /> {order.paymentMethod?.toUpperCase() || 'MPESA'}</p>
+            <p>Status: {order.paymentStatus === 'failed' ? 'Failed' : order.paymentStatus}</p>
+            {order.mpesaReceiptNumber ? <p>Receipt: {order.mpesaReceiptNumber}</p> : null}
           </div>
           <div className="order-summary-item">
             <h3>Totals</h3>
             <p>Items: {order.items?.length || 0}</p>
-            <p>Subtotal: KES {order.items?.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0).toFixed(2)}</p>
-            <p>Delivery: KES {order.deliveryFee?.toFixed(2) ?? '0.00'}</p>
-            <p><strong>Total: KES {order.totalPrice.toFixed(2)}</strong></p>
+            <p>Subtotal: {formatCurrency(getOrderSubtotal())}</p>
+            <p>Delivery: {formatCurrency(order.deliveryFee ?? 0)}</p>
+            <p>Tax: {formatCurrency(order.tax ?? 0)}</p>
+            <p><strong>Total: {formatCurrency(getOrderTotal())}</strong></p>
           </div>
         </div>
 
@@ -222,13 +246,15 @@ const OrderDetails = () => {
           {order.items.map((item) => {
             const food = resolveOrderFood(item);
             const key = food?._id || item.foodId || item.food || item._id || `${item.quantity}-${Math.random()}`;
+            const unitPrice = Number(item.price ?? item.unitPrice ?? food?.price ?? 0);
+            const lineTotal = unitPrice * Number(item.quantity ?? 1);
             return (
               <div key={key} className="order-item-row">
                 <div>
                   <p className="item-name">{getOrderItemName(item)}</p>
-                  <p className="item-qty">Qty: {item.quantity}</p>
+                  <p className="item-qty">Qty: {item.quantity} • Unit price: {formatCurrency(unitPrice)}</p>
                 </div>
-                <p className="item-total">KES {(item.price * item.quantity).toFixed(2)}</p>
+                <p className="item-total">{formatCurrency(lineTotal)}</p>
               </div>
             );
           })}

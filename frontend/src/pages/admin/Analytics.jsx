@@ -144,7 +144,7 @@ const Analytics = () => {
             </div>
             <div className="metric-content">
               <p className="metric-label">Total Revenue</p>
-              <h3 className="metric-value">KES {stats.totalRevenue?.toLocaleString() || '0'}</h3>
+              <h3 className="metric-value">Ksh {stats.totalRevenue?.toLocaleString() || '0'}</h3>
               <p className="metric-change">
                 <TrendingUp size={14} /> +{stats.monthlyGrowth}% from last month
               </p>
@@ -158,7 +158,7 @@ const Analytics = () => {
             <div className="metric-content">
               <p className="metric-label">Total Orders</p>
               <h3 className="metric-value">{stats.totalOrders?.toLocaleString() || '0'}</h3>
-              <p className="metric-change">Avg: KES {stats.averageOrderValue?.toFixed(2) || '0'} per order</p>
+              <p className="metric-change">Avg: Ksh {stats.averageOrderValue?.toFixed(2) || '0'} per order</p>
             </div>
           </div>
 
@@ -181,7 +181,7 @@ const Analytics = () => {
             </div>
             <div className="metric-content">
               <p className="metric-label">Avg Order Value</p>
-              <h3 className="metric-value">KES {stats.averageOrderValue?.toFixed(2) || '0'}</h3>
+              <h3 className="metric-value">Ksh {stats.averageOrderValue?.toFixed(2) || '0'}</h3>
               <p className="metric-change">Per transaction</p>
             </div>
           </div>
@@ -218,7 +218,7 @@ const Analytics = () => {
                   </div>
                   <div className="item-stats">
                     <span className="orders">{food.orders} orders</span>
-                    <span className="revenue">KES {food.revenue?.toLocaleString() || '0'}</span>
+                    <span className="revenue">Ksh {food.revenue?.toLocaleString() || '0'}</span>
                   </div>
                 </div>
               ))}
@@ -241,7 +241,7 @@ const Analytics = () => {
                   </div>
                   <div className="stat">
                     <span className="label">Revenue</span>
-                    <span className="value">KES {restaurant.revenue?.toLocaleString() || '0'}</span>
+                    <span className="value">Ksh {restaurant.revenue?.toLocaleString() || '0'}</span>
                   </div>
                 </div>
               </div>

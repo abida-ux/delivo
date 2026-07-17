@@ -20,7 +20,7 @@ function App() {
       {isLoading && <Loader />}
       <AuthModal />
       {!isAdminRoute && <Navbar />}
-      <main className={isAdminRoute ? 'admin-main' : ''}>
+      <main className={isAdminRoute ? 'admin-page-main' : ''}>
         <AppRoutes />
       </main>
     </div>

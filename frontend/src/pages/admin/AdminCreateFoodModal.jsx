@@ -120,7 +120,7 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="price">Price (KES) *</label>
+              <label htmlFor="price">Price (Ksh) *</label>
               <input
                 type="number"
                 id="price"

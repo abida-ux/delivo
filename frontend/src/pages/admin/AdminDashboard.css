@@ -10,16 +10,16 @@
 }
 
 .stat-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 20px;
-  transition: all 0.3s ease;
+  background: #ffffff;
+  border: 1px solid #d9ead5;
+  border-radius: 18px;
+  padding: 24px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .stat-card:hover {
-  border-color: #ff6b35;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(39, 87, 64, 0.08);
 }
 
 .stat-header {
@@ -60,9 +60,9 @@
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  color: #000;
+  color: #1f4338;
   margin: 0;
 }
 
@@ -73,17 +73,17 @@
 }
 
 .info-box {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #d9ead5;
+  border-radius: 18px;
+  padding: 24px;
 }
 
 .info-box h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: #000;
-  margin: 0 0 16px 0;
+  color: #1f4338;
+  margin: 0 0 20px 0;
 }
 
 .info-box p {

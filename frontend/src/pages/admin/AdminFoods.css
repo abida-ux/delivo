@@ -16,14 +16,14 @@
   gap: 12px;
   flex: 1;
   max-width: 500px;
-  padding: 12px 16px;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 14px 18px;
+  background: #f7fcf6;
+  border: 1px solid #d9ead5;
+  border-radius: 14px;
 }
 
 .search-box svg {
-  color: #999;
+  color: #2f855a;
 }
 
 .search-box input {
@@ -38,12 +38,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  background: #ff6b35;
+  padding: 12px 22px;
+  background: #2f855a;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 14px;
+  font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -51,8 +51,8 @@
 }
 
 .add-btn:hover {
-  background: #e55a24;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+  background: #276749;
+  box-shadow: 0 8px 20px rgba(39, 87, 64, 0.18);
 }
 
 .foods-grid {
@@ -62,18 +62,18 @@
 }
 
 .food-item-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #d9ead5;
+  border-radius: 18px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
 }
 
 .food-item-card:hover {
-  border-color: #ff6b35;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 26px rgba(39, 87, 64, 0.08);
 }
 
 .food-image {
@@ -131,7 +131,7 @@
 .food-price {
   font-size: 18px;
   font-weight: 700;
-  color: #ff6b35;
+  color: #2f855a;
   margin-bottom: 12px;
 }
 

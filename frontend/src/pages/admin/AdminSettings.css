@@ -9,13 +9,12 @@
 }
 
 .settings-section {
-  background: rgba(26, 35, 50, 0.6);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #d9ead5;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(39, 87, 64, 0.08);
   animation: slideIn 0.3s ease;
-  backdrop-filter: blur(10px);
 }
 
 @keyframes slideIn {
@@ -33,20 +32,20 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 212, 255, 0.05) 100%);
-  border-bottom: 2px solid rgba(0, 212, 255, 0.2);
+  padding: 22px 24px;
+  background: #f2fbf1;
+  border-bottom: 2px solid #d9ead5;
 }
 
 .admin-settings .section-icon {
-  color: #00d4ff;
+  color: #2f855a;
   flex-shrink: 0;
 }
 
 .admin-settings .section-header h2 {
   font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--admin-foreground, #1f4338);
   margin: 0;
 }
 
@@ -75,7 +74,7 @@
   gap: 12px;
   cursor: pointer;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--admin-foreground, #1f4338);
   user-select: none;
 }
 
@@ -87,16 +86,16 @@
   position: relative;
   width: 48px;
   height: 28px;
-  background-color: rgba(255, 255, 0.2);
+  background-color: rgba(72, 187, 120, 0.16);
   border-radius: 14px;
   transition: all 0.3s ease;
   flex-shrink: 0;
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  border: 1px solid rgba(72, 187, 120, 0.2);
 }
 
 .toggle-label input:checked + .toggle-switch {
-  background-color: #00d4ff;
-  border-color: #00d4ff;
+  background-color: #2f855a;
+  border-color: #2f855a;
 }
 
 .toggle-switch::before {
@@ -118,14 +117,14 @@
 
 .setting-desc {
   font-size: 13px;
-  color: rgba(255, 255, 0.6);
+  color: var(--admin-muted, #4a6d56);
   margin: 0;
 }
 
 .setting-item label {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 0.9);
+  color: var(--admin-foreground, #1f4338);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -133,35 +132,35 @@
 .setting-item input,
 .setting-item textarea,
 .setting-item select {
-  padding: 10px 12px;
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #d9ead5;
+  border-radius: 12px;
   font-family: 'Poppins', sans-serif;
   font-size: 14px;
   transition: all 0.3s ease;
-  background: rgba(15, 20, 25, 0.5);
-  color: #ffffff;
+  background: var(--admin-surface, #ffffff);
+  color: var(--admin-foreground, #1f4338);
 }
 
 .setting-item input::placeholder,
 .setting-item textarea::placeholder {
-  color: rgba(255, 255, 0.4);
+  color: var(--admin-muted, #8fa296);
 }
 
 .setting-item input:focus,
 .setting-item textarea:focus,
 .setting-item select:focus {
   outline: none;
-  border-color: #00d4ff;
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
-  background-color: rgba(0, 212, 255, 0.05);
+  border-color: var(--admin-primary, #2f855a);
+  box-shadow: 0 0 0 3px rgba(47, 133, 90, 0.14);
+  background-color: rgba(47, 133, 90, 0.04);
 }
 
 .notification-preview {
   margin-top: 12px;
   padding: 12px;
-  background-color: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  background-color: rgba(47, 133, 90, 0.04);
+  border: 1px solid rgba(47, 133, 90, 0.12);
   border-radius: 8px;
 }
 
@@ -174,16 +173,16 @@
 }
 
 .preview-box {
-  background: rgba(15, 20, 25, 0.5);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  background: var(--admin-surface, #ffffff);
+  border: 1px solid rgba(47, 133, 90, 0.08);
   border-radius: 6px;
   padding: 12px;
-  border-left: 3px solid #00d4ff;
+  border-left: 3px solid var(--admin-primary, #2f855a);
 }
 
 .preview-content {
   font-size: 14px;
-  color: rgba(255, 255, 0.8);
+  color: var(--admin-foreground, #1f4338);
   margin: 0;
   line-height: 1.5;
 }
@@ -204,39 +203,39 @@
   font-size: 14px;
 }
 
+.add-promo-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--admin-primary, #2f855a) 0%, var(--admin-primary-strong, #276749) 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
 .add-promo-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(47, 133, 90, 0.18);
 }
 
-.add-promo-btn.hide {
-  display: none;
-}
-
-.promo-form {
-  background: rgba(0, 212, 255, 0.05);
-  padding: 16px;
+.promo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--admin-surface, #ffffff);
+  border: 1px solid rgba(47, 133, 90, 0.08);
   border-radius: 8px;
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  transition: all 0.3s ease;
 }
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+.promo-row:hover {
+  border-color: rgba(47, 133, 90, 0.18);
+  box-shadow: 0 2px 8px rgba(47, 133, 90, 0.08);
 }
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.admin-settings .form-group label {
-  font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 0.9);
   text-transform: uppercase;
@@ -294,8 +293,8 @@
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #000;
+  background: linear-gradient(135deg, #2f855a 0%, #48bb78 100%);
+  color: #ffffff;
 }
 
 .btn-save:hover {
@@ -320,15 +319,15 @@
   gap: 8px;
 }
 
-.promo-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: rgba(15, 20, 25, 0.5);
-  border: 1px solid rgba(0, 212, 255, 0.2);
+.promo-form {
+  background: var(--admin-surface, #ffffff);
+  padding: 16px;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  border: 1px solid rgba(47, 133, 90, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 }
 
 .promo-row:hover {
@@ -356,8 +355,8 @@
 .badge-active {
   display: inline-block;
   padding: 2px 8px;
-  background-color: rgba(76, 175, 80, 0.2);
-  color: #a5d6a7;
+  background-color: rgba(47, 133, 90, 0.12);
+  color: var(--admin-foreground, #1f4338);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
@@ -367,8 +366,8 @@
 .badge-inactive {
   display: inline-block;
   padding: 2px 8px;
-  background-color: rgba(244, 67, 54, 0.2);
-  color: #ef9a9a;
+  background-color: rgba(244, 67, 54, 0.08);
+  color: #c74a4a;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
@@ -464,15 +463,15 @@
   align-items: center;
   gap: 8px;
   padding: 14px 24px;
-  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
-  color: #000;
+  background: linear-gradient(135deg, #2f855a 0%, #48bb78 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 14px;
-  box-shadow: 0 6px 16px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 10px 24px rgba(39, 87, 64, 0.18);
 }
 
 .save-settings-btn:hover {
@@ -489,10 +488,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.2);
-  border-radius: 8px;
+  padding: 18px;
+  background: #f7fcf6;
+  border: 1px solid #d9ead5;
+  border-radius: 14px;
 }
 
 .notification-form .form-group {
@@ -678,6 +677,131 @@
   background: rgba(244, 67, 54, 0.15);
   border-color: rgba(244, 67, 54, 0.5);
   color: #ff6b6b;
+}
+
+/* Admin settings theme refresh */
+.admin-settings {
+  color: var(--admin-foreground, #1f4338);
+}
+
+.admin-settings .settings-section {
+  background: var(--admin-surface, #ffffff);
+  border: 1px solid var(--admin-border, #d9ead5);
+  box-shadow: 0 16px 40px rgba(39, 87, 64, 0.08);
+}
+
+.admin-settings .section-header {
+  background: linear-gradient(135deg, #f7fcf6 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--admin-border, #d9ead5);
+}
+
+.admin-settings .section-icon {
+  color: var(--admin-primary, #2f855a) !important;
+}
+
+.admin-settings .section-header h2,
+.admin-settings .promos-list h3,
+.admin-settings .notifications-history h3,
+.admin-settings .notification-content h4 {
+  color: var(--admin-foreground, #1f4338) !important;
+}
+
+.admin-settings .setting-desc,
+.admin-settings .setting-item label,
+.admin-settings .form-group label,
+.admin-settings .notification-form .form-group label,
+.admin-settings .toggle-label,
+.admin-settings .preview-title,
+.admin-settings .promo-details,
+.admin-settings .notification-content p,
+.admin-settings .notification-meta,
+.admin-settings .empty-state p,
+.admin-settings .notification-form small {
+  color: var(--admin-muted, #4a6d56) !important;
+}
+
+.admin-settings .toggle-label input:checked + .toggle-switch {
+  background-color: var(--admin-primary, #2f855a) !important;
+  border-color: var(--admin-primary, #2f855a) !important;
+}
+
+.admin-settings .toggle-switch {
+  background-color: var(--admin-primary-soft, rgba(72, 187, 120, 0.16)) !important;
+  border-color: var(--admin-border, #d9ead5) !important;
+}
+
+.admin-settings .setting-item input,
+.admin-settings .setting-item textarea,
+.admin-settings .setting-item select,
+.admin-settings .form-group input,
+.admin-settings .form-group select,
+.admin-settings .notification-form .form-group input,
+.admin-settings .notification-form .form-group textarea,
+.admin-settings .notification-form .form-group select {
+  background: #ffffff !important;
+  color: var(--admin-foreground, #1f4338) !important;
+  border: 1px solid var(--admin-border, #d9ead5) !important;
+}
+
+.admin-settings .setting-item input::placeholder,
+.admin-settings .setting-item textarea::placeholder,
+.admin-settings .form-group input::placeholder,
+.admin-settings .notification-form .form-group input::placeholder,
+.admin-settings .notification-form .form-group textarea::placeholder {
+  color: #8fa296 !important;
+}
+
+.admin-settings .setting-item input:focus,
+.admin-settings .setting-item textarea:focus,
+.admin-settings .setting-item select:focus,
+.admin-settings .form-group input:focus,
+.admin-settings .form-group select:focus,
+.admin-settings .notification-form .form-group input:focus,
+.admin-settings .notification-form .form-group textarea:focus,
+.admin-settings .notification-form .form-group select:focus {
+  border-color: var(--admin-primary, #2f855a) !important;
+  box-shadow: 0 0 0 3px rgba(47, 133, 90, 0.14) !important;
+  background-color: #f7fcf6 !important;
+}
+
+.admin-settings .notification-preview,
+.admin-settings .promo-form,
+.admin-settings .notification-form,
+.admin-settings .preview-box,
+.admin-settings .promo-row,
+.admin-settings .notification-item {
+  background: #fdfefc !important;
+  border-color: var(--admin-border, #d9ead5) !important;
+}
+
+.admin-settings .preview-content,
+.admin-settings .promo-code strong,
+.admin-settings .badge-active,
+.admin-settings .badge-inactive {
+  color: var(--admin-foreground, #1f4338) !important;
+}
+
+.admin-settings .add-promo-btn,
+.admin-settings .btn-save,
+.admin-settings .save-settings-btn,
+.admin-settings .send-notification-btn {
+  background: linear-gradient(135deg, var(--admin-primary, #2f855a) 0%, var(--admin-primary-strong, #276749) 100%) !important;
+  color: #ffffff !important;
+}
+
+.admin-settings .btn-cancel,
+.admin-settings .toggle-btn,
+.admin-settings .delete-btn {
+  color: var(--admin-foreground, #1f4338) !important;
+  border-color: var(--admin-border, #d9ead5) !important;
+  background: #fff !important;
+}
+
+.admin-settings .save-settings-btn:hover,
+.admin-settings .btn-save:hover,
+.admin-settings .add-promo-btn:hover,
+.admin-settings .send-notification-btn:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(39, 87, 64, 0.16) !important;
 }
 
 /* Responsive */

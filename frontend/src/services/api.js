@@ -4,15 +4,16 @@ import axios from 'axios';
 const PRODUCTION_API_URL = 'https://delivo-d5r8.onrender.com/api';
 
 const getAPIUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  if (import.meta.env.DEV) {
+    return '/api';
   }
 
-  if (import.meta.env.PROD) {
-    return PRODUCTION_API_URL;
+  const rawUrl = import.meta.env.VITE_API_URL?.trim();
+  if (rawUrl) {
+    return rawUrl.replace(/\/+$/, '');
   }
 
-  return '/api';
+  return PRODUCTION_API_URL;
 };
 
 const API_BASE_URL = getAPIUrl();
