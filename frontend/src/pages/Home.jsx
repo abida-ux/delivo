@@ -136,8 +136,8 @@ export default function Home() {
           <div className="footer-column">
             <h4>Support</h4>
             <ul>
-              <li><a href="mailto:info@delivo.buzz">info@delivo.buzz</a></li>
-              <li><a href="tel:+254704060217">0704060217</a></li>
+              <li><a href="mailto:support@delivo.co.ke">support@delivo.co.ke</a></li>
+              <li><a href="tel:+254700000000">+254 700 000 000</a></li>
             </ul>
           </div>
           <div className="footer-column">

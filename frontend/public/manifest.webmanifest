@@ -11,13 +11,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/ion.svg",
+      "src": "/favicon-circle.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/ion.svg",
+      "src": "/favicon-circle.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"

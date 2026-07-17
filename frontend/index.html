@@ -2,15 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/ion.svg" />
-    <link rel="apple-touch-icon" href="/ion.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon-circle.svg" />
+    <link rel="apple-touch-icon" href="/favicon-circle.svg" />
     <link rel="manifest" href="/manifest.webmanifest?v=delivo-pwa-20260715" />
     <meta name="theme-color" content="#f97316" />
+    <meta name="description" content="Delivo — Fast food delivery across Nairobi and beyond. Order from nearby restaurants, track delivery, and enjoy deals." />
+    <!-- Open Graph / Twitter -->
+    <meta property="og:title" content="Delivo — Fast food delivery" />
+    <meta property="og:description" content="Fast food delivery across Nairobi and beyond. Order from nearby restaurants and enjoy great offers." />
+    <meta property="og:image" content="/logo.jpg" />
+    <meta property="og:url" content="https://www.delivo.buzz" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Delivo" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>delivo</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Delivo",
+        "url": "https://www.delivo.buzz",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.delivo.buzz/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
