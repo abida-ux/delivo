@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, AlertCircle, Check } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { createOrder, getAppSettings, getMpesaStatus } from '../../services/api';
+import { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
 
@@ -25,6 +25,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     whatsapp: '',
     mpesaNumber: ''
   });
+  const [restaurants, setRestaurants] = useState([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState('');
   const [orderId, setOrderId] = useState(null);
   const [checkoutRequestId, setCheckoutRequestId] = useState(null);
   const [paymentMessage, setPaymentMessage] = useState('');
@@ -82,6 +84,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     if (!deliveryInfo.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
+    if (!selectedRestaurant) {
+      newErrors.restaurant = 'Please choose a restaurant to order from';
+    }
     if (!deliveryInfo.address.trim()) {
       newErrors.address = 'Precise delivery location is required';
     } else if (deliveryInfo.address.trim().length < 8) {
@@ -115,6 +120,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   };
 
   useEffect(() => {
+    // fetch available restaurants for the select list
+    const fetchRestaurants = async () => {
+      try {
+        const data = await getAllRestaurants();
+        setRestaurants(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length === 1) setSelectedRestaurant(data[0]._id || '');
+      } catch (err) {
+        console.error('Error loading restaurants for checkout:', err);
+      }
+    };
+
+    fetchRestaurants();
+
     return () => {
       clearPolling();
     };
@@ -197,6 +215,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         mpesaNumber: deliveryInfo.mpesaNumber,
         deliveryFee,
         specialInstructions: '',
+        restaurantId: selectedRestaurant || undefined,
       };
 
       if (user && user.id) {
@@ -296,6 +315,24 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                 className={errors.fullName ? 'error' : ''}
               />
               {errors.fullName && <span className="field-error">{errors.fullName}</span>}
+            </div>
+            <div className="form-group">
+              <label>Restaurant *</label>
+              <select
+                value={selectedRestaurant}
+                onChange={(e) => {
+                  setSelectedRestaurant(e.target.value);
+                  if (errors.restaurant) setErrors({ ...errors, restaurant: '' });
+                }}
+                disabled={isProcessing || orderPending}
+                className={errors.restaurant ? 'error' : ''}
+              >
+                <option value="">Select restaurant</option>
+                {restaurants.map((r) => (
+                  <option key={r._id || r.id} value={r._id || r.id}>{r.name}</option>
+                ))}
+              </select>
+              {errors.restaurant && <span className="field-error">{errors.restaurant}</span>}
             </div>
           </div>
 
