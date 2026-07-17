@@ -6,22 +6,25 @@ import { LoaderProvider } from './context/LoaderContext'
 import { AuthModalProvider } from './context/AuthModalContext'
 import { AuthProvider } from './context/AuthContext'
 import PwaInstallPrompt from './components/PwaInstallPrompt'
+import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <LoaderProvider>
-      <AuthProvider>
-        <AuthModalProvider>
-          <CartProvider>
-            <CartUIProvider>
-              <App />
-              <PwaInstallPrompt />
-            </CartUIProvider>
-          </CartProvider>
-        </AuthModalProvider>
-      </AuthProvider>
-    </LoaderProvider>
+    <ErrorBoundary>
+      <LoaderProvider>
+        <AuthProvider>
+          <AuthModalProvider>
+            <CartProvider>
+              <CartUIProvider>
+                <App />
+                <PwaInstallPrompt />
+              </CartUIProvider>
+            </CartProvider>
+          </AuthModalProvider>
+        </AuthProvider>
+      </LoaderProvider>
+    </ErrorBoundary>
   </BrowserRouter>
 )

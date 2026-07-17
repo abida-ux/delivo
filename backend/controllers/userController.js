@@ -133,6 +133,8 @@ const createPasswordResetCode = async (user) => {
   }
 };
 
+const EMAIL_VERIFICATION = process.env.EMAIL_VERIFICATION === 'true';
+
 exports.registerUser = async (req, res, next) => {
   try {
     const { name, email, password, role, phone } = req.body;
@@ -192,7 +194,7 @@ exports.registerUser = async (req, res, next) => {
       password,
       role: role || 'customer',
       phone,
-      isVerified: false,
+      isVerified: EMAIL_VERIFICATION ? false : true,
       verificationResendCount: 0,
       verificationResendWindowStart: new Date(),
       verificationAttempts: 0,
@@ -200,38 +202,41 @@ exports.registerUser = async (req, res, next) => {
 
     console.log('[auth] user saved to database', { userId: user._id, email: user.email });
 
+    // If email verification is enabled, attempt to create and send verification code
     let emailDelivered = false;
-    try {
-      console.log('[auth] backend -> creating verification code', { userId: user._id, email: user.email });
-      await createVerificationCode(user);
-      console.log('[auth] backend <- verification code created and email flow completed', { userId: user._id, email: user.email });
-      emailDelivered = true;
-    } catch (error) {
-      console.error('[auth] registration email flow failed', {
-        userId: user._id,
-        email: user.email,
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-        command: error.command,
-        response: error.response,
-      });
-
+    if (EMAIL_VERIFICATION) {
       try {
-        await User.findByIdAndDelete(user._id);
-        console.log('[auth] registration cleanup completed', { userId: user._id, email: user.email });
-      } catch (cleanupError) {
-        console.error('[auth] registration cleanup failed', {
+        console.log('[auth] backend -> creating verification code', { userId: user._id, email: user.email });
+        await createVerificationCode(user);
+        console.log('[auth] backend <- verification code created and email flow completed', { userId: user._id, email: user.email });
+        emailDelivered = true;
+      } catch (error) {
+        console.error('[auth] registration email flow failed', {
           userId: user._id,
           email: user.email,
-          message: cleanupError.message,
+          message: error.message,
+          stack: error.stack,
+          code: error.code,
+          command: error.command,
+          response: error.response,
+        });
+
+        try {
+          await User.findByIdAndDelete(user._id);
+          console.log('[auth] registration cleanup completed', { userId: user._id, email: user.email });
+        } catch (cleanupError) {
+          console.error('[auth] registration cleanup failed', {
+            userId: user._id,
+            email: user.email,
+            message: cleanupError.message,
+          });
+        }
+
+        return res.status(503).json({
+          success: false,
+          message: 'We could not send the verification email right now. Please try again shortly.',
         });
       }
-
-      return res.status(503).json({
-        success: false,
-        message: 'We could not send the verification email right now. Please try again shortly.',
-      });
     }
 
     console.log('[auth] registration completed', {
@@ -240,21 +245,28 @@ exports.registerUser = async (req, res, next) => {
       emailDelivered,
     });
 
-    return res.status(201).json({
+    const response = {
       success: true,
-      message: 'User registered successfully. A verification code has been sent to your email.',
+      message: EMAIL_VERIFICATION
+        ? 'User registered successfully. A verification code has been sent to your email.'
+        : 'User registered successfully. Email verification is disabled in this environment.',
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
       },
-      verification: {
+    };
+
+    if (EMAIL_VERIFICATION) {
+      response.verification = {
         required: true,
         emailDelivered,
         resendEndpoint: '/api/users/resend-verification-code',
-      },
-    });
+      };
+    }
+
+    return res.status(201).json(response);
   } catch (error) {
     console.error('[auth] registration controller crashed', {
       message: error.message,
@@ -284,7 +296,7 @@ exports.loginUser = async (req, res, next) => {
       });
     }
 
-    if (!user.isVerified) {
+    if (EMAIL_VERIFICATION && !user.isVerified) {
       return res.status(401).json({
         success: false,
         message: 'Account not verified. Please verify your email first.',

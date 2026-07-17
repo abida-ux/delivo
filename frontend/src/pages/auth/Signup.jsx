@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
-import { registerUser, verifyEmail, resendVerificationCode } from '../../services/api';
+import { registerUser } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import './Auth.css';
@@ -13,12 +13,6 @@ const Signup = ({ isModal = false }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showVerification, setShowVerification] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [verifyLoading, setVerifyLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [verifyMessage, setVerifyMessage] = useState('');
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const otpInputRef = useRef(null);
   const isSubmittingRef = useRef(false);
@@ -78,29 +72,29 @@ const Signup = ({ isModal = false }) => {
       const { confirmPassword, ...payload } = formData;
       const startedAt = Date.now();
 
-      sessionStorage.setItem('pendingVerificationEmail', payload.email);
-      setVerificationEmail(payload.email);
+      sessionStorage.removeItem('pendingVerificationEmail');
       setVerificationSuccess(false);
-      setVerifyMessage('A verification email is being prepared for your inbox. Please check your email and return here to enter the code.');
-      setOtp('');
       setError('');
 
       console.log('[auth] signup submit starting', { email: payload.email, isModal });
       const res = await registerUser(payload);
       console.log('[auth] signup submit completed', { message: res?.message, email: payload.email });
       const elapsed = Date.now() - startedAt;
-      const remainingDelay = Math.max(0, 1000 - elapsed);
+      const remainingDelay = Math.max(0, 500 - elapsed);
 
       if (remainingDelay > 0) {
         await new Promise((resolve) => setTimeout(resolve, remainingDelay));
       }
 
-      setShowVerification(true);
-      setVerifyMessage(res?.message || 'A verification email has been sent to your inbox. Please enter the 6-digit code from that email to finish verifying your account.');
-      setFormData((prev) => ({ ...emptyForm, email: payload.email }));
-      setTimeout(() => {
-        otpInputRef.current?.focus();
-      }, 0);
+      setFormData((prev) => ({ ...emptyForm }));
+
+      // If modal, close and open login; otherwise navigate to login page
+      if (isModal) {
+        closeModal();
+        openLoginModal();
+      } else {
+        navigate('/login');
+      }
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Signup failed';
       if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('user already exists')) {
@@ -119,49 +113,7 @@ const Signup = ({ isModal = false }) => {
     }
   };
 
-  const handleVerifySubmit = async (e) => {
-    e.preventDefault();
-    if (!verificationEmail || !otp) {
-      setError('Email and verification code are required');
-      return;
-    }
-
-    try {
-      setVerifyLoading(true);
-      await verifyEmail({ email: verificationEmail, code: otp });
-      sessionStorage.removeItem('pendingVerificationEmail');
-      setOtp('');
-      setError('');
-
-      if (isModal) {
-        closeModal();
-        openLoginModal();
-      } else {
-        navigate('/login');
-      }
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Verification failed';
-      setError(errorMsg);
-    } finally {
-      setVerifyLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!verificationEmail) return;
-
-    try {
-      setResendLoading(true);
-      const res = await resendVerificationCode({ email: verificationEmail });
-      setVerifyMessage(res?.message || 'A new verification email has been sent to your inbox.');
-      setError('');
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Could not resend code';
-      setError(errorMsg);
-    } finally {
-      setResendLoading(false);
-    }
-  };
+  // Verification flow removed for local development. Backend may still enforce verification based on environment.
 
   return (
     <div className={`auth-container ${isModal ? 'modal-mode' : ''}`}>
