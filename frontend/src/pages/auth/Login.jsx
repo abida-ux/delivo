@@ -70,7 +70,7 @@ const Login = ({ isModal = false }) => {
       if (res.user?.role === 'admin') {
         navigate('/admin');
       } else if (res.user?.role === 'restaurant') {
-        navigate('/restaurant-dashboard');
+        navigate('/restaurant');
       } else if (res.user?.role === 'rider') {
         navigate('/rider-dashboard');
       } else {

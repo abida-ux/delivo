@@ -15,6 +15,7 @@ const errorHandler = require('./middleware/errorMiddleware');
 
 // Import routes
 const restaurantRoutes = require('./routes/restaurantRoutes');
+const restaurantPortalRoutes = require('./routes/restaurantPortalRoutes');
 const foodRoutes = require('./routes/foodRoutes');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/auth');
@@ -76,6 +77,7 @@ app.use(cors(corsOptions));
 
 // ==================== ROUTES ====================
 app.use('/api/restaurants', restaurantRoutes);
+app.use('/api/restaurant', restaurantPortalRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);

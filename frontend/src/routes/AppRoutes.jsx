@@ -30,6 +30,14 @@ const AvailableDeliveries = lazy(() => import("../pages/rider/AvailableDeliverie
 const DeliveryHistory = lazy(() => import("../pages/rider/DeliveryHistory"));
 const RiderEarnings = lazy(() => import("../pages/rider/Earnings"));
 const RestaurantDashboard = lazy(() => import("../pages/restaurant/RestaurantDashboard"));
+const RestaurantOrders = lazy(() => import("../pages/restaurant/RestaurantOrders"));
+const RestaurantCompletedOrders = lazy(() => import("../pages/restaurant/RestaurantCompletedOrders"));
+const RestaurantFoods = lazy(() => import("../pages/restaurant/RestaurantFoods"));
+const RestaurantRevenue = lazy(() => import("../pages/restaurant/RestaurantRevenue"));
+const RestaurantWithdrawals = lazy(() => import("../pages/restaurant/RestaurantWithdrawals"));
+const RestaurantTransactions = lazy(() => import("../pages/restaurant/RestaurantTransactions"));
+const RestaurantProfile = lazy(() => import("../pages/restaurant/RestaurantProfile"));
+const RestaurantSettings = lazy(() => import("../pages/restaurant/RestaurantSettings"));
 
 export default function AppRoutes() {
   return (
@@ -181,10 +189,82 @@ export default function AppRoutes() {
 
       {/* Restaurant Routes - Protected */}
       <Route
+        path="/restaurant"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/restaurant-dashboard"
         element={
           <ProtectedRoute requiredRole="restaurant">
             <RestaurantDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/orders"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantOrders />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/completed-orders"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantCompletedOrders />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/foods"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantFoods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/revenue"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantRevenue />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/withdrawals"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantWithdrawals />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/transactions"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantTransactions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/profile"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/restaurant/settings"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantSettings />
           </ProtectedRoute>
         }
       />

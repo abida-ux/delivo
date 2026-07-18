@@ -30,6 +30,68 @@ const RestaurantSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  ownerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'suspended'],
+    default: 'approved',
+  },
+  availableBalance: {
+    type: Number,
+    default: 0,
+  },
+  pendingBalance: {
+    type: Number,
+    default: 0,
+  },
+  withdrawnBalance: {
+    type: Number,
+    default: 0,
+  },
+  description: {
+    type: String,
+    default: '',
+  },
+  phone: {
+    type: String,
+    default: '',
+  },
+  email: {
+    type: String,
+    default: '',
+  },
+  openingHours: {
+    type: String,
+    default: '08:00',
+  },
+  closingHours: {
+    type: String,
+    default: '22:00',
+  },
+  deliveryRadius: {
+    type: Number,
+    default: 5,
+  },
+  location: {
+    type: String,
+    default: '',
+  },
+  bankName: {
+    type: String,
+    default: '',
+  },
+  accountNumber: {
+    type: String,
+    default: '',
+  },
+  mpesaNumber: {
+    type: String,
+    default: '',
+  },
   foods: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Food',
