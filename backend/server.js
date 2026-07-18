@@ -98,6 +98,19 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve frontend in production and support client-side routing
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(clientBuildPath));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
+
 // 404 handler
 app.use((req, res) => {
   console.log(`❌ 404: Route not found: ${req.method} ${req.path}`);
