@@ -1,4 +1,3 @@
-import React from 'react';
 import { Search, ShoppingBag, CreditCard, ShoppingCart, Truck } from 'lucide-react';
 import './HowItWorks.css';
 

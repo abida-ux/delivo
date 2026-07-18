@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { Wallet, Plus, Send, History, Eye, EyeOff, CreditCard } from 'lucide-react';
 import '../pages.css';
 import './Wallet.css';

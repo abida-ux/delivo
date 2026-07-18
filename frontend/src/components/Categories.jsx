@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import {useRef} from 'react';
 import { ChevronLeft, ChevronRight, UtensilsCrossed, Coffee, Utensils, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant } from 'lucide-react';
 import './Categories.css';
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import {useState, useEffect, useContext} from 'react';
 import { MapPin, Clock, DollarSign, Package, Search, Loader, ChevronRight, Navigation } from 'lucide-react';
 import './RiderStores.css';
 import { useNavigate } from 'react-router-dom';

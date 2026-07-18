@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import {useState, useContext} from 'react';
 import { Send, AlertCircle } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { Star, Clock, ShoppingBag, Plus, Minus, Heart, Share2, ShieldCheck, X, Loader } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRestaurantById, getFoodsByRestaurant, createOrder } from '../../services/api';
@@ -22,14 +22,6 @@ const Restaurants = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
-
-  useEffect(() => {
-    if (!restaurantId) {
-      setError('No restaurant selected');
-      return;
-    }
-    fetchRestaurantData();
-  }, [restaurantId]);
 
   const fetchRestaurantData = async () => {
     try {
@@ -57,6 +49,15 @@ const Restaurants = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!restaurantId) {
+      setError('No restaurant selected');
+      return;
+    }
+
+    fetchRestaurantData();
+  }, [restaurantId]);
 
   const handleAddToCart = (food) => {
     addItem(food, 1);

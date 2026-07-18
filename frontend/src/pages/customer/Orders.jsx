@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Clock, MapPin, CreditCard } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -15,9 +15,9 @@ const Orders = () => {
   const { openCart } = useCartUI();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { addItem, clearCart } = useCart();
+  const filterStatus = searchParams.get('filter') || 'all';
 
   const resolveOrderFood = (item) => {
     if (!item) return null;
@@ -75,35 +75,29 @@ const Orders = () => {
 
     openCart();
   };
-
   useEffect(() => {
-    const filter = searchParams.get('filter') || 'all';
-    setFilterStatus(filter);
-  }, [searchParams]);
+    const fetchUserOrders = async () => {
+      try {
+        setLoading(true);
+        if (!user) {
+          const guestOrders = getGuestOrders();
+          setOrders(guestOrders);
+          return;
+        }
 
-  useEffect(() => {
+        const ordersData = await getUserOrders(user.id);
+        const ordersList = Array.isArray(ordersData) ? ordersData : (ordersData.data || []);
+        setOrders(ordersList);
+      } catch (error) {
+        console.error('❌ Error fetching orders:', error);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchUserOrders();
   }, [user]);
-
-  const fetchUserOrders = async () => {
-    try {
-      setLoading(true);
-      if (!user) {
-        const guestOrders = getGuestOrders();
-        setOrders(guestOrders);
-        return;
-      }
-
-      const ordersData = await getUserOrders(user.id);
-      const ordersList = Array.isArray(ordersData) ? ordersData : (ordersData.data || []);
-      setOrders(ordersList);
-    } catch (error) {
-      console.error('❌ Error fetching orders:', error);
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusColor = (order) => {
     if (order.paymentStatus === 'failed') return '#ef4444';
@@ -165,31 +159,31 @@ const Orders = () => {
       <div className="orders-filters">
         <button 
           className={filterStatus === 'all' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setFilterStatus('all')}
+          onClick={() => setSearchParams({ filter: 'all' })}
         >
           All
         </button>
         <button 
           className={filterStatus === 'pending' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setFilterStatus('pending')}
+          onClick={() => setSearchParams({ filter: 'pending' })}
         >
           Pending
         </button>
         <button 
           className={filterStatus === 'confirmed' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setFilterStatus('confirmed')}
+          onClick={() => setSearchParams({ filter: 'confirmed' })}
         >
           Confirmed
         </button>
         <button 
           className={filterStatus === 'on-delivery' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setFilterStatus('on-delivery')}
+          onClick={() => setSearchParams({ filter: 'on-delivery' })}
         >
           On Delivery
         </button>
         <button 
           className={filterStatus === 'delivered' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setFilterStatus('delivered')}
+          onClick={() => setSearchParams({ filter: 'delivered' })}
         >
           Delivered
         </button>

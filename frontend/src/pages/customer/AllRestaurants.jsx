@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Star, MapPin, Clock, Search } from 'lucide-react';
 import { getAllRestaurants } from '../../services/api';
@@ -14,10 +14,6 @@ const AllRestaurants = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const filterParam = searchParams.get('filter');
-
-  useEffect(() => {
-    fetchRestaurants();
-  }, [filterParam]);
 
   const fetchRestaurants = async () => {
     try {
@@ -57,6 +53,10 @@ const AllRestaurants = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, [filterParam]);
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { Search, Trash2, Ban, Eye, Shield, UserCheck } from 'lucide-react';
 import '../pages.css';
 import './Users.css';

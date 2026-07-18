@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { Trash2, Edit, Search, Plus, Star } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllRestaurants, deleteRestaurant, updateRestaurant, createRestaurant } from '../../services/api';

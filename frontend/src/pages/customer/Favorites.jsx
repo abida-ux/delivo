@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { Heart, MapPin, Star, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../pages.css';

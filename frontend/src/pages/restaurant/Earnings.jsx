@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { TrendingUp, DollarSign, Calendar, Download, Filter } from 'lucide-react';
 import '../pages.css';
 import './Earnings.css';

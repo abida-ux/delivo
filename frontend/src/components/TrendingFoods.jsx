@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import {useEffect, useRef, useState, useMemo} from 'react';
 import { Star, Plus, ChevronLeft, ChevronRight, ShoppingCart, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';

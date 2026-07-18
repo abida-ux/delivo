@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { MapPin, Clock, DollarSign, Navigation, Phone, Check } from 'lucide-react';
 import '../pages.css';
 import './AvailableDeliveries.css';

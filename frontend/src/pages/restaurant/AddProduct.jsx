@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { Upload, Plus, X } from 'lucide-react';
 import '../pages.css';
 import './AddProduct.css';

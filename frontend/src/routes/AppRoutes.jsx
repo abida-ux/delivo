@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Loader from "../components/Loader";
 import { ProtectedRoute } from "../components/ProtectedRoute";
+import NotFound from "../pages/NotFound";
 
 const Home = lazy(() => import("../pages/Home"));
 const Menu = lazy(() => import("../pages/Menu"));
@@ -268,6 +269,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </Suspense>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAllStores, getStoreType } from '../../services/api';
 import Loader from '../../components/Loader';
@@ -12,10 +12,6 @@ const StoresByType = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    fetchStoresAndType();
-  }, [typeId]);
 
   const fetchStoresAndType = async () => {
     try {
@@ -35,6 +31,10 @@ const StoresByType = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchStoresAndType();
+  }, [typeId]);
 
   const handleStoreClick = (storeId) => {
     navigate(`/store/${storeId}`);

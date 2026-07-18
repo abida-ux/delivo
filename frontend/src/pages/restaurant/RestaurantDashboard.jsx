@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, TrendingUp, ShoppingBag, Wallet, DollarSign, PackageOpen, ArrowRight } from 'lucide-react';
 import '../pages.css';

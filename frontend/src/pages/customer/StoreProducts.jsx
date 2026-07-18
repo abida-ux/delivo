@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getStoreById } from '../../services/api';
 import { useCart } from '../../context/CartContext';
@@ -17,10 +17,6 @@ const StoreProducts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  useEffect(() => {
-    fetchStore();
-  }, [storeId]);
-
   const fetchStore = async () => {
     try {
       setLoading(true);
@@ -35,6 +31,10 @@ const StoreProducts = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchStore();
+  }, [storeId]);
 
   const categories = [
     'all',

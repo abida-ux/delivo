@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { Star, Users, TrendingUp, Award, Heart, CheckCircle, Zap, Users2, Globe, Lightbulb, Rocket, Handshake, Leaf } from 'lucide-react';
 import './About.css';
 import MainLayout from '../layouts/MainLayout';

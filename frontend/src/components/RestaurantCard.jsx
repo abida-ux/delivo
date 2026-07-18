@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import {useState, useEffect, useRef} from 'react';
 import { Star, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAllRestaurants } from '../services/api';

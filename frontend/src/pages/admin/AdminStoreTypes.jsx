@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { getAllStoreTypes, createStoreType, updateStoreType, deleteStoreType } from '../../services/api';
 import './AdminStores.css';
 

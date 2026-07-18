@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import {useState, useEffect} from 'react';
 import { Clock, Zap, Star, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCartUI } from '../context/CartUIContext';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import {useState} from 'react';
 import { MapPin, Truck, TrendingUp, DollarSign, Clock, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import '../pages.css';

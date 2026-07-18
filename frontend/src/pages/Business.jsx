@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowRight, MessageCircle, Mail, Phone } from 'lucide-react';
 import './Business.css';
 import MainLayout from '../layouts/MainLayout';

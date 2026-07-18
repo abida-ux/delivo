@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import { Star, Search, Plus, Check, Coffee, Utensils, UtensilsCrossed, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant } from 'lucide-react';
 import { getAllFoods } from '../services/api';
 import { useCart } from '../context/CartContext';
