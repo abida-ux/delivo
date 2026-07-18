@@ -4,7 +4,7 @@ const { authenticate } = require('../middleware/authMiddleware');
 const Restaurant = require('../models/Restaurant');
 const Food = require('../models/Food');
 const Order = require('../models/Order');
-const { calculateRestaurantEarnings, buildRestaurantFilter } = require('../utils/restaurantPortal');
+const { calculateRestaurantEarnings, buildRestaurantFilter, buildRestaurantDashboardData } = require('../utils/restaurantPortal');
 
 const ensureRestaurantOwner = async (req, res, next) => {
   try {
@@ -71,14 +71,7 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
     res.status(200).json({
       success: true,
       data: {
-        restaurant: {
-          id: restaurant._id,
-          name: restaurant.name,
-          status: restaurant.status,
-          availableBalance: restaurant.availableBalance || 0,
-          pendingBalance: restaurant.pendingBalance || 0,
-          withdrawnBalance: restaurant.withdrawnBalance || 0,
-        },
+        restaurant: buildRestaurantDashboardData(restaurant),
         stats: {
           todayOrders: todayOrders.length,
           pendingOrders: pendingOrders.length,

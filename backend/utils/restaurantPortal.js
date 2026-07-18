@@ -12,7 +12,18 @@ const calculateRestaurantEarnings = (orderTotal, commission = 100) => {
 
 const buildRestaurantFilter = (ownerId) => ({ ownerId });
 
+const buildRestaurantDashboardData = (restaurant) => ({
+  id: restaurant._id,
+  name: restaurant.name,
+  status: restaurant.status,
+  availableBalance: restaurant.availableBalance || 0,
+  pendingBalance: restaurant.pendingBalance || 0,
+  withdrawnBalance: restaurant.withdrawnBalance || 0,
+  isOpen: restaurant.isOpen !== undefined ? restaurant.isOpen : true,
+});
+
 module.exports = {
   calculateRestaurantEarnings,
   buildRestaurantFilter,
+  buildRestaurantDashboardData,
 };

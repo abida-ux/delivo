@@ -2,14 +2,25 @@ import {useEffect, useState} from 'react';
 import './RestaurantDashboard.css';
 
 const RestaurantProfile = () => {
-  const [form, setForm] = useState({ name: '', description: '', phone: '', email: '', openingHours: '', closingHours: '', deliveryRadius: '', location: '' });
+  const [form, setForm] = useState({ name: '', description: '', phone: '', email: '', openingHours: '', closingHours: '', deliveryRadius: '', location: '', isOpen: true });
+  const [statusMessage, setStatusMessage] = useState('');
   useEffect(() => {
     const load = async () => {
       const token = localStorage.getItem('token');
       const res = await fetch('/api/restaurant/dashboard', { headers: { Authorization: `Bearer ${token}` } });
       const json = await res.json();
       if (json?.success) {
-        setForm({ name: json.data.restaurant.name || '', description: '', phone: '', email: '', openingHours: '', closingHours: '', deliveryRadius: '', location: '' });
+        setForm({
+          name: json.data.restaurant.name || '',
+          description: '',
+          phone: '',
+          email: '',
+          openingHours: '',
+          closingHours: '',
+          deliveryRadius: '',
+          location: '',
+          isOpen: json.data.restaurant.isOpen !== undefined ? json.data.restaurant.isOpen : true,
+        });
       }
     };
     load();
@@ -18,7 +29,13 @@ const RestaurantProfile = () => {
   const save = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    await fetch('/api/restaurant/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
+    const res = await fetch('/api/restaurant/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(form) });
+    const json = await res.json();
+    if (json?.success) {
+      setStatusMessage('Availability updated successfully.');
+    } else {
+      setStatusMessage(json?.message || 'Unable to update profile right now.');
+    }
   };
 
   return (
@@ -34,6 +51,11 @@ const RestaurantProfile = () => {
           <input placeholder="Closing Hours" value={form.closingHours} onChange={(e) => setForm({ ...form, closingHours: e.target.value })} />
           <input placeholder="Delivery Radius" value={form.deliveryRadius} onChange={(e) => setForm({ ...form, deliveryRadius: e.target.value })} />
           <input placeholder="Location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <label className="availability-toggle">
+            <input type="checkbox" checked={Boolean(form.isOpen)} onChange={(e) => setForm({ ...form, isOpen: e.target.checked })} />
+            <span>{Boolean(form.isOpen) ? 'Open now' : 'Closed for now'}</span>
+          </label>
+          {statusMessage ? <p className="status-message">{statusMessage}</p> : null}
           <div className="button-row"><button className="btn-primary" type="submit">Save Profile</button></div>
         </form>
       </div>
