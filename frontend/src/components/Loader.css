@@ -45,16 +45,20 @@
 
 /* D CORE */
 .d-core {
-  font-size: 130px;
-  font-weight: 900;
-  font-family: Arial Black, sans-serif;
-
-  background: linear-gradient(135deg, #ff6b35, #ff8c42, #f25417);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-
-  filter: drop-shadow(0 12px 30px rgba(255,107,53,0.25));
+  width: 140px;
+  height: 140px;
+  border-radius: 24px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 12px 30px rgba(0,0,0,0.12));
   animation: pulse 2s infinite ease-in-out;
+}
+
+.d-core img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* SCAN */

@@ -5,7 +5,9 @@ const Loader = () => {
     <div className="glass-loader">
 
       <div className="engine">
-        <div className="d-core">D</div>
+        <div className="d-core">
+          <img src="/delivos.png" alt="Delivo" />
+        </div>
 
         <div className="scan"></div>
 

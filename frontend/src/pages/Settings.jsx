@@ -1,14 +1,19 @@
-import {useState, useEffect} from 'react';
-import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package } from 'lucide-react';
+import { useState, useEffect, useContext } from 'react';
+import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePushSubscription } from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 import './pages.css';
 import './Settings.css';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const userId = user?.id || user?._id;
+  const settingsKey = userId ? `delivo_settings_${userId}` : 'delivo_settings';
+
   const [settings, setSettings] = useState(() => {
-    const savedSettings = localStorage.getItem('delivo_settings');
+    const savedSettings = localStorage.getItem(settingsKey);
     return savedSettings
       ? JSON.parse(savedSettings)
       : {
@@ -19,10 +24,23 @@ const Settings = () => {
           theme: 'light',
           location: true,
           darkMode: false,
+          checkoutProfile: {
+            fullName: '',
+            address: '',
+            whatsapp: '',
+            mpesaNumber: '',
+          },
         };
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem(settingsKey);
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings));
+    }
+  }, [settingsKey]);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushNotice, setPushNotice] = useState('');
 
@@ -124,8 +142,12 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem('delivo_settings', JSON.stringify(settings));
-  }, [settings]);
+    localStorage.setItem(settingsKey, JSON.stringify(settings));
+  }, [settingsKey, settings]);
+
+  const handleInstallFromSettings = () => {
+    window.dispatchEvent(new CustomEvent('delivo-show-install', { detail: { manual: true } }));
+  };
 
   const handleToggle = async (key) => {
     const nextValue = !settings[key];
@@ -150,7 +172,7 @@ const Settings = () => {
   };
 
   const handleSaveSettings = () => {
-    localStorage.setItem('delivo_settings', JSON.stringify(settings));
+    localStorage.setItem(settingsKey, JSON.stringify(settings));
     setHasChanges(false);
     alert('Settings saved successfully!');
     setTimeout(() => navigate(-1), 1500);
@@ -166,9 +188,15 @@ const Settings = () => {
         theme: 'light',
         location: true,
         darkMode: false,
+        checkoutProfile: {
+          fullName: '',
+          address: '',
+          whatsapp: '',
+          mpesaNumber: '',
+        },
       };
       setSettings(defaultSettings);
-      localStorage.setItem('delivo_settings', JSON.stringify(defaultSettings));
+      localStorage.setItem(settingsKey, JSON.stringify(defaultSettings));
       setHasChanges(false);
     }
   };
@@ -312,6 +340,102 @@ const Settings = () => {
               <option value="dark">Dark</option>
               <option value="auto">Auto (System)</option>
             </select>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="section-header">
+            <User size={20} />
+            <h2>Account Settings</h2>
+          </div>
+          {user ? (
+            <>
+              <div className="form-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  value={settings.checkoutProfile.fullName}
+                  onChange={(e) => {
+                    setSettings((prev) => ({
+                      ...prev,
+                      checkoutProfile: { ...prev.checkoutProfile, fullName: e.target.value },
+                    }));
+                    setHasChanges(true);
+                  }}
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Delivery Address</label>
+                <input
+                  type="text"
+                  value={settings.checkoutProfile.address}
+                  onChange={(e) => {
+                    setSettings((prev) => ({
+                      ...prev,
+                      checkoutProfile: { ...prev.checkoutProfile, address: e.target.value },
+                    }));
+                    setHasChanges(true);
+                  }}
+                  placeholder="House, apartment, street or landmark"
+                />
+              </div>
+              <div className="form-group">
+                <label>WhatsApp Number</label>
+                <input
+                  type="tel"
+                  value={settings.checkoutProfile.whatsapp}
+                  onChange={(e) => {
+                    setSettings((prev) => ({
+                      ...prev,
+                      checkoutProfile: { ...prev.checkoutProfile, whatsapp: e.target.value },
+                    }));
+                    setHasChanges(true);
+                  }}
+                  placeholder="0722 000 000"
+                />
+              </div>
+              <div className="form-group">
+                <label>M-Pesa Number</label>
+                <input
+                  type="tel"
+                  value={settings.checkoutProfile.mpesaNumber}
+                  onChange={(e) => {
+                    setSettings((prev) => ({
+                      ...prev,
+                      checkoutProfile: { ...prev.checkoutProfile, mpesaNumber: e.target.value },
+                    }));
+                    setHasChanges(true);
+                  }}
+                  placeholder="0722 000 000"
+                />
+              </div>
+              <p className="setting-description" style={{ marginTop: '8px' }}>
+                Your saved account details will be prefilled during checkout whenever you place an order.
+              </p>
+            </>
+          ) : (
+            <div className="account-empty-note">
+              <p>Please log in to save your checkout profile. Saved account details will be prefilled at checkout for faster orders.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="settings-section">
+          <div className="section-header">
+            <Package size={20} />
+            <h2>Delivo App</h2>
+          </div>
+          <div className="setting-item install-section">
+            <div className="setting-info">
+              <label>Download App</label>
+              <p className="setting-description">
+                Install Delivo on your device for faster access. If you hide the prompt, return here to download it anytime.
+              </p>
+            </div>
+            <button className="download-app-btn" type="button" onClick={handleInstallFromSettings}>
+              Download App
+            </button>
           </div>
         </div>
 

@@ -179,6 +179,63 @@
   box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.12);
 }
 
+.form-group {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 115, 53, 0.12);
+}
+
+.account-empty-note {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff7f2;
+  border: 1px solid #fee2d7;
+}
+
+.download-app-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff6b35 0%, #fb923c 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.download-app-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(251, 146, 60, 0.2);
+}
+
+.install-section {
+  align-items: flex-start;
+}
+
 .settings-actions {
   display: flex;
   gap: 12px;

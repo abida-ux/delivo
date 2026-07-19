@@ -11,6 +11,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const { user } = useContext(AuthContext);
   const { clearCart } = useCart();
   const navigate = useNavigate();
+  const userId = user?.id || user?._id;
+  const settingsKey = userId ? `delivo_settings_${userId}` : null;
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState({});
   const [deliverySettings, setDeliverySettings] = useState({
@@ -51,12 +53,38 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       }
     };
 
+    const loadCheckoutProfile = () => {
+      if (!settingsKey) return;
+      try {
+        const savedSettings = localStorage.getItem(settingsKey);
+        if (!savedSettings) return;
+
+        const parsed = JSON.parse(savedSettings);
+        const profile = parsed?.checkoutProfile;
+        if (profile) {
+          setDeliveryInfo((prev) => ({
+            ...prev,
+            fullName: profile.fullName || prev.fullName,
+            address: profile.address || prev.address,
+            whatsapp: profile.whatsapp || prev.whatsapp,
+            mpesaNumber: profile.mpesaNumber || prev.mpesaNumber,
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load saved checkout profile:', error);
+      }
+    };
+
     if (isOpen) {
       loadSettings();
+      loadCheckoutProfile();
     }
 
     const onSettingsUpdated = () => {
-      if (isOpen) loadSettings();
+      if (isOpen) {
+        loadSettings();
+        loadCheckoutProfile();
+      }
     };
 
     const storageHandler = (e) => {
