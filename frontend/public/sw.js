@@ -1,5 +1,5 @@
 const CACHE_NAME = 'delivo-cache-v2';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/ion.svg'];
+const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/delivo.jpg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -22,8 +22,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Delivo update';
   const options = {
     body: payload.message || 'You have a new update from Delivo.',
-    icon: '/ion.svg',
-    badge: '/ion.svg',
+    icon: '/delivo.jpg',
+    badge: '/delivo.jpg',
     data: {
       url: payload.url || '/',
     },
@@ -69,7 +69,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (requestUrl.pathname === '/manifest.webmanifest' || requestUrl.pathname === '/ion.svg') {
+  if (requestUrl.pathname === '/manifest.webmanifest' || requestUrl.pathname === '/delivo.jpg') {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
         .then((response) => {

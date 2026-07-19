@@ -11,15 +11,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon-circle.svg",
+      "src": "/delivo.jpg",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/favicon-circle.svg",
+      "src": "/delivo.jpg",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     }
   ]

@@ -130,13 +130,13 @@ export default function Home() {
       <footer className="footer">
         <div className="footer-content simplified-footer">
           <div className="footer-column">
-            <h4>Delivo Kenya</h4>
-            <p>Fast food delivery across Nairobi and beyond.</p>
+            <h4>Delivo</h4>
+            <p>Fast food delivery.</p>
           </div>
           <div className="footer-column">
             <h4>Support</h4>
             <ul>
-              <li><a href="mailto:support@delivo.co.ke">support@delivo.co.ke</a></li>
+              <li><a href="mailto:info@delivo.buzz">info@delivo.buzz</a></li>
               <li><a href="tel:+254700000000">+254 700 000 000</a></li>
             </ul>
           </div>
@@ -154,7 +154,7 @@ export default function Home() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 Delivo. Built for Kenya.</p>
+          <p>&copy; 2024 Delivo.</p>
         </div>
       </footer>
     </div>
