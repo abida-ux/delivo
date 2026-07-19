@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { calculateRestaurantEarnings, buildRestaurantFilter, buildRestaurantDashboardData } = require('../utils/restaurantPortal');
+const { calculateRestaurantEarnings, buildRestaurantFilter, buildRestaurantDashboardData, getAvailabilityStatus } = require('../utils/restaurantPortal');
 
 test('calculateRestaurantEarnings returns expected commission and net value', () => {
   const result = calculateRestaurantEarnings(950, 100);
@@ -28,4 +28,9 @@ test('buildRestaurantDashboardData exposes the restaurant availability status', 
   assert.equal(dashboardData.isOpen, false);
   assert.equal(dashboardData.name, 'Taste Hub');
   assert.equal(dashboardData.availableBalance, 1250);
+});
+
+test('getAvailabilityStatus returns a clear open or closed label', () => {
+  assert.deepEqual(getAvailabilityStatus({ isOpen: true }), { isOpen: true, label: 'Open now' });
+  assert.deepEqual(getAvailabilityStatus({ isOpen: false }), { isOpen: false, label: 'Closed' });
 });

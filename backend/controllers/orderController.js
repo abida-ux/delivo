@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Food = require('../models/Food');
+const Restaurant = require('../models/Restaurant');
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 
@@ -18,6 +19,7 @@ exports.createOrder = async (req, res, next) => {
       whatsappNumber,
       mpesaNumber,
       deliveryFee = 20,
+      restaurantId,
     } = req.body;
 
     console.log('🛒 Creating order with data:', {
@@ -53,6 +55,23 @@ exports.createOrder = async (req, res, next) => {
         success: false,
         message: 'Delivery address is required',
       });
+    }
+
+    if (restaurantId) {
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({
+          success: false,
+          message: 'Selected restaurant was not found',
+        });
+      }
+
+      if (restaurant.isOpen === false) {
+        return res.status(400).json({
+          success: false,
+          message: 'This restaurant is currently closed and cannot receive orders right now',
+        });
+      }
     }
 
     if (!whatsappNumber) {

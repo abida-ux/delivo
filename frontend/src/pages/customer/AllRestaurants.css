@@ -168,6 +168,14 @@
   font-weight: 600;
 }
 
+.status-open {
+  color: #16a34a;
+}
+
+.status-closed {
+  color: #dc2626;
+}
+
 .items-count {
   color: #999;
 }

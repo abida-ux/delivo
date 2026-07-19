@@ -163,8 +163,8 @@ const RestaurantCard = () => {
 
                   <span className="metric-separator">•</span>
 
-                  <span className="delivery-fee-text">
-                    {restaurant.isOpen ? '🟢 Open' : '🔴 Closed'}
+                  <span className={`delivery-fee-text ${restaurant.isOpen === false ? 'status-closed' : 'status-open'}`}>
+                    {restaurant.isOpen === false ? '🔴 Closed' : '🟢 Open'}
                   </span>
 
                 </div>

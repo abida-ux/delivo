@@ -296,6 +296,16 @@
   color: #777777;
 }
 
+.status-open {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.status-closed {
+  color: #dc2626;
+  font-weight: 700;
+}
+
 /* RESPONSIVE DESIGN - Tablet */
 @media (max-width: 1200px) {
   .restaurants-section {

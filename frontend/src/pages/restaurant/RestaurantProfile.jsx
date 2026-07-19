@@ -55,6 +55,7 @@ const RestaurantProfile = () => {
             <input type="checkbox" checked={Boolean(form.isOpen)} onChange={(e) => setForm({ ...form, isOpen: e.target.checked })} />
             <span>{Boolean(form.isOpen) ? 'Open now' : 'Closed for now'}</span>
           </label>
+          <p className="helper-text">Switch this on when your restaurant is ready to receive orders, and off when you are closed.</p>
           {statusMessage ? <p className="status-message">{statusMessage}</p> : null}
           <div className="button-row"><button className="btn-primary" type="submit">Save Profile</button></div>
         </form>

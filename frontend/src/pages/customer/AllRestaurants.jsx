@@ -153,7 +153,9 @@ const AllRestaurants = () => {
                 </div>
 
                 <div className="restaurant-footer">
-                  <span className="delivery-fee">₹{restaurant.deliveryFee || 40} delivery</span>
+                  <span className={`delivery-fee ${restaurant.isOpen === false ? 'status-closed' : 'status-open'}`}>
+                    {restaurant.isOpen === false ? 'Closed' : 'Open now'}
+                  </span>
                   <span className="items-count">
                     {restaurant.foods?.length || 50}+ items
                   </span>

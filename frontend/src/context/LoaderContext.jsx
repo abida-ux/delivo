@@ -1,11 +1,11 @@
-import { createContext, useState, useEffect } from 'react';
+import React from 'react';
 
-export const LoaderContext = createContext();
+export const LoaderContext = React.createContext(null);
 
 export const LoaderProvider = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Minimum display time for loader (in milliseconds)
     const MINIMUM_LOADER_TIME = 2000; // 2 seconds
     const startTime = Date.now();

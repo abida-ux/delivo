@@ -124,8 +124,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     const fetchRestaurants = async () => {
       try {
         const data = await getAllRestaurants();
-        setRestaurants(Array.isArray(data) ? data : []);
-        if (Array.isArray(data) && data.length === 1) setSelectedRestaurant(data[0]._id || '');
+        const availableRestaurants = Array.isArray(data)
+          ? data.filter((restaurant) => restaurant.isOpen !== false)
+          : [];
+        setRestaurants(availableRestaurants);
+        if (availableRestaurants.length === 1) {
+          setSelectedRestaurant(availableRestaurants[0]._id || '');
+        } else {
+          setSelectedRestaurant('');
+        }
       } catch (err) {
         console.error('Error loading restaurants for checkout:', err);
       }
@@ -332,6 +339,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                   <option key={r._id || r.id} value={r._id || r.id}>{r.name}</option>
                 ))}
               </select>
+              {restaurants.length === 0 ? (
+                <span className="field-error">No restaurants are currently accepting orders. Please try again later.</span>
+              ) : null}
               {errors.restaurant && <span className="field-error">{errors.restaurant}</span>}
             </div>
           </div>
