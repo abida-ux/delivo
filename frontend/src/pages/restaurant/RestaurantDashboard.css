@@ -1,23 +1,22 @@
 .restaurant-shell {
   min-height: 100vh;
-  background: linear-gradient(135deg, #fff8f2 0%, #fdf2f8 45%, #eef2ff 100%);
+  background: #eff6ff;
   padding: 24px;
-  color: #1f2937;
+  color: #0f172a;
 }
 
 .restaurant-shell .glass-card {
-  background: rgba(255,255,255,0.78);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.6);
-  box-shadow: 0 20px 60px rgba(15,23,42,0.08);
-  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  box-shadow: 0 10px 28px rgba(15,23,42,0.06);
+  border-radius: 18px;
 }
 
 .restaurant-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px;
+  padding: 22px;
   margin-bottom: 20px;
 }
 
@@ -28,15 +27,16 @@
 
 .restaurant-header p {
   margin: 6px 0 0;
-  color: #64748b;
+  color: #475569;
 }
 
 .restaurant-badge {
   padding: 10px 14px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #fb923c, #f43f5e);
-  color: white;
-  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  border: 1px solid #bfdbfe;
 }
 
 .stats-grid {
@@ -51,20 +51,23 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  border: 1px solid #dbeafe;
+  background: #ffffff;
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 38px rgba(15,23,42,0.12);
+  background: #eff6ff;
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .stat-content h3 {
@@ -101,7 +104,7 @@
 
 .panel-title button {
   border: none;
-  background: #111827;
+  background: #1d4ed8;
   color: white;
   border-radius: 999px;
   padding: 8px 12px;
@@ -131,17 +134,18 @@
 }
 
 .nav-card {
-  padding: 16px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #fff, #f8fafc);
-  border: 1px solid #e2e8f0;
+  padding: 18px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #dbeafe;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  text-align: left;
 }
 
 .nav-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 20px rgba(15,23,42,0.08);
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .nav-card h3 {

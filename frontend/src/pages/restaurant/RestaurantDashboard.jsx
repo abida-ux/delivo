@@ -42,12 +42,12 @@ const RestaurantDashboard = () => {
   }, []);
 
   const cards = [
-    { label: "Today's Orders", value: stats.todayOrders, icon: ShoppingBag, color: '#3b82f6' },
-    { label: 'Pending Orders', value: stats.pendingOrders, icon: PackageOpen, color: '#f59e0b' },
-    { label: 'Completed Orders', value: stats.completedOrders, icon: BarChart3, color: '#22c55e' },
-    { label: "Today's Revenue", value: `KES ${stats.todayRevenue.toLocaleString()}`, icon: DollarSign, color: '#8b5cf6' },
-    { label: 'Total Revenue', value: `KES ${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp, color: '#0f766e' },
-    { label: 'Available Balance', value: `KES ${stats.availableBalance.toLocaleString()}`, icon: Wallet, color: '#fb923c' },
+    { label: "Today's Orders", value: stats.todayOrders, icon: ShoppingBag },
+    { label: 'Pending Orders', value: stats.pendingOrders, icon: PackageOpen },
+    { label: 'Completed Orders', value: stats.completedOrders, icon: BarChart3 },
+    { label: "Today's Revenue", value: `KES ${stats.todayRevenue.toLocaleString()}`, icon: DollarSign },
+    { label: 'Total Revenue', value: `KES ${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp },
+    { label: 'Available Balance', value: `KES ${stats.availableBalance.toLocaleString()}`, icon: Wallet },
   ];
 
   const quickLinks = [
@@ -73,8 +73,8 @@ const RestaurantDashboard = () => {
         {cards.map((card) => {
           const Icon = card.icon;
           return (
-            <div className="stat-card glass-card" key={card.label}>
-              <div className="stat-icon" style={{ backgroundColor: `${card.color}20`, color: card.color }}>
+            <div className="stat-card" key={card.label}>
+              <div className="stat-icon">
                 <Icon size={22} />
               </div>
               <div className="stat-content">

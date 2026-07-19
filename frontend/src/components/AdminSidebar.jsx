@@ -44,7 +44,9 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       <div className={`admin-sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="logo-section">
-            <div className="logo-icon">D</div>
+            <div className="logo-icon">
+              <img src="/delivos.png" alt="Delivo" />
+            </div>
             <span className="logo-text">Delivo Admin</span>
           </div>
           <button

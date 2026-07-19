@@ -39,6 +39,7 @@ const RestaurantWithdrawals = lazy(() => import("../pages/restaurant/RestaurantW
 const RestaurantTransactions = lazy(() => import("../pages/restaurant/RestaurantTransactions"));
 const RestaurantProfile = lazy(() => import("../pages/restaurant/RestaurantProfile"));
 const RestaurantSettings = lazy(() => import("../pages/restaurant/RestaurantSettings"));
+const RestaurantDashboardLayout = lazy(() => import("../layouts/RestaurantDashboardLayout"));
 
 export default function AppRoutes() {
   return (
@@ -193,7 +194,9 @@ export default function AppRoutes() {
         path="/restaurant"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantDashboard />
+            <RestaurantDashboardLayout pageTitle="Restaurant Portal">
+              <RestaurantDashboard />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -201,7 +204,9 @@ export default function AppRoutes() {
         path="/restaurant-dashboard"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantDashboard />
+            <RestaurantDashboardLayout pageTitle="Restaurant Portal">
+              <RestaurantDashboard />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -209,7 +214,9 @@ export default function AppRoutes() {
         path="/restaurant/orders"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantOrders />
+            <RestaurantDashboardLayout pageTitle="Orders">
+              <RestaurantOrders />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -217,7 +224,9 @@ export default function AppRoutes() {
         path="/restaurant/completed-orders"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantCompletedOrders />
+            <RestaurantDashboardLayout pageTitle="Completed Orders">
+              <RestaurantCompletedOrders />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -225,7 +234,9 @@ export default function AppRoutes() {
         path="/restaurant/foods"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantFoods />
+            <RestaurantDashboardLayout pageTitle="Foods">
+              <RestaurantFoods />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -233,7 +244,9 @@ export default function AppRoutes() {
         path="/restaurant/revenue"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantRevenue />
+            <RestaurantDashboardLayout pageTitle="Revenue">
+              <RestaurantRevenue />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -241,7 +254,9 @@ export default function AppRoutes() {
         path="/restaurant/withdrawals"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantWithdrawals />
+            <RestaurantDashboardLayout pageTitle="Withdrawals">
+              <RestaurantWithdrawals />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -249,7 +264,9 @@ export default function AppRoutes() {
         path="/restaurant/transactions"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantTransactions />
+            <RestaurantDashboardLayout pageTitle="Transactions">
+              <RestaurantTransactions />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -257,7 +274,9 @@ export default function AppRoutes() {
         path="/restaurant/profile"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantProfile />
+            <RestaurantDashboardLayout pageTitle="Profile">
+              <RestaurantProfile />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />
@@ -265,7 +284,9 @@ export default function AppRoutes() {
         path="/restaurant/settings"
         element={
           <ProtectedRoute requiredRole="restaurant">
-            <RestaurantSettings />
+            <RestaurantDashboardLayout pageTitle="Settings">
+              <RestaurantSettings />
+            </RestaurantDashboardLayout>
           </ProtectedRoute>
         }
       />

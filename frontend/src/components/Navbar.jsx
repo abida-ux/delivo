@@ -180,8 +180,8 @@ const Navbar = () => {
 
           {/* LEFT: LOGO */}
           <div className="navbar-left">
-            <div className="logo-circle">
-              <span className="logo-text-d">D</span>
+            <div className="logo-image">
+              <img src="/delivos.png" alt="Delivo" />
             </div>
             <span className="brand-name">Delivo</span>
           </div>

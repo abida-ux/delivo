@@ -12,15 +12,16 @@ function App() {
   const { isLoading } = useContext(LoaderContext);
   const location = useLocation();
 
-  // Hide navbar on admin routes
+  // Hide navbar on admin and restaurant portal routes
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isRestaurantRoute = location.pathname.startsWith('/restaurant');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
       {isLoading && <Loader />}
       <AuthModal />
-      {!isAdminRoute && <Navbar />}
-      <main className={isAdminRoute ? 'admin-page-main' : ''}>
+      {!isAdminRoute && !isRestaurantRoute && <Navbar />}
+      <main className={isAdminRoute || isRestaurantRoute ? 'admin-page-main' : ''}>
         <AppRoutes />
       </main>
     </div>
