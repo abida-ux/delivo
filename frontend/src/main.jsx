@@ -9,6 +9,8 @@ import PwaInstallPrompt from './components/PwaInstallPrompt'
 import ErrorBoundary from './components/ErrorBoundary'
 import './index.css'
 import App from './App.jsx'
+// import chunk recovery (detect failed dynamic imports and reload once)
+import './utils/chunkRecovery'
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
