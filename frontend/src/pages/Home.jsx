@@ -3,6 +3,7 @@ import { Clock, Zap, Star, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCartUI } from '../context/CartUIContext';
 import "./Home.css";
+import heroImage from '../assets/hero.png';
 
 import FeaturedRestaurants from "../components/RestaurantCard";
 import Categories from "../components/Categories";
@@ -33,10 +34,39 @@ export default function Home() {
   };
 
   const promos = [
-    { id: 1, title: "50% OFF on First Order", discount: "50%", minOrder: "KES 10", buttonText: "Order Now" },
-    { id: 2, title: "Free Delivery on Orders Above KES 30", discount: "FREE", minOrder: "KES 30+", buttonText: "Shop Now" },
-    { id: 3, title: "Double Points Weekend", discount: "2x", minOrder: "All orders", buttonText: "Learn More" },
+    {
+      id: 1,
+      title: "Free Delivery Week",
+      discount: "FREE",
+      minOrder: "All restaurants",
+      buttonText: "Claim Offer",
+      body: "Enjoy free delivery on all participating restaurants this week — no code needed."
+    },
+    {
+      id: 2,
+      title: "Lunch Combo Deals",
+      discount: "30% OFF",
+      minOrder: "KES 50+",
+      buttonText: "Get Lunch",
+      body: "Curated lunch combos to power your day — available 11am–3pm.",
+    },
+    {
+      id: 3,
+      title: "Refer & Earn",
+      discount: "KES 200",
+      minOrder: "Invite a friend",
+      buttonText: "Refer Now",
+      body: "Invite friends to Delivo and earn KES 200 for every successful referral."
+    },
   ];
+
+  // Auto-advance promotions every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActivePromoIndex(prev => (prev + 1) % promos.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [promos.length]);
 
   const handleFindFood = () => {
     if (searchTerm.trim()) {
@@ -67,7 +97,7 @@ export default function Home() {
 
   return (
     <div className="home-wrapper">
-      {/* ===== 2. PROMOTIONS CAROUSEL ===== */}
+      {/* ===== Promotions Carousel (re-added) ===== */}
       <section className="promotions-section">
         <div className="promotions-container">
           <div className="promo-card active">
@@ -91,6 +121,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* promotions carousel removed per design request */}
       {/* ===== 3. CATEGORIES BROWSER ===== */}
       <Categories onSelectCategory={handleCategorySelect} selectedCategory={selectedCategory} />
 
@@ -137,7 +168,7 @@ export default function Home() {
             <h4>Support</h4>
             <ul>
               <li><a href="mailto:info@delivo.buzz">info@delivo.buzz</a></li>
-              <li><a href="tel:+254700000000">+254 700 000 000</a></li>
+              <li><a href="tel:+254704060217">+254 704 060 217</a></li>
             </ul>
           </div>
           <div className="footer-column">
@@ -154,7 +185,7 @@ export default function Home() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; 2024 Delivo.</p>
+          <p>&copy; 2026 Delivo.</p>
         </div>
       </footer>
     </div>
