@@ -11,15 +11,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/delivo.jpg",
+      "src": "/delivos.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/delivo.jpg",
+      "src": "/delivos.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

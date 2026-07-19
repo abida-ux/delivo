@@ -1,5 +1,5 @@
 const CACHE_NAME = 'delivo-cache-v2';
-const APP_SHELL = ['/manifest.webmanifest', '/delivo.jpg'];
+const APP_SHELL = ['/manifest.webmanifest', '/delivos.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -27,10 +27,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Delivo update';
   const options = {
     body: payload.message || 'You have a new update from Delivo.',
-    icon: '/delivo.jpg',
-    badge: '/delivo.jpg',
-    data: {
-      url: payload.url || '/',
+      icon: '/delivos.png',
+      badge: '/delivos.png',
     },
   };
 
