@@ -71,7 +71,11 @@ const AllRestaurants = () => {
     setFilteredRestaurants(filtered);
   };
 
-  const handleRestaurantClick = (restaurantId) => {
+  const handleRestaurantClick = (restaurantId, restaurant) => {
+    if (restaurant?.isOpen === false) {
+      alert('This restaurant is currently closed and cannot receive orders right now.');
+      return;
+    }
     navigate(`/restaurants/${restaurantId}`);
   };
 
@@ -122,8 +126,8 @@ const AllRestaurants = () => {
           {filteredRestaurants.map((restaurant) => (
             <div
               key={restaurant._id}
-              className="restaurant-card"
-              onClick={() => handleRestaurantClick(restaurant._id)}
+              className={`restaurant-card ${restaurant.isOpen === false ? 'restaurant-card-closed' : ''}`}
+              onClick={() => handleRestaurantClick(restaurant._id, restaurant)}
             >
               <div className="restaurant-image">
                 <img

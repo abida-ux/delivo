@@ -110,6 +110,55 @@
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
+.res-closed-banner {
+  max-width: 1280px;
+  margin: 20px auto 0;
+  padding: 14px 20px;
+  background: #fff3f3;
+  border: 1px solid #ffd0d0;
+  border-radius: 12px;
+  color: #b42318;
+  font-size: 14px;
+}
+
+.res-details-card {
+  max-width: 1280px;
+  margin: 20px auto 0;
+  padding: 0 80px;
+  box-sizing: border-box;
+}
+
+.res-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.res-detail-item {
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.res-detail-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888888;
+  margin-bottom: 6px;
+}
+
+.res-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  line-height: 1.5;
+}
+
 .res-cuisine-subtext {
   font-size: 14px;
   font-weight: 500;

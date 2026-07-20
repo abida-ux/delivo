@@ -108,12 +108,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const validateForm = () => {
     const newErrors = {};
     const phonePattern = /^(?:0(?:1|7)\d{8}|(?:\+|00)254(?:1|7)\d{8}|254(?:1|7)\d{8})$/;
+    const selectedRestaurantData = restaurants.find((restaurant) => (restaurant._id || restaurant.id) === selectedRestaurant);
 
     if (!deliveryInfo.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
     if (!selectedRestaurant) {
       newErrors.restaurant = 'Please choose a restaurant to order from';
+    } else if (!selectedRestaurantData || selectedRestaurantData.isOpen === false) {
+      newErrors.restaurant = 'This restaurant is currently closed and cannot receive orders right now';
     }
     if (!deliveryInfo.address.trim()) {
       newErrors.address = 'Precise delivery location is required';
@@ -152,14 +155,18 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     const fetchRestaurants = async () => {
       try {
         const data = await getAllRestaurants();
-        const availableRestaurants = Array.isArray(data)
-          ? data.filter((restaurant) => restaurant.isOpen !== false)
-          : [];
-        setRestaurants(availableRestaurants);
-        if (availableRestaurants.length === 1) {
-          setSelectedRestaurant(availableRestaurants[0]._id || '');
+        const allRestaurants = Array.isArray(data) ? data : [];
+        setRestaurants(allRestaurants);
+
+        const openRestaurants = allRestaurants.filter((restaurant) => restaurant.isOpen !== false);
+        if (openRestaurants.length === 1) {
+          setSelectedRestaurant(openRestaurants[0]._id || '');
         } else {
-          setSelectedRestaurant('');
+          setSelectedRestaurant((currentSelection) => {
+            if (!currentSelection) return '';
+            const stillOpen = allRestaurants.some((restaurant) => (restaurant._id || restaurant.id) === currentSelection && restaurant.isOpen !== false);
+            return stillOpen ? currentSelection : '';
+          });
         }
       } catch (err) {
         console.error('Error loading restaurants for checkout:', err);
@@ -363,12 +370,21 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                 className={errors.restaurant ? 'error' : ''}
               >
                 <option value="">Select restaurant</option>
-                {restaurants.map((r) => (
-                  <option key={r._id || r.id} value={r._id || r.id}>{r.name}</option>
-                ))}
+                {restaurants.map((r) => {
+                  const id = r._id || r.id;
+                  const disabled = r.isOpen === false;
+                  return (
+                    <option key={id} value={id} disabled={disabled}>
+                      {r.name}{disabled ? ' — Closed' : ''}
+                    </option>
+                  );
+                })}
               </select>
               {restaurants.length === 0 ? (
                 <span className="field-error">No restaurants are currently accepting orders. Please try again later.</span>
+              ) : null}
+              {restaurants.length > 0 && restaurants.every((restaurant) => restaurant.isOpen === false) ? (
+                <span className="field-error">All restaurants are currently closed. Please try again later.</span>
               ) : null}
               {errors.restaurant && <span className="field-error">{errors.restaurant}</span>}
             </div>

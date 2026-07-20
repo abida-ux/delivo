@@ -10,16 +10,17 @@ const RestaurantProfile = () => {
       const res = await fetch('/api/restaurant/dashboard', { headers: { Authorization: `Bearer ${token}` } });
       const json = await res.json();
       if (json?.success) {
+        const restaurant = json.data?.restaurant || {};
         setForm({
-          name: json.data.restaurant.name || '',
-          description: '',
-          phone: '',
-          email: '',
-          openingHours: '',
-          closingHours: '',
-          deliveryRadius: '',
-          location: '',
-          isOpen: json.data.restaurant.isOpen !== undefined ? json.data.restaurant.isOpen : true,
+          name: restaurant.name || '',
+          description: restaurant.description || '',
+          phone: restaurant.phone || '',
+          email: restaurant.email || '',
+          openingHours: restaurant.openingHours || '',
+          closingHours: restaurant.closingHours || '',
+          deliveryRadius: restaurant.deliveryRadius ?? '',
+          location: restaurant.location || '',
+          isOpen: restaurant.isOpen !== undefined ? restaurant.isOpen : true,
         });
       }
     };

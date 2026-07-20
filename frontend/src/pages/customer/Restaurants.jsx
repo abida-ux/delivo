@@ -59,7 +59,13 @@ const Restaurants = () => {
     fetchRestaurantData();
   }, [restaurantId]);
 
+  const isRestaurantOpen = restaurant?.isOpen !== false;
+
   const handleAddToCart = (food) => {
+    if (!isRestaurantOpen) {
+      alert('This restaurant is currently closed and cannot receive orders right now.');
+      return;
+    }
     addItem(food, 1);
   };
 
@@ -68,6 +74,10 @@ const Restaurants = () => {
   };
 
   const handleUpdateQuantity = (foodId, newQuantity) => {
+    if (!isRestaurantOpen) {
+      alert('This restaurant is currently closed and cannot receive orders right now.');
+      return;
+    }
     if (newQuantity <= 0) {
       handleRemoveFromCart(foodId);
     } else {
@@ -188,8 +198,8 @@ const Restaurants = () => {
 
         <div className="res-hero-caption">
           <div className="res-status-row">
-            <span className={`res-status-tag ${restaurant.isOpen ? 'open' : 'closed'}`}>
-              {restaurant.isOpen ? "Open Now" : "Closed"}
+            <span className={`res-status-tag ${isRestaurantOpen ? 'open' : 'closed'}`}>
+              {isRestaurantOpen ? 'Open Now' : 'Closed'}
             </span>
             <span className="res-delivery-badge">
               <ShieldCheck size={14} /> Delivo Verified
@@ -198,6 +208,41 @@ const Restaurants = () => {
 
           <h1 className="res-brand-title">{restaurant.name}</h1>
           <p className="res-cuisine-subtext">{restaurant.cuisine?.join(' • ') || 'Restaurant'}</p>
+        </div>
+      </div>
+
+      {!isRestaurantOpen && (
+        <div className="res-closed-banner">
+          <strong>This restaurant is currently closed.</strong> You can still browse the menu, but orders cannot be placed right now.
+        </div>
+      )}
+
+      <div className="res-details-card">
+        <div className="res-details-grid">
+          <div className="res-detail-item">
+            <span className="res-detail-label">Location</span>
+            <span className="res-detail-value">{restaurant.location || 'Location not provided yet'}</span>
+          </div>
+          <div className="res-detail-item">
+            <span className="res-detail-label">Phone</span>
+            <span className="res-detail-value">{restaurant.phone || 'Not provided'}</span>
+          </div>
+          <div className="res-detail-item">
+            <span className="res-detail-label">Email</span>
+            <span className="res-detail-value">{restaurant.email || 'Not provided'}</span>
+          </div>
+          <div className="res-detail-item">
+            <span className="res-detail-label">Hours</span>
+            <span className="res-detail-value">{restaurant.openingHours && restaurant.closingHours ? `${restaurant.openingHours} - ${restaurant.closingHours}` : 'Hours not provided'}</span>
+          </div>
+          <div className="res-detail-item">
+            <span className="res-detail-label">Delivery Radius</span>
+            <span className="res-detail-value">{restaurant.deliveryRadius ? `${restaurant.deliveryRadius} km` : 'Not provided'}</span>
+          </div>
+          <div className="res-detail-item">
+            <span className="res-detail-label">About</span>
+            <span className="res-detail-value">{restaurant.description || 'More details coming soon.'}</span>
+          </div>
         </div>
       </div>
 
@@ -281,7 +326,8 @@ const Restaurants = () => {
       {Object.keys(cart).length > 0 && (
         <button
           className="res-basket-float-sheet"
-          onClick={() => setShowCheckout(true)}
+          onClick={() => isRestaurantOpen && setShowCheckout(true)}
+          disabled={!isRestaurantOpen}
         >
           <ShoppingBag />
           <span>{Object.keys(cart).length} items • KES {getCartTotal()}</span>

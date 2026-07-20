@@ -79,6 +79,15 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
 }
 
+.restaurant-card-closed {
+  opacity: 0.8;
+  border: 1px solid #fdd7d7;
+}
+
+.restaurant-card-closed .restaurant-info h3 {
+  color: #8a1f1f;
+}
+
 .restaurant-image {
   position: relative;
   width: 100%;
