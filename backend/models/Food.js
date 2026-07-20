@@ -28,13 +28,18 @@ const FoodSchema = new mongoose.Schema({
   store: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Store',
-    required: true,
+    default: null,
   },
   // Keep restaurant for backward compatibility
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',
   },
+  restaurants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
+    default: [],
+  }],
   isAvailable: {
     type: Boolean,
     default: true,

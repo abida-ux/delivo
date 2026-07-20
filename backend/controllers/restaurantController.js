@@ -1,4 +1,5 @@
 const Restaurant = require('../models/Restaurant');
+const User = require('../models/User');
 
 // @desc Get all restaurants
 // @route GET /api/restaurants
@@ -43,8 +44,59 @@ exports.getRestaurantById = async (req, res, next) => {
 exports.createRestaurant = async (req, res, next) => {
   try {
     console.log('📝 Creating restaurant with data:', req.body);
-    
-    const restaurant = await Restaurant.create(req.body);
+
+    const {
+      ownerName,
+      ownerEmail,
+      ownerPassword,
+      ownerConfirmPassword,
+      ...restaurantData
+    } = req.body;
+
+    const normalizedOwnerEmail = ownerEmail ? ownerEmail.toLowerCase() : '';
+
+    let ownerUser = null;
+    if (ownerEmail || ownerPassword || ownerConfirmPassword) {
+      if (!normalizedOwnerEmail || !ownerPassword || !ownerConfirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Restaurant owner email, password, and confirmation are required.',
+        });
+      }
+
+      if (ownerPassword !== ownerConfirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password and confirmation password must match.',
+        });
+      }
+
+      const existingOwner = await User.findOne({ email: normalizedOwnerEmail });
+      if (existingOwner) {
+        return res.status(400).json({
+          success: false,
+          message: 'A restaurant owner already exists with that email.',
+        });
+      }
+
+      ownerUser = await User.create({
+        name: ownerName || restaurantData.name || 'Restaurant Owner',
+        email: normalizedOwnerEmail,
+        password: ownerPassword,
+        role: 'restaurant',
+        phone: restaurantData.phone || '',
+        isVerified: true,
+      });
+    }
+
+    const restaurantPayload = {
+      ...restaurantData,
+      name: restaurantData.name?.trim(),
+      email: restaurantData.email || normalizedOwnerEmail || '',
+      ownerId: ownerUser?._id || null,
+    };
+
+    const restaurant = await Restaurant.create(restaurantPayload);
 
     res.status(201).json({
       success: true,

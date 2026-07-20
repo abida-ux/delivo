@@ -2,13 +2,13 @@ import {useState, useEffect} from 'react';
 import { X } from 'lucide-react';
 import './AdminEditFoodModal.css';
 
-const AdminEditFoodModal = ({ isOpen, food, onClose, onSave }) => {
+const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
     category: '',
     image: '',
-    restaurant: '',
+    restaurants: [],
     description: '',
   });
 
@@ -16,12 +16,20 @@ const AdminEditFoodModal = ({ isOpen, food, onClose, onSave }) => {
 
   useEffect(() => {
     if (food) {
+      const selectedRestaurants = Array.isArray(food.restaurants)
+        ? food.restaurants
+            .map((restaurant) => (typeof restaurant === 'object' ? restaurant._id : restaurant))
+            .filter(Boolean)
+        : food.restaurant
+          ? [typeof food.restaurant === 'object' ? food.restaurant._id : food.restaurant]
+          : [];
+
       setFormData({
         name: food.name || '',
         price: food.price || '',
         category: food.category || '',
         image: food.image || '',
-        restaurant: typeof food.restaurant === 'object' ? food.restaurant?.name : food.restaurant || '',
+        restaurants: selectedRestaurants,
         description: food.description || '',
       });
     }
@@ -41,8 +49,11 @@ const AdminEditFoodModal = ({ isOpen, food, onClose, onSave }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Exclude restaurant from update data since it shouldn't be edited
-      const { restaurant, ...updateData } = formData;
+      const updateData = {
+        ...formData,
+        restaurant: formData.restaurants[0] || '',
+        restaurants: formData.restaurants,
+      };
       const result = await onSave(updateData);
       
       // Only close if save was successful
@@ -134,16 +145,24 @@ const AdminEditFoodModal = ({ isOpen, food, onClose, onSave }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="restaurant">Restaurant</label>
-            <input
-              type="text"
-              id="restaurant"
-              name="restaurant"
-              value={formData.restaurant}
-              onChange={handleChange}
-              placeholder="Restaurant name"
-              disabled
-            />
+            <label htmlFor="restaurants">Restaurants</label>
+            <select
+              id="restaurants"
+              name="restaurants"
+              multiple
+              value={formData.restaurants}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                setFormData((prev) => ({ ...prev, restaurants: selected }));
+              }}
+            >
+              {restaurants?.map((restaurant) => (
+                <option key={restaurant._id} value={restaurant._id}>
+                  {restaurant.name}
+                </option>
+              ))}
+            </select>
+            <small>Select one or more restaurants for this food.</small>
           </div>
 
           <div className="image-preview">

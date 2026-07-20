@@ -48,14 +48,36 @@ const AdminFoods = () => {
     }
   };
 
+  const getRestaurantNames = (food) => {
+    const names = [];
+    const addName = (value) => {
+      if (!value) return;
+      if (typeof value === 'object') {
+        if (value.name) names.push(value.name);
+        return;
+      }
+      names.push(String(value));
+    };
+
+    if (Array.isArray(food.restaurants)) {
+      food.restaurants.forEach(addName);
+    } else if (food.restaurant) {
+      addName(food.restaurant);
+    }
+
+    return names.filter(Boolean);
+  };
+
   const handleSearch = (value) => {
     setSearchTerm(value);
-    const filtered = foods.filter(
-      (food) =>
+    const filtered = foods.filter((food) => {
+      const restaurantNames = getRestaurantNames(food).join(' ').toLowerCase();
+      return (
         food.name?.toLowerCase().includes(value.toLowerCase()) ||
         food.category?.toLowerCase().includes(value.toLowerCase()) ||
-        food.restaurant?.toLowerCase().includes(value.toLowerCase())
-    );
+        restaurantNames.includes(value.toLowerCase())
+      );
+    });
     setFilteredFoods(filtered);
   };
 
@@ -156,7 +178,7 @@ const AdminFoods = () => {
                     <h3>{food.name}</h3>
                     <p className="category">{food.category}</p>
                     <p className="restaurant">
-                      🏪 {typeof food.restaurant === 'object' ? food.restaurant?.name : food.restaurant}
+                      🏪 {getRestaurantNames(food).join(', ')}
                     </p>
 
                     <div className="food-price">{formatCurrency(food.price || 0)}</div>
@@ -191,6 +213,7 @@ const AdminFoods = () => {
         <AdminEditFoodModal
           isOpen={isEditModalOpen}
           food={editingFood}
+          restaurants={restaurants}
           onClose={() => {
             setIsEditModalOpen(false);
             setEditingFood(null);

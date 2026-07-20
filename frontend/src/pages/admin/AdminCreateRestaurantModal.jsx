@@ -8,6 +8,13 @@ const AdminCreateRestaurantModal = ({ isOpen, onClose, onSave }) => {
     cuisine: '',
     deliveryTime: '30 mins',
     bannerImage: '',
+    description: '',
+    phone: '',
+    email: '',
+    ownerName: '',
+    ownerEmail: '',
+    ownerPassword: '',
+    ownerConfirmPassword: '',
     isOpen: true,
   });
 
@@ -43,6 +50,14 @@ const AdminCreateRestaurantModal = ({ isOpen, onClose, onSave }) => {
       alert('Please enter banner image URL');
       return;
     }
+    if (!formData.ownerEmail.trim() || !formData.ownerPassword.trim() || !formData.ownerConfirmPassword.trim()) {
+      alert('Please provide the restaurant owner email, password, and confirm password');
+      return;
+    }
+    if (formData.ownerPassword !== formData.ownerConfirmPassword) {
+      alert('Password and confirm password must match');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -72,6 +87,13 @@ const AdminCreateRestaurantModal = ({ isOpen, onClose, onSave }) => {
           cuisine: '',
           deliveryTime: '30 mins',
           bannerImage: '',
+          description: '',
+          phone: '',
+          email: '',
+          ownerName: '',
+          ownerEmail: '',
+          ownerPassword: '',
+          ownerConfirmPassword: '',
           isOpen: true,
         });
       }
@@ -143,6 +165,44 @@ const AdminCreateRestaurantModal = ({ isOpen, onClose, onSave }) => {
               placeholder="Enter image URL"
               required
             />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="phone">Phone</label>
+              <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="Enter phone number" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="email">Restaurant Email</label>
+              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter restaurant email" />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea id="description" name="description" value={formData.description} onChange={handleChange} placeholder="Enter restaurant description" rows="3" />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="ownerName">Owner Name</label>
+              <input type="text" id="ownerName" name="ownerName" value={formData.ownerName} onChange={handleChange} placeholder="Enter owner name" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="ownerEmail">Owner Email *</label>
+              <input type="email" id="ownerEmail" name="ownerEmail" value={formData.ownerEmail} onChange={handleChange} placeholder="Enter owner email" required />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="ownerPassword">Owner Password *</label>
+              <input type="password" id="ownerPassword" name="ownerPassword" value={formData.ownerPassword} onChange={handleChange} placeholder="Create password" required />
+            </div>
+            <div className="form-group">
+              <label htmlFor="ownerConfirmPassword">Confirm Password *</label>
+              <input type="password" id="ownerConfirmPassword" name="ownerConfirmPassword" value={formData.ownerConfirmPassword} onChange={handleChange} placeholder="Confirm password" required />
+            </div>
           </div>
 
           {formData.bannerImage && (

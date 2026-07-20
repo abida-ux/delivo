@@ -8,7 +8,7 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
     price: '',
     category: '',
     image: '',
-    restaurant: '',
+    restaurants: [],
     description: '',
   });
 
@@ -28,8 +28,8 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.restaurant) {
-      alert('Please select a restaurant');
+    if (!formData.restaurants.length) {
+      alert('Please select at least one restaurant');
       return;
     }
     if (!formData.name.trim()) {
@@ -55,8 +55,13 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
     
     setLoading(true);
     try {
-      console.log('📝 Submitting food data:', formData);
-      const result = await onSave(formData);
+      const payload = {
+        ...formData,
+        restaurant: formData.restaurants[0],
+        restaurants: formData.restaurants,
+      };
+      console.log('📝 Submitting food data:', payload);
+      const result = await onSave(payload);
       
       // Only close if save was successful
       if (result !== false) {
@@ -67,7 +72,7 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
           price: '',
           category: '',
           image: '',
-          restaurant: '',
+          restaurants: [],
           description: '',
         });
       }
@@ -88,21 +93,25 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
 
         <form onSubmit={handleSubmit} className="edit-form">
           <div className="form-group">
-            <label htmlFor="restaurant">Restaurant *</label>
+            <label htmlFor="restaurants">Restaurants *</label>
             <select
-              id="restaurant"
-              name="restaurant"
-              value={formData.restaurant}
-              onChange={handleChange}
+              id="restaurants"
+              name="restaurants"
+              multiple
+              value={formData.restaurants}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                setFormData((prev) => ({ ...prev, restaurants: selected }));
+              }}
               required
             >
-              <option value="">Select a restaurant</option>
               {restaurants.map((restaurant) => (
                 <option key={restaurant._id} value={restaurant._id}>
                   {restaurant.name}
                 </option>
               ))}
             </select>
+            <small>Select one or more restaurants where this food is available.</small>
           </div>
 
           <div className="form-group">

@@ -68,10 +68,15 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
       return item.foodId?.restaurant?.toString() === restaurant._id.toString() ? itemSum + Number(item.quantity || 0) : itemSum;
     }, 0), 0);
 
+    const restaurantProfile = restaurant.toObject ? restaurant.toObject() : { ...restaurant };
+
     res.status(200).json({
       success: true,
       data: {
-        restaurant: buildRestaurantDashboardData(restaurant),
+        restaurant: {
+          ...restaurantProfile,
+          ...buildRestaurantDashboardData(restaurant),
+        },
         stats: {
           todayOrders: todayOrders.length,
           pendingOrders: pendingOrders.length,
@@ -144,7 +149,9 @@ router.get('/completed', authenticate, ensureRestaurantOwner, async (req, res) =
 router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
     const restaurant = req.restaurant;
-    const foods = await Food.find({ restaurant: restaurant._id }).sort({ createdAt: -1 }).lean();
+    const foods = await Food.find({
+      $or: [{ restaurant: restaurant._id }, { restaurants: restaurant._id }],
+    }).sort({ createdAt: -1 }).lean();
     res.status(200).json({ success: true, data: foods });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -154,10 +161,27 @@ router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
 router.post('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
     const restaurant = req.restaurant;
-    const foodPayload = { ...req.body, restaurant: restaurant._id }; 
+    const restaurantIds = Array.isArray(req.body.restaurants) ? req.body.restaurants : [restaurant._id];
+    const normalizedRestaurants = restaurantIds.includes(restaurant._id.toString()) || restaurantIds.includes(restaurant._id)
+      ? restaurantIds
+      : [restaurant._id];
+
+    const foodPayload = {
+      ...req.body,
+      restaurant: restaurant._id,
+      restaurants: normalizedRestaurants,
+      store: req.body.store || null,
+    };
+
     const food = await Food.create(foodPayload);
-    restaurant.foods.push(food._id);
-    await restaurant.save();
+    const restaurantIdsToLink = [...new Set(normalizedRestaurants.filter(Boolean))];
+    await Promise.all(restaurantIdsToLink.map(async (restaurantId) => {
+      const restaurantDoc = await Restaurant.findById(restaurantId);
+      if (restaurantDoc && !restaurantDoc.foods.includes(food._id)) {
+        restaurantDoc.foods.push(food._id);
+        await restaurantDoc.save();
+      }
+    }));
     res.status(201).json({ success: true, data: food });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -166,7 +190,10 @@ router.post('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
 
 router.put('/foods/:id', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
-    const food = await Food.findOne({ _id: req.params.id, restaurant: req.restaurant._id });
+    const food = await Food.findOne({
+      _id: req.params.id,
+      $or: [{ restaurant: req.restaurant._id }, { restaurants: req.restaurant._id }],
+    });
     if (!food) return res.status(404).json({ success: false, message: 'Food not found' });
     Object.assign(food, req.body);
     await food.save();
