@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getAnalytics } from 'firebase/analytics';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 // Firebase configuration - from environment variables
@@ -9,10 +10,12 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
 };
 
 let firebaseApp = null;
 let messaging = null;
+let analytics = null;
 
 export const initializeFirebase = () => {
   if (firebaseApp) {
@@ -28,6 +31,7 @@ export const initializeFirebase = () => {
   try {
     firebaseApp = initializeApp(firebaseConfig);
     messaging = getMessaging(firebaseApp);
+    analytics = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ? getAnalytics(firebaseApp) : null;
     console.log('✅ Firebase initialized successfully');
     return firebaseApp;
   } catch (error) {
@@ -63,6 +67,7 @@ export const requestFcmToken = async () => {
       storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
       messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
       appId: import.meta.env.VITE_FIREBASE_APP_ID,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
     };
 
     let registration;

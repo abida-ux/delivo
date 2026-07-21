@@ -1,6 +1,57 @@
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const PushSubscription = require('../models/PushSubscription');
+const { sendMulticastFcmMessages } = require('../utils/firebaseMessaging');
+const { sendPushToUser } = require('../utils/pushNotifications');
+
+const buildAdminNotificationPayload = ({ title, message, type, notificationId }) => ({
+  title,
+  message,
+  icon: '/favicon.ico',
+  url: '/notifications',
+  data: {
+    type,
+    notificationId,
+  },
+});
+
+const sendPushToAllActiveSubscriptions = async (payload) => {
+  const subscriptions = await PushSubscription.find({ isActive: true });
+  if (!subscriptions.length) {
+    return { sent: 0, total: 0 };
+  }
+
+  const webPushSubscriptions = subscriptions.filter((s) => s.endpoint && s.keys?.p256dh && s.keys?.auth);
+  const fcmTokens = subscriptions.filter((s) => s.fcmToken).map((s) => s.fcmToken);
+
+  let totalSent = 0;
+
+  if (webPushSubscriptions.length > 0) {
+    const webResults = await Promise.all(
+      webPushSubscriptions.map((subscription) => sendBrowserPush(subscription, payload))
+    );
+    totalSent += webResults.filter((result) => result.ok).length;
+  }
+
+  if (fcmTokens.length > 0) {
+    const fcmResult = await sendMulticastFcmMessages({ fcmTokens, payload });
+    totalSent += fcmResult.sent;
+
+    if (fcmResult.invalidTokens.length > 0) {
+      try {
+        await PushSubscription.updateMany(
+          { fcmToken: { $in: fcmResult.invalidTokens } },
+          { isActive: false }
+        );
+        console.log(`⚠️ Marked ${fcmResult.invalidTokens.length} invalid FCM tokens as inactive`);
+      } catch (error) {
+        console.error('❌ Failed to mark invalid tokens:', error.message);
+      }
+    }
+  }
+
+  return { sent: totalSent, total: subscriptions.length };
+};
 
 const sendBrowserPush = async (subscription, payload) => {
   try {
@@ -86,6 +137,19 @@ exports.createNotification = async (req, res) => {
       type: type || 'system',
       userId: userId || null, // null = broadcast to all
     });
+
+    const payload = buildAdminNotificationPayload({
+      title,
+      message,
+      type: type || 'system',
+      notificationId: notification._id.toString(),
+    });
+
+    if (userId) {
+      await sendPushToUser({ userId, payload });
+    } else {
+      await sendPushToAllActiveSubscriptions(payload);
+    }
 
     res.status(201).json({
       success: true,
