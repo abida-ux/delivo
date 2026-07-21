@@ -23,13 +23,20 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  const payload = event.data && event.data.text() ? JSON.parse(event.data.text()) : {};
+  let payload = {};
+
+  try {
+    payload = event.data && event.data.text() ? JSON.parse(event.data.text()) : {};
+  } catch (error) {
+    payload = {};
+  }
+
   const title = payload.title || 'Delivo update';
   const options = {
     body: payload.message || 'You have a new update from Delivo.',
-      icon: '/delivos.png',
-      badge: '/delivos.png',
-    },
+    icon: '/delivos.png',
+    badge: '/delivos.png',
+    data: payload,
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

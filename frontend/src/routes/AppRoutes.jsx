@@ -6,6 +6,7 @@ import NotFound from "../pages/NotFound";
 
 const Home = lazy(() => import("../pages/Home"));
 const Menu = lazy(() => import("../pages/Menu"));
+const PushDiagnostics = lazy(() => import("../pages/PushDiagnostics"));
 const AllRestaurants = lazy(() => import("../pages/customer/AllRestaurants"));
 const Restaurants = lazy(() => import("../pages/customer/Restaurants"));
 const StoresByType = lazy(() => import("../pages/customer/StoresByType"));
@@ -48,6 +49,7 @@ export default function AppRoutes() {
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/menu" element={<Menu />} />
+      <Route path="/push-diagnostics" element={<PushDiagnostics />} />
       <Route path="/restaurants" element={<AllRestaurants />} />
       <Route path="/restaurants/:id" element={<Restaurants />} />
       <Route path="/stores/:typeId" element={<StoresByType />} />

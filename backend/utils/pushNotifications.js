@@ -35,7 +35,7 @@ const buildNotificationPayload = ({ eventType, order, recipientRole, extra = {} 
 
   const templates = {
     order_created: {
-      title: 'New Order Received',
+      title: 'New order received',
       message: `${customerName} placed a new order for ${amount} at ${restaurantName}.`,
     },
     order_placed_customer: {
@@ -43,7 +43,7 @@ const buildNotificationPayload = ({ eventType, order, recipientRole, extra = {} 
       message: `Your order #${orderIdShort} has been received successfully. We're preparing your delivery.`,
     },
     order_assigned_rider: {
-      title: 'New Delivery Assigned',
+      title: 'New delivery assignment',
       message: `You have a new delivery assignment for order #${orderIdShort}. Customer: ${customerName}`,
     },
     order_status_update: {
