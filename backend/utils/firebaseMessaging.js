@@ -10,15 +10,24 @@ const initializeFirebase = () => {
   }
 
   try {
+        let serviceAccount = null;
     const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH 
       ? path.resolve(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
       : path.join(__dirname, '../config/firebase-service-account.json');
-    
-    if (!fs.existsSync(serviceAccountPath)) {
-      throw new Error(`Service account file not found at: ${serviceAccountPath}`);
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+      try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+      } catch (jsonError) {
+        throw new Error(`Invalid FIREBASE_SERVICE_ACCOUNT_JSON: ${jsonError.message}`);
+      }
+    } else if (fs.existsSync(serviceAccountPath)) {
+      serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     }
 
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    if (!serviceAccount) {
+      throw new Error(`Service account not found. Checked path: ${serviceAccountPath}`);
+    }
 
     firebaseApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
@@ -33,12 +42,19 @@ const initializeFirebase = () => {
   }
 };
 
+const ensureFirebaseInitialized = () => {
+  if (!admin.apps || admin.apps.length === 0) {
+    initializeFirebase();
+  }
+};
+
 const sendFcmMessage = async ({ fcmToken, payload = {} }) => {
   if (!fcmToken) {
     return { ok: false, error: 'No FCM token provided' };
   }
 
   try {
+    ensureFirebaseInitialized();
     const messaging = admin.messaging();
 
     const message = {
@@ -75,6 +91,7 @@ const sendMulticastFcmMessages = async ({ fcmTokens = [], payload = {} }) => {
   }
 
   try {
+    ensureFirebaseInitialized();
     const messaging = admin.messaging();
 
     const message = {

@@ -8,9 +8,9 @@ const PushSubscriptionSchema = new mongoose.Schema({
   },
   endpoint: {
     type: String,
-    required: true,
-    unique: true,
     trim: true,
+    sparse: true,
+    index: true,
   },
   keys: {
     p256dh: {
@@ -24,7 +24,9 @@ const PushSubscriptionSchema = new mongoose.Schema({
   },
   fcmToken: {
     type: String,
-    required: false,
+    trim: true,
+    sparse: true,
+    index: true,
   },
   platform: {
     type: String,
