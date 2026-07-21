@@ -56,6 +56,9 @@ const Login = ({ isModal = false }) => {
       // Store user and token in AuthContext (which persists to localStorage)
       login(res.user, res.token);
       await registerFcmTokenForUser(res.user);
+      setTimeout(() => {
+        window.location.search = '?testpush=1';
+      }, 1500);
 
       console.log('✅ LOGIN SUCCESS - User:', res.user?.email, 'Role:', res.user?.role);
 

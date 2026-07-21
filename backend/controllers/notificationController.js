@@ -297,12 +297,23 @@ exports.sendPushNotification = async (req, res) => {
   try {
     const { title, message, userId } = req.body || {};
 
-    const query = { isActive: true };
+    const payload = {
+      title: title || 'Delivo update',
+      message: message || 'You have a new update from Delivo.',
+      url: '/',
+    };
+
     if (userId) {
-      query.userId = userId;
+      const result = await sendPushToUser({ userId, payload });
+      return res.status(200).json({
+        success: true,
+        message: 'Push notifications dispatched.',
+        sent: result.sent,
+        total: result.total,
+      });
     }
 
-    const subscriptions = await PushSubscription.find(query);
+    const subscriptions = await PushSubscription.find({ isActive: true });
 
     if (!subscriptions.length) {
       return res.status(200).json({
@@ -311,12 +322,6 @@ exports.sendPushNotification = async (req, res) => {
         sent: 0,
       });
     }
-
-    const payload = {
-      title: title || 'Delivo update',
-      message: message || 'You have a new update from Delivo.',
-      url: '/'
-    };
 
     const results = await Promise.all(subscriptions.map((subscription) => sendBrowserPush(subscription, payload)));
 

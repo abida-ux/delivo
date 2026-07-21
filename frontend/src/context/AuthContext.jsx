@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from 'react';
+import { sendTestPush } from '../services/api';
 import { initializeFirebase, requestFcmToken, saveFcmToken } from '../services/firebaseMessaging';
 
 export const AuthContext = createContext();
@@ -8,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // ✅ ADD LOADING STATE
   const [isFcmRegistered, setIsFcmRegistered] = useState(false);
+  const [hasTriggeredRefreshTestPush, setHasTriggeredRefreshTestPush] = useState(false);
 
   // ✅ LOAD AUTH FROM STORAGE ON MOUNT
   useEffect(() => {
@@ -62,6 +64,37 @@ export const AuthProvider = ({ children }) => {
     console.log('   Current state - user:', user);
   }, [user]);
 
+  const triggerRefreshTestPush = async (currentUser) => {
+    if (hasTriggeredRefreshTestPush || !currentUser || !token) return null;
+
+    const params = new URLSearchParams(window.location.search);
+    const shouldSendTestPush = params.get('testpush') === '1' || localStorage.getItem('delivo_test_push_on_refresh') === '1';
+
+    if (!shouldSendTestPush) return null;
+
+    try {
+      const response = await sendTestPush({
+        title: 'Delivo test push',
+        message: 'This push notification was sent after a refresh for testing.',
+        userId: currentUser.id || currentUser._id,
+      });
+
+      if (response?.success) {
+        console.log('✅ Refresh test push sent successfully');
+      }
+    } catch (error) {
+      console.error('❌ Refresh test push failed:', error);
+    } finally {
+      setHasTriggeredRefreshTestPush(true);
+      if (window.history.replaceState) {
+        const nextUrl = `${window.location.pathname}${window.location.hash}`;
+        window.history.replaceState({}, document.title, nextUrl);
+      }
+    }
+
+    return null;
+  };
+
   const registerFcmTokenForUser = async (currentUser) => {
     const activeUser = currentUser || user;
     const authToken = token || localStorage.getItem('token');
@@ -114,8 +147,14 @@ export const AuthProvider = ({ children }) => {
       await registerFcmTokenForUser(user);
     };
 
+    const autoSendRefreshTestPush = async () => {
+      if (!user || !token || isFcmRegistered) return;
+      await triggerRefreshTestPush(user);
+    };
+
     autoRegisterFcm();
-  }, [user, token, isFcmRegistered]);
+    autoSendRefreshTestPush();
+  }, [user, token, isFcmRegistered, hasTriggeredRefreshTestPush]);
 
   // ✅ DERIVED STATE - NO DUPLICATE BOOLEAN
   // isAuthenticated is derived from user state (single source of truth)
