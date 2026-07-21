@@ -18,6 +18,16 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  restaurantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
+    required: false,
+  },
+  riderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
+  },
   items: [{
     foodId: {
       type: mongoose.Schema.Types.ObjectId,

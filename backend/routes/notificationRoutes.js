@@ -8,6 +8,7 @@ const {
   deleteAllNotifications,
   savePushSubscription,
   sendPushNotification,
+  registerFcmToken,
 } = require('../controllers/notificationController');
 const { authenticate } = require('../middleware/authMiddleware');
 
@@ -32,5 +33,8 @@ router.delete('/', deleteAllNotifications);
 // Browser push subscription management
 router.post('/push/subscribe', savePushSubscription);
 router.post('/push/send', sendPushNotification);
+
+// FCM token management
+router.post('/fcm/register', registerFcmToken);
 
 module.exports = router;

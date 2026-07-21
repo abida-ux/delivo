@@ -15,12 +15,21 @@ const PushSubscriptionSchema = new mongoose.Schema({
   keys: {
     p256dh: {
       type: String,
-      required: true,
+      required: false,
     },
     auth: {
       type: String,
-      required: true,
+      required: false,
     },
+  },
+  fcmToken: {
+    type: String,
+    required: false,
+  },
+  platform: {
+    type: String,
+    enum: ['web', 'android', 'ios'],
+    default: 'web',
   },
   isActive: {
     type: Boolean,

@@ -1,8 +1,10 @@
 const Order = require('../models/Order');
 const Food = require('../models/Food');
 const Restaurant = require('../models/Restaurant');
+const User = require('../models/User');
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
+const { buildNotificationPayload, createInAppNotification, sendPushToUser } = require('../utils/pushNotifications');
 
 // @desc Create order
 // @route POST /api/orders
@@ -130,6 +132,7 @@ exports.createOrder = async (req, res, next) => {
       userId: userId || undefined,
       guestEmail: guestEmail || undefined,
       guestPhone: guestPhone || undefined,
+      restaurantId: restaurantId || undefined,
       items: populatedItems,
       totalPrice,
       deliveryFee: finalDeliveryFee,
@@ -180,6 +183,33 @@ exports.createOrder = async (req, res, next) => {
     }
 
     await order.populate('items.foodId');
+
+    try {
+      const restaurantOwner = restaurantId ? await User.findOne({ _id: restaurant?.ownerId, role: 'restaurant' }) : null;
+      const adminUser = await User.findOne({ role: 'admin' });
+      const customerUser = userId ? await User.findById(userId) : null;
+
+      const recipients = [];
+      if (adminUser?._id) recipients.push({ userId: adminUser._id, role: 'admin' });
+      if (restaurantOwner?._id) recipients.push({ userId: restaurantOwner._id, role: 'restaurant' });
+      if (customerUser?._id) recipients.push({ userId: customerUser._id, role: 'customer' });
+
+      const orderPayload = buildNotificationPayload({ eventType: 'order_created', order, recipientRole: 'admin' });
+      const customerPayload = buildNotificationPayload({ eventType: 'order_placed_customer', order, recipientRole: 'customer' });
+
+      for (const recipient of recipients) {
+        const payload = recipient.role === 'customer' ? customerPayload : orderPayload;
+        await createInAppNotification({
+          userId: recipient.userId,
+          title: payload.title,
+          message: payload.message,
+          type: 'order',
+        });
+        await sendPushToUser({ userId: recipient.userId, payload });
+      }
+    } catch (notificationError) {
+      console.error('⚠️ Order notifications failed:', notificationError.message || notificationError);
+    }
 
     console.log('✅ Order created successfully:', order._id);
 
@@ -237,7 +267,7 @@ exports.getOrderById = async (req, res, next) => {
 // @route PUT /api/orders/:id
 exports.updateOrderStatus = async (req, res, next) => {
   try {
-    const { status, paymentStatus } = req.body;
+    const { status, paymentStatus, riderId } = req.body;
 
     const order = await Order.findById(req.params.id);
     if (!order) {
@@ -249,10 +279,46 @@ exports.updateOrderStatus = async (req, res, next) => {
 
     order.status = status || order.status;
     order.paymentStatus = paymentStatus || order.paymentStatus;
+    order.riderId = riderId || order.riderId;
     order.updatedAt = Date.now();
 
     await order.save();
     await order.populate('items.foodId');
+
+    try {
+      const adminUser = await User.findOne({ role: 'admin' });
+      const restaurantOwner = order.restaurantId ? await User.findOne({ _id: order.restaurantId.ownerId, role: 'restaurant' }) : null;
+      const customerUser = order.userId ? await User.findById(order.userId) : null;
+      const riderUser = order.riderId ? await User.findById(order.riderId) : null;
+
+      const payload = buildNotificationPayload({
+        eventType: status === 'assigned' || status === 'on-delivery' ? 'order_assigned_rider' : 'order_status_update',
+        order,
+        recipientRole: riderUser ? 'rider' : 'customer',
+      });
+
+      if (adminUser?._id) {
+        await createInAppNotification({ userId: adminUser._id, title: payload.title, message: payload.message, type: 'order' });
+        await sendPushToUser({ userId: adminUser._id, payload });
+      }
+
+      if (restaurantOwner?._id) {
+        await createInAppNotification({ userId: restaurantOwner._id, title: payload.title, message: payload.message, type: 'order' });
+        await sendPushToUser({ userId: restaurantOwner._id, payload });
+      }
+
+      if (customerUser?._id) {
+        await createInAppNotification({ userId: customerUser._id, title: payload.title, message: payload.message, type: 'order' });
+        await sendPushToUser({ userId: customerUser._id, payload });
+      }
+
+      if (riderUser?._id) {
+        await createInAppNotification({ userId: riderUser._id, title: payload.title, message: payload.message, type: 'order' });
+        await sendPushToUser({ userId: riderUser._id, payload });
+      }
+    } catch (notificationError) {
+      console.error('⚠️ Order status notifications failed:', notificationError.message || notificationError);
+    }
 
     res.status(200).json({
       success: true,

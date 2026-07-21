@@ -188,9 +188,9 @@ exports.deleteAllNotifications = async (req, res) => {
 exports.savePushSubscription = async (req, res) => {
   try {
     const userId = req.user?.id;
-    const { endpoint, keys } = req.body || {};
+    const { endpoint, keys, fcmToken, platform } = req.body || {};
 
-    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    if (!endpoint && !fcmToken) {
       return res.status(400).json({
         success: false,
         message: 'Subscription data is incomplete.',
@@ -198,13 +198,17 @@ exports.savePushSubscription = async (req, res) => {
     }
 
     const subscription = await PushSubscription.findOneAndUpdate(
-      { endpoint },
+      { $or: [{ endpoint }, { fcmToken }] },
       {
-        endpoint,
-        keys: {
-          p256dh: keys.p256dh,
-          auth: keys.auth,
-        },
+        endpoint: endpoint || undefined,
+        keys: endpoint
+          ? {
+              p256dh: keys?.p256dh,
+              auth: keys?.auth,
+            }
+          : undefined,
+        fcmToken,
+        platform: platform || 'web',
         userId,
         isActive: true,
       },
@@ -266,3 +270,51 @@ exports.sendPushNotification = async (req, res) => {
     });
   }
 };
+
+exports.registerFcmToken = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const { fcmToken, platform = 'web' } = req.body || {};
+
+    if (!fcmToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'FCM token is required.',
+      });
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated.',
+      });
+    }
+
+    const subscription = await PushSubscription.findOneAndUpdate(
+      { fcmToken },
+      {
+        fcmToken,
+        platform,
+        userId,
+        isActive: true,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    console.log(`✅ FCM token registered for user ${userId}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'FCM token registered successfully.',
+      subscription,
+    });
+  } catch (error) {
+    console.error('❌ Error registering FCM token:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error registering FCM token.',
+      error: error.message,
+    });
+  }
+};
+

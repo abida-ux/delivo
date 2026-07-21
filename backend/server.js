@@ -12,6 +12,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const { isAllowedOrigin } = require('./config/cors');
 const errorHandler = require('./middleware/errorMiddleware');
+const { initializeFirebase } = require('./utils/firebaseMessaging');
 
 // Import routes
 const restaurantRoutes = require('./routes/restaurantRoutes');
@@ -46,6 +47,14 @@ console.log(`  MPESA_SECRET loaded: ${process.env.MPESA_SECRET || process.env.SE
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize Firebase Admin SDK
+try {
+  initializeFirebase();
+} catch (error) {
+  console.warn('⚠️ Firebase initialization skipped or failed. FCM notifications will not work.');
+  console.warn('   To enable FCM: Set FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT_PATH in .env');
+}
 
 // ==================== MIDDLEWARE ====================
 // JSON parsing with size limits
