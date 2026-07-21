@@ -56,17 +56,31 @@ export const requestFcmToken = async () => {
       return null;
     }
 
-    // Register service worker for FCM
+    const firebaseConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    };
+
+    let registration;
     try {
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       console.log('✅ Firebase Service Worker registered');
     } catch (swError) {
       console.warn('⚠️ Failed to register Firebase service worker:', swError.message);
     }
 
+    const readyRegistration = await navigator.serviceWorker.ready;
+    if (readyRegistration?.active) {
+      readyRegistration.active.postMessage({ type: 'INIT_FCM', config: firebaseConfig });
+    }
+
     const token = await getToken(messaging, {
       vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: await navigator.serviceWorker.ready,
+      serviceWorkerRegistration: readyRegistration,
     });
 
     if (token) {

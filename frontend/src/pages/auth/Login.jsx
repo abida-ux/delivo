@@ -10,7 +10,7 @@ const Login = ({ isModal = false }) => {
   const navigate = useNavigate();
 
   // Use AuthContext for login (SINGLE SOURCE OF TRUTH)
-  const { login } = useContext(AuthContext);
+  const { login, registerFcmTokenForUser } = useContext(AuthContext);
   // Use AuthModalContext only to close modal
   const { closeModal } = useContext(AuthModalContext);
 
@@ -55,6 +55,7 @@ const Login = ({ isModal = false }) => {
 
       // Store user and token in AuthContext (which persists to localStorage)
       login(res.user, res.token);
+      await registerFcmTokenForUser(res.user);
 
       console.log('✅ LOGIN SUCCESS - User:', res.user?.email, 'Role:', res.user?.role);
 

@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from 'react';
+import { initializeFirebase, requestFcmToken, saveFcmToken } from '../services/firebaseMessaging';
 
 export const AuthContext = createContext();
 
@@ -6,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // ✅ ADD LOADING STATE
+  const [isFcmRegistered, setIsFcmRegistered] = useState(false);
 
   // ✅ LOAD AUTH FROM STORAGE ON MOUNT
   useEffect(() => {
@@ -37,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', authToken);
     setUser(userData);
     setToken(authToken);
+    setIsFcmRegistered(false);
     console.log('✅ User set to:', userData);
   };
 
@@ -59,6 +62,62 @@ export const AuthProvider = ({ children }) => {
     console.log('   Current state - user:', user);
   }, [user]);
 
+  const registerFcmTokenForUser = async (currentUser) => {
+    const activeUser = currentUser || user;
+    const authToken = token || localStorage.getItem('token');
+    if (!activeUser || !authToken || isFcmRegistered) return null;
+    if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+      console.warn('⚠️ Browser does not support service workers or notifications. FCM registration skipped.');
+      return null;
+    }
+
+    const hasFirebaseConfig =
+      import.meta.env.VITE_FIREBASE_API_KEY &&
+      import.meta.env.VITE_FIREBASE_PROJECT_ID &&
+      import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID &&
+      import.meta.env.VITE_FIREBASE_APP_ID &&
+      import.meta.env.VITE_FIREBASE_VAPID_KEY;
+
+    if (!hasFirebaseConfig) {
+      console.warn('⚠️ Firebase web config or VAPID key is missing. FCM cannot be registered.');
+      return null;
+    }
+
+    try {
+      initializeFirebase();
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission !== 'granted') {
+        console.warn('⚠️ Notification permission not granted. FCM registration skipped.');
+        return null;
+      }
+
+      const fcmToken = await requestFcmToken();
+      if (fcmToken) {
+        await saveFcmToken(fcmToken, activeUser.id || activeUser._id);
+        setIsFcmRegistered(true);
+        console.log('✅ FCM token registered for user', activeUser.id || activeUser._id);
+        return fcmToken;
+      }
+    } catch (error) {
+      console.error('❌ FCM registration failed:', error);
+    }
+
+    return null;
+  };
+
+  useEffect(() => {
+    const autoRegisterFcm = async () => {
+      if (!user || !token || isFcmRegistered) return;
+      await registerFcmTokenForUser(user);
+    };
+
+    autoRegisterFcm();
+  }, [user, token, isFcmRegistered]);
+
   // ✅ DERIVED STATE - NO DUPLICATE BOOLEAN
   // isAuthenticated is derived from user state (single source of truth)
   const isAuthenticated = !!user;
@@ -70,6 +129,7 @@ export const AuthProvider = ({ children }) => {
         token,
         login,
         logout,
+        registerFcmTokenForUser,
         isAuthenticated: !!user,
         isLoading, // ✅ ADD LOADING STATE
       }}
