@@ -97,6 +97,19 @@ const Navbar = () => {
     }
   };
 
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return undefined;
+
+    const handleServiceWorkerMessage = (event) => {
+      if (event.data?.type === 'DELIVO_PUSH_RECEIVED') {
+        fetchNotifications();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+  }, [user, token]);
+
   // ✅ DELETE NOTIFICATION
   const deleteNotification = async (notificationId) => {
     if (!token) return;

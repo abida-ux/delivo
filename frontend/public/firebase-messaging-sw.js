@@ -28,7 +28,13 @@ const handleBackgroundMessage = (payload) => {
     ],
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions).then(() => {
+    return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
+      });
+    });
+  });
 };
 
 const initFirebase = (firebaseConfig) => {

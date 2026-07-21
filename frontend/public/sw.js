@@ -39,7 +39,15 @@ self.addEventListener('push', (event) => {
     data: payload,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(() => {
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
+        });
+      });
+    })
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {

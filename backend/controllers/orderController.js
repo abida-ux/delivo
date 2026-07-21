@@ -185,17 +185,41 @@ exports.createOrder = async (req, res, next) => {
     await order.populate('items.foodId');
 
     try {
-      const restaurantOwner = restaurantId ? await User.findOne({ _id: restaurant?.ownerId, role: 'restaurant' }) : null;
-      const adminUser = await User.findOne({ role: 'admin' });
+      const restaurantOwner = restaurantId && restaurant?.ownerId
+        ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' })
+        : null;
+      const adminUsers = await User.find({ role: 'admin' });
       const customerUser = userId ? await User.findById(userId) : null;
 
       const recipients = [];
-      if (adminUser?._id) recipients.push({ userId: adminUser._id, role: 'admin' });
+      for (const adminUser of adminUsers) {
+        recipients.push({ userId: adminUser._id, role: 'admin' });
+      }
       if (restaurantOwner?._id) recipients.push({ userId: restaurantOwner._id, role: 'restaurant' });
       if (customerUser?._id) recipients.push({ userId: customerUser._id, role: 'customer' });
 
-      const orderPayload = buildNotificationPayload({ eventType: 'order_created', order, recipientRole: 'admin' });
-      const customerPayload = buildNotificationPayload({ eventType: 'order_placed_customer', order, recipientRole: 'customer' });
+      const orderPayload = buildNotificationPayload({
+        eventType: 'order_created',
+        order,
+        recipientRole: 'admin',
+        extra: {
+          orderId: order._id.toString(),
+          customerName: customerUser?.name || customerName || 'Customer',
+          restaurantName: restaurant?.name || 'restaurant',
+          deliveryAddress,
+        },
+      });
+      const customerPayload = buildNotificationPayload({
+        eventType: 'order_placed_customer',
+        order,
+        recipientRole: 'customer',
+        extra: {
+          orderId: order._id.toString(),
+          customerName: customerUser?.name || customerName || 'Customer',
+          restaurantName: restaurant?.name || 'restaurant',
+          deliveryAddress,
+        },
+      });
 
       for (const recipient of recipients) {
         const payload = recipient.role === 'customer' ? customerPayload : orderPayload;
@@ -286,35 +310,106 @@ exports.updateOrderStatus = async (req, res, next) => {
     await order.populate('items.foodId');
 
     try {
-      const adminUser = await User.findOne({ role: 'admin' });
-      const restaurantOwner = order.restaurantId ? await User.findOne({ _id: order.restaurantId.ownerId, role: 'restaurant' }) : null;
+      const adminUsers = await User.find({ role: 'admin' });
+      const restaurant = order.restaurantId ? await Restaurant.findById(order.restaurantId) : null;
+      const restaurantOwner = restaurant?.ownerId ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' }) : null;
       const customerUser = order.userId ? await User.findById(order.userId) : null;
       const riderUser = order.riderId ? await User.findById(order.riderId) : null;
 
-      const payload = buildNotificationPayload({
-        eventType: status === 'assigned' || status === 'on-delivery' ? 'order_assigned_rider' : 'order_status_update',
+      const orderIdShort = order._id.toString().slice(-6);
+      const customerName = customerUser?.name || order.customerName || 'Customer';
+      const restaurantName = restaurant?.name || 'restaurant';
+      const deliveryAddress = order.deliveryAddress || 'your requested address';
+      const riderName = riderUser?.name || 'a rider';
+      const riderPhone = riderUser?.phone || 'contact soon';
+
+      const genericPayload = buildNotificationPayload({
+        eventType: 'order_status_update',
         order,
         recipientRole: riderUser ? 'rider' : 'customer',
+        extra: {
+          orderId: order._id.toString(),
+          customerName,
+          restaurantName,
+          deliveryAddress,
+          riderName,
+          riderPhone,
+        },
       });
 
-      if (adminUser?._id) {
-        await createInAppNotification({ userId: adminUser._id, title: payload.title, message: payload.message, type: 'order' });
-        await sendPushToUser({ userId: adminUser._id, payload });
-      }
+      if (status === 'assigned' || status === 'on-delivery') {
+        const riderPayload = {
+          title: 'New delivery assignment',
+          message: `You have been assigned order #${orderIdShort} for ${restaurantName}. Customer: ${customerName}. Delivery to: ${deliveryAddress}.`,
+          icon: '/favicon.ico',
+          url: '/orders',
+          data: {
+            eventType: 'order_assigned_rider',
+            recipientRole: 'rider',
+            orderId: order._id.toString(),
+            customerName,
+            restaurantName,
+            deliveryAddress,
+            riderName,
+            riderPhone,
+            orderStatus: status,
+          },
+        };
 
-      if (restaurantOwner?._id) {
-        await createInAppNotification({ userId: restaurantOwner._id, title: payload.title, message: payload.message, type: 'order' });
-        await sendPushToUser({ userId: restaurantOwner._id, payload });
-      }
+        const restaurantPayload = {
+          title: 'Order assigned to rider',
+          message: `Order #${orderIdShort} has been assigned to ${riderName} (${riderPhone}). Customer: ${customerName}. Delivery to: ${deliveryAddress}.`,
+          icon: '/favicon.ico',
+          url: '/orders',
+          data: {
+            eventType: 'order_assigned_rider',
+            recipientRole: 'restaurant',
+            orderId: order._id.toString(),
+            customerName,
+            restaurantName,
+            deliveryAddress,
+            riderName,
+            riderPhone,
+            orderStatus: status,
+          },
+        };
 
-      if (customerUser?._id) {
-        await createInAppNotification({ userId: customerUser._id, title: payload.title, message: payload.message, type: 'order' });
-        await sendPushToUser({ userId: customerUser._id, payload });
-      }
+        for (const adminUser of adminUsers) {
+          await createInAppNotification({ userId: adminUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' });
+          await sendPushToUser({ userId: adminUser._id, payload: riderPayload });
+        }
 
-      if (riderUser?._id) {
-        await createInAppNotification({ userId: riderUser._id, title: payload.title, message: payload.message, type: 'order' });
-        await sendPushToUser({ userId: riderUser._id, payload });
+        if (restaurantOwner?._id) {
+          await createInAppNotification({ userId: restaurantOwner._id, title: restaurantPayload.title, message: restaurantPayload.message, type: 'order' });
+          await sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload });
+        }
+
+        if (riderUser?._id) {
+          await createInAppNotification({ userId: riderUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' });
+          await sendPushToUser({ userId: riderUser._id, payload: riderPayload });
+        }
+      } else {
+        const payload = genericPayload;
+
+        for (const adminUser of adminUsers) {
+          await createInAppNotification({ userId: adminUser._id, title: payload.title, message: payload.message, type: 'order' });
+          await sendPushToUser({ userId: adminUser._id, payload });
+        }
+
+        if (restaurantOwner?._id) {
+          await createInAppNotification({ userId: restaurantOwner._id, title: payload.title, message: payload.message, type: 'order' });
+          await sendPushToUser({ userId: restaurantOwner._id, payload });
+        }
+
+        if (customerUser?._id) {
+          await createInAppNotification({ userId: customerUser._id, title: payload.title, message: payload.message, type: 'order' });
+          await sendPushToUser({ userId: customerUser._id, payload });
+        }
+
+        if (riderUser?._id) {
+          await createInAppNotification({ userId: riderUser._id, title: payload.title, message: payload.message, type: 'order' });
+          await sendPushToUser({ userId: riderUser._id, payload });
+        }
       }
     } catch (notificationError) {
       console.error('⚠️ Order status notifications failed:', notificationError.message || notificationError);
