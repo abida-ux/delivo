@@ -49,6 +49,13 @@ const Login = ({ isModal = false }) => {
     try {
       setLoading(true);
 
+      if ('Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          localStorage.setItem('delivo_test_push_on_refresh', '1');
+        }
+      }
+
       // Call API login endpoint
       const res = await loginUser(formData);
       console.log('📡 API Response:', JSON.stringify(res));
@@ -56,9 +63,6 @@ const Login = ({ isModal = false }) => {
       // Store user and token in AuthContext (which persists to localStorage)
       login(res.user, res.token);
       await registerFcmTokenForUser(res.user);
-      setTimeout(() => {
-        window.location.search = '?testpush=1';
-      }, 1500);
 
       console.log('✅ LOGIN SUCCESS - User:', res.user?.email, 'Role:', res.user?.role);
 
