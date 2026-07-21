@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from "./components/Navbar";
 import AppRoutes from "./routes/AppRoutes";
@@ -8,9 +8,34 @@ import { LoaderContext } from "./context/LoaderContext";
 import './styles/global.css';
 import './components/Loader.css';
 
+const triggerRefreshNotification = async () => {
+  if (!('Notification' in window)) return;
+
+  const permission = Notification.permission;
+  if (permission !== 'granted') {
+    try {
+      await Notification.requestPermission();
+    } catch {
+      return;
+    }
+  }
+
+  if (Notification.permission === 'granted') {
+    new Notification('Delivo refresh test', {
+      body: 'This notification appears on every refresh for testing.',
+      icon: '/delivos.png',
+      tag: 'delivo-refresh-test',
+    });
+  }
+};
+
 function App() {
   const { isLoading } = useContext(LoaderContext);
   const location = useLocation();
+
+  useEffect(() => {
+    triggerRefreshNotification();
+  }, [location.pathname]);
 
   // Hide navbar on admin and restaurant portal routes
   const isAdminRoute = location.pathname.startsWith('/admin');
