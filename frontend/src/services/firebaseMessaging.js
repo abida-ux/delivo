@@ -2,16 +2,29 @@ import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
-// Firebase configuration - from environment variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
+const fallbackFirebaseConfig = {
+  apiKey: 'AIzaSyAeAZyhCK_pS8uCWvCH9wiSmBvgKX6dHAU',
+  authDomain: 'delivo-73fab.firebaseapp.com',
+  projectId: 'delivo-73fab',
+  storageBucket: 'delivo-73fab.firebasestorage.app',
+  messagingSenderId: '816710185546',
+  appId: '1:816710185546:web:50caf29f09910c4dbdacb3',
+  measurementId: 'G-FLNP8FRK9Q',
 };
+
+const resolveFirebaseConfig = () => ({
+  ...fallbackFirebaseConfig,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || fallbackFirebaseConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fallbackFirebaseConfig.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || fallbackFirebaseConfig.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || fallbackFirebaseConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fallbackFirebaseConfig.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || fallbackFirebaseConfig.appId,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || fallbackFirebaseConfig.measurementId,
+});
+
+// Firebase configuration - from environment variables with safe fallbacks
+const firebaseConfig = resolveFirebaseConfig();
 
 let firebaseApp = null;
 let messaging = null;
@@ -60,15 +73,7 @@ export const requestFcmToken = async () => {
       return null;
     }
 
-    const firebaseConfig = {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID,
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
-    };
+    const firebaseConfig = resolveFirebaseConfig();
 
     let registration;
     try {

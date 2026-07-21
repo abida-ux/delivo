@@ -79,8 +79,7 @@ export const AuthProvider = ({ children }) => {
       import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
     if (!hasFirebaseConfig) {
-      console.warn('⚠️ Firebase web config or VAPID key is missing. FCM cannot be registered.');
-      return null;
+      console.warn('⚠️ Firebase web config or VAPID key is missing. Continuing with browser permission prompt so notifications can still be requested.');
     }
 
     try {
