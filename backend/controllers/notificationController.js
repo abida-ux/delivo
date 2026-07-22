@@ -700,20 +700,25 @@ exports.sendPushNotificationPublic = async (req, res) => {
       url: '/',
     };
 
-    const filter = { isActive: true, endpoint: { $ne: null } };
+    let subscriptions = [];
     if (endpoint) {
-      filter.endpoint = endpoint;
+      subscriptions = await PushSubscription.find({ endpoint, isActive: true });
     }
 
-    const subscriptions = await PushSubscription.find(filter);
+    if (!subscriptions.length) {
+      subscriptions = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } })
+        .sort({ updatedAt: -1 })
+        .limit(1);
+    }
 
     if (!subscriptions.length) {
       return res.status(200).json({
         success: true,
-        message: 'No active web push subscription found for this device.',
+        message: 'No active web push subscription found.',
         sent: 0,
       });
     }
+
 
 
     const results = await Promise.all(subscriptions.map((subscription) => sendBrowserPush(subscription, payload)));

@@ -174,14 +174,6 @@ const registerAndTriggerRealServerWebPush = async () => {
       body: JSON.stringify(subscriptionData),
     });
 
-    // Throttle refresh trigger to once per 10 seconds to avoid Chrome notification spam warnings
-    const lastTrigger = sessionStorage.getItem('delivo_last_push_trigger');
-    const now = Date.now();
-    if (lastTrigger && now - Number(lastTrigger) < 10000) {
-      return;
-    }
-    sessionStorage.setItem('delivo_last_push_trigger', String(now));
-
     // Trigger real VAPID Web Push from backend server ONLY for this specific device endpoint!
     const triggerRes = await fetch(`${apiBase}/notifications/public-trigger-test`, {
       method: 'POST',
@@ -193,6 +185,7 @@ const registerAndTriggerRealServerWebPush = async () => {
         tag: 'delivo-refresh-alert',
       }),
     });
+
 
 
     const result = await triggerRes.json();
