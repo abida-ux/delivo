@@ -116,9 +116,7 @@ const logRefreshNotification = (status, data = {}) => {
   }
 };
 
-const registerAndTriggerRealServerWebPush = async () => {
-  const timeStr = new Date().toLocaleTimeString();
-
+const registerBrowserPushSubscriptionSilent = async () => {
   if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.warn('[WebPush] Web push is not supported in this browser environment.');
     return;
@@ -174,35 +172,18 @@ const registerAndTriggerRealServerWebPush = async () => {
       body: JSON.stringify(subscriptionData),
     });
 
-    // Trigger real VAPID Web Push from backend server ONLY for this specific device endpoint!
-    const triggerRes = await fetch(`${apiBase}/notifications/public-trigger-test`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: subscription.endpoint,
-        title: 'Delivo Web Push 🍕',
-        message: `Notification active! (Refreshed at ${timeStr})`,
-        tag: 'delivo-refresh-alert',
-      }),
-    });
-
-
-
-    const result = await triggerRes.json();
-    console.log('🚀 [WebPush] Server Web Push result:', result);
+    console.log('✅ [WebPush] VAPID push subscription silently registered.');
   } catch (error) {
-    console.error('[WebPush] Error triggering real server Web Push:', error);
+    console.error('[WebPush] Error registering Web Push subscription:', error);
   }
 };
-
-
 
 function App() {
   const { isLoading } = useContext(LoaderContext);
   const { user, token } = useContext(AuthContext);
   const location = useLocation();
 
-  // Initialize Firebase, register Web Push, and trigger real server push on refresh
+  // Initialize Firebase and register Web Push silently
   useEffect(() => {
     initializeFirebase();
 
@@ -211,7 +192,8 @@ function App() {
     };
 
     window.addEventListener('beforeunload', markBeforeUnload);
-    registerAndTriggerRealServerWebPush();
+    registerBrowserPushSubscriptionSilent();
+
 
     return () => {
       window.removeEventListener('beforeunload', markBeforeUnload);

@@ -194,54 +194,50 @@ exports.createOrder = async (req, res, next) => {
       ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' })
       : null;
 
-    const adminUsers = await User.find({ role: 'admin' });
-    const customerUser = userId ? await User.findById(userId) : null;
-
     try {
+      const orderIdShort = order._id.toString().slice(-6).toUpperCase();
 
-      const recipients = [];
-      for (const adminUser of adminUsers) {
-        recipients.push({ userId: adminUser._id, role: 'admin' });
+      // 1. Send Admin Order Notification strictly to users with role === 'admin'
+      const adminUsers = await User.find({ role: 'admin' });
+      if (adminUsers && adminUsers.length > 0) {
+        const adminPayload = {
+          title: 'New Order Alert',
+          message: `New order #${orderIdShort} placed by ${customerName || customerUser?.name || 'Customer'} for KES ${totalPrice}.`,
+          url: '/admin/orders',
+          tag: 'delivo-admin-order',
+        };
+
+        for (const adminUser of adminUsers) {
+          await createInAppNotification({
+            userId: adminUser._id,
+            title: adminPayload.title,
+            message: adminPayload.message,
+            type: 'order',
+          });
+          await sendPushToUser({ userId: adminUser._id, payload: adminPayload });
+        }
       }
-      if (restaurantOwner?._id) recipients.push({ userId: restaurantOwner._id, role: 'restaurant' });
-      if (customerUser?._id) recipients.push({ userId: customerUser._id, role: 'customer' });
 
-      const orderPayload = buildNotificationPayload({
-        eventType: 'order_created',
-        order,
-        recipientRole: 'admin',
-        extra: {
-          orderId: order._id.toString(),
-          customerName: customerUser?.name || customerName || 'Customer',
-          restaurantName: restaurant?.name || 'restaurant',
-          deliveryAddress,
-        },
-      });
-      const customerPayload = buildNotificationPayload({
-        eventType: 'order_placed_customer',
-        order,
-        recipientRole: 'customer',
-        extra: {
-          orderId: order._id.toString(),
-          customerName: customerUser?.name || customerName || 'Customer',
-          restaurantName: restaurant?.name || 'restaurant',
-          deliveryAddress,
-        },
-      });
-
-      for (const recipient of recipients) {
-        const payload = recipient.role === 'customer' ? customerPayload : orderPayload;
+      // 2. Send Restaurant Owner Notification strictly to restaurant owner
+      if (restaurantOwner?._id) {
+        const restaurantPayload = {
+          title: 'New Order Received',
+          message: `Your store received new order #${orderIdShort} for KES ${totalPrice}.`,
+          url: '/restaurant/orders',
+          tag: 'delivo-restaurant-order',
+        };
         await createInAppNotification({
-          userId: recipient.userId,
-          title: payload.title,
-          message: payload.message,
+          userId: restaurantOwner._id,
+          title: restaurantPayload.title,
+          message: restaurantPayload.message,
           type: 'order',
         });
-        await sendPushToUser({ userId: recipient.userId, payload });
+        await sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload });
       }
     } catch (notificationError) {
       console.error('⚠️ Order notifications failed:', notificationError.message || notificationError);
     }
+
 
     console.log('✅ Order created successfully:', order._id);
 

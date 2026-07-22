@@ -202,8 +202,26 @@ exports.registerUser = async (req, res, next) => {
 
     console.log('[auth] user saved to database', { userId: user._id, email: user.email });
 
-    // Welcome notification will be sent when user registers FCM token
-    // (after they enable browser notifications), so we don't send it here
+    // Send Welcome Notification (In-App & Push) when account is created
+    try {
+      const { createInAppNotification, sendPushToUser } = require('../utils/pushNotifications');
+      const welcomePayload = {
+        title: 'Welcome to Delivo',
+        message: `Welcome, ${user.name}! Your account has been created successfully. Explore our top restaurants and order delicious food.`,
+        url: '/',
+        tag: 'delivo-welcome',
+      };
+      await createInAppNotification({
+        userId: user._id,
+        title: welcomePayload.title,
+        message: welcomePayload.message,
+        type: 'system',
+      });
+      await sendPushToUser({ userId: user._id, payload: welcomePayload });
+    } catch (welcomeErr) {
+      console.warn('⚠️ Welcome notification warning:', welcomeErr.message);
+    }
+
 
     // If email verification is enabled, attempt to create and send verification code
     let emailDelivered = false;

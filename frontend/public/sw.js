@@ -139,7 +139,8 @@ self.addEventListener('push', (event) => {
     payload = {};
   }
 
-  const title = payload.title || 'Delivo Notification 🍕';
+  const title = payload.title || 'Delivo Notification';
+
   const options = {
     body: payload.message || 'You have a new update from Delivo.',
     icon: '/delivos.png',

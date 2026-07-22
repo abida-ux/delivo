@@ -694,11 +694,12 @@ exports.sendPushNotificationPublic = async (req, res) => {
     const { endpoint, title, message, tag } = req.body || {};
     const timeStr = new Date().toLocaleTimeString();
     const payload = {
-      title: title || 'Delivo Web Push 🍕',
-      message: message || `Real Web Push received from server at ${timeStr}!`,
-      tag: tag || 'delivo-refresh-alert',
+      title: title || 'Delivo Notification',
+      message: message || `Notification received from server at ${timeStr}.`,
+      tag: tag || 'delivo-alert',
       url: '/',
     };
+
 
     let subscriptions = [];
     if (endpoint) {

@@ -39,7 +39,7 @@ const buildNotificationPayload = ({ eventType, order, recipientRole, extra = {} 
       message: `${customerName} placed a new order for ${amount} at ${restaurantName}.`,
     },
     order_placed_customer: {
-      title: 'Order Confirmed 🎉',
+      title: 'Order Confirmed',
       message: `Your order #${orderIdShort} has been received successfully. We're preparing your delivery.`,
     },
     order_assigned_rider: {
@@ -67,6 +67,7 @@ const buildNotificationPayload = ({ eventType, order, recipientRole, extra = {} 
       message: `Your order #${orderIdShort} has been successfully delivered.`,
     },
   };
+
 
   const template = templates[eventType] || templates.order_status_update;
   const itemSummary = items.slice(0, 3).map((item) => `${item.quantity} x ${item.foodId?.name || 'Item'}`).join(', ');
@@ -197,14 +198,14 @@ const sendOrderPaymentNotification = async (order, status) => {
   let message = '';
 
   if (status === 'completed' || status === 'confirmed') {
-    title = 'Payment Received! ✅';
-    message = `Your M-Pesa payment of ${amountStr} for order #${orderIdShort} was confirmed! The restaurant is preparing your food.`;
+    title = 'Payment Confirmed';
+    message = `Your M-Pesa payment of ${amountStr} for order #${orderIdShort} was confirmed. The restaurant is preparing your food.`;
   } else if (status === 'failed' || status === 'cancelled') {
-    title = 'Payment Failed ❌';
+    title = 'Payment Failed';
     message = `M-Pesa payment for order #${orderIdShort} failed or was cancelled. Please try again from your cart.`;
   } else {
-    title = 'Order Placed 🍕';
-    message = `Order #${orderIdShort} created! Check your phone for the M-Pesa PIN prompt.`;
+    title = 'Order Placed';
+    message = `Order #${orderIdShort} created. Check your phone for the M-Pesa PIN prompt.`;
   }
 
   const payload = {
@@ -225,20 +226,21 @@ const sendOrderPaymentNotification = async (order, status) => {
         type: 'order',
       });
       await sendPushToUser({ userId: order.userId, payload });
-    }
+    } else {
+      // Guest checkout: send to latest active push subscription
+      const activeSubs = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } })
+        .sort({ updatedAt: -1 })
+        .limit(1);
 
-    // Also dispatch to active browser push subscriptions for guest / browser context
-    const activeSubs = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } })
-      .sort({ updatedAt: -1 })
-      .limit(5);
-
-    if (activeSubs.length > 0) {
-      await Promise.all(activeSubs.map((sub) => sendBrowserPush(sub, payload)));
+      if (activeSubs.length > 0) {
+        await Promise.all(activeSubs.map((sub) => sendBrowserPush(sub, payload)));
+      }
     }
   } catch (err) {
     console.error('❌ Error sending order payment notification:', err.message);
   }
 };
+
 
 module.exports = {
   buildNotificationPayload,
