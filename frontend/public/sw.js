@@ -139,17 +139,16 @@ self.addEventListener('push', (event) => {
     payload = {};
   }
 
-  const title = payload.title || 'Delivo Push Notification 🍕';
+  const title = payload.title || 'Delivo Notification 🍕';
   const options = {
     body: payload.message || 'You have a new update from Delivo.',
     icon: '/delivos.png',
     badge: '/delivos.png',
-    tag: `delivo-push-${Date.now()}`,
-    renotify: true,
-    requireInteraction: true,
-    vibrate: [200, 100, 200, 100, 200],
+    tag: payload.tag || 'delivo-push-alert',
+    vibrate: [200, 100, 200],
     data: payload,
   };
+
 
   event.waitUntil(
     self.registration.showNotification(title, options).then(() => {

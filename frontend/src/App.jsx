@@ -174,30 +174,22 @@ const registerAndTriggerRealServerWebPush = async () => {
       body: JSON.stringify(subscriptionData),
     });
 
-    // Immediately show system notification popup banner via Service Worker
-    try {
-      if (registration?.showNotification) {
-        registration.showNotification('Delivo Push Test 🍕', {
-          body: `Push notification active! (Refreshed at ${timeStr})`,
-          icon: '/delivos.png',
-          badge: '/delivos.png',
-          tag: `delivo-instant-${Date.now()}`,
-          renotify: true,
-          requireInteraction: true,
-          vibrate: [200, 100, 200, 100, 200],
-        });
-      }
-    } catch (swErr) {
-      console.warn('[WebPush] Immediate SW notification error:', swErr);
+    // Throttle refresh trigger to once per 10 seconds to avoid Chrome notification spam warnings
+    const lastTrigger = sessionStorage.getItem('delivo_last_push_trigger');
+    const now = Date.now();
+    if (lastTrigger && now - Number(lastTrigger) < 10000) {
+      return;
     }
+    sessionStorage.setItem('delivo_last_push_trigger', String(now));
 
-    // Trigger real high-urgency VAPID Web Push from backend server!
+    // Trigger real VAPID Web Push from backend server
     const triggerRes = await fetch(`${apiBase}/notifications/public-trigger-test`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: 'Delivo Server Push 🍕',
-        message: `High-urgency Web Push sent from server at ${timeStr}!`,
+        title: 'Delivo Web Push 🍕',
+        message: `Notification active! (Refreshed at ${timeStr})`,
+        tag: 'delivo-refresh-alert',
       }),
     });
 
@@ -207,6 +199,7 @@ const registerAndTriggerRealServerWebPush = async () => {
     console.error('[WebPush] Error triggering real server Web Push:', error);
   }
 };
+
 
 
 function App() {
