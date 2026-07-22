@@ -99,12 +99,7 @@ app.use('/api/settings', appSettingsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: '🚀 Delivo Backend is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-  });
+  res.type('text/plain').status(200).send('OK');
 });
 
 // Serve frontend in production and support client-side routing
