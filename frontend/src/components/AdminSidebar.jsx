@@ -12,6 +12,7 @@ import {
   UtensilsCrossed,
   Settings,
   Truck,
+  Bell,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import './AdminSidebar.css';
@@ -28,6 +29,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
     { label: 'Foods', path: '/admin/foods', icon: UtensilsCrossed },
     { label: 'Riders', path: '/admin/riders', icon: Truck },
     { label: 'Orders', path: '/admin/orders', icon: ShoppingCart },
+    { label: 'Notifications', path: '/admin/notifications', icon: Bell },
     { label: 'Analytics', path: '/admin/analytics', icon: TrendingUp },
     { label: 'Settings', path: '/admin/settings', icon: Settings },
   ];

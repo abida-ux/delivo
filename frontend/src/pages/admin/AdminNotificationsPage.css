@@ -1,0 +1,9 @@
+.admin-notifications-page {
+  padding: 24px;
+  min-height: calc(100vh - 80px);
+}
+
+.admin-notifications-page > .admin-notification-sender {
+  margin: 0 auto;
+  max-width: 760px;
+}

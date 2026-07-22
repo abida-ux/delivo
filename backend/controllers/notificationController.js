@@ -261,10 +261,24 @@ exports.savePushSubscription = async (req, res) => {
       });
     }
 
+    const effectivePlatform = platform || 'web';
+
+    if (userId && endpoint) {
+      await PushSubscription.updateMany(
+        {
+          userId,
+          platform: effectivePlatform,
+          endpoint: { $ne: endpoint },
+          isActive: true,
+        },
+        { $set: { isActive: false } }
+      );
+    }
+
     const subscription = await PushSubscription.findOneAndUpdate(
-      { $or: [{ endpoint }, { fcmToken }] },
+      { endpoint },
       {
-        endpoint: endpoint || undefined,
+        endpoint,
         keys: endpoint
           ? {
               p256dh: keys?.p256dh,
@@ -272,7 +286,7 @@ exports.savePushSubscription = async (req, res) => {
             }
           : undefined,
         fcmToken,
-        platform: platform || 'web',
+        platform: effectivePlatform,
         userId,
         isActive: true,
       },
@@ -359,6 +373,16 @@ exports.registerFcmToken = async (req, res) => {
       });
     }
 
+    await PushSubscription.updateMany(
+      {
+        userId,
+        platform,
+        fcmToken: { $ne: fcmToken },
+        isActive: true,
+      },
+      { $set: { isActive: false } }
+    );
+
     const subscription = await PushSubscription.findOneAndUpdate(
       { fcmToken },
       {
@@ -366,11 +390,37 @@ exports.registerFcmToken = async (req, res) => {
         platform,
         userId,
         isActive: true,
+        endpoint: null,
+        keys: { p256dh: null, auth: null },
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
     console.log(`✅ FCM token registered for user ${userId}`);
+
+    try {
+      const { sendFcmMessage } = require('../utils/firebaseMessaging');
+      const user = await require('../models/User').findById(userId);
+
+      if (user) {
+        const welcomePayload = {
+          title: 'Welcome to Delivo! 🎉',
+          message: `Hi ${user.name}, your account has been created successfully. Start ordering your favorite food now!`,
+          data: {
+            eventType: 'account_created',
+            userId: userId.toString(),
+            recipientRole: 'customer',
+            clickAction: '/restaurants',
+          },
+          url: '/restaurants',
+        };
+
+        await sendFcmMessage({ fcmToken, payload: welcomePayload });
+        console.log(`✅ Welcome notification sent to new user ${userId} after FCM registration`);
+      }
+    } catch (pushError) {
+      console.warn(`⚠️ Welcome notification failed for user ${userId}:`, pushError.message);
+    }
 
     res.status(200).json({
       success: true,
@@ -382,6 +432,192 @@ exports.registerFcmToken = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error registering FCM token.',
+      error: error.message,
+    });
+  }
+};
+
+exports.sendTestNotification = async (req, res) => {
+  try {
+    const { fcmToken } = req.body || {};
+
+    if (!fcmToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'FCM token is required for testing.',
+      });
+    }
+
+    const { sendFcmMessage } = require('../utils/firebaseMessaging');
+
+    const testPayload = {
+      title: 'Test Notification from Delivo',
+      message: 'If you see this, Firebase push notifications are working! 🎉',
+      data: {
+        eventType: 'test',
+        orderId: 'test-notification',
+        recipientRole: 'test',
+        clickAction: '/notifications',
+      },
+      url: '/notifications',
+    };
+
+    console.log('📨 Sending test FCM notification...');
+    const result = await sendFcmMessage({ fcmToken, payload: testPayload });
+
+    if (result.ok) {
+      console.log('✅ Test notification sent successfully:', result.messageId);
+      return res.status(200).json({
+        success: true,
+        message: 'Test notification sent successfully!',
+        messageId: result.messageId,
+      });
+    }
+
+    console.error('❌ Test notification failed:', result.error?.message);
+    res.status(400).json({
+      success: false,
+      message: 'Failed to send test notification.',
+      error: result.error?.message || 'Unknown error',
+    });
+  } catch (error) {
+    console.error('❌ Error sending test notification:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending test notification.',
+      error: error.message,
+    });
+  }
+};
+
+exports.sendAdminNotification = async (req, res) => {
+  try {
+    const adminId = req.user?.id;
+    const { title, message, targetType = 'all', targetUserIds = [], targetRole } = req.body || {};
+
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated.',
+      });
+    }
+
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title and message are required.',
+      });
+    }
+
+    // Verify user is admin (optional - adjust based on your auth system)
+    const User = require('../models/User');
+    const adminUser = await User.findById(adminId);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only admins can send notifications.',
+      });
+    }
+
+    const { sendMulticastFcmMessages } = require('../utils/firebaseMessaging');
+    const Notification = require('../models/Notification');
+
+    let targetUsers = [];
+
+    // Determine target users
+    if (targetType === 'all') {
+      targetUsers = await User.find({}, '_id');
+    } else if (targetType === 'role' && targetRole) {
+      targetUsers = await User.find({ role: targetRole }, '_id');
+    } else if (targetType === 'specific' && targetUserIds.length > 0) {
+      targetUsers = await User.find({ _id: { $in: targetUserIds } }, '_id');
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid target type or no target users specified.',
+      });
+    }
+
+    if (targetUsers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No target users found.',
+      });
+    }
+
+    const notificationPayload = {
+      title,
+      message,
+      data: {
+        eventType: 'admin_broadcast',
+        sentBy: adminId.toString(),
+        sentAt: new Date().toISOString(),
+        clickAction: '/notifications',
+      },
+      url: '/notifications',
+    };
+
+    let sentCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    // Send to each user
+    for (const user of targetUsers) {
+      try {
+        // Get user's FCM tokens
+        const subscriptions = await PushSubscription.find({
+          userId: user._id,
+          isActive: true,
+          fcmToken: { $exists: true, $ne: null },
+        }).select('fcmToken');
+
+        if (subscriptions.length > 0) {
+          const fcmTokens = subscriptions.map((s) => s.fcmToken);
+          const result = await sendMulticastFcmMessages({
+            fcmTokens,
+            payload: notificationPayload,
+          });
+
+          if (result.sent > 0) {
+            sentCount += result.sent;
+          }
+          if (result.failed > 0) {
+            failedCount += result.failed;
+          }
+        }
+
+        // Create in-app notification record
+        await Notification.create({
+          userId: user._id,
+          title,
+          message,
+          type: 'admin_broadcast',
+          isRead: false,
+        });
+      } catch (userError) {
+        failedCount++;
+        errors.push(`Error sending to user ${user._id}: ${userError.message}`);
+      }
+    }
+
+    console.log(`✅ Admin broadcast notification sent: ${sentCount} push, ${targetUsers.length} in-app`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin notification sent successfully!',
+      stats: {
+        targetedUsers: targetUsers.length,
+        pushSent: sentCount,
+        pushFailed: failedCount,
+        inAppCreated: targetUsers.length,
+      },
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error('❌ Error sending admin notification:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending admin notification.',
       error: error.message,
     });
   }

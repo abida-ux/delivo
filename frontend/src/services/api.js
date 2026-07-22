@@ -190,6 +190,11 @@ export const sendTestPush = async (payload = {}) => {
   return res.data;
 };
 
+export const sendAdminNotification = async (data) => {
+  const res = await api.post('/notifications/admin/broadcast', data);
+  return res.data;
+};
+
 export const resendVerificationCode = async (data) => {
   const res = await api.post('/users/resend-verification-code', data);
   return res.data;
