@@ -6,7 +6,8 @@ const User = require('../models/User');
 
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
-const { buildNotificationPayload, createInAppNotification, sendPushToUser } = require('../utils/pushNotifications');
+const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
+
 
 // @desc Create order
 // @route POST /api/orders
@@ -164,6 +165,7 @@ exports.createOrder = async (req, res, next) => {
       await order.save();
 
       console.log('✅ M-Pesa STK push initiated:', order.checkoutRequestId);
+      sendOrderPaymentNotification(order, 'pending').catch(() => {});
     } catch (pushError) {
       const errorDetail = pushError.message || 'Unknown M-Pesa error';
       const isDuplicateSession = /Duplicated MSISDN|USSD Session|existing USSD/i.test(errorDetail);
@@ -174,6 +176,7 @@ exports.createOrder = async (req, res, next) => {
       await order.save();
 
       console.error('❌ M-Pesa STK push failed:', errorDetail);
+      sendOrderPaymentNotification(order, 'failed').catch(() => {});
 
       return res.status(502).json({
         success: false,
@@ -183,6 +186,7 @@ exports.createOrder = async (req, res, next) => {
         error: errorDetail,
       });
     }
+
 
     await order.populate('items.foodId');
 

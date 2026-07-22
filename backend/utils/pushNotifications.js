@@ -188,10 +188,64 @@ const dispatchOrderNotifications = async ({ order, recipientUsers = [], recipien
   return { recipients: uniqueRecipientIds };
 };
 
+const sendOrderPaymentNotification = async (order, status) => {
+  if (!order) return;
+  const orderIdShort = order._id ? order._id.toString().slice(-6).toUpperCase() : 'ORDER';
+  const amountStr = order.totalPrice ? `KES ${order.totalPrice}` : '';
+
+  let title = '';
+  let message = '';
+
+  if (status === 'completed' || status === 'confirmed') {
+    title = 'Payment Received! ✅';
+    message = `Your M-Pesa payment of ${amountStr} for order #${orderIdShort} was confirmed! The restaurant is preparing your food.`;
+  } else if (status === 'failed' || status === 'cancelled') {
+    title = 'Payment Failed ❌';
+    message = `M-Pesa payment for order #${orderIdShort} failed or was cancelled. Please try again from your cart.`;
+  } else {
+    title = 'Order Placed 🍕';
+    message = `Order #${orderIdShort} created! Check your phone for the M-Pesa PIN prompt.`;
+  }
+
+  const payload = {
+    title,
+    message,
+    icon: '/delivos.png',
+    badge: '/delivos.png',
+    url: '/customer/orders',
+    tag: 'delivo-order-payment',
+  };
+
+  try {
+    if (order.userId) {
+      await createInAppNotification({
+        userId: order.userId,
+        title,
+        message,
+        type: 'order',
+      });
+      await sendPushToUser({ userId: order.userId, payload });
+    }
+
+    // Also dispatch to active browser push subscriptions for guest / browser context
+    const activeSubs = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } })
+      .sort({ updatedAt: -1 })
+      .limit(5);
+
+    if (activeSubs.length > 0) {
+      await Promise.all(activeSubs.map((sub) => sendBrowserPush(sub, payload)));
+    }
+  } catch (err) {
+    console.error('❌ Error sending order payment notification:', err.message);
+  }
+};
+
 module.exports = {
   buildNotificationPayload,
   createInAppNotification,
   sendPushToUser,
   dispatchOrderNotifications,
   sendBrowserPush,
+  sendOrderPaymentNotification,
 };
+

@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const { sendMpesaStkPush, queryMpesaStkStatus } = require('../utils/mpesaService');
+const { sendOrderPaymentNotification } = require('../utils/pushNotifications');
 
 const normalizePhone = (phone = '') => phone.replace(/\D/g, '');
 
@@ -103,6 +104,8 @@ exports.handleMpesaCallback = async (req, res, next) => {
     await order.save();
 
     console.log(`✅ M-Pesa callback processed. Order ${order._id} status=${order.status}`);
+    sendOrderPaymentNotification(order, order.paymentStatus).catch(() => {});
+
     res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
   } catch (error) {
     next(error);
@@ -140,10 +143,12 @@ exports.handleMpesaStatus = async (req, res, next) => {
         order.transactionDate = transactionDate || order.transactionDate;
         order.paymentCallbackPayload = queryResponse;
         order.failureReason = '';
+        sendOrderPaymentNotification(order, 'completed').catch(() => {});
       } else if (result.isExplicitFailure) {
         order.paymentStatus = 'failed';
         order.status = 'cancelled';
         order.failureReason = resultDesc || 'M-Pesa payment failed or was cancelled';
+        sendOrderPaymentNotification(order, 'failed').catch(() => {});
       }
 
       order.updatedAt = new Date();
@@ -158,4 +163,5 @@ exports.handleMpesaStatus = async (req, res, next) => {
     next(error);
   }
 };
+
 
