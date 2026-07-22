@@ -688,26 +688,33 @@ exports.savePushSubscriptionPublic = async (req, res) => {
   }
 };
 
-// Public endpoint to trigger real Web Push from backend server to all active browser push subscriptions
+// Public endpoint to trigger real Web Push from backend server to the target device endpoint
 exports.sendPushNotificationPublic = async (req, res) => {
   try {
-    const { title, message } = req.body || {};
+    const { endpoint, title, message, tag } = req.body || {};
     const timeStr = new Date().toLocaleTimeString();
     const payload = {
       title: title || 'Delivo Web Push 🍕',
       message: message || `Real Web Push received from server at ${timeStr}!`,
+      tag: tag || 'delivo-refresh-alert',
       url: '/',
     };
 
-    const subscriptions = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } });
+    const filter = { isActive: true, endpoint: { $ne: null } };
+    if (endpoint) {
+      filter.endpoint = endpoint;
+    }
+
+    const subscriptions = await PushSubscription.find(filter);
 
     if (!subscriptions.length) {
       return res.status(200).json({
         success: true,
-        message: 'No active web push subscriptions found.',
+        message: 'No active web push subscription found for this device.',
         sent: 0,
       });
     }
+
 
     const results = await Promise.all(subscriptions.map((subscription) => sendBrowserPush(subscription, payload)));
     const sentCount = results.filter((r) => r.ok).length;

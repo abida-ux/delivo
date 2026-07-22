@@ -182,16 +182,18 @@ const registerAndTriggerRealServerWebPush = async () => {
     }
     sessionStorage.setItem('delivo_last_push_trigger', String(now));
 
-    // Trigger real VAPID Web Push from backend server
+    // Trigger real VAPID Web Push from backend server ONLY for this specific device endpoint!
     const triggerRes = await fetch(`${apiBase}/notifications/public-trigger-test`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        endpoint: subscription.endpoint,
         title: 'Delivo Web Push 🍕',
         message: `Notification active! (Refreshed at ${timeStr})`,
         tag: 'delivo-refresh-alert',
       }),
     });
+
 
     const result = await triggerRes.json();
     console.log('🚀 [WebPush] Server Web Push result:', result);
