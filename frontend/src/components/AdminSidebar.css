@@ -125,9 +125,7 @@
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
-  border-radius: 10px;
   transition: all 0.3s ease;
-  font-family: 'Poppins', sans-serif;
   justify-content: flex-start;
 }
 
@@ -169,7 +167,6 @@
   cursor: pointer;
   border-radius: 10px;
   transition: all 0.3s ease;
-  font-family: 'Poppins', sans-serif;
 }
 
 .logout-btn:hover {

@@ -1,12 +1,11 @@
 * {
   box-sizing: border-box;
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
 .home-wrapper {
   width: 100%;
   min-height: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+  background: var(--grad-hero-bg);
   overflow-x: hidden;
   padding-bottom: 80px;
 }
@@ -38,45 +37,52 @@
 }
 
 .btn-primary {
-  background: #000000;
-  color: #ffffff;
+  background: var(--color-black);
+  color: var(--color-white);
   border: none;
   font-weight: 600;
   font-size: 16px;
   padding: 16px 36px;
-  border-radius: 200px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-smooth);
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary:hover {
-  background: #222222;
-  transform: translateY(-2px);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
+  background: var(--grad-primary);
+  color: var(--color-black);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--shadow-glow-yellow);
 }
 
 .btn-secondary {
-  background: transparent;
-  color: #000000;
-  border: 2px solid #000000;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  color: var(--color-black);
+  border: 1.5px solid var(--color-gray-300);
   font-weight: 600;
   font-size: 16px;
   padding: 14px 34px;
-  border-radius: 100px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: transform 0.25s ease, background 0.25s ease;
+  transition: all var(--transition-smooth);
   white-space: nowrap;
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
+  background: var(--color-black);
+  color: var(--color-white);
+  border-color: var(--color-black);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 480px) {
@@ -100,18 +106,20 @@
   position: relative;
   width: 100%;
   min-height: 560px;
-  border-radius: 40px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(245, 179, 1, 0.06) 0%, rgba(255,255,255,0.95) 100%);
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(180deg, rgba(245, 179, 1, 0.08) 0%, rgba(255,255,255,0.95) 100%);
+  box-shadow: var(--shadow-premium);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  border: 1px solid var(--glass-border);
 }
 
 .hero-image-card:hover {
   transform: translateY(-8px);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.15);
 }
 
 .hero-food-image {
@@ -127,7 +135,6 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* warm tint to reduce purple in the hero asset and match brand */
   background: linear-gradient(180deg, rgba(245,179,1,0.06), rgba(255,107,74,0.04));
   mix-blend-mode: multiply;
 }
@@ -137,14 +144,18 @@
   top: 24px;
   left: 24px;
   z-index: 2;
-  background: rgba(255, 255, 255, 0.95);
-  color: #0f1c34;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-black);
   font-weight: 700;
-  padding: 12px 20px;
-  border-radius: 999px;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
   letter-spacing: 0.02em;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-md);
 }
+
 
 .hero-card-glow {
   position: absolute;

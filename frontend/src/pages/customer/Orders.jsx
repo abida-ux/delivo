@@ -97,6 +97,24 @@ const Orders = () => {
     };
 
     fetchUserOrders();
+
+    const interval = window.setInterval(fetchUserOrders, 10000);
+
+    const handleFocus = () => fetchUserOrders();
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        fetchUserOrders();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [user]);
 
   const getStatusColor = (order) => {

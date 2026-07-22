@@ -1,36 +1,28 @@
-import {useState} from 'react';
 import { Star, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
+import { useState } from 'react';
 import './FoodCard.css';
 
 const FoodCard = ({ food }) => {
-  const { addItem } = useCart();
+  const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
   const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
 
-  const handleAddToCart = async () => {
-    console.log('🛒 Starting to add item:', food.name);
-    // Add item to cart and wait for it
-    await addItem(food, quantity);
-    
-    // Immediately show "In Cart" button
-    console.log('🔵 Setting added=true');
-    setAdded(true);
-    console.log('✅ Item added, showing In Cart button');
-    
-    // Reset after 3 seconds
-    const timeout = setTimeout(() => {
-      console.log('⏰ Timeout: resetting to Add button');
-      setAdded(false);
-    }, 3000);
-    
-    return () => clearTimeout(timeout);
-  };
+  // Derive "in cart" state from actual cart context — no more fake 3-second timer
+  const cartItems = getCartItems();
+  const isInCart = cartItems.some(item => {
+    const id = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+    return id === food._id;
+  });
 
-  const handleGoToCart = () => {
-    openCart();
+  const restaurantName = typeof food.restaurant === 'object'
+    ? food.restaurant?.name
+    : food.restaurant || 'Restaurant';
+
+  const handleAddToCart = () => {
+    addItem(food, quantity);
+    setQuantity(1); // Reset quantity after adding
   };
 
   return (
@@ -50,16 +42,16 @@ const FoodCard = ({ food }) => {
       <div className="food-info">
         <div className="food-meta-head">
           <h3 className="food-name">{food.name}</h3>
-          <p className="food-vendor">{food.restaurant}</p>
+          <p className="food-vendor">{restaurantName}</p>
         </div>
 
         <div className="food-action-row">
           <span className="food-price">KES {food.price}</span>
 
-          {added ? (
+          {isInCart ? (
             <button
               className="go-to-cart-btn"
-              onClick={handleGoToCart}
+              onClick={openCart}
             >
               <ShoppingCart size={16} />
               In Cart

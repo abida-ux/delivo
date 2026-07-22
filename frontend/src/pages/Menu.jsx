@@ -58,17 +58,28 @@ const Menu = () => {
     }
   };
 
+  const normalizeText = (text) => text?.toString().trim().toLowerCase() || '';
+
   const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
+    const term = e.target.value;
+    const normalizedTerm = normalizeText(term);
     setSearchTerm(term);
-    filterFoods(term, selectedCategory);
+    filterFoods(normalizedTerm, selectedCategory);
 
     // Generate real-time suggestions
-    if (term.length > 0) {
-      const filtered = foods.filter((food) =>
-        food.name?.toLowerCase().includes(term) ||
-        food.description?.toLowerCase().includes(term)
-      );
+    if (normalizedTerm.length > 0) {
+      const queryWords = normalizedTerm.split(/\s+/).filter(Boolean);
+      const filtered = foods.filter((food) => {
+        const nameWords = (food.name || '').toLowerCase().split(/\s+/).filter(Boolean);
+        const descriptionWords = (food.description || '').toLowerCase().split(/\s+/).filter(Boolean);
+
+        return queryWords.every((queryWord) => {
+          return (
+            nameWords.some((word) => word.startsWith(queryWord)) ||
+            descriptionWords.some((word) => word.startsWith(queryWord))
+          );
+        });
+      });
       setSuggestions(filtered.slice(0, 5)); // Show top 5 suggestions
       setShowSuggestions(true);
     } else {
@@ -91,14 +102,15 @@ const Menu = () => {
 
   const filterFoods = (search, category) => {
     let filtered = foods;
+    const normalizedSearch = search?.toString().toLowerCase().trim() || '';
 
     // Search by name or description
-    if (search) {
-      filtered = filtered.filter(
-        (food) =>
-          food.name?.toLowerCase().includes(search) ||
-          food.description?.toLowerCase().includes(search)
-      );
+    if (normalizedSearch) {
+      const searchWords = normalizedSearch.split(/\s+/).filter(Boolean);
+      filtered = filtered.filter((food) => {
+        const haystack = `${food.name || ''} ${food.description || ''}`.toLowerCase();
+        return searchWords.every((word) => haystack.includes(word));
+      });
     }
 
     setFilteredFoods(filtered);
@@ -152,7 +164,8 @@ const Menu = () => {
                 <div
                   key={food._id}
                   className="suggestion-item"
-                  onClick={() => handleSelectSuggestion(food)}
+                  onMouseDown={() => handleSelectSuggestion(food)}
+                  onTouchStart={() => handleSelectSuggestion(food)}
                 >
                   <img
                     src={resolveImageUrl(food.image)}

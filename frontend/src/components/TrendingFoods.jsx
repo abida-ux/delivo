@@ -1,25 +1,16 @@
 import {useEffect, useRef, useState, useMemo} from 'react';
-import { Star, Plus, ChevronLeft, ChevronRight, ShoppingCart, X } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { useCartUI } from '../context/CartUIContext';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { getAllFoods } from '../services/api';
+import FoodCard from './FoodCard';
 import './TrendingFoods.css';
 
 const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false }) => {
   const scrollContainerRef = useRef(null);
-  const { addItem, getCartItems } = useCart();
-  const { openCart } = useCartUI();
+  const autoScrollRef = useRef(null);
 
   const [trendingItems, setTrendingItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Get cart items to check if item is in cart
-  const cartItems = getCartItems();
-  const cartItemIds = cartItems.map(item => {
-    // foodId can be either a string or an object (when populated)
-    return typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
-  }) || [];
 
   useEffect(() => {
     const fetchFoods = async () => {
@@ -41,14 +32,27 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
     };
 
     fetchFoods();
+  }, []);
 
-    // Auto-scroll every 8 seconds
-    const autoScrollInterval = setInterval(() => {
+  // Auto-scroll every 8 seconds — pauses on hover
+  useEffect(() => {
+    const startAutoScroll = () => {
+      autoScrollRef.current = setInterval(() => {
+        handleScroll('right');
+      }, 8000);
+    };
+
+    startAutoScroll();
+    return () => clearInterval(autoScrollRef.current);
+  }, []);
+
+  const pauseAutoScroll = () => clearInterval(autoScrollRef.current);
+  const resumeAutoScroll = () => {
+    clearInterval(autoScrollRef.current);
+    autoScrollRef.current = setInterval(() => {
       handleScroll('right');
     }, 8000);
-
-    return () => clearInterval(autoScrollInterval);
-  }, []);
+  };
 
   // Filter foods based on category and search term
   const filteredItems = useMemo(() => {
@@ -87,10 +91,6 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
         behavior: 'smooth',
       });
     }
-  };
-
-  const handleAddToCart = (item) => {
-    addItem(item, 1);
   };
 
   if (error) {
@@ -173,6 +173,8 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
         <div
           className="trending-carousel-track"
           ref={scrollContainerRef}
+          onMouseEnter={pauseAutoScroll}
+          onMouseLeave={resumeAutoScroll}
         >
           {filteredItems.length === 0 ? (
             <p className="loading-text">
@@ -182,56 +184,7 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
             </p>
           ) : (
             filteredItems.map((item) => (
-              <div key={item._id} className="food-card">
-                <div className="food-image-wrapper">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="food-image"
-                  />
-
-                  <div className="food-rating-tag">
-                    <Star size={12} className="star-icon-filled" />
-                    <span>{item.rating}</span>
-                  </div>
-                </div>
-
-                <div className="food-info">
-                  <div className="food-meta-head">
-                    <h3 className="food-name">{item.name}</h3>
-                    <p className="food-vendor">
-                      {typeof item.restaurant === 'object' 
-                        ? item.restaurant?.name 
-                        : item.restaurant || 'Restaurant'}
-                    </p>
-                  </div>
-
-                  <div className="food-action-row">
-                    <span className="food-price">
-                      KES {item.price}
-                    </span>
-
-                    {cartItemIds.includes(item._id) ? (
-                      <button
-                        className="go-to-cart-ui"
-                        onClick={openCart}
-                      >
-                        <ShoppingCart size={18} />
-                        <span>Go to Cart</span>
-                      </button>
-                    ) : (
-                      <button
-                        className="add-to-cart-ui"
-                        onClick={() => handleAddToCart(item)}
-                        aria-label={`Add ${item.name} to cart`}
-                      >
-                        <Plus size={18} />
-                        <span>Add</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <FoodCard key={item._id} food={item} />
             ))
           )}
         </div>

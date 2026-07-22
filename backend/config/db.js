@@ -1,28 +1,32 @@
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
+const connectDB = async (retryCount = 0) => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       retryWrites: true,
       w: 'majority',
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
-      minPoolSize: 2,
+      connectTimeoutMS: 30000,
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     return conn;
   } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    console.error('🔧 Troubleshooting tips:');
-    console.error('1. Check if your IP is whitelisted in MongoDB Atlas (Security -> IP Whitelist)');
-    console.error('2. Verify the MONGO_URI environment variable');
-    console.error('3. Ensure MongoDB Atlas cluster is active');
-    process.exit(1);
+    console.error(`❌ MongoDB Connection Error (attempt ${retryCount + 1}): ${error.message}`);
+
+    if (retryCount < 5) {
+      console.log('🔄 Retrying MongoDB connection in 3 seconds...');
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return connectDB(retryCount + 1);
+    } else {
+      console.error('⚠️ Could not establish connection to MongoDB after 5 retries. Background reconnects will continue.');
+    }
   }
 };
 
 module.exports = connectDB;
+
+

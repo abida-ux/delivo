@@ -58,7 +58,7 @@ const OrderDetails = () => {
   };
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId) return undefined;
 
     const fetchOrder = async () => {
       try {
@@ -83,6 +83,24 @@ const OrderDetails = () => {
     };
 
     fetchOrder();
+
+    const interval = window.setInterval(fetchOrder, 10000);
+
+    const handleFocus = () => fetchOrder();
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        fetchOrder();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [orderId, user]);
 
   const getStatusLabel = () => {

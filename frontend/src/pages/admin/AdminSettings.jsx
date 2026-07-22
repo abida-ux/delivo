@@ -161,6 +161,13 @@ const AdminSettings = () => {
     try {
       await updateAppSettings(settings);
 
+      try {
+        localStorage.setItem('app_settings_updated', Date.now().toString());
+        window.dispatchEvent(new Event('app_settings_updated'));
+      } catch (e) {
+        // ignore storage errors
+      }
+
       if (settings.promoNotifications && settings.notificationMessage?.trim()) {
         try {
           await api.post('/notifications/create', {

@@ -1,11 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 .categories-section {
   max-width: 1440px;
   margin: 0 auto;
   padding: 28px 60px;
   background-color: #ffffff;
-  font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
   position: relative;
 }
@@ -84,69 +81,77 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 8px 20px 8px 10px;
-  border-radius: 100px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  padding: 10px 22px 10px 12px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-smooth);
 }
 
 .category-icon-wrapper {
-  width: 40px;
-  height: 40px;
-  background-color: transparent;
+  width: 42px;
+  height: 42px;
+  background-color: var(--color-gray-100);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #333;
-  transition: all 0.3s ease;
+  color: var(--color-black);
+  transition: all var(--transition-smooth);
 }
 
 .category-icon {
-  color: #333;
-  stroke-width: 1.5;
+  color: var(--color-black);
+  stroke-width: 1.8;
+  transition: color var(--transition-fast);
 }
 
 .category-name {
   font-size: 14px;
   font-weight: 600;
-  color: #000000;
+  color: var(--color-black);
   white-space: nowrap;
 }
 
 /* HOVER EFFECTS & GESTURES */
 .category-pill-card:hover {
-  transform: translateY(-3px) scale(1.02);
-  border-color: #ff6b35;
-  box-shadow: 0 12px 24px rgba(255, 107, 53, 0.12);
+  transform: translateY(-4px) scale(1.03);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow-yellow);
 }
 
 .category-pill-card:hover .category-icon-wrapper {
-  background-color: transparent;
+  background-color: rgba(245, 179, 1, 0.2);
 }
 
 .category-pill-card:hover .category-icon {
-  color: #ff6b35;
+  color: var(--color-primary-dark);
 }
 
 /* SELECTED STATE */
 .category-pill-card.selected {
-  background: #ff6b35;
-  border-color: #ff6b35;
-  color: white;
-  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.25);
+  background: var(--grad-primary);
+  border-color: transparent;
+  color: var(--color-black);
+  box-shadow: var(--shadow-glow-yellow);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.category-pill-card.selected .category-icon-wrapper {
+  background-color: var(--color-black);
 }
 
 .category-pill-card.selected .category-icon {
-  color: white;
+  color: var(--color-white);
 }
 
 .category-pill-card.selected .category-name {
-  color: white;
+  color: var(--color-black);
+  font-weight: 700;
 }
+
 
 /* RESPONSIVE LAYOUT RESPONSES */
 @media (max-width: 1200px) {

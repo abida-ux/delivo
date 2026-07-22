@@ -1,15 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 const fallbackFirebaseConfig = {
-  apiKey: 'AIzaSyAeAZyhCK_pS8uCWvCH9wiSmBvgKX6dHAU',
-  authDomain: 'delivo-73fab.firebaseapp.com',
-  projectId: 'delivo-73fab',
-  storageBucket: 'delivo-73fab.firebasestorage.app',
-  messagingSenderId: '816710185546',
-  appId: '1:816710185546:web:50caf29f09910c4dbdacb3',
-  measurementId: 'G-FLNP8FRK9Q',
+  apiKey: 'AIzaSyA41-p0LVWmexu4jPS48a7UF6iXMVmRlt8',
+  authDomain: 'web-push-e48bc.firebaseapp.com',
+  projectId: 'web-push-e48bc',
+  storageBucket: 'web-push-e48bc.firebasestorage.app',
+  messagingSenderId: '653494159220',
+  appId: '1:653494159220:web:1bba64e4015c4d2f714e21',
+  measurementId: 'G-QCY4PMD9XS',
 };
 
 const resolveFirebaseConfig = () => ({
@@ -21,6 +20,7 @@ const resolveFirebaseConfig = () => ({
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fallbackFirebaseConfig.messagingSenderId,
   appId: import.meta.env.VITE_FIREBASE_APP_ID || fallbackFirebaseConfig.appId,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || fallbackFirebaseConfig.measurementId,
+  vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || '',
 });
 
 // Firebase configuration - from environment variables with safe fallbacks
@@ -28,7 +28,6 @@ const firebaseConfig = resolveFirebaseConfig();
 
 let firebaseApp = null;
 let messaging = null;
-let analytics = null;
 
 export const initializeFirebase = () => {
   if (firebaseApp) {
@@ -36,19 +35,18 @@ export const initializeFirebase = () => {
   }
 
   if (!firebaseConfig.projectId) {
-    console.warn('⚠️ Firebase config incomplete. FCM notifications will not work.');
-    console.warn('   Set VITE_FIREBASE_* environment variables to enable FCM.');
+    console.warn('[FCM] Firebase config incomplete. FCM notifications will not work.');
+    console.warn('      Set VITE_FIREBASE_* environment variables to enable FCM.');
     return null;
   }
 
   try {
     firebaseApp = initializeApp(firebaseConfig);
     messaging = getMessaging(firebaseApp);
-    analytics = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ? getAnalytics(firebaseApp) : null;
-    console.log('✅ Firebase initialized successfully');
+    console.log('[FCM] Firebase initialized successfully');
     return firebaseApp;
   } catch (error) {
-    console.error('❌ Firebase initialization failed:', error.message);
+    console.error('[FCM] Firebase initialization failed:', error.message);
     return null;
   }
 };
@@ -62,59 +60,62 @@ export const getMessagingInstance = () => {
 
 export const requestFcmToken = async () => {
   if (!messaging) {
-    console.warn('⚠️ Firebase messaging not initialized');
+    console.warn('[FCM] Firebase messaging not initialized');
     return null;
   }
 
   try {
     // Check if service worker is available
     if (!('serviceWorker' in navigator)) {
-      console.warn('⚠️ Service Workers not supported');
+      console.warn('[FCM] Service Workers not supported');
       return null;
     }
 
-    const firebaseConfig = resolveFirebaseConfig();
+    const currentConfig = resolveFirebaseConfig();
 
+    // Register the unified service worker (sw.js handles both caching and FCM)
     let registration;
     try {
-      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('✅ Firebase Service Worker registered');
+      registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('[FCM] Service Worker registered:', registration.scope);
     } catch (swError) {
-      console.warn('⚠️ Failed to register Firebase service worker:', swError.message);
+      console.warn('[FCM] Failed to register service worker:', swError.message);
     }
 
-    const readyRegistration = await navigator.serviceWorker.ready;
-    if (readyRegistration?.active) {
-      readyRegistration.active.postMessage({ type: 'INIT_FCM', config: firebaseConfig });
+    const serviceWorkerRegistration = registration || await navigator.serviceWorker.ready;
+
+    // Send Firebase config to the service worker so it can initialize FCM
+    if (serviceWorkerRegistration?.active) {
+      serviceWorkerRegistration.active.postMessage({ type: 'INIT_FCM', config: currentConfig });
     }
 
     const token = await getToken(messaging, {
-      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: readyRegistration,
+      serviceWorkerRegistration,
+      vapidKey: currentConfig.vapidKey,
     });
 
     if (token) {
-      console.log('✅ FCM token received:', token.substring(0, 20) + '...');
+      console.log('[FCM] Token received:', token.substring(0, 20) + '...');
       return token;
     } else {
-      console.warn('⚠️ No FCM token generated');
+      console.warn('[FCM] No token generated');
       return null;
     }
   } catch (error) {
-    console.error('❌ Error requesting FCM token:', error.message);
+    console.error('[FCM] Error requesting token:', error.message);
     return null;
   }
 };
 
 export const listenForFcmMessages = (callback) => {
   if (!messaging) {
-    console.warn('⚠️ Firebase messaging not initialized');
+    console.warn('[FCM] Firebase messaging not initialized');
     return null;
   }
 
   try {
     return onMessage(messaging, (payload) => {
-      console.log('📬 Foreground FCM message received:', payload);
+      console.log('[FCM] Foreground message received:', payload);
 
       const notificationData = {
         title: payload.notification?.title || 'Delivo',
@@ -126,16 +127,17 @@ export const listenForFcmMessages = (callback) => {
         callback(notificationData);
       }
 
+      // Also show a native notification for foreground messages
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(notificationData.title, {
           body: notificationData.message,
-          icon: '/favicon.ico',
+          icon: '/delivos.png',
           data: notificationData.data,
         });
       }
     });
   } catch (error) {
-    console.error('❌ Error listening for FCM messages:', error.message);
+    console.error('[FCM] Error listening for messages:', error.message);
     return null;
   }
 };
@@ -146,11 +148,26 @@ export const saveFcmToken = async (fcmToken, userId) => {
   }
 
   try {
-    const response = await fetch('/api/notifications/fcm/register', {
+    const authToken = localStorage.getItem('token');
+    if (!authToken) {
+      console.warn('[FCM] No auth token found, cannot save FCM token to backend');
+      return null;
+    }
+
+    // Use the same API URL resolution as the main api module
+    let apiBase = '/api';
+    if (!import.meta.env.DEV) {
+      const rawUrl = import.meta.env.VITE_API_URL?.trim();
+      if (rawUrl) {
+        apiBase = rawUrl.replace(/\/+$/, '');
+      }
+    }
+
+    const response = await fetch(`${apiBase}/notifications/fcm/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         fcmToken,
@@ -161,14 +178,48 @@ export const saveFcmToken = async (fcmToken, userId) => {
 
     const result = await response.json();
     if (result.success) {
-      console.log('✅ FCM token saved to database');
+      console.log('[FCM] Token saved to backend');
       return result;
     }
 
-    console.warn('⚠️ Failed to save FCM token:', result.message);
+    console.warn('[FCM] Failed to save token:', result.message);
     return null;
   } catch (error) {
-    console.error('❌ Error saving FCM token:', error.message);
+    console.error('[FCM] Error saving token:', error.message);
+    return null;
+  }
+};
+
+export const requestNotificationPermissionAndRegister = async () => {
+  try {
+    if (!('Notification' in window)) {
+      console.warn('[FCM] Browser notifications not supported');
+      return null;
+    }
+
+    if (Notification.permission === 'denied') {
+      console.warn('[FCM] Notifications blocked by user');
+      return null;
+    }
+
+    if (Notification.permission !== 'granted') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.log('[FCM] User declined notification permission');
+        return null;
+      }
+      console.log('[FCM] Notification permission granted');
+    }
+
+    const token = await requestFcmToken();
+    if (token) {
+      console.log('[FCM] Token obtained after permission granted');
+      return token;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[FCM] Error requesting notification permission:', error.message);
     return null;
   }
 };
@@ -179,4 +230,5 @@ export default {
   requestFcmToken,
   listenForFcmMessages,
   saveFcmToken,
+  requestNotificationPermissionAndRegister,
 };

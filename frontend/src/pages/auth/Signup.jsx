@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { registerUser, verifyEmail, resendVerificationCode } from '../../services/api';
+import { requestNotificationPermissionAndRegister } from '../../services/firebaseMessaging';
 import { useNavigate } from 'react-router-dom';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import './Auth.css';
@@ -91,6 +92,10 @@ const Signup = ({ isModal = false }) => {
       if (remainingDelay > 0) {
         await new Promise((resolve) => setTimeout(resolve, remainingDelay));
       }
+
+      // Request notification permission after signup
+      console.log('[auth] requesting notification permission after signup');
+      await requestNotificationPermissionAndRegister();
 
       setFormData((prev) => ({ ...emptyForm }));
 

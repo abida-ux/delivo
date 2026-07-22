@@ -1,11 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 .how-it-works-section {
   position: relative;
   width: 100%;
   padding: 60px 40px;
   background-color: #ffffff;
-  font-family: 'Poppins', sans-serif;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -154,13 +151,19 @@
 .step-card {
   position: relative;
   z-index: 2;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
-  border-radius: 20px;
-  padding: 24px 20px;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--color-white);
+  border: 1px solid var(--glass-border-subtle);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  padding: 26px 22px;
+  transition: all var(--transition-smooth);
   height: 100%;
+}
+
+.step-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(245, 179, 1, 0.35);
 }
 
 .step-card-header {
@@ -174,28 +177,36 @@
 .step-number-badge {
   font-size: 12px;
   font-weight: 700;
-  color: #f5b301;
-  background: #fffdf0;
-  padding: 4px 10px;
-  border-radius: 100px;
-  border: 1px solid rgba(245, 179, 1, 0.15);
+  color: var(--color-black);
+  background: var(--grad-primary);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 10px rgba(245, 179, 1, 0.25);
   flex-shrink: 0;
 }
 
 .step-icon-panel {
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, #fffdf0 0%, #fff9e6 100%);
-  border: 1.5px solid rgba(245, 179, 1, 0.2);
-  color: #f5b301;
-  border-radius: 16px;
+  width: 54px;
+  height: 54px;
+  background: var(--color-gray-50);
+  border: 1.5px solid rgba(245, 179, 1, 0.25);
+  color: var(--color-primary-dark);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(245, 179, 1, 0.1);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-bounce);
   flex-shrink: 0;
 }
+
+.step-card:hover .step-icon-panel {
+  background: var(--color-black);
+  color: var(--color-primary);
+  transform: scale(1.1) rotate(-4deg);
+  box-shadow: var(--shadow-glow-yellow);
+}
+
 
 .step-card-body {
   display: flex;

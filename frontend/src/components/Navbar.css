@@ -1,23 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 :root {
-  --bg-glass: rgba(255, 255, 255, 0.45);
-  --bg-glass-scrolled: rgba(255, 255, 255, 0.85);
-  --border-glass: rgba(255, 255, 255, 0.6);
-  --shadow-premium: 0 16px 40px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --text-main: #000000;
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --bg-glass-scrolled: rgba(255, 255, 255, 0.92);
+  --border-glass: rgba(255, 255, 255, 0.8);
+  --shadow-premium: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --text-main: #111111;
   --text-muted: #555555;
-  --accent-yellow: #FFC700;
-  --accent-orange-glow: rgba(255, 138, 0, 0.15);
+  --accent-yellow: #f5b301;
+  --accent-orange-glow: rgba(255, 107, 74, 0.2);
 }
 
-/* Remove default focus outline for all buttons */
+/* Allow keyboard focus to remain visible, hide for mouse/touch */
 button {
-  outline: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-button:focus {
+button:focus:not(:focus-visible) {
   outline: none;
   box-shadow: none;
 }
@@ -66,22 +63,24 @@ button:focus {
   margin: 0 auto;
   height: 64px;
   background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--border-glass);
   border-radius: 100px;
   box-shadow: var(--shadow-premium);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  transition: background 0.4s ease, border-color 0.4s ease;
+  padding: 0 24px;
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .navbar-container.scrolled .navbar-glass {
   background: var(--bg-glass-scrolled);
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
 }
+
 
 /* LEFT SIDE: Logo */
 .navbar-left {
@@ -113,7 +112,6 @@ button:focus {
 }
 
 .brand-name {
-  font-family: 'Poppins', sans-serif;
   font-weight: 700;
   font-size: 22px;
   color: var(--text-main);
@@ -134,7 +132,6 @@ button:focus {
 .nav-link {
   background: transparent;
   border: none;
-  font-family: 'Poppins', sans-serif;
   font-weight: 500;
   font-size: 14px;
   color: var(--text-muted);
@@ -197,7 +194,6 @@ button:focus {
   border: 1px solid transparent;
   border-radius: 100px;
   padding: 0 16px 0 44px;
-  font-family: 'Poppins', sans-serif;
   font-size: 13px;
   color: var(--text-main);
   outline: none;
@@ -583,7 +579,6 @@ button:focus {
   border: none;
   padding: 12px 28px;
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -837,7 +832,6 @@ button:focus {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease;
-  font-family: 'Poppins', sans-serif;
   outline: none;
 }
 
@@ -896,14 +890,12 @@ button:focus {
   font-weight: 600;
   margin: 0 0 8px 0;
   color: #000;
-  font-family: 'Poppins', sans-serif;
 }
 
 .logout-confirm-dialog p {
   font-size: 14px;
   color: #666;
   margin: 0 0 24px 0;
-  font-family: 'Poppins', sans-serif;
 }
 
 .logout-confirm-actions {
@@ -920,7 +912,6 @@ button:focus {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
   transition: all 0.2s ease;
   flex: 1;
 }

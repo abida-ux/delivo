@@ -63,11 +63,12 @@ const getCallbackUrl = () => {
 };
 
 const getAccountReference = (orderReference = '') => {
-  const prefix = process.env.MPESA_ACCOUNT_REFERENCE_PREFIX || process.env.ACCOUNT_REFERENCE || 'DELIVO-ORDER';
-  return orderReference ? `${prefix}-${orderReference}` : prefix;
+  const raw = String(orderReference).replace(/[^a-zA-Z0-9]/g, '');
+  const suffix = raw ? raw.slice(-8) : 'ORD';
+  return `DLV${suffix}`.slice(0, 12);
 };
 
-const getTransactionDesc = () => process.env.MPESA_TRANSACTION_DESC || process.env.TRANSACTION_DESC || 'Payment for Delivo order';
+const getTransactionDesc = () => 'Delivo Pay';
 const getTransactionType = () => process.env.MPESA_TRANSACTION_TYPE || process.env.TRANSACTION_TYPE || 'CustomerPayBillOnline';
 
 const getAccessToken = async () => {
@@ -105,8 +106,9 @@ const sendMpesaStkPush = async ({ phoneNumber, amount, accountReference, transac
     PhoneNumber: phone,
     CallBackURL: callbackUrl,
     AccountReference: getAccountReference(accountReference),
-    TransactionDesc: transactionDesc || getTransactionDesc(),
+    TransactionDesc: (transactionDesc || getTransactionDesc()).slice(0, 13),
   };
+
 
   const token = await getAccessToken();
   const url = `${getBaseUrl()}/mpesa/stkpush/v1/processrequest`;

@@ -72,13 +72,35 @@ const sendBrowserPush = async (subscription, payload) => {
       vapidKeys.privateKey
     );
 
-    await webPush.sendNotification(subscription, JSON.stringify(payload));
+    const pushOptions = {
+      TTL: 60,
+      urgency: 'high',
+      headers: {
+        Urgency: 'high',
+      },
+    };
+
+    await webPush.sendNotification(subscription, JSON.stringify(payload), pushOptions);
+    console.log(`⚡ Instant Web Push sent to endpoint: ${subscription.endpoint.substring(0, 35)}...`);
     return { ok: true };
+
   } catch (error) {
-    console.error('❌ Browser push delivery failed', error.message);
-    return { ok: false, error };
+    console.error('❌ Browser push delivery failed:', error.statusCode, error.message);
+
+    // If subscription is expired (410 Gone or 404 Not Found), deactivate it
+    if (error.statusCode === 410 || error.statusCode === 404) {
+      try {
+        await PushSubscription.updateOne({ _id: subscription._id }, { isActive: false });
+        console.log(`⚠️ Deactivated expired push subscription (${subscription._id})`);
+      } catch (dbErr) {
+        // ignore db error
+      }
+    }
+
+    return { ok: false, error: error.message };
   }
 };
+
 
 // Get user's notifications
 exports.getNotifications = async (req, res) => {
@@ -622,4 +644,119 @@ exports.sendAdminNotification = async (req, res) => {
     });
   }
 };
+
+// Public endpoint for registering browser push subscriptions (allows guest / testing users)
+exports.savePushSubscriptionPublic = async (req, res) => {
+  try {
+    const { endpoint, keys, platform } = req.body || {};
+
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+      return res.status(400).json({
+        success: false,
+        message: 'Subscription endpoint and keys are required.',
+      });
+    }
+
+    const subscription = await PushSubscription.findOneAndUpdate(
+      { endpoint },
+      {
+        endpoint,
+        keys: {
+          p256dh: keys.p256dh,
+          auth: keys.auth,
+        },
+        platform: platform || 'web',
+        isActive: true,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    console.log('✅ Public Web Push subscription registered:', endpoint.substring(0, 30));
+
+    res.status(200).json({
+      success: true,
+      message: 'Web push subscription saved successfully.',
+      subscription,
+    });
+  } catch (error) {
+    console.error('❌ Error saving public push subscription:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error saving push subscription.',
+      error: error.message,
+    });
+  }
+};
+
+// Public endpoint to trigger real Web Push from backend server to all active browser push subscriptions
+exports.sendPushNotificationPublic = async (req, res) => {
+  try {
+    const { title, message } = req.body || {};
+    const timeStr = new Date().toLocaleTimeString();
+    const payload = {
+      title: title || 'Delivo Web Push 🍕',
+      message: message || `Real Web Push received from server at ${timeStr}!`,
+      url: '/',
+    };
+
+    const subscriptions = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } });
+
+    if (!subscriptions.length) {
+      return res.status(200).json({
+        success: true,
+        message: 'No active web push subscriptions found.',
+        sent: 0,
+      });
+    }
+
+    const results = await Promise.all(subscriptions.map((subscription) => sendBrowserPush(subscription, payload)));
+    const sentCount = results.filter((r) => r.ok).length;
+
+    console.log(`✅ Real Web Push dispatched to ${sentCount}/${subscriptions.length} subscribers`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Push notifications dispatched from server.',
+      sent: sentCount,
+      total: subscriptions.length,
+    });
+  } catch (error) {
+    console.error('❌ Error sending public push notification:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error sending push notification.',
+      error: error.message,
+    });
+  }
+};
+
+
+// Debug: return push subscriptions for the authenticated user
+exports.getMyPushSubscriptions = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
+
+    const subs = await PushSubscription.find({ userId });
+    res.status(200).json({ success: true, subscriptions: subs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching subscriptions', error: error.message });
+  }
+};
+
+// Debug: return all push subscriptions (development only)
+exports.debugAllPushSubscriptions = async (req, res) => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ success: false, message: 'Forbidden in production' });
+    }
+    const subs = await PushSubscription.find({}).limit(200).lean();
+    res.status(200).json({ success: true, total: subs.length, subscriptions: subs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching subscriptions', error: error.message });
+  }
+};
+
+
+
 

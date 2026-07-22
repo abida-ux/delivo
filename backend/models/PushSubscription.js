@@ -10,7 +10,6 @@ const PushSubscriptionSchema = new mongoose.Schema({
     type: String,
     trim: true,
     sparse: true,
-    index: true,
   },
   keys: {
     p256dh: {
@@ -26,7 +25,6 @@ const PushSubscriptionSchema = new mongoose.Schema({
     type: String,
     trim: true,
     sparse: true,
-    index: true,
   },
   platform: {
     type: String,

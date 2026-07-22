@@ -6,6 +6,7 @@ const PwaInstallPrompt = () => {
   const [swWaiting, setSwWaiting] = useState(null);
   const [neverShow, setNeverShow] = useState(() => localStorage.getItem('delivo_pwa_never_show') === 'true');
   const [installHintVisible, setInstallHintVisible] = useState(false);
+  const [showNeverShowMessage, setShowNeverShowMessage] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -16,27 +17,23 @@ const PwaInstallPrompt = () => {
 
     if (neverShow) {
       setIsVisible(false);
-      setInstallHintVisible(false);
     }
 
     const registerServiceWorker = async () => {
       try {
         const reg = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`);
 
-        // handle updatefound
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // new update available
                 setSwWaiting(reg.waiting || newWorker);
               }
             });
           }
         });
 
-        // if already waiting
         if (reg.waiting) setSwWaiting(reg.waiting);
       } catch (error) {
         console.error('Service worker registration failed', error);
@@ -46,14 +43,25 @@ const PwaInstallPrompt = () => {
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault();
       setDeferredPrompt(event);
-      // don't show immediate big banner; show small CTA in header instead
-      if (!neverShow) setIsVisible(true);
+      if (!neverShow) {
+        setIsVisible(true);
+      }
     };
 
     const handleShowInstallPrompt = (event) => {
       const manual = event?.detail?.manual;
       if (neverShow && !manual) return;
       setIsVisible(true);
+    };
+
+    const handleInstallFromSettings = () => {
+      setIsVisible(true);
+      if (!deferredPrompt) {
+        setMessage('Your browser may show the install option from the address bar. Choose Install to download Delivo.');
+        return;
+      }
+
+      handleInstall();
     };
 
     const handleAppInstalled = () => {
@@ -64,41 +72,34 @@ const PwaInstallPrompt = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('delivo-show-install', handleShowInstallPrompt);
+    window.addEventListener('delivo-install-app', handleInstallFromSettings);
 
     registerServiceWorker();
 
-    const timer = window.setTimeout(() => {
-      // show small CTA after a short delay if no beforeinstallprompt fired
-      if (!deferredPrompt && !neverShow) {
-        setIsVisible(true);
-      }
-    }, 8000);
-
-    const onControllerChange = () => {
-      window.location.reload();
-    };
-
-    navigator.serviceWorker.addEventListener && navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
-
     return () => {
-      window.clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('delivo-show-install', handleShowInstallPrompt);
-      navigator.serviceWorker.removeEventListener && navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      window.removeEventListener('delivo-install-app', handleInstallFromSettings);
     };
-  }, [deferredPrompt, neverShow]);
+  }, []);
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
       setMessage('If installation is not available here, open Settings and tap Download App.');
       return;
     }
-    deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      setIsVisible(false);
-      setDeferredPrompt(null);
+
+    try {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setIsVisible(false);
+        setDeferredPrompt(null);
+      }
+    } catch (error) {
+      console.error('Install prompt failed:', error);
+      setMessage('Install is not available right now. You can still use the Download App option from Settings.');
     }
   };
 
@@ -108,22 +109,15 @@ const PwaInstallPrompt = () => {
     setIsVisible(false);
     setDeferredPrompt(null);
     setInstallHintVisible(true);
-    setMessage('App install is still available in Settings. Tap Download App when you are ready.');
+    setShowNeverShowMessage(true);
+    setMessage('You can always download the Delivo app from the Download App button in Settings.');
   };
 
   const handleDismissHint = () => {
     setInstallHintVisible(false);
+    setShowNeverShowMessage(false);
     setMessage('');
   };
-
-  useEffect(() => {
-    if (!installHintVisible) return undefined;
-    const hideTimer = window.setTimeout(() => {
-      setInstallHintVisible(false);
-      setMessage('');
-    }, 7000);
-    return () => window.clearTimeout(hideTimer);
-  }, [installHintVisible]);
 
   const handleUpdate = () => {
     if (!swWaiting) return;
@@ -133,7 +127,7 @@ const PwaInstallPrompt = () => {
   // Small bottom CTA and manual install hint
   return (
     <>
-      {(isVisible || installHintVisible) && (
+      {(isVisible || installHintVisible || showNeverShowMessage) && (
         <div
           style={{
             position: 'fixed',
@@ -158,21 +152,22 @@ const PwaInstallPrompt = () => {
             {installHintVisible ? (
               <>
                 <div style={{ fontSize: 15, lineHeight: 1.6 }}>
-                  {message || 'App install is still available in Settings. Tap Download App when you are ready.'}
+                  {message || 'You can always download the Delivo app from the Download App button in Settings.'}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
                   <button
                     onClick={handleDismissHint}
                     style={{
-                      background: 'rgba(255,255,255,0.08)',
+                      background: '#f97316',
                       color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.16)',
+                      border: 'none',
                       borderRadius: 12,
-                      padding: '8px 12px',
+                      padding: '8px 16px',
                       cursor: 'pointer',
+                      fontWeight: 600,
                     }}
                   >
-                    Close
+                    Got it
                   </button>
                 </div>
               </>
@@ -217,24 +212,6 @@ const PwaInstallPrompt = () => {
               </>
             )}
           </div>
-        </div>
-      )}
-
-      {swWaiting && (
-        <div style={{ position: 'fixed', top: 56, right: 12, zIndex: 9999 }}>
-          <button
-            onClick={handleUpdate}
-            style={{
-              background: '#111827',
-              color: '#fff',
-              border: 'none',
-              padding: '6px 10px',
-              borderRadius: 10,
-              boxShadow: '0 6px 14px rgba(0,0,0,0.12)'
-            }}
-          >
-            Update available — Refresh
-          </button>
         </div>
       )}
     </>

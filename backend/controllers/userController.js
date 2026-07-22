@@ -202,6 +202,9 @@ exports.registerUser = async (req, res, next) => {
 
     console.log('[auth] user saved to database', { userId: user._id, email: user.email });
 
+    // Welcome notification will be sent when user registers FCM token
+    // (after they enable browser notifications), so we don't send it here
+
     // If email verification is enabled, attempt to create and send verification code
     let emailDelivered = false;
     if (EMAIL_VERIFICATION) {

@@ -1,10 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
 .auth-container {
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  font-family: 'Poppins', sans-serif;
 }
 
 .auth-page-title {
@@ -45,7 +42,6 @@
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -144,7 +140,6 @@
   background: white;
   border-radius: 10px;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
   font-size: 13px;
   font-weight: 600;
   color: #333;
@@ -431,7 +426,6 @@
   border: 2px solid #e0e0e0;
   border-radius: 10px;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
   transition: border-color 0.3s ease;
 }
 
@@ -470,7 +464,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Poppins', sans-serif;
 }
 
 .auth-link-btn:hover {

@@ -236,12 +236,45 @@
   align-items: flex-start;
 }
 
+.orders-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.quick-order-btn {
+  flex: 1 1 240px;
+  min-width: 180px;
+  padding: 14px 18px;
+  border: 1px solid #f2d8c7;
+  border-radius: 14px;
+  background: #fff;
+  color: #1f2937;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.quick-order-btn:hover {
+  background: #fff7f2;
+  border-color: #ffb68e;
+  transform: translateY(-1px);
+}
+
+.quick-order-btn:active {
+  transform: translateY(0);
+}
+
 .settings-actions {
   display: flex;
   gap: 12px;
   margin-top: 20px;
   padding: 0 20px 20px 20px;
 }
+
 
 .save-btn,
 .reset-btn {

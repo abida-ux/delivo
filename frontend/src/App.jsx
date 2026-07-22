@@ -1,13 +1,20 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from "./components/Navbar";
 import AppRoutes from "./routes/AppRoutes";
 import Loader from "./components/Loader";
 import AuthModal from "./components/AuthModal";
 import { LoaderContext } from "./context/LoaderContext";
+import { AuthContext } from "./context/AuthContext";
 import { savePushSubscription } from './services/api';
+import {
+  initializeFirebase,
+  listenForFcmMessages,
+} from './services/firebaseMessaging';
 import './styles/global.css';
 import './components/Loader.css';
+
+const RELOAD_HINT_KEY = 'delivo_refresh_pending';
 
 const urlBase64ToUint8Array = (base64String) => {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -37,6 +44,23 @@ const arrayBufferToBase64 = (buffer) => {
   return window.btoa(binary);
 };
 
+const registerServiceWorker = async () => {
+  if (!('serviceWorker' in navigator)) {
+    return null;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`);
+    await navigator.serviceWorker.ready;
+    return registration;
+  } catch (error) {
+    console.warn('Service worker registration failed', error);
+    return null;
+  }
+};
+
+// Register Web Push API subscription (VAPID-based, separate from FCM)
+// Only called when user is authenticated so the backend can associate the subscription
 const registerBrowserPushSubscription = async () => {
   if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
     return;
@@ -46,19 +70,27 @@ const registerBrowserPushSubscription = async () => {
     return;
   }
 
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
+  if (!vapidPublicKey) {
+    console.warn('Browser push registration skipped: frontend public VAPID key is not configured.');
+    return;
+  }
+
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await registerServiceWorker();
+    if (!registration) {
+      return;
+    }
+
     const existingSubscription = await registration.pushManager.getSubscription();
     if (existingSubscription) {
       return;
     }
 
-    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
-    const options = { userVisibleOnly: true };
-
-    if (vapidPublicKey) {
-      options.applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-    }
+    const options = {
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    };
 
     const subscription = await registration.pushManager.subscribe(options);
     await savePushSubscription({
@@ -73,35 +105,149 @@ const registerBrowserPushSubscription = async () => {
   }
 };
 
-const triggerRefreshNotification = async () => {
-  if (!('Notification' in window)) return;
-
-  const permission = Notification.permission;
-  if (permission !== 'granted') {
-    try {
-      await Notification.requestPermission();
-    } catch {
-      return;
-    }
-  }
-
-  if (Notification.permission === 'granted') {
-    new Notification('Delivo refresh test', {
-      body: 'This notification appears on every refresh for testing.',
-      icon: '/delivos.png',
-      tag: 'delivo-refresh-test',
-    });
+const logRefreshNotification = (status, data = {}) => {
+  const entry = { status, timestamp: new Date().toISOString(), ...data };
+  try {
+    const existing = JSON.parse(localStorage.getItem('delivoRefreshNotificationTrace') || '[]');
+    existing.push(entry);
+    localStorage.setItem('delivoRefreshNotificationTrace', JSON.stringify(existing.slice(-20)));
+  } catch (err) {
+    // ignore storage errors
   }
 };
 
+const registerAndTriggerRealServerWebPush = async () => {
+  const timeStr = new Date().toLocaleTimeString();
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn('[WebPush] Web push is not supported in this browser environment.');
+    return;
+  }
+
+  // Request permission if default
+  if (Notification.permission === 'default') {
+    try {
+      const res = await Notification.requestPermission();
+      console.log('[WebPush] Notification permission requested:', res);
+    } catch (err) {
+      console.warn('[WebPush] Permission request error:', err);
+    }
+  }
+
+  if (Notification.permission !== 'granted') {
+    console.warn('[WebPush] Permission not granted:', Notification.permission);
+    return;
+  }
+
+  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BHfiaX7G8DIf2Ryphn3kSRvb1-8vwznP7Og4eu3Q--8ieIVrkyFR6cGYIuGhSNY9yB4MQvRu7E2ixNGuZq7gvW0';
+
+  try {
+    const registration = await registerServiceWorker();
+    if (!registration) {
+      console.warn('[WebPush] Could not register service worker');
+      return;
+    }
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      const options = {
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      };
+      subscription = await registration.pushManager.subscribe(options);
+      console.log('[WebPush] Created new VAPID subscription:', subscription.endpoint.substring(0, 35));
+    }
+
+    const subscriptionData = {
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
+        auth: arrayBufferToBase64(subscription.getKey('auth')),
+      },
+    };
+
+    // Save subscription to backend using public endpoint
+    const apiBase = import.meta.env.DEV ? 'http://localhost:5000/api' : (import.meta.env.VITE_API_URL || '/api');
+    await fetch(`${apiBase}/notifications/public-subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subscriptionData),
+    });
+
+    // Immediately show system notification popup banner via Service Worker
+    try {
+      if (registration?.showNotification) {
+        registration.showNotification('Delivo Push Test 🍕', {
+          body: `Push notification active! (Refreshed at ${timeStr})`,
+          icon: '/delivos.png',
+          badge: '/delivos.png',
+          tag: `delivo-instant-${Date.now()}`,
+          renotify: true,
+          requireInteraction: true,
+          vibrate: [200, 100, 200, 100, 200],
+        });
+      }
+    } catch (swErr) {
+      console.warn('[WebPush] Immediate SW notification error:', swErr);
+    }
+
+    // Trigger real high-urgency VAPID Web Push from backend server!
+    const triggerRes = await fetch(`${apiBase}/notifications/public-trigger-test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Delivo Server Push 🍕',
+        message: `High-urgency Web Push sent from server at ${timeStr}!`,
+      }),
+    });
+
+    const result = await triggerRes.json();
+    console.log('🚀 [WebPush] Server Web Push result:', result);
+  } catch (error) {
+    console.error('[WebPush] Error triggering real server Web Push:', error);
+  }
+};
+
+
 function App() {
   const { isLoading } = useContext(LoaderContext);
+  const { user, token } = useContext(AuthContext);
   const location = useLocation();
 
+  // Initialize Firebase, register Web Push, and trigger real server push on refresh
   useEffect(() => {
-    triggerRefreshNotification();
+    initializeFirebase();
+
+    const markBeforeUnload = () => {
+      sessionStorage.setItem(RELOAD_HINT_KEY, '1');
+    };
+
+    window.addEventListener('beforeunload', markBeforeUnload);
+    registerAndTriggerRealServerWebPush();
+
+    return () => {
+      window.removeEventListener('beforeunload', markBeforeUnload);
+    };
+  }, []);
+
+  // Register push subscriptions and FCM listener AFTER user is authenticated
+  useEffect(() => {
+    if (!user || !token) return;
+
+    // Register VAPID-based Web Push subscription (requires auth to save to backend)
     registerBrowserPushSubscription();
-  }, [location.pathname]);
+
+    // Listen for foreground FCM messages
+    const unsubscribe = listenForFcmMessages((notification) => {
+      console.log('Foreground FCM notification:', notification);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [user?._id, token]);
 
   // Hide navbar on admin and restaurant portal routes
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -118,5 +264,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;

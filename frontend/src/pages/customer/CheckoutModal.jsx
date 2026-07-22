@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { X, AlertCircle, Check } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants } from '../../services/api';
+import { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants, getOrderById } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
 
@@ -113,11 +113,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     if (!deliveryInfo.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
+
     if (!selectedRestaurant) {
-      newErrors.restaurant = 'Please choose a restaurant to order from';
-    } else if (!selectedRestaurantData || selectedRestaurantData.isOpen === false) {
+      // If a restaurant is not explicitly picked, auto-pick the first open restaurant if available
+      const openRest = restaurants.find((r) => r.isOpen !== false);
+      if (openRest) {
+        setSelectedRestaurant(openRest._id || openRest.id);
+      } else if (restaurants.length > 0) {
+        newErrors.restaurant = 'Please choose a restaurant to order from';
+      }
+    } else if (selectedRestaurantData && selectedRestaurantData.isOpen === false) {
       newErrors.restaurant = 'This restaurant is currently closed and cannot receive orders right now';
     }
+
     if (!deliveryInfo.address.trim()) {
       newErrors.address = 'Precise delivery location is required';
     } else if (deliveryInfo.address.trim().length < 8) {
@@ -159,15 +167,23 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         setRestaurants(allRestaurants);
 
         const openRestaurants = allRestaurants.filter((restaurant) => restaurant.isOpen !== false);
-        if (openRestaurants.length === 1) {
-          setSelectedRestaurant(openRestaurants[0]._id || '');
-        } else {
-          setSelectedRestaurant((currentSelection) => {
-            if (!currentSelection) return '';
-            const stillOpen = allRestaurants.some((restaurant) => (restaurant._id || restaurant.id) === currentSelection && restaurant.isOpen !== false);
-            return stillOpen ? currentSelection : '';
-          });
+        
+        let defaultId = '';
+        if (cartItems && cartItems.length > 0) {
+          const firstItem = cartItems[0];
+          const raw = firstItem?.restaurantId || firstItem?.restaurant || firstItem?.foodId?.restaurant;
+          if (raw) {
+            const id = typeof raw === 'object' ? (raw._id || raw.id) : raw;
+            const found = openRestaurants.find((r) => (r._id || r.id) === id);
+            if (found) defaultId = found._id || found.id;
+          }
         }
+
+        if (!defaultId && openRestaurants.length > 0) {
+          defaultId = openRestaurants[0]._id || openRestaurants[0].id || '';
+        }
+
+        setSelectedRestaurant((currentSelection) => currentSelection || defaultId);
       } catch (err) {
         console.error('Error loading restaurants for checkout:', err);
       }
@@ -180,14 +196,31 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     };
   }, []);
 
+
   const checkOrderStatus = async (id, checkoutRequestIdValue) => {
     try {
-      const updatedOrder = checkoutRequestIdValue
-        ? await getMpesaStatus(checkoutRequestIdValue)
-        : await getOrderById(id);
-      setPaymentStatus(updatedOrder.paymentStatus);
+      let updatedOrder = null;
+      if (checkoutRequestIdValue) {
+        try {
+          updatedOrder = await getMpesaStatus(checkoutRequestIdValue);
+        } catch (e) {
+          console.warn('getMpesaStatus error during poll, trying getOrderById fallback:', e);
+        }
+      }
+      if (!updatedOrder && id) {
+        try {
+          updatedOrder = await getOrderById(id);
+        } catch (e) {
+          console.warn('getOrderById fallback error:', e);
+        }
+      }
 
-      if (updatedOrder.paymentStatus === 'completed') {
+      if (!updatedOrder) return;
+
+      const currentStatus = updatedOrder.paymentStatus || updatedOrder.status;
+      setPaymentStatus(currentStatus);
+
+      if (currentStatus === 'completed' || currentStatus === 'confirmed') {
         clearPolling();
         setPaymentStage('success');
         setPaymentMessage('Payment confirmed. Redirecting to your orders page...');
@@ -205,10 +238,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         return;
       }
 
-      if (updatedOrder.paymentStatus === 'failed') {
+      if (currentStatus === 'failed' || currentStatus === 'cancelled') {
         clearPolling();
         setPaymentStage('failed');
-        setPaymentMessage('Payment failed. Please retry the M-Pesa prompt or close this window.');
+        setPaymentMessage('Payment failed or cancelled. Please retry the M-Pesa prompt.');
         setOrderPending(false);
         return;
       }
@@ -217,9 +250,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       setPaymentMessage('M-Pesa prompt sent. Waiting for payment confirmation...');
     } catch (error) {
       console.error('Error polling order status:', error);
-      setPaymentMessage('Waiting for payment confirmation... Please keep this screen open.');
     }
   };
+
 
   const startPaymentPolling = async (id, checkoutRequestIdValue) => {
     if (pollInterval.current) {

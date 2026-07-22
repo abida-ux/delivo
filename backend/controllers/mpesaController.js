@@ -121,35 +121,36 @@ exports.handleMpesaStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    if (order.paymentStatus === 'completed') {
+    if (order.paymentStatus === 'completed' || order.paymentStatus === 'failed') {
       return res.json({ success: true, data: order });
     }
 
-    const queryResponse = await queryMpesaStkStatus({ checkoutRequestId });
-    const resultCode = Number(queryResponse?.ResultCode);
-    const resultDesc = queryResponse?.ResultDesc || '';
-    const receipt = queryResponse?.MpesaReceiptNumber || null;
-    const transactionDate = queryResponse?.TransactionDate || null;
-    const result = classifyMpesaResult({ resultCode, resultDesc, receipt });
+    try {
+      const queryResponse = await queryMpesaStkStatus({ checkoutRequestId });
+      const resultCode = Number(queryResponse?.ResultCode);
+      const resultDesc = queryResponse?.ResultDesc || '';
+      const receipt = queryResponse?.MpesaReceiptNumber || null;
+      const transactionDate = queryResponse?.TransactionDate || null;
+      const result = classifyMpesaResult({ resultCode, resultDesc, receipt });
 
-    if (result.isSuccessful) {
-      order.paymentStatus = 'completed';
-      order.status = 'confirmed';
-      order.mpesaReceiptNumber = receipt || order.mpesaReceiptNumber;
-      order.transactionDate = transactionDate || order.transactionDate;
-      order.paymentCallbackPayload = queryResponse;
-      order.failureReason = '';
-    } else if (result.isExplicitFailure) {
-      order.paymentStatus = 'failed';
-      order.status = 'cancelled';
-      order.failureReason = resultDesc || 'M-Pesa payment failed or was cancelled';
-    } else {
-      order.paymentStatus = order.paymentStatus === 'completed' ? 'completed' : 'pending';
-      order.failureReason = '';
+      if (result.isSuccessful) {
+        order.paymentStatus = 'completed';
+        order.status = 'confirmed';
+        order.mpesaReceiptNumber = receipt || order.mpesaReceiptNumber;
+        order.transactionDate = transactionDate || order.transactionDate;
+        order.paymentCallbackPayload = queryResponse;
+        order.failureReason = '';
+      } else if (result.isExplicitFailure) {
+        order.paymentStatus = 'failed';
+        order.status = 'cancelled';
+        order.failureReason = resultDesc || 'M-Pesa payment failed or was cancelled';
+      }
+
+      order.updatedAt = new Date();
+      await order.save();
+    } catch (queryErr) {
+      console.warn('⚠️ M-Pesa STK query status notice:', queryErr.message || queryErr);
     }
-
-    order.updatedAt = new Date();
-    await order.save();
 
     res.json({ success: true, data: order });
   } catch (error) {
@@ -157,3 +158,4 @@ exports.handleMpesaStatus = async (req, res, next) => {
     next(error);
   }
 };
+

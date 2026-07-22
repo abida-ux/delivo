@@ -1,7 +1,9 @@
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Food = require('../models/Food');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
+
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser } = require('../utils/pushNotifications');
@@ -59,23 +61,6 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    if (restaurantId) {
-      const restaurant = await Restaurant.findById(restaurantId);
-      if (!restaurant) {
-        return res.status(404).json({
-          success: false,
-          message: 'Selected restaurant was not found',
-        });
-      }
-
-      if (restaurant.isOpen === false) {
-        return res.status(400).json({
-          success: false,
-          message: 'This restaurant is currently closed and cannot receive orders right now',
-        });
-      }
-    }
-
     if (!whatsappNumber) {
       return res.status(400).json({
         success: false,
@@ -90,9 +75,9 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    // Calculate total price and verify items exist
     let subtotal = 0;
     const populatedItems = [];
+    let inferredRestaurantId = null;
 
     for (const item of items) {
       const food = await Food.findById(item.foodId);
@@ -104,6 +89,10 @@ exports.createOrder = async (req, res, next) => {
         });
       }
 
+      if (!inferredRestaurantId && food.restaurant) {
+        inferredRestaurantId = typeof food.restaurant === 'object' ? food.restaurant._id : food.restaurant;
+      }
+
       const itemTotal = food.price * item.quantity;
       subtotal += itemTotal;
 
@@ -113,6 +102,19 @@ exports.createOrder = async (req, res, next) => {
         price: food.price,
       });
     }
+
+    const finalRestaurantId = restaurantId || inferredRestaurantId;
+    let restaurant = null;
+    if (finalRestaurantId && mongoose.Types.ObjectId.isValid(finalRestaurantId)) {
+      restaurant = await Restaurant.findById(finalRestaurantId);
+      if (restaurant && restaurant.isOpen === false) {
+        return res.status(400).json({
+          success: false,
+          message: 'This restaurant is currently closed and cannot receive orders right now',
+        });
+      }
+    }
+
 
     const appSettings = (await AppSettings.findOne()) || {};
     const freeDeliveryEnabled = appSettings.freeDeliveryEnabled !== false;
@@ -132,7 +134,7 @@ exports.createOrder = async (req, res, next) => {
       userId: userId || undefined,
       guestEmail: guestEmail || undefined,
       guestPhone: guestPhone || undefined,
-      restaurantId: restaurantId || undefined,
+      restaurantId: finalRestaurantId || undefined,
       items: populatedItems,
       totalPrice,
       deliveryFee: finalDeliveryFee,
@@ -184,12 +186,14 @@ exports.createOrder = async (req, res, next) => {
 
     await order.populate('items.foodId');
 
+    const restaurantOwner = restaurant?.ownerId
+      ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' })
+      : null;
+
+    const adminUsers = await User.find({ role: 'admin' });
+    const customerUser = userId ? await User.findById(userId) : null;
+
     try {
-      const restaurantOwner = restaurantId && restaurant?.ownerId
-        ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' })
-        : null;
-      const adminUsers = await User.find({ role: 'admin' });
-      const customerUser = userId ? await User.findById(userId) : null;
 
       const recipients = [];
       for (const adminUser of adminUsers) {

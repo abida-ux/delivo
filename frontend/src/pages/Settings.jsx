@@ -8,7 +8,8 @@ import './Settings.css';
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user;
   const userId = user?.id || user?._id;
   const settingsKey = userId ? `delivo_settings_${userId}` : 'delivo_settings';
 
@@ -34,6 +35,7 @@ const Settings = () => {
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem(settingsKey);
@@ -89,19 +91,18 @@ const Settings = () => {
           throw new Error('Notification permission was not granted.');
         }
 
-        if (!import.meta.env.VITE_VAPID_PUBLIC_KEY) {
-          setPushNotice('Browser push is enabled locally, but the backend still needs VAPID keys for real delivery.');
+        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.VITE_FIREBASE_VAPID_KEY || '';
+        if (!vapidPublicKey) {
+          setPushNotice('Browser push is enabled locally, but the frontend still needs a public VAPID key to register a live browser subscription.');
         } else {
           setPushNotice('');
         }
 
         const registration = await navigator.serviceWorker.ready;
-        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
-        const options = { userVisibleOnly: true };
-
-        if (vapidPublicKey) {
-          options.applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-        }
+        const options = {
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        };
 
         const subscription = await registration.pushManager.subscribe(options);
         await savePushSubscription({
@@ -146,7 +147,12 @@ const Settings = () => {
   }, [settingsKey, settings]);
 
   const handleInstallFromSettings = () => {
-    window.dispatchEvent(new CustomEvent('delivo-show-install', { detail: { manual: true } }));
+    setShowDownloadConfirm(true);
+  };
+
+  const confirmDownloadApp = () => {
+    setShowDownloadConfirm(false);
+    window.dispatchEvent(new CustomEvent('delivo-install-app'));
   };
 
   const handleToggle = async (key) => {
@@ -461,6 +467,70 @@ const Settings = () => {
             Reset to Default
           </button>
         </div>
+
+        {showDownloadConfirm && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+              zIndex: 99999,
+            }}
+          >
+            <div
+              style={{
+                width: 'min(92vw, 420px)',
+                background: '#fff',
+                borderRadius: 16,
+                padding: 20,
+                boxShadow: '0 24px 60px rgba(15, 23, 42, 0.25)',
+              }}
+            >
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#111827' }}>
+                Download Delivo app?
+              </div>
+              <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 18 }}>
+                Do you want to download Delivo app?
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowDownloadConfirm(false)}
+                  style={{
+                    background: '#e5e7eb',
+                    color: '#111827',
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDownloadApp}
+                  style={{
+                    background: '#f97316',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '10px 14px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                  }}
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {hasChanges && (
           <div className="unsaved-changes-banner">

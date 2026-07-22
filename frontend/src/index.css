@@ -2,6 +2,8 @@
    GLOBAL RESET + BASE LAYER
    ========================= */
 
+@import './styles/theme.css';
+
 * {
   margin: 0;
   padding: 0;
@@ -15,10 +17,12 @@ html {
 
 /* BODY BASE */
 body {
-  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
-  background: #ffffff;
-  color: #111111;
+  font-family: var(--font-family);
+  background: var(--color-white);
+  color: var(--color-black);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* REMOVE DEFAULT BUTTON STYLES */
@@ -49,22 +53,39 @@ input {
   font-family: inherit;
 }
 
-/* FOCUS OUTLINE (ACCESSIBLE BUT CLEAN) */
-:focus {
-  outline: 2px solid #f5b301;
-  outline-offset: 2px;
+/* SELECTION STYLING */
+::selection {
+  background: rgba(245, 179, 1, 0.25);
+  color: var(--color-black);
+}
+
+/* FOCUS OUTLINE (ACCESSIBLE — only visible for keyboard users) */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(245, 179, 1, 0.25);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* SCROLLBAR CLEAN LOOK */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #f5b301;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
+  transition: background var(--transition-smooth);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
 }
 
 ::-webkit-scrollbar-track {
-  background: #f3f3f3;
+  background: var(--color-gray-100);
 }
