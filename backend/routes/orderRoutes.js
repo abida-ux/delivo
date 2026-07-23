@@ -111,8 +111,34 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
       },
     };
 
+    const restaurantPayload = {
+      title: 'Order assigned to rider',
+      message: `Order #${orderIdShort} has been assigned to ${riderUser.name || 'a rider'} (${riderUser.phone || 'contact soon'}). Customer: ${customerName}. Delivery to: ${deliveryAddress}.`,
+      icon: '/favicon.ico',
+      url: '/restaurant/orders',
+      data: {
+        eventType: 'order_assigned_rider',
+        recipientRole: 'restaurant',
+        orderId: order._id.toString(),
+        customerName,
+        restaurantName,
+        deliveryAddress,
+        riderName: riderUser.name || 'a rider',
+        riderPhone: riderUser.phone || 'contact soon',
+        orderStatus: 'assigned',
+      },
+    };
+
     await createInAppNotification({ userId: riderUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' });
     await sendPushToUser({ userId: riderUser._id, payload: riderPayload });
+
+    if (restaurant?.ownerId) {
+      const restaurantOwner = await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' });
+      if (restaurantOwner?._id) {
+        await createInAppNotification({ userId: restaurantOwner._id, title: restaurantPayload.title, message: restaurantPayload.message, type: 'order' });
+        await sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload });
+      }
+    }
 
     res.status(200).json({ success: true, data: order, message: 'Rider assigned successfully' });
   } catch (error) {

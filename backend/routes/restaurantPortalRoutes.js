@@ -103,6 +103,7 @@ router.get('/orders', authenticate, ensureRestaurantOwner, async (req, res) => {
       items: { $exists: true, $ne: [] },
     })
       .populate('userId', 'name email')
+      .populate('riderId', 'name phone email')
       .populate('items.foodId')
       .sort({ createdAt: -1 })
       .lean();

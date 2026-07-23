@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { Clock, DollarSign, MapPin, RefreshCcw, Truck, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext as AuthContextValue } from '../../context/AuthContext.jsx';
@@ -16,6 +16,8 @@ const RiderDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState('');
+  const [notificationToast, setNotificationToast] = useState(null);
+  const shownNotificationIds = useRef(new Set());
 
   const fetchDashboardData = async () => {
     if (!user?._id && !user?.id) return;
@@ -36,6 +38,43 @@ const RiderDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+  }, [token, user]);
+
+  useEffect(() => {
+    if (!token || (!user?._id && !user?.id)) return undefined;
+
+    const loadNotifications = async () => {
+      try {
+        const response = await fetch('/api/notifications', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        const assignmentNotification = (data?.notifications || []).find((notification) => {
+          if (notification?.isRead) return false;
+          const title = String(notification?.title || '').toLowerCase();
+          const message = String(notification?.message || '').toLowerCase();
+          return title.includes('delivery') || title.includes('assigned') || message.includes('assigned') || message.includes('delivery');
+        });
+
+        if (assignmentNotification && !shownNotificationIds.current.has(assignmentNotification._id)) {
+          shownNotificationIds.current.add(assignmentNotification._id);
+          setNotificationToast({
+            title: assignmentNotification.title,
+            message: assignmentNotification.message,
+          });
+
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification(assignmentNotification.title, { body: assignmentNotification.message });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load rider notifications', error);
+      }
+    };
+
+    loadNotifications();
+    const interval = window.setInterval(loadNotifications, 15000);
+    return () => window.clearInterval(interval);
   }, [token, user]);
 
   const stats = useMemo(() => [
@@ -117,6 +156,13 @@ const RiderDashboard = () => {
       </div>
 
       {message ? <div className="rider-toast">{message}</div> : null}
+      {notificationToast ? (
+        <div className="rider-toast" style={{ background: '#ecfeff', color: '#0f172a', border: '1px solid #67e8f9' }}>
+          <strong>{notificationToast.title}</strong>
+          <div>{notificationToast.message}</div>
+          <button className="toggle-btn" onClick={() => setNotificationToast(null)} style={{ marginTop: '8px' }}>Dismiss</button>
+        </div>
+      ) : null}
 
       <div className="stats-grid">
         {stats.map((stat) => {
