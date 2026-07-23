@@ -219,15 +219,16 @@ function App() {
     };
   }, [user?._id, token]);
 
-  // Hide navbar on admin and restaurant portal routes
+  // Hide navbar on admin, restaurant, and rider portal routes
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isRestaurantRoute = location.pathname.startsWith('/restaurant');
+  const isRiderRoute = location.pathname.startsWith('/rider') || location.pathname === '/rider-dashboard';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
       {isLoading && <Loader />}
       <AuthModal />
-      {!isAdminRoute && !isRestaurantRoute && <Navbar />}
+      {!isAdminRoute && !isRestaurantRoute && !isRiderRoute && <Navbar />}
       <main className={isAdminRoute || isRestaurantRoute ? 'admin-page-main' : ''}>
         <AppRoutes />
       </main>
