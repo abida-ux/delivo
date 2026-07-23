@@ -40,16 +40,15 @@ router.get('/rider/available', authenticate, async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Admins or riders only' });
     }
 
+    const activeOrderStatuses = ['pending', 'confirmed', 'preparing', 'assigned', 'out-for-delivery', 'on-delivery'];
     const busyRiderIds = await Order.distinct('riderId', {
-      status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] },
+      status: { $in: activeOrderStatuses },
       riderId: { $ne: null },
     });
 
     const availableRiders = await User.find({
       role: 'rider',
       _id: { $nin: busyRiderIds },
-      riderStatus: { $in: ['available', 'offline'] },
-      currentOrderId: null,
     })
       .select('-password')
       .sort({ name: 1 });
