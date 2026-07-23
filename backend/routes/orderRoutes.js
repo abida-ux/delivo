@@ -40,20 +40,26 @@ router.get('/rider/available', authenticate, async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Admins or riders only' });
     }
 
-    const busyOrders = await Order.find({
+    const busyRiderIds = await Order.distinct('riderId', {
       status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] },
       riderId: { $ne: null },
-    }).select('riderId');
-
-    const busyRiderIds = busyOrders.map((order) => String(order.riderId));
+    });
 
     const availableRiders = await User.find({
       role: 'rider',
       _id: { $nin: busyRiderIds },
+      riderStatus: { $in: ['available', 'offline'] },
       currentOrderId: null,
-    }).select('-password');
+    })
+      .select('-password')
+      .sort({ name: 1 });
 
-    res.status(200).json({ success: true, data: availableRiders });
+    const normalizedRiders = availableRiders.map((rider) => ({
+      ...rider.toObject(),
+      riderStatus: rider.riderStatus === 'on-delivery' ? 'on-delivery' : 'available',
+    }));
+
+    res.status(200).json({ success: true, data: normalizedRiders });
   } catch (error) {
     next(error);
   }
@@ -79,6 +85,10 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
     const riderUser = await User.findById(riderId);
     if (!riderUser || riderUser.role !== 'rider') {
       return res.status(400).json({ success: false, message: 'Invalid rider selected' });
+    }
+
+    if (order.riderId && ['assigned', 'out-for-delivery', 'on-delivery'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: 'Order is already assigned to a rider' });
     }
 
     const activeOrderCount = await Order.countDocuments({ riderId, status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] } });

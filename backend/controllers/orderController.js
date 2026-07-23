@@ -7,7 +7,7 @@ const User = require('../models/User');
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
-const { isActiveDeliveryStatus } = require('../utils/riderWorkflow');
+const { isActiveDeliveryStatus, isRiderAssignable } = require('../utils/riderWorkflow');
 
 
 // @desc Create order

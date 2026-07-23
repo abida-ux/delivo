@@ -684,17 +684,21 @@ exports.updateRiderStatus = async (req, res, next) => {
 
 exports.updateUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found',
       });
     }
+
+    const { password, ...updateFields } = req.body;
+    Object.assign(user, updateFields);
+    if (password) {
+      user.password = password;
+    }
+
+    await user.save();
 
     res.status(200).json({
       success: true,

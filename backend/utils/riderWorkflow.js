@@ -10,8 +10,9 @@ const isRiderAssignable = (rider, activeOrderCount = 0) => {
     return false;
   }
 
-  const riderStatus = String(rider.riderStatus || 'offline').toLowerCase();
-  return riderStatus === 'available' && activeOrderCount === 0 && !rider.currentOrderId;
+  const riderStatus = String(rider.riderStatus || 'available').toLowerCase();
+  const isIdleStatus = riderStatus === 'available' || riderStatus === 'offline';
+  return isIdleStatus && activeOrderCount === 0 && !rider.currentOrderId;
 };
 
 module.exports = {

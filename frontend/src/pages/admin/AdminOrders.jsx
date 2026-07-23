@@ -1,5 +1,5 @@
-import {useState, useEffect} from 'react';
-import { Eye, Search, UserCheck } from 'lucide-react';
+import {useState, useEffect, useMemo} from 'react';
+import { Eye, UserCheck } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllOrders, updateOrder } from '../../services/api';
 import AdminEditOrderModal from './AdminEditOrderModal';
@@ -18,6 +18,8 @@ const AdminOrders = () => {
   const [storesMap, setStoresMap] = useState({});
   const [restaurantsMap, setRestaurantsMap] = useState({});
   const [availableRiders, setAvailableRiders] = useState([]);
+  const [availableRidersLoading, setAvailableRidersLoading] = useState(false);
+  const [riderSearchTerm, setRiderSearchTerm] = useState('');
   const [assigningOrderId, setAssigningOrderId] = useState(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState(null);
@@ -27,25 +29,34 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
+  const fetchAvailableRiders = async () => {
+    try {
+      setAvailableRidersLoading(true);
+      const token = localStorage.getItem('token');
+      const ridersRes = await fetch('/api/orders/rider/available', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const ridersData = await ridersRes.json();
+      if (ridersData?.success) {
+        setAvailableRiders(ridersData.data || []);
+      } else {
+        setAvailableRiders([]);
+      }
+    } catch (innerErr) {
+      console.warn('Failed to fetch available riders:', innerErr);
+      setAvailableRiders([]);
+    } finally {
+      setAvailableRidersLoading(false);
+    }
+  };
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const data = await getAllOrders();
       setOrders(data);
       setFilteredOrders(data);
-
-      try {
-        const token = localStorage.getItem('token');
-        const ridersRes = await fetch('/api/orders/rider/available', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const ridersData = await ridersRes.json();
-        if (ridersData?.success) {
-          setAvailableRiders(ridersData.data || []);
-        }
-      } catch (innerErr) {
-        console.warn('Failed to fetch available riders:', innerErr);
-      }
+      await fetchAvailableRiders();
 
       // Bulk fetch all stores and restaurants once to avoid many per-id requests
       try {
@@ -154,9 +165,11 @@ const AdminOrders = () => {
     }
   };
 
-  const openAssignModal = (order) => {
+  const openAssignModal = async (order) => {
     setSelectedOrderForAssignment(order);
     setSelectedRiderId('');
+    setRiderSearchTerm('');
+    await fetchAvailableRiders();
     setIsAssignModalOpen(true);
   };
 
@@ -165,6 +178,16 @@ const AdminOrders = () => {
     setSelectedOrderForAssignment(null);
     setSelectedRiderId('');
   };
+
+  const filteredRiderOptions = useMemo(() => {
+    const query = riderSearchTerm.trim().toLowerCase();
+    return availableRiders.filter((rider) => {
+      const name = String(rider.name || '').toLowerCase();
+      const email = String(rider.email || '').toLowerCase();
+      const phone = String(rider.phone || '').toLowerCase();
+      return !query || name.includes(query) || email.includes(query) || phone.includes(query);
+    });
+  }, [availableRiders, riderSearchTerm]);
 
   const handleAssignRider = async (orderId, riderId = selectedRiderId) => {
     if (!riderId) return;
@@ -287,17 +310,45 @@ const AdminOrders = () => {
               <button className="modal-close" onClick={closeAssignModal}>×</button>
             </div>
             <p className="assignment-summary">Order #{selectedOrderForAssignment._id?.slice(-6).toUpperCase()} - {selectedOrderForAssignment.customerName || 'Customer'}</p>
-            {availableRiders.length === 0 ? (
+            <div className="assign-form">
+              <label htmlFor="riderSearch">Search riders</label>
+              <input
+                id="riderSearch"
+                type="text"
+                value={riderSearchTerm}
+                onChange={(e) => setRiderSearchTerm(e.target.value)}
+                placeholder="Search by name, phone, or email"
+              />
+            </div>
+            {availableRidersLoading ? (
+              <div className="loading-state">
+                <div className="spinner"></div>
+                <p>Loading riders...</p>
+              </div>
+            ) : filteredRiderOptions.length === 0 ? (
               <p className="empty-riders">No riders are currently available.</p>
             ) : (
-              <div className="assign-form">
-                <label htmlFor="riderSelect">Available Riders</label>
-                <select id="riderSelect" value={selectedRiderId} onChange={(e) => setSelectedRiderId(e.target.value)}>
-                  <option value="">Select a rider</option>
-                  {availableRiders.map((rider) => (
-                    <option key={rider._id} value={rider._id}>{rider.name} • {rider.email}</option>
-                  ))}
-                </select>
+              <div className="rider-list">
+                {filteredRiderOptions.map((rider) => (
+                  <button
+                    key={rider._id}
+                    type="button"
+                    className={`rider-card ${selectedRiderId === rider._id ? 'selected' : ''}`}
+                    onClick={() => setSelectedRiderId(rider._id)}
+                  >
+                    <div className="rider-card-left">
+                      <div className="rider-avatar">{rider.name?.charAt(0) || 'R'}</div>
+                      <div>
+                        <p className="rider-name">{rider.name || rider.email}</p>
+                        <p className="rider-meta">{rider.phone || rider.email}</p>
+                      </div>
+                    </div>
+                    <div className="rider-card-right">
+                      <span className="status-badge available">Available</span>
+                      <p className="rider-meta">Completed: {rider.totalDeliveries || 0}</p>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
             <div className="form-actions">
