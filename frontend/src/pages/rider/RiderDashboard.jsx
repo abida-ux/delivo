@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext as AuthContextValue } from '../../context/AuthContext.jsx';
-import { getOrderById, updateOrder, getUnassignedOrders, claimOrder } from '../../services/api';
+import { getOrderById, updateOrder, getUnassignedOrders, claimOrder, getAPIUrl } from '../../services/api';
 import '../pages.css';
 import './RiderDashboard.css';
 
@@ -49,9 +49,10 @@ const RiderDashboard = () => {
     if (!user?._id && !user?.id) return;
     try {
       if (!isSilent) setLoading(true);
+      const apiUrl = getAPIUrl();
       const [profileRes, assignedRes, unassignedData] = await Promise.all([
-        fetch(`/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json()),
-        fetch(`/api/orders/rider/assigned`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json()),
+        fetch(`${apiUrl}/users/me`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json()),
+        fetch(`${apiUrl}/orders/rider/assigned`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json()),
         getUnassignedOrders().catch(() => []),
       ]);
 
@@ -90,7 +91,8 @@ const RiderDashboard = () => {
 
     const loadNotifications = async () => {
       try {
-        const response = await fetch('/api/notifications', {
+        const apiUrl = getAPIUrl();
+        const response = await fetch(`${apiUrl}/notifications`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
@@ -192,7 +194,8 @@ const RiderDashboard = () => {
     try {
       const newStatus = profile?.riderStatus === 'offline' ? 'available' : 'offline';
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/me`, {
+      const apiUrl = getAPIUrl();
+      const res = await fetch(`${apiUrl}/users/me`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ riderStatus: newStatus }),

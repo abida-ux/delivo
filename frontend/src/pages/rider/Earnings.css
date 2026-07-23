@@ -1,0 +1,564 @@
+/* ==========================================================================
+   DELIVO RIDER EARNINGS — Premium Orange Theme & Full Responsive
+   ========================================================================== */
+
+.rider-earnings {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 100px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1e293b;
+  min-height: 100vh;
+}
+
+/* ---- Page Header ---- */
+.rider-earnings .page-header {
+  margin-bottom: 24px;
+  padding: 0;
+}
+
+.rider-earnings .page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.rider-earnings .page-header p {
+  color: #64748b;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+/* ---- Earnings Overview ---- */
+.earnings-overview {
+  margin-bottom: 24px;
+}
+
+.earning-card.primary {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #090d16 100%);
+  border-radius: 24px;
+  padding: 28px 28px 20px;
+  color: white;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.earning-card.primary::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0) 70%);
+  pointer-events: none;
+}
+
+.earning-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.earning-card .card-top .label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.earning-card .card-top .amount {
+  font-size: 38px;
+  font-weight: 800;
+  margin: 6px 0 0;
+  color: white;
+  letter-spacing: -1px;
+}
+
+.earning-card .card-top .icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 107, 0, 0.2);
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff6b00;
+}
+
+/* Timeframe Buttons */
+.timeframe-buttons {
+  display: flex;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tf-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 11px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tf-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tf-btn.active {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35);
+}
+
+/* ---- Stats Grid ---- */
+.rider-earnings .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.rider-earnings .stat-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+
+.rider-earnings .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.08);
+  border-color: #ffc499;
+}
+
+.rider-earnings .stat-card .stat-icon {
+  width: 48px;
+  height: 48px;
+  background: #fff7ed;
+  color: #ff6b00;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.rider-earnings .stat-card .stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.rider-earnings .stat-card .stat-content h3 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 4px 0 0;
+}
+
+/* ---- Chart Section ---- */
+.chart-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.chart-section h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 20px;
+}
+
+.simple-chart {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  height: 200px;
+  padding: 10px 0;
+}
+
+.chart-bar-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.chart-bar-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 60px;
+  border-radius: 10px 10px 4px 4px;
+  background: linear-gradient(to top, #ff6b00, #ff8800) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: growBar 0.6s ease-out;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+}
+
+.chart-bar:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.4);
+  transform: scaleY(1.03);
+  transform-origin: bottom;
+}
+
+@keyframes growBar {
+  from { height: 0 !important; }
+}
+
+.chart-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 0;
+}
+
+.chart-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ff6b00;
+  margin: 0;
+}
+
+/* ---- Transactions Section ---- */
+.transactions-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.transactions-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.transactions-section .section-header h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+  background: #fff7ed;
+  border-color: #ffc499;
+  color: #ff6b00;
+}
+
+.transactions-table {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.transactions-table .table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 0.8fr 1fr 1.3fr 0.8fr;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border-radius: 14px 14px 0 0;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.transactions-table .table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 0.8fr 1fr 1.3fr 0.8fr;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.2s ease;
+  align-items: center;
+}
+
+.transactions-table .table-row:hover {
+  background: #fffbf5;
+}
+
+.transactions-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.transactions-table .cell {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.transactions-table .cell.highlight {
+  color: #ff6b00;
+  font-weight: 800;
+}
+
+.transactions-table .status-badge.completed {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+/* ---- Payout Section ---- */
+.payout-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.payout-section h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 18px;
+}
+
+.payout-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 18px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  margin-bottom: 18px;
+}
+
+.payout-info .info-item label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.payout-info .info-item p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.payout-info .info-item p.amount {
+  color: #ff6b00;
+  font-size: 20px;
+}
+
+.request-payout-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.request-payout-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1024px) {
+  .rider-earnings .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .rider-earnings {
+    padding: 16px 14px 100px;
+  }
+
+  .rider-earnings .page-header h1 {
+    font-size: 22px;
+  }
+
+  .earning-card.primary {
+    padding: 22px 20px 18px;
+    border-radius: 20px;
+  }
+
+  .earning-card .card-top .amount {
+    font-size: 30px;
+  }
+
+  .earning-card .card-top .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .timeframe-buttons {
+    flex-wrap: wrap;
+  }
+
+  .tf-btn {
+    min-width: fit-content;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .rider-earnings .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .rider-earnings .stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .rider-earnings .stat-card .stat-content h3 {
+    font-size: 18px;
+  }
+
+  .simple-chart {
+    height: 160px;
+    gap: 10px;
+  }
+
+  .chart-bar {
+    max-width: 50px;
+  }
+
+  /* Make table scroll horizontally on mobile */
+  .transactions-table .table-header,
+  .transactions-table .table-row {
+    min-width: 600px;
+  }
+
+  .payout-info {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .chart-section,
+  .transactions-section,
+  .payout-section {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .transactions-section .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .rider-earnings {
+    padding: 12px 10px 100px;
+  }
+
+  .rider-earnings .page-header h1 {
+    font-size: 20px;
+  }
+
+  .earning-card .card-top {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .earning-card .card-top .amount {
+    font-size: 28px;
+  }
+
+  .simple-chart {
+    height: 130px;
+    gap: 6px;
+  }
+
+  .chart-label {
+    font-size: 10px;
+  }
+
+  .chart-value {
+    font-size: 11px;
+  }
+}

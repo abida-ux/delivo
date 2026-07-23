@@ -1,0 +1,395 @@
+/* ==========================================================================
+   DELIVO DELIVERY HISTORY — Premium Orange Theme & Full Responsive
+   ========================================================================== */
+
+.delivery-history {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 100px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1e293b;
+  min-height: 100vh;
+}
+
+/* ---- Page Header ---- */
+.delivery-history .page-header {
+  margin-bottom: 24px;
+  padding: 0;
+}
+
+.delivery-history .page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.delivery-history .page-header p {
+  color: #64748b;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+/* ---- Stats Grid ---- */
+.delivery-history .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.delivery-history .stat-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+
+.delivery-history .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.08);
+  border-color: #ffc499;
+}
+
+.delivery-history .stat-card .icon {
+  width: 48px;
+  height: 48px;
+  background: #fff7ed;
+  color: #ff6b00;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.delivery-history .stat-card .stat-content .label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.delivery-history .stat-card .stat-content h3 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 4px 0 0;
+}
+
+/* ---- Filter Section ---- */
+.delivery-history .filter-section {
+  display: flex;
+  gap: 10px;
+  padding: 6px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.delivery-history .filter-section::-webkit-scrollbar {
+  display: none;
+}
+
+.delivery-history .filter-btn {
+  flex: 1;
+  min-width: fit-content;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.delivery-history .filter-btn:hover {
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.delivery-history .filter-btn.active {
+  background: white;
+  color: #ff6b00;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Deliveries List ---- */
+.delivery-history .deliveries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.delivery-history .delivery-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.delivery-history .delivery-item:hover {
+  border-color: #ffc499;
+  box-shadow: 0 8px 24px rgba(255, 107, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.delivery-history .delivery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+}
+
+.delivery-history .order-info h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.delivery-history .order-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.delivery-history .delivery-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.delivery-history .delivery-meta .date {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.delivery-history .delivery-meta .time {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Expanded Details */
+.delivery-history .delivery-details {
+  padding: 0 22px 20px;
+  animation: expandDown 0.3s ease;
+}
+
+@keyframes expandDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.delivery-history .details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
+  margin-bottom: 14px;
+}
+
+.delivery-history .details-grid .detail label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.delivery-history .details-grid .detail p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.delivery-history .details-grid .detail p.amount {
+  color: #ff6b00;
+  font-weight: 800;
+}
+
+.delivery-history .details-grid .detail p.rating {
+  font-size: 14px;
+}
+
+.delivery-history .action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.delivery-history .action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: auto;
+  height: auto;
+}
+
+.delivery-history .action-btn:hover {
+  background: #fff7ed;
+  border-color: #ffc499;
+  color: #ff6b00;
+}
+
+/* ---- Empty State ---- */
+.delivery-history .empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: white;
+  border: 1px dashed #e2e8f0;
+  border-radius: 24px;
+  margin-top: 20px;
+}
+
+.delivery-history .empty-state svg {
+  color: #94a3b8;
+}
+
+.delivery-history .empty-state h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 16px 0 8px;
+}
+
+.delivery-history .empty-state p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1024px) {
+  .delivery-history .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .delivery-history .details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .delivery-history {
+    padding: 16px 14px 100px;
+  }
+
+  .delivery-history .page-header h1 {
+    font-size: 22px;
+  }
+
+  .delivery-history .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .delivery-history .stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .delivery-history .stat-card .stat-content h3 {
+    font-size: 18px;
+  }
+
+  .delivery-history .delivery-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .delivery-history .delivery-meta {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .delivery-history .details-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .delivery-history .action-buttons {
+    flex-direction: column;
+  }
+
+  .delivery-history .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .delivery-history .filter-section {
+    gap: 6px;
+    padding: 4px;
+  }
+
+  .delivery-history .filter-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .delivery-history {
+    padding: 12px 10px 100px;
+  }
+
+  .delivery-history .page-header h1 {
+    font-size: 20px;
+  }
+
+  .delivery-history .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-history .stat-card .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .delivery-history .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-history .delivery-details {
+    padding: 0 16px 16px;
+  }
+}

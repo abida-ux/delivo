@@ -1,0 +1,414 @@
+/* ==========================================================================
+   DELIVO AVAILABLE DELIVERIES — Premium Orange Theme & Full Responsive
+   ========================================================================== */
+
+.available-deliveries {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 100px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1e293b;
+  min-height: 100vh;
+}
+
+/* ---- Page Header ---- */
+.available-deliveries .page-header {
+  margin-bottom: 24px;
+  padding: 0;
+}
+
+.available-deliveries .page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.available-deliveries .page-header p {
+  color: #64748b;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+/* ---- Info Banner ---- */
+.available-deliveries .info-banner {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #c2410c;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeSlideIn 0.4s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Accepted Section ---- */
+.accepted-deliveries-section {
+  margin-bottom: 28px;
+}
+
+.accepted-deliveries-section h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 14px;
+}
+
+.accepted-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.accepted-delivery-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+  transition: transform 0.2s ease;
+}
+
+.accepted-delivery-card:hover {
+  transform: translateX(4px);
+}
+
+.accepted-delivery-card .check-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+.accepted-delivery-card .delivery-info h3 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.accepted-delivery-card .delivery-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+.accepted-delivery-card .delivery-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accepted-delivery-card .delivery-meta .distance {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.accepted-delivery-card .delivery-meta .payment {
+  font-size: 15px;
+  font-weight: 800;
+  color: #16a34a;
+}
+
+/* ---- Section Header ---- */
+.deliveries-section .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.deliveries-section .section-header h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.deliveries-section .sort-select {
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deliveries-section .sort-select:focus {
+  outline: none;
+  border-color: #ff6b00;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+}
+
+/* ---- Delivery Cards ---- */
+.available-deliveries .deliveries-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.available-deliveries .delivery-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.available-deliveries .delivery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(255, 107, 0, 0.1);
+  border-color: #ffc499;
+}
+
+.available-deliveries .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.available-deliveries .card-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.available-deliveries .badge {
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+/* Route Info */
+.route-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.route-info .location {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.route-info .location .icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.route-info .location .label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.route-info .location .name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 2px 0 0;
+}
+
+.route-info .location .address {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+.route-line {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff6b00;
+  padding: 4px 0;
+  position: relative;
+}
+
+.route-line::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #ff6b00, #16a34a);
+  border-radius: 999px;
+}
+
+/* Delivery Details Row */
+.available-deliveries .delivery-details {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.available-deliveries .delivery-details .detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.available-deliveries .delivery-details .detail.payment {
+  color: #ff6b00;
+  font-weight: 800;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+}
+
+/* Accept Button */
+.available-deliveries .accept-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.available-deliveries .accept-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+}
+
+/* ---- Empty State ---- */
+.available-deliveries .empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: white;
+  border: 1px dashed #e2e8f0;
+  border-radius: 24px;
+}
+
+.available-deliveries .empty-state svg {
+  color: #94a3b8;
+}
+
+.available-deliveries .empty-state h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 16px 0 8px;
+}
+
+.available-deliveries .empty-state p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .available-deliveries {
+    padding: 16px 14px 100px;
+  }
+
+  .available-deliveries .page-header h1 {
+    font-size: 22px;
+  }
+
+  .available-deliveries .deliveries-list {
+    grid-template-columns: 1fr;
+  }
+
+  .deliveries-section .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .deliveries-section .sort-select {
+    width: 100%;
+  }
+
+  .accepted-delivery-card {
+    flex-wrap: wrap;
+  }
+
+  .accepted-delivery-card .delivery-meta {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 16px;
+    padding-top: 8px;
+    border-top: 1px solid #d1fae5;
+  }
+}
+
+@media (max-width: 480px) {
+  .available-deliveries {
+    padding: 12px 10px 100px;
+  }
+
+  .available-deliveries .page-header h1 {
+    font-size: 20px;
+  }
+
+  .available-deliveries .delivery-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .available-deliveries .delivery-details {
+    gap: 8px;
+  }
+
+  .available-deliveries .delivery-details .detail {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .route-info {
+    padding: 10px;
+  }
+}
