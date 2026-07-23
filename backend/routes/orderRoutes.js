@@ -15,9 +15,6 @@ const {
 
 router.post('/', createOrder);
 router.get('/user/:userId', getUserOrders);
-router.get('/:id', getOrderById);
-router.put('/:id', updateOrderStatus);
-router.get('/', getAllOrders);
 
 router.get('/rider/assigned', authenticate, async (req, res, next) => {
   try {
@@ -70,6 +67,54 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
     if (!adminUser || adminUser.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Admins only' });
     }
+
+    const { orderId, riderId } = req.body;
+    if (!orderId || !riderId) {
+      return res.status(400).json({ success: false, message: 'Order ID and rider ID are required' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const riderUser = await User.findById(riderId);
+    if (!riderUser || riderUser.role !== 'rider') {
+      return res.status(400).json({ success: false, message: 'Invalid rider selected' });
+    }
+
+    if (order.riderId && ['assigned', 'out-for-delivery', 'on-delivery'].includes(order.status)) {
+      return res.status(400).json({ success: false, message: 'Order is already assigned to a rider' });
+    }
+
+    const activeOrderCount = await Order.countDocuments({ riderId, status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] } });
+    const isBusy = activeOrderCount > 0 || !!riderUser.currentOrderId || riderUser.riderStatus === 'on-delivery';
+    if (isBusy) {
+      return res.status(400).json({ success: false, message: 'Rider is not available for assignment' });
+    }
+
+    order.riderId = riderUser._id;
+    order.status = 'assigned';
+    order.deliveryStatus = 'assigned';
+    order.currentRiderStatus = 'assigned';
+    order.assignedAt = new Date();
+    order.updatedAt = new Date();
+    await order.save();
+
+    riderUser.riderStatus = 'on-delivery';
+    riderUser.isOnline = true;
+    riderUser.currentOrderId = order._id;
+    riderUser.lastSeenAt = new Date();
+    await riderUser.save();
+
+    const restaurant = order.restaurantId ? await Restaurant.findById(order.restaurantId) : null;
+    const customerUser = order.userId ? await User.findById(order.userId) : null;
+    const orderIdShort = order._id.toString().slice(-6).toUpperCase();
+    const customerName = customerUser?.name || order.customerName || 'Customer';
+    const restaurantName = restaurant?.name || 'restaurant';
+    const deliveryAddress = order.deliveryAddress || 'your requested address';
+
+    const riderPayload = {
 
     const { orderId, riderId } = req.body;
     if (!orderId || !riderId) {
