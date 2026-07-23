@@ -37,6 +37,7 @@ const AdminOrders = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const ridersData = await ridersRes.json();
+      console.debug('Available riders response', ridersData);
       if (ridersData?.success) {
         setAvailableRiders(ridersData.data || []);
       } else {
