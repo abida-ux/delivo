@@ -15,7 +15,9 @@ const {
   getAllUsers,
   deleteUser,
   createUser,
+  getAdminStats,
 } = require('../controllers/userController');
+
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
@@ -24,7 +26,9 @@ router.post('/resend-verification-code', resendVerificationCode);
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password', resetPassword);
 router.post('/', createUser);
+router.get('/admin/stats', authenticate, getAdminStats);
 router.get('/me', authenticate, getCurrentUserProfile);
+
 router.put('/me/status', authenticate, updateRiderStatus);
 router.get('/', getAllUsers);
 router.get('/:id', getUserProfile);

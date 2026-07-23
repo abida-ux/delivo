@@ -152,6 +152,17 @@ export const getAllOrders = async () => {
   return res.data.data || [];
 };
 
+export const getUnassignedOrders = async () => {
+  const res = await api.get('/orders/rider/unassigned');
+  return res.data.data || [];
+};
+
+export const claimOrder = async (orderId) => {
+  const res = await api.put(`/orders/${orderId}/claim`);
+  return res.data;
+};
+
+
 
 // ================= AUTH (FIXED) =================
 export const loginUser = async (data) => {
@@ -206,7 +217,13 @@ export const createUser = async (data) => {
 };
 
 // ================= ADMIN FUNCTIONS =================
+export const getAdminStats = async () => {
+  const res = await api.get('/users/admin/stats');
+  return res.data.data;
+};
+
 export const getAllUsers = async () => {
+
   const res = await api.get('/users');
   return res.data.data || [];
 };

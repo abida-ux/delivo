@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import { Download, Filter, Calendar, TrendingUp } from 'lucide-react';
+import { Download, Filter, Calendar, TrendingUp, DollarSign, BarChart3, CheckCircle2 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllOrders } from '../../services/api';
 import '../pages.css';
@@ -104,27 +104,28 @@ const Transactions = () => {
             </div>
           </div>
           <div className="stat-card">
-            <span className="stat-icon">💰</span>
+            <DollarSign size={24} className="stat-icon" />
             <div className="stat-content">
               <p className="stat-label">Total Commission</p>
               <h3>Ksh {stats.totalCommission?.toFixed(2) || '0'}</h3>
             </div>
           </div>
           <div className="stat-card">
-            <span className="stat-icon">📊</span>
+            <BarChart3 size={24} className="stat-icon" />
             <div className="stat-content">
               <p className="stat-label">Avg Transaction</p>
               <h3>Ksh {stats.averageTransaction || '0'}</h3>
             </div>
           </div>
           <div className="stat-card">
-            <span className="stat-icon">✓</span>
+            <CheckCircle2 size={24} className="stat-icon" />
             <div className="stat-content">
               <p className="stat-label">Total Transactions</p>
               <h3>{stats.totalTransactions}</h3>
             </div>
           </div>
         </div>
+
 
         <div className="controls-section">
           <div className="filter-buttons">

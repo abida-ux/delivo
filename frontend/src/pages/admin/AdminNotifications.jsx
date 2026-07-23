@@ -59,9 +59,10 @@ const AdminNotifications = () => {
 
       setSuccessMessage(
         formData.userId
-          ? `✅ Notification sent to user!`
-          : `✅ Notification broadcast to all users!`
+          ? 'Notification sent to user!'
+          : 'Notification broadcast to all users!'
       );
+
 
       setFormData({
         title: '',
@@ -163,8 +164,8 @@ const AdminNotifications = () => {
             />
             <small>
               {formData.userId
-                ? '📤 Will send to this specific user'
-                : '📢 Will broadcast to all users'}
+                ? 'Will send to this specific user'
+                : 'Will broadcast to all users'}
             </small>
           </div>
 
@@ -191,11 +192,12 @@ const AdminNotifications = () => {
         {/* Info Box */}
         <div className="admin-notifications-info">
           <p>
-            💡 <strong>Tip:</strong> Leave the "Send to Specific User" field empty
+            <strong>Tip:</strong> Leave the "Send to Specific User" field empty
             to broadcast your notification to all users. Otherwise, enter a user ID
             to send to a specific user.
           </p>
         </div>
+
       </div>
     </div>
   );

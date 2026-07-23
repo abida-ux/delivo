@@ -1,5 +1,6 @@
 import {useState, useEffect} from 'react';
-import { Trash2, Edit, Search, Plus, Star } from 'lucide-react';
+import { Trash2, Edit, Search, Plus, Star, MapPin } from 'lucide-react';
+
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllRestaurants, deleteRestaurant, updateRestaurant, createRestaurant } from '../../services/api';
 import AdminEditRestaurantModal from './AdminEditRestaurantModal';
@@ -155,8 +156,10 @@ const Restaurants = () => {
                           <span>{restaurant.rating || 4.5}</span>
                         </div>
                         <div className="delivery-time">
-                          📍 {restaurant.deliveryTime || 30} mins
+                          <MapPin size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+                          {restaurant.deliveryTime || 30} mins
                         </div>
+
                       </div>
 
                       <div className="card-actions">

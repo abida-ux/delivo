@@ -711,7 +711,7 @@ exports.updateUserProfile = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select('-password');
+    const users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
 
     res.status(200).json({
       success: true,
@@ -719,6 +719,7 @@ exports.getAllUsers = async (req, res, next) => {
       data: users,
     });
   } catch (error) {
+
     next(error);
   }
 };
@@ -778,3 +779,40 @@ exports.createUser = async (req, res, next) => {
     });
   }
 };
+
+// @desc Get fast aggregated admin stats
+// @route GET /api/users/admin/stats
+exports.getAdminStats = async (req, res, next) => {
+  try {
+    const Food = require('../models/Food');
+    const Order = require('../models/Order');
+    const Restaurant = require('../models/Restaurant');
+
+    const [userCount, restaurantCount, foodCount, orderCount, revenueAgg] = await Promise.all([
+      User.countDocuments(),
+      Restaurant.countDocuments(),
+      Food.countDocuments(),
+      Order.countDocuments(),
+      Order.aggregate([
+        { $match: { paymentStatus: { $ne: 'failed' } } },
+        { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+      ]),
+    ]);
+
+    const revenue = revenueAgg[0]?.total || 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: userCount,
+        restaurants: restaurantCount,
+        foods: foodCount,
+        orders: orderCount,
+        revenue,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

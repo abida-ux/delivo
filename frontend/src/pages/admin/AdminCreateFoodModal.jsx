@@ -60,7 +60,8 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
         restaurant: formData.restaurants[0],
         restaurants: formData.restaurants,
       };
-      console.log('📝 Submitting food data:', payload);
+      console.log('Submitting food data:', payload);
+
       const result = await onSave(payload);
       
       // Only close if save was successful

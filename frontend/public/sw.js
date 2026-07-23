@@ -209,12 +209,25 @@ self.addEventListener('fetch', (event) => {
   }
 
   const requestUrl = new URL(event.request.url);
+
+  // CRITICAL FIX: Do NOT intercept requests in local development (Vite HMR & dev server)
+  if (
+    requestUrl.hostname === 'localhost' ||
+    requestUrl.hostname === '127.0.0.1' ||
+    requestUrl.port === '5173' ||
+    requestUrl.pathname.startsWith('/@') ||
+    requestUrl.pathname.startsWith('/src/') ||
+    requestUrl.pathname.startsWith('/node_modules/')
+  ) {
+    return; // Allow direct fetch from Vite dev server without Service Worker caching
+  }
+
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
 
   if (requestUrl.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(event.request).catch(() => caches.match('/index.html')));
+    event.respondWith(fetch(event.request));
     return;
   }
 
@@ -227,22 +240,21 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
           return networkResponse;
         })
-        .catch(() => caches.match(event.request).then((r) => r || caches.match('/delivo.jpg')))
+        .catch(() => caches.match(event.request).then((r) => r || caches.match('/index.html')))
     );
     return;
   }
 
-  // Cache-first for other assets
+  // Cache-first for other static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
-      return fetch(event.request)
-        .then((networkResponse) => {
-          const responseCopy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
-          return networkResponse;
-        })
-        .catch(() => caches.match('/delivo.jpg'));
+      return fetch(event.request).then((networkResponse) => {
+        const responseCopy = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
+        return networkResponse;
+      });
     })
   );
 });
+

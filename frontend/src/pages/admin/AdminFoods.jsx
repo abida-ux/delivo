@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import { Trash2, Edit, Search, Plus } from 'lucide-react';
+import { Trash2, Edit, Search, Plus, Star, Store } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import AdminEditFoodModal from './AdminEditFoodModal';
 import AdminCreateFoodModal from './AdminCreateFoodModal';
@@ -8,6 +8,7 @@ import { resolveImageUrl } from '../../utils/placeholderImage';
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminFoods.css';
+
 
 const AdminFoods = () => {
   const [foods, setFoods] = useState([]);
@@ -171,15 +172,17 @@ const AdminFoods = () => {
                       backgroundImage: `url(${resolveImageUrl(food.image)})`,
                     }}
                   >
-                    <span className="food-rating">⭐ {food.rating || 4.5}</span>
+                    <span className="food-rating"><Star size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', fill: '#f59e0b', color: '#f59e0b' }} /> {food.rating || 4.5}</span>
                   </div>
 
                   <div className="food-details">
                     <h3>{food.name}</h3>
                     <p className="category">{food.category}</p>
                     <p className="restaurant">
-                      🏪 {getRestaurantNames(food).join(', ')}
+                      <Store size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+                      {getRestaurantNames(food).join(', ')}
                     </p>
+
 
                     <div className="food-price">{formatCurrency(food.price || 0)}</div>
 

@@ -66,19 +66,6 @@ const AdminSettings = () => {
           notificationMessage: appSettings.notificationMessage || 'Free delivery for orders above Ksh 2,500!',
         });
 
-        if (appSettings.promoNotifications) {
-          try {
-            await api.post('/notifications/create', {
-              title: 'Announcement',
-              message: appSettings.notificationMessage || 'Free delivery for orders above Ksh 2,500!',
-              type: 'promotion',
-              userId: null,
-            });
-          } catch (err) {
-            console.error('Failed to create broadcast notification:', err);
-          }
-        }
-
         try {
           localStorage.setItem('app_settings_updated', Date.now().toString());
           window.dispatchEvent(new Event('app_settings_updated'));
@@ -132,13 +119,14 @@ const AdminSettings = () => {
         userId: notificationForm.userId || null,
       });
 
-      setNotificationMessage('✅ Notification sent successfully!');
+      setNotificationMessage('Notification sent successfully!');
       setNotificationForm({ title: '', message: '', type: 'system', userId: '' });
       setTimeout(() => setNotificationMessage(''), 3000);
       fetchNotifications();
     } catch (error) {
       console.error('Error sending notification:', error);
-      setNotificationMessage('❌ Error sending notification');
+      setNotificationMessage('Error sending notification');
+
       setTimeout(() => setNotificationMessage(''), 3000);
     } finally {
       setNotificationLoading(false);
@@ -156,7 +144,7 @@ const AdminSettings = () => {
     }
   };
 
-  // Save settings to the backend and publish a broadcast notification when enabled
+  // Save settings to backend
   const saveSettings = async () => {
     try {
       await updateAppSettings(settings);
@@ -168,19 +156,6 @@ const AdminSettings = () => {
         // ignore storage errors
       }
 
-      if (settings.promoNotifications && settings.notificationMessage?.trim()) {
-        try {
-          await api.post('/notifications/create', {
-            title: 'New offer',
-            message: settings.notificationMessage,
-            type: 'promotion',
-            userId: null,
-          });
-        } catch (notificationError) {
-          console.error('Error creating promo notification:', notificationError);
-        }
-      }
-
       alert('Settings saved successfully!');
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -189,6 +164,7 @@ const AdminSettings = () => {
   };
 
   const handleSettingChange = (key, value) => {
+
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -407,7 +383,8 @@ const AdminSettings = () => {
                   rows="3"
                 />
                 <div className="notification-preview">
-                  <p className="preview-title">📱 Preview:</p>
+                  <p className="preview-title">Preview:</p>
+
                   <div className="preview-box">
                     <p className="preview-content">
                       {settings.notificationMessage || 'Your notification message will appear here...'}

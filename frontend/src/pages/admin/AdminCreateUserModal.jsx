@@ -42,7 +42,8 @@ const AdminCreateUserModal = ({ isOpen, onClose, onSave }) => {
     
     setLoading(true);
     try {
-      console.log('📝 Submitting user data:', formData);
+      console.log('Submitting user data:', formData);
+
       const result = await onSave(formData);
       if (result !== false) {
         onClose();

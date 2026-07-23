@@ -75,7 +75,8 @@ const AdminCreateRestaurantModal = ({ isOpen, onClose, onSave }) => {
         cuisine: cuisineArray,
       };
       
-      console.log('📝 Submitting restaurant data:', newData);
+      console.log('Submitting restaurant data:', newData);
+
       const result = await onSave(newData);
       
       // Only close if save was successful

@@ -54,36 +54,45 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const data = await getAllOrders();
-      setOrders(data);
-      setFilteredOrders(data);
-      await fetchAvailableRiders();
 
-      // Bulk fetch all stores and restaurants once to avoid many per-id requests
-      try {
-        const [storesList, restaurantsList] = await Promise.all([getAllStores(), getAllRestaurants()]);
-        const storesObj = {};
-        (storesList || []).forEach((s) => {
-          if (s && s._id) storesObj[String(s._id)] = s;
-        });
+      const [data, ridersRes, storesList, restaurantsList] = await Promise.all([
+        getAllOrders().catch(() => []),
+        fetch('/api/orders/rider/available', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }).then((res) => res.json()).catch(() => ({ success: false })),
+        getAllStores().catch(() => []),
+        getAllRestaurants().catch(() => []),
+      ]);
 
-        const restsObj = {};
-        (restaurantsList || []).forEach((r) => {
-          if (r && r._id) restsObj[String(r._id)] = r;
-        });
+      const ordersList = Array.isArray(data) ? data : [];
+      setOrders(ordersList);
+      setFilteredOrders(ordersList);
 
-        setStoresMap(storesObj);
-        setRestaurantsMap(restsObj);
-      } catch (innerErr) {
-        // If bulk fetch fails, continue without maps
-        console.warn('Failed to fetch stores/restaurants in bulk:', innerErr);
+      if (ridersRes?.success) {
+        setAvailableRiders(ridersRes.data || []);
+      } else {
+        setAvailableRiders([]);
       }
+
+      const storesObj = {};
+      (storesList || []).forEach((s) => {
+        if (s && s._id) storesObj[String(s._id)] = s;
+      });
+
+      const restsObj = {};
+      (restaurantsList || []).forEach((r) => {
+        if (r && r._id) restsObj[String(r._id)] = r;
+      });
+
+      setStoresMap(storesObj);
+      setRestaurantsMap(restsObj);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   const resolveRestaurantName = (order) => {
     const explicit = ((order && order.restaurant && order.restaurant.name) || order.restaurantName || '');

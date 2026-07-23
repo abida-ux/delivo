@@ -119,17 +119,18 @@ exports.createOrder = async (req, res, next) => {
 
 
     const appSettings = (await AppSettings.findOne()) || {};
-    const freeDeliveryEnabled = appSettings.freeDeliveryEnabled !== false;
-    const freeDeliveryMinimum = Number(appSettings.freeDeliveryMinimum) || 0;
+    const freeDeliveryEnabled = appSettings.freeDeliveryEnabled === true;
+    const freeDeliveryMinimum = appSettings.freeDeliveryMinimum != null ? Number(appSettings.freeDeliveryMinimum) : 2500;
     const isFreeDelivery = freeDeliveryEnabled && subtotal >= freeDeliveryMinimum;
 
     let parsedDeliveryFee = Number(deliveryFee);
     if (Number.isNaN(parsedDeliveryFee) || parsedDeliveryFee < 0) {
       parsedDeliveryFee = 0;
     }
-    const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 0;
-    const finalDeliveryFee = isFreeDelivery ? 0 : (deliveryFee !== undefined ? parsedDeliveryFee : deliveryFeeFromSettings);
+    const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 20;
+    const finalDeliveryFee = isFreeDelivery ? 0 : (deliveryFee !== undefined && deliveryFee !== null ? parsedDeliveryFee : deliveryFeeFromSettings);
     const totalPrice = subtotal + finalDeliveryFee;
+
 
     // ✅ Create order with userId (if authenticated) or guest info (if guest)
     const order = await Order.create({
@@ -478,7 +479,8 @@ exports.getAllOrders = async (req, res, next) => {
     const orders = await Order.find()
       .populate('userId', 'name email phone')
       .populate('items.foodId')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -486,6 +488,124 @@ exports.getAllOrders = async (req, res, next) => {
       data: orders,
     });
   } catch (error) {
+
     next(error);
   }
 };
+
+// @desc Get unassigned available orders for riders to claim
+// @route GET /api/orders/rider/unassigned
+exports.getUnassignedOrders = async (req, res, next) => {
+  try {
+    const requester = await User.findById(req.user.id);
+    if (!requester || requester.role !== 'rider') {
+      return res.status(403).json({ success: false, message: 'Riders only' });
+    }
+
+    const unassignedOrders = await Order.find({
+      $or: [
+        { riderId: { $exists: false } },
+        { riderId: null }
+      ],
+      status: { $in: ['pending', 'confirmed', 'preparing'] },
+    })
+      .populate('items.foodId')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: unassignedOrders.length,
+      data: unassignedOrders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc Claim/Grab an order (Rider)
+// @route PUT /api/orders/:id/claim
+exports.claimOrder = async (req, res, next) => {
+  try {
+    const riderId = req.user.id;
+    const riderUser = await User.findById(riderId);
+    if (!riderUser || riderUser.role !== 'rider') {
+      return res.status(403).json({ success: false, message: 'Riders only' });
+    }
+
+    const orderId = req.params.id;
+
+    // Atomic find and update to prevent race conditions when 2 riders click claim simultaneously
+    const order = await Order.findOneAndUpdate(
+      {
+        _id: orderId,
+        $or: [{ riderId: { $exists: false } }, { riderId: null }],
+        status: { $in: ['pending', 'confirmed', 'preparing'] },
+      },
+      {
+        $set: {
+          riderId: riderUser._id,
+          status: 'assigned',
+          deliveryStatus: 'assigned',
+          currentRiderStatus: 'assigned',
+          assignedAt: new Date(),
+          updatedAt: new Date(),
+        },
+      },
+      { new: true }
+    ).populate('items.foodId');
+
+    if (!order) {
+      return res.status(400).json({
+        success: false,
+        message: 'This order is no longer available or has already been grabbed by another rider.',
+      });
+    }
+
+    // Update rider's status
+    riderUser.riderStatus = 'on-delivery';
+    riderUser.isOnline = true;
+    riderUser.currentOrderId = order._id;
+    riderUser.lastSeenAt = new Date();
+    await riderUser.save();
+
+    // Send notifications
+    try {
+      const adminUsers = await User.find({ role: 'admin' });
+      const restaurant = order.restaurantId ? await Restaurant.findById(order.restaurantId) : null;
+      const restaurantOwner = restaurant?.ownerId ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' }) : null;
+      const customerUser = order.userId ? await User.findById(order.userId) : null;
+
+      const orderIdShort = order._id.toString().slice(-6).toUpperCase();
+      const customerName = customerUser?.name || order.customerName || 'Customer';
+      const restaurantName = restaurant?.name || 'restaurant';
+
+      const claimNotificationPayload = {
+        title: 'Order Claimed by Rider',
+        message: `Rider ${riderUser.name || 'A rider'} accepted Order #${orderIdShort} for ${restaurantName}.`,
+        url: '/admin/orders',
+        tag: 'delivo-order-claimed',
+      };
+
+      for (const adminUser of adminUsers) {
+        await createInAppNotification({ userId: adminUser._id, title: claimNotificationPayload.title, message: claimNotificationPayload.message, type: 'order' });
+        await sendPushToUser({ userId: adminUser._id, payload: claimNotificationPayload });
+      }
+
+      if (restaurantOwner?._id) {
+        await createInAppNotification({ userId: restaurantOwner._id, title: claimNotificationPayload.title, message: claimNotificationPayload.message, type: 'order' });
+        await sendPushToUser({ userId: restaurantOwner._id, payload: claimNotificationPayload });
+      }
+    } catch (notifErr) {
+      console.error('⚠️ Claim order notification error:', notifErr.message || notifErr);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Order grabbed successfully! Drive safely.',
+      data: order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

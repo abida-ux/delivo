@@ -11,10 +11,14 @@ const {
   getOrderById,
   updateOrderStatus,
   getAllOrders,
+  getUnassignedOrders,
+  claimOrder,
 } = require('../controllers/orderController');
 
 router.post('/', createOrder);
 router.get('/user/:userId', getUserOrders);
+router.get('/rider/unassigned', authenticate, getUnassignedOrders);
+router.put('/:id/claim', authenticate, claimOrder);
 
 router.get('/rider/assigned', authenticate, async (req, res, next) => {
   try {

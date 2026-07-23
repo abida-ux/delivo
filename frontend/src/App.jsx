@@ -50,7 +50,7 @@ const registerServiceWorker = async () => {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`);
+    const registration = await navigator.serviceWorker.register('/sw.js');
     await navigator.serviceWorker.ready;
     return registration;
   } catch (error) {
@@ -58,6 +58,7 @@ const registerServiceWorker = async () => {
     return null;
   }
 };
+
 
 // Register Web Push API subscription (VAPID-based, separate from FCM)
 // Only called when user is authenticated so the backend can associate the subscription

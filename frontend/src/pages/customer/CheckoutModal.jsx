@@ -45,9 +45,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         setDeliverySettings({
           enabled: settings.deliveryFeeEnabled !== false,
           amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
-          freeDeliveryEnabled: settings.freeDeliveryEnabled !== false,
-          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 0,
+          freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
+          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
         });
+
       } catch (error) {
         console.error('Error loading app settings:', error);
       }
