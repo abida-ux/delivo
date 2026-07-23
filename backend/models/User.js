@@ -35,11 +35,11 @@ const UserSchema = new mongoose.Schema({
   riderStatus: {
     type: String,
     enum: ['available', 'on-delivery', 'offline'],
-    default: 'offline',
+    default: 'available',
   },
   isOnline: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   currentOrderId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -338,14 +338,16 @@ exports.updateOrderStatus = async (req, res, next) => {
         riderUser.lastSeenAt = new Date();
         await riderUser.save();
       }
-    } else if (nextStatus === 'delivered' && order.riderId) {
+    } else if ((nextStatus === 'delivered' || nextStatus === 'cancelled') && order.riderId) {
       const riderUser = await User.findById(order.riderId);
       if (riderUser) {
         riderUser.riderStatus = 'available';
         riderUser.isOnline = true;
         riderUser.currentOrderId = null;
-        riderUser.totalDeliveries = (riderUser.totalDeliveries || 0) + 1;
-        riderUser.totalEarnings = Number(riderUser.totalEarnings || 0) + Number(order.totalPrice || 0) * 0.1;
+        if (nextStatus === 'delivered') {
+          riderUser.totalDeliveries = (riderUser.totalDeliveries || 0) + 1;
+          riderUser.totalEarnings = Number(riderUser.totalEarnings || 0) + Number(order.totalPrice || 0) * 0.1;
+        }
         riderUser.lastSeenAt = new Date();
         await riderUser.save();
       }
