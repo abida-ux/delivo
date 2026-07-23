@@ -45,16 +45,12 @@ router.get('/rider/available', authenticate, async (req, res, next) => {
       riderId: { $ne: null },
     }).select('riderId');
 
-    const busyRiderIds = busyOrders.map((order) => order.riderId.toString());
+    const busyRiderIds = busyOrders.map((order) => String(order.riderId));
 
     const availableRiders = await User.find({
       role: 'rider',
       _id: { $nin: busyRiderIds },
-      $or: [
-        { riderStatus: 'available' },
-        { riderStatus: 'offline' },
-        { riderStatus: { $exists: false } },
-      ],
+      currentOrderId: null,
     }).select('-password');
 
     res.status(200).json({ success: true, data: availableRiders });

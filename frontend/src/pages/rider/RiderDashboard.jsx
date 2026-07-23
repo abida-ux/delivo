@@ -27,7 +27,13 @@ const RiderDashboard = () => {
         fetch(`/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json()),
         fetch(`/api/orders/rider/assigned`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => res.json()),
       ]);
-      if (profileRes?.success) setProfile(profileRes.data);
+      if (profileRes?.success) {
+        const normalizedProfile = {
+          ...profileRes.data,
+          riderStatus: profileRes.data?.riderStatus === 'on-delivery' ? 'on-delivery' : 'available',
+        };
+        setProfile(normalizedProfile);
+      }
       if (assignedRes?.success) setOrders(assignedRes.data || []);
     } catch (error) {
       console.error('Failed to load rider dashboard', error);
@@ -84,28 +90,6 @@ const RiderDashboard = () => {
     { label: 'Earnings', value: `KES ${((profile?.totalEarnings || 0)).toFixed(0)}`, icon: DollarSign, color: '#8b5cf6' },
   ], [orders, profile]);
 
-  const handleStatusToggle = async () => {
-    if (!user?.id && !user?._id) return;
-    setUpdating(true);
-    try {
-      const nextStatus = profile?.riderStatus === 'offline' ? 'available' : 'offline';
-      const response = await fetch('/api/users/me/status', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ riderStatus: nextStatus }),
-      });
-      const data = await response.json();
-      if (data?.success) {
-        setProfile(data.data);
-        setMessage(`Status updated to ${data.data.riderStatus}`);
-      }
-    } catch (error) {
-      console.error('Failed to update rider status', error);
-      setMessage('Unable to update rider status right now.');
-    } finally {
-      setUpdating(false);
-    }
-  };
 
   const handleOrderAction = async (order, action) => {
     try {
@@ -145,12 +129,9 @@ const RiderDashboard = () => {
             <p>Delivery Partner Dashboard</p>
           </div>
           <div className="status-toggle">
-            <span className={profile?.riderStatus === 'available' ? 'online' : profile?.riderStatus === 'on-delivery' ? 'busy' : 'offline'}>
-              {profile?.riderStatus === 'available' ? '🟢 Available' : profile?.riderStatus === 'on-delivery' ? '🟡 On Delivery' : '🔴 Offline'}
+            <span className={profile?.riderStatus === 'on-delivery' ? 'busy' : 'online'}>
+              {profile?.riderStatus === 'on-delivery' ? '🟡 On Delivery' : '🟢 Available'}
             </span>
-            <button className="toggle-btn" onClick={handleStatusToggle} disabled={updating}>
-              {updating ? 'Updating...' : profile?.riderStatus === 'offline' ? 'Go Online' : 'Go Offline'}
-            </button>
           </div>
         </div>
       </div>
