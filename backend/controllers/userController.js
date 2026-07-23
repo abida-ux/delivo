@@ -642,6 +642,46 @@ exports.getUserProfile = async (req, res, next) => {
   }
 };
 
+exports.getCurrentUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateRiderStatus = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || user.role !== 'rider') {
+      return res.status(403).json({ success: false, message: 'Riders only' });
+    }
+
+    const nextStatus = String(req.body.riderStatus || '').toLowerCase();
+    const allowedStatuses = ['available', 'on-delivery', 'offline'];
+    if (!allowedStatuses.includes(nextStatus)) {
+      return res.status(400).json({ success: false, message: 'Invalid rider status' });
+    }
+
+    user.riderStatus = nextStatus;
+    user.isOnline = nextStatus !== 'offline';
+    user.lastSeenAt = new Date();
+    if (nextStatus === 'offline') {
+      user.currentOrderId = null;
+    }
+    await user.save();
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateUserProfile = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {

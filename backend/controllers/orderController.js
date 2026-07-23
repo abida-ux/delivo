@@ -7,6 +7,7 @@ const User = require('../models/User');
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
+const { isActiveDeliveryStatus } = require('../utils/riderWorkflow');
 
 
 // @desc Create order
@@ -305,10 +306,50 @@ exports.updateOrderStatus = async (req, res, next) => {
       });
     }
 
-    order.status = status || order.status;
-    order.paymentStatus = paymentStatus || order.paymentStatus;
-    order.riderId = riderId || order.riderId;
+    const nextStatus = status || order.status;
+    const nextPaymentStatus = paymentStatus || order.paymentStatus;
+    const nextRiderId = riderId || order.riderId;
+
+    order.status = nextStatus;
+    order.paymentStatus = nextPaymentStatus;
+    order.riderId = nextRiderId;
     order.updatedAt = Date.now();
+
+    if (nextStatus === 'assigned' || nextStatus === 'out-for-delivery' || nextStatus === 'on-delivery') {
+      order.deliveryStatus = 'assigned';
+      order.currentRiderStatus = 'assigned';
+      if (!order.assignedAt) order.assignedAt = new Date();
+      if (nextStatus === 'out-for-delivery' || nextStatus === 'on-delivery') {
+        order.deliveryStartedAt = order.deliveryStartedAt || new Date();
+        order.deliveryStatus = 'out-for-delivery';
+      }
+    } else if (nextStatus === 'delivered') {
+      order.deliveryStatus = 'delivered';
+      order.deliveryCompletedAt = order.deliveryCompletedAt || new Date();
+      order.currentRiderStatus = 'available';
+    }
+
+    if (nextRiderId && (nextStatus === 'assigned' || nextStatus === 'out-for-delivery' || nextStatus === 'on-delivery')) {
+      const riderUser = await User.findById(nextRiderId);
+      if (riderUser) {
+        riderUser.riderStatus = 'on-delivery';
+        riderUser.isOnline = true;
+        riderUser.currentOrderId = order._id;
+        riderUser.lastSeenAt = new Date();
+        await riderUser.save();
+      }
+    } else if (nextStatus === 'delivered' && order.riderId) {
+      const riderUser = await User.findById(order.riderId);
+      if (riderUser) {
+        riderUser.riderStatus = 'available';
+        riderUser.isOnline = true;
+        riderUser.currentOrderId = null;
+        riderUser.totalDeliveries = (riderUser.totalDeliveries || 0) + 1;
+        riderUser.totalEarnings = Number(riderUser.totalEarnings || 0) + Number(order.totalPrice || 0) * 0.1;
+        riderUser.lastSeenAt = new Date();
+        await riderUser.save();
+      }
+    }
 
     await order.save();
     await order.populate('items.foodId');

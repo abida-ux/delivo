@@ -3,11 +3,12 @@ import { MapPin, Clock, DollarSign, Package, Search, Loader, ChevronRight, Navig
 import './RiderStores.css';
 import { useNavigate } from 'react-router-dom';
 import { getAllOrders } from '../../services/api';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext as AuthContextValue } from '../../context/AuthContext.jsx';
 
 const RiderStores = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const authContext = AuthContextValue ? useContext(AuthContextValue) : null;
+  const user = authContext?.user ?? null;
   
   const [filters, setFilters] = useState('available');
   const [searchTerm, setSearchTerm] = useState('');

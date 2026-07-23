@@ -32,6 +32,32 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  riderStatus: {
+    type: String,
+    enum: ['available', 'on-delivery', 'offline'],
+    default: 'offline',
+  },
+  isOnline: {
+    type: Boolean,
+    default: false,
+  },
+  currentOrderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order',
+    default: null,
+  },
+  totalDeliveries: {
+    type: Number,
+    default: 0,
+  },
+  totalEarnings: {
+    type: Number,
+    default: 0,
+  },
+  lastSeenAt: {
+    type: Date,
+    default: Date.now,
+  },
   isVerified: {
     type: Boolean,
     default: false,

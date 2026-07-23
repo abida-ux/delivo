@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate } = require('../middleware/authMiddleware');
+const User = require('../models/User');
+const Order = require('../models/Order');
+const Restaurant = require('../models/Restaurant');
+const { createInAppNotification, sendPushToUser } = require('../utils/pushNotifications');
 const {
   createOrder,
   getUserOrders,
@@ -13,5 +18,106 @@ router.get('/user/:userId', getUserOrders);
 router.get('/:id', getOrderById);
 router.put('/:id', updateOrderStatus);
 router.get('/', getAllOrders);
+
+router.get('/rider/assigned', authenticate, async (req, res, next) => {
+  try {
+    const requester = await User.findById(req.user.id);
+    if (!requester || requester.role !== 'rider') {
+      return res.status(403).json({ success: false, message: 'Riders only' });
+    }
+
+    const orders = await Order.find({ riderId: requester._id }).populate('items.foodId').sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/rider/available', authenticate, async (req, res, next) => {
+  try {
+    const requester = await User.findById(req.user.id);
+    if (!requester || requester.role !== 'rider') {
+      return res.status(403).json({ success: false, message: 'Riders only' });
+    }
+
+    const availableRiders = await User.find({ role: 'rider', riderStatus: 'available' }).select('-password');
+    res.status(200).json({ success: true, data: availableRiders });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/rider/assign', authenticate, async (req, res, next) => {
+  try {
+    const adminUser = await User.findById(req.user.id);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admins only' });
+    }
+
+    const { orderId, riderId } = req.body;
+    if (!orderId || !riderId) {
+      return res.status(400).json({ success: false, message: 'Order ID and rider ID are required' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const riderUser = await User.findById(riderId);
+    if (!riderUser || riderUser.role !== 'rider') {
+      return res.status(400).json({ success: false, message: 'Invalid rider selected' });
+    }
+
+    const activeOrderCount = await Order.countDocuments({ riderId, status: { $in: ['assigned', 'out-for-delivery', 'on-delivery', 'delivered'] } });
+    if (riderUser.riderStatus !== 'available' || activeOrderCount > 0 || riderUser.currentOrderId) {
+      return res.status(400).json({ success: false, message: 'Rider is not available for assignment' });
+    }
+
+    order.riderId = riderUser._id;
+    order.status = 'assigned';
+    order.deliveryStatus = 'assigned';
+    order.currentRiderStatus = 'assigned';
+    order.assignedAt = new Date();
+    order.updatedAt = new Date();
+    await order.save();
+
+    riderUser.riderStatus = 'on-delivery';
+    riderUser.isOnline = true;
+    riderUser.currentOrderId = order._id;
+    riderUser.lastSeenAt = new Date();
+    await riderUser.save();
+
+    const restaurant = order.restaurantId ? await Restaurant.findById(order.restaurantId) : null;
+    const customerUser = order.userId ? await User.findById(order.userId) : null;
+    const orderIdShort = order._id.toString().slice(-6).toUpperCase();
+    const customerName = customerUser?.name || order.customerName || 'Customer';
+    const restaurantName = restaurant?.name || 'restaurant';
+    const deliveryAddress = order.deliveryAddress || 'your requested address';
+
+    const riderPayload = {
+      title: 'New Delivery Assigned',
+      message: `You have been assigned Order #${orderIdShort} from ${restaurantName}.`,
+      icon: '/favicon.ico',
+      url: '/rider-dashboard',
+      data: {
+        eventType: 'order_assigned_rider',
+        recipientRole: 'rider',
+        orderId: order._id.toString(),
+        customerName,
+        restaurantName,
+        deliveryAddress,
+        orderStatus: 'assigned',
+      },
+    };
+
+    await createInAppNotification({ userId: riderUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' });
+    await sendPushToUser({ userId: riderUser._id, payload: riderPayload });
+
+    res.status(200).json({ success: true, data: order, message: 'Rider assigned successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

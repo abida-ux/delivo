@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import { Eye, Search } from 'lucide-react';
+import { Eye, Search, UserCheck } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllOrders, updateOrder } from '../../services/api';
 import AdminEditOrderModal from './AdminEditOrderModal';
@@ -17,6 +17,11 @@ const AdminOrders = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [storesMap, setStoresMap] = useState({});
   const [restaurantsMap, setRestaurantsMap] = useState({});
+  const [availableRiders, setAvailableRiders] = useState([]);
+  const [assigningOrderId, setAssigningOrderId] = useState(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState(null);
+  const [selectedRiderId, setSelectedRiderId] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -28,6 +33,19 @@ const AdminOrders = () => {
       const data = await getAllOrders();
       setOrders(data);
       setFilteredOrders(data);
+
+      try {
+        const token = localStorage.getItem('token');
+        const ridersRes = await fetch('/api/orders/rider/available', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const ridersData = await ridersRes.json();
+        if (ridersData?.success) {
+          setAvailableRiders(ridersData.data || []);
+        }
+      } catch (innerErr) {
+        console.warn('Failed to fetch available riders:', innerErr);
+      }
 
       // Bulk fetch all stores and restaurants once to avoid many per-id requests
       try {
@@ -136,6 +154,43 @@ const AdminOrders = () => {
     }
   };
 
+  const openAssignModal = (order) => {
+    setSelectedOrderForAssignment(order);
+    setSelectedRiderId('');
+    setIsAssignModalOpen(true);
+  };
+
+  const closeAssignModal = () => {
+    setIsAssignModalOpen(false);
+    setSelectedOrderForAssignment(null);
+    setSelectedRiderId('');
+  };
+
+  const handleAssignRider = async (orderId, riderId = selectedRiderId) => {
+    if (!riderId) return;
+    try {
+      setAssigningOrderId(orderId);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/orders/rider/assign', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ orderId, riderId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.message || 'Unable to assign rider');
+      }
+      await fetchOrders();
+      closeAssignModal();
+      alert('Rider assigned successfully');
+    } catch (error) {
+      console.error('Assignment failed:', error);
+      alert(error.message || 'Unable to assign rider');
+    } finally {
+      setAssigningOrderId(null);
+    }
+  };
+
   return (
     <AdminDashboardLayout pageTitle="Orders Management">
       <div className="admin-orders">
@@ -200,6 +255,16 @@ const AdminOrders = () => {
                         >
                           <Eye size={18} />
                         </button>
+                        {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                          <button
+                            className="action-btn assign-btn"
+                            title="Assign Rider"
+                            onClick={() => openAssignModal(order)}
+                            disabled={assigningOrderId === order._id}
+                          >
+                            <UserCheck size={18} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -213,6 +278,37 @@ const AdminOrders = () => {
           </div>
         )}
       </div>
+
+      {isAssignModalOpen && selectedOrderForAssignment && (
+        <div className="modal-overlay" onClick={closeAssignModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Assign Rider</h3>
+              <button className="modal-close" onClick={closeAssignModal}>×</button>
+            </div>
+            <p className="assignment-summary">Order #{selectedOrderForAssignment._id?.slice(-6).toUpperCase()} - {selectedOrderForAssignment.customerName || 'Customer'}</p>
+            {availableRiders.length === 0 ? (
+              <p className="empty-riders">No riders are currently available.</p>
+            ) : (
+              <div className="assign-form">
+                <label htmlFor="riderSelect">Available Riders</label>
+                <select id="riderSelect" value={selectedRiderId} onChange={(e) => setSelectedRiderId(e.target.value)}>
+                  <option value="">Select a rider</option>
+                  {availableRiders.map((rider) => (
+                    <option key={rider._id} value={rider._id}>{rider.name} • {rider.email}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="form-actions">
+              <button type="button" className="btn-cancel" onClick={closeAssignModal}>Cancel</button>
+              <button type="button" className="btn-save" onClick={() => handleAssignRider(selectedOrderForAssignment._id)} disabled={!selectedRiderId || assigningOrderId === selectedOrderForAssignment._id}>
+                {assigningOrderId === selectedOrderForAssignment._id ? 'Assigning...' : 'Assign Rider'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AdminEditOrderModal
         isOpen={isEditModalOpen}

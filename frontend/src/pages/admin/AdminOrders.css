@@ -136,11 +136,39 @@
   border-color: var(--admin-primary-strong, #276749);
 }
 
+.assign-btn:hover {
+  color: var(--admin-primary-strong, #276749);
+  border-color: var(--admin-primary-strong, #276749);
+}
+
 .empty-state {
   padding: 60px 20px;
   text-align: center;
   color: #6b7280;
   font-size: 16px;
+}
+
+.assignment-summary {
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.assign-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.assign-form select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.empty-riders {
+  color: #b45309;
+  font-weight: 600;
 }
 
 .loading-state {

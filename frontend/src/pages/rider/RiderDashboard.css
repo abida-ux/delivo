@@ -1,0 +1,180 @@
+.rider-dashboard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-header {
+  background: linear-gradient(135deg, #fffaf6 0%, #ffffff 100%);
+  border: 1px solid #e7e0d8;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-toggle .online,
+.status-toggle .busy,
+.status-toggle .offline {
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.status-toggle .online { background: #dcfce7; color: #166534; }
+.status-toggle .busy { background: #fef3c7; color: #92400e; }
+.status-toggle .offline { background: #fee2e2; color: #991b1b; }
+
+.toggle-btn,
+.details-btn {
+  border: none;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: #2f855a;
+  color: white;
+}
+
+.toggle-btn:disabled,
+.details-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.stat-card,
+.delivery-card,
+.profile-section {
+  background: white;
+  border: 1px solid #efe5dc;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.04);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.count {
+  background: #f3f4f6;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.rider-toast {
+  background: #ecfdf3;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.deliveries-list {
+  display: grid;
+  gap: 12px;
+}
+
+.delivery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.badge.active {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.delivery-info p {
+  margin: 4px 0;
+  color: #374151;
+}
+
+.delivery-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.loading-state,
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #efe5dc;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.info-item label {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 768px) {
+  .rider-dashboard { padding: 16px; }
+  .header-top { flex-direction: column; align-items: flex-start; }
+  .status-toggle { width: 100%; justify-content: space-between; }
+}
