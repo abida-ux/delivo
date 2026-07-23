@@ -36,11 +36,27 @@ router.get('/rider/assigned', authenticate, async (req, res, next) => {
 router.get('/rider/available', authenticate, async (req, res, next) => {
   try {
     const requester = await User.findById(req.user.id);
-    if (!requester || requester.role !== 'rider') {
-      return res.status(403).json({ success: false, message: 'Riders only' });
+    if (!requester || !['admin', 'rider'].includes(requester.role)) {
+      return res.status(403).json({ success: false, message: 'Admins or riders only' });
     }
 
-    const availableRiders = await User.find({ role: 'rider', riderStatus: 'available' }).select('-password');
+    const busyOrders = await Order.find({
+      status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] },
+      riderId: { $ne: null },
+    }).select('riderId');
+
+    const busyRiderIds = busyOrders.map((order) => order.riderId.toString());
+
+    const availableRiders = await User.find({
+      role: 'rider',
+      _id: { $nin: busyRiderIds },
+      $or: [
+        { riderStatus: 'available' },
+        { riderStatus: 'offline' },
+        { riderStatus: { $exists: false } },
+      ],
+    }).select('-password');
+
     res.status(200).json({ success: true, data: availableRiders });
   } catch (error) {
     next(error);
@@ -69,8 +85,9 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid rider selected' });
     }
 
-    const activeOrderCount = await Order.countDocuments({ riderId, status: { $in: ['assigned', 'out-for-delivery', 'on-delivery', 'delivered'] } });
-    if (riderUser.riderStatus !== 'available' || activeOrderCount > 0 || riderUser.currentOrderId) {
+    const activeOrderCount = await Order.countDocuments({ riderId, status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] } });
+    const isBusy = activeOrderCount > 0 || !!riderUser.currentOrderId || riderUser.riderStatus === 'on-delivery';
+    if (isBusy) {
       return res.status(400).json({ success: false, message: 'Rider is not available for assignment' });
     }
 
