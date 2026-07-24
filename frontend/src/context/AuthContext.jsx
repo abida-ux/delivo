@@ -71,9 +71,16 @@ export const AuthProvider = ({ children }) => {
 
     try {
       initializeFirebase();
-      const permission = Notification.permission;
+      if (Notification.permission === 'default') {
+        try {
+          const res = await Notification.requestPermission();
+          console.log('[Auth] Notification permission request result:', res);
+        } catch (err) {
+          console.warn('[Auth] Notification permission request failed:', err);
+        }
+      }
 
-      if (permission !== 'granted') {
+      if (Notification.permission !== 'granted') {
         console.warn('[Auth] Notification permission not granted. FCM registration skipped.');
         return null;
       }

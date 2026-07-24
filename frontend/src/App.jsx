@@ -81,6 +81,15 @@ const registerBrowserPushSubscription = async () => {
     return;
   }
 
+  if (Notification.permission === 'default') {
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('[WebPush] Notification permission request result:', permission);
+    } catch (err) {
+      console.warn('[WebPush] Notification permission request failed:', err);
+    }
+  }
+
   if (Notification.permission !== 'granted') {
     return;
   }
@@ -98,16 +107,16 @@ const registerBrowserPushSubscription = async () => {
     }
 
     const existingSubscription = await registration.pushManager.getSubscription();
-    if (existingSubscription) {
-      return;
+    
+    let subscription = existingSubscription;
+    if (!subscription) {
+      const options = {
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      };
+      subscription = await registration.pushManager.subscribe(options);
     }
 
-    const options = {
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-    };
-
-    const subscription = await registration.pushManager.subscribe(options);
     await savePushSubscription({
       endpoint: subscription.endpoint,
       keys: {
@@ -116,7 +125,7 @@ const registerBrowserPushSubscription = async () => {
       },
     });
   } catch (error) {
-    console.warn('Browser push registration skipped:', error);
+    console.warn('Browser push registration failed:', error);
   }
 };
 

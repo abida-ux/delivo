@@ -147,25 +147,49 @@ exports.createNotification = async (req, res) => {
       });
     }
 
-    // Create notification
-    const notification = await Notification.create({
-      title,
-      message,
-      type: type || 'system',
-      userId: userId || null, // null = broadcast to all
-    });
-
-    const payload = buildAdminNotificationPayload({
-      title,
-      message,
-      type: type || 'system',
-      notificationId: notification._id.toString(),
-    });
-
     if (userId) {
+      // Create single notification
+      const notification = await Notification.create({
+        title,
+        message,
+        type: type || 'system',
+        userId,
+      });
+
+      const payload = buildAdminNotificationPayload({
+        title,
+        message,
+        type: type || 'system',
+        notificationId: notification._id.toString(),
+      });
+
       await sendPushToUser({ userId, payload });
     } else {
-      await sendPushToAllActiveSubscriptions(payload);
+      // Broadcast to all users: find all users
+      const allUsers = await User.find({}, '_id');
+      
+      // Let's create separate in-app records and dispatch push for each user
+      for (const targetUser of allUsers) {
+        try {
+          const notification = await Notification.create({
+            title,
+            message,
+            type: type || 'system',
+            userId: targetUser._id,
+          });
+
+          const payload = buildAdminNotificationPayload({
+            title,
+            message,
+            type: type || 'system',
+            notificationId: notification._id.toString(),
+          });
+
+          await sendPushToUser({ userId: targetUser._id, payload });
+        } catch (err) {
+          console.error(`Error sending broadcast notification to user ${targetUser._id}:`, err.message);
+        }
+      }
     }
 
     res.status(201).json({
