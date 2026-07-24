@@ -54,7 +54,7 @@ const FoodCard = ({ food }) => {
               onClick={openCart}
             >
               <ShoppingCart size={16} />
-              In Cart
+              <span className="btn-text">In Cart</span>
             </button>
           ) : (
             <div className="quantity-selector">
@@ -78,7 +78,7 @@ const FoodCard = ({ food }) => {
                 onClick={handleAddToCart}
               >
                 <ShoppingCart size={16} />
-                Add
+                <span className="btn-text">Add</span>
               </button>
             </div>
           )}

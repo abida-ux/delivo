@@ -276,19 +276,21 @@
     text-align: center;
   }
   .add-to-cart-btn, .go-to-cart-btn {
-    width: auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 50% !important;
+    padding: 0 !important;
     flex-shrink: 0; /* Prevent the cart button from shrinking */
-    height: 38px; /* Touch target close to 40px */
-    padding: 6px 8px; /* Slightly reduced width/padding */
-    font-size: 11px;
-    gap: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
+  .add-to-cart-btn .btn-text, .go-to-cart-btn .btn-text {
+    display: none !important;
+  }
   .add-to-cart-btn svg, .go-to-cart-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
 }
 
