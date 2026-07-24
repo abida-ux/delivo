@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DELIVO RIDER EARNINGS — Premium Orange Theme & Full Responsive
+   DELIVO RIDER EARNINGS — Clean Theme & Full Responsive
    ========================================================================== */
 
 .rider-earnings {
@@ -7,7 +7,7 @@
   margin: 0 auto;
   padding: 28px 24px 100px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #1e293b;
+  color: var(--delivo-slate);
   min-height: 100vh;
 }
 
@@ -20,12 +20,12 @@
 .rider-earnings .page-header h1 {
   font-size: 28px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   letter-spacing: -0.5px;
 }
 
 .rider-earnings .page-header p {
-  color: #64748b;
+  color: var(--delivo-text-muted);
   font-size: 15px;
   margin-top: 4px;
 }
@@ -37,12 +37,13 @@
 
 .earning-card.primary {
   position: relative;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #090d16 100%);
+  background: linear-gradient(180deg, #f8fbf6 0%, #e9f5eb 100%);
   border-radius: 24px;
   padding: 28px 28px 20px;
-  color: white;
+  color: var(--delivo-dark);
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.18);
+  box-shadow: 0 12px 40px rgba(39, 87, 64, 0.08);
 }
 
 .earning-card.primary::before {
@@ -52,395 +53,244 @@
   right: -80px;
   width: 280px;
   height: 280px;
-  background: radial-gradient(circle, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0) 70%);
   pointer-events: none;
 }
 
 .earning-card .card-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 20px;
-  position: relative;
-  z-index: 2;
 }
 
-.earning-card .card-top .label {
-  font-size: 13px;
+.earning-card .card-top .title {
+  font-size: 14px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--delivo-orange);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0;
 }
 
-.earning-card .card-top .amount {
+.earning-card .card-top .timeframe {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid var(--delivo-card-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--delivo-dark);
+}
+
+.earning-card .main-val {
   font-size: 38px;
   font-weight: 800;
-  margin: 6px 0 0;
-  color: white;
-  letter-spacing: -1px;
+  margin: 0 0 8px 0;
+  color: var(--delivo-dark);
 }
 
-.earning-card .card-top .icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 107, 0, 0.2);
-  border: 1px solid rgba(255, 107, 0, 0.3);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ff6b00;
-}
-
-/* Timeframe Buttons */
-.timeframe-buttons {
-  display: flex;
-  gap: 8px;
-  position: relative;
-  z-index: 2;
-  padding: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.tf-btn {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 11px;
-  border: none;
-  background: transparent;
+.earning-card .card-subtext {
   font-size: 13px;
-  font-weight: 700;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  color: var(--delivo-text-muted);
 }
 
-.tf-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.tf-btn.active {
-  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
-  color: white;
-  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.35);
-}
-
-/* ---- Stats Grid ---- */
-.rider-earnings .stats-grid {
+/* Secondary Cards */
+.earnings-grid-sub {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-bottom: 28px;
+  margin-top: 16px;
 }
 
-.rider-earnings .stat-card {
+.earning-card.sub {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--delivo-card-border);
   border-radius: 18px;
   padding: 20px;
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-  transition: all 0.25s ease;
 }
 
-.rider-earnings .stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.08);
-  border-color: #ffc499;
-}
-
-.rider-earnings .stat-card .stat-icon {
+.earning-card.sub .icon-box {
   width: 48px;
   height: 48px;
-  background: #fff7ed;
-  color: #ff6b00;
   border-radius: 14px;
+  background: var(--delivo-orange-light);
+  color: var(--delivo-orange);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   font-size: 24px;
 }
 
-.rider-earnings .stat-card .stat-label {
+.earning-card.sub .label {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
-  margin: 0;
+  color: var(--delivo-text-muted);
 }
 
-.rider-earnings .stat-card .stat-content h3 {
-  font-size: 22px;
+.earning-card.sub .val {
+  font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 4px 0 0;
+  color: var(--delivo-dark);
+  margin-top: 4px;
 }
 
 /* ---- Chart Section ---- */
-.chart-section {
+.earnings-chart-section {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 22px;
+  border: 1px solid var(--delivo-card-border);
+  border-radius: 24px;
   padding: 24px;
-  margin-bottom: 28px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  margin-bottom: 24px;
 }
 
-.chart-section h2 {
-  font-size: 18px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 20px;
-}
-
-.simple-chart {
+.chart-header {
   display: flex;
-  gap: 16px;
-  align-items: flex-end;
-  height: 200px;
-  padding: 10px 0;
-}
-
-.chart-bar-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  height: 100%;
+  margin-bottom: 24px;
+}
+
+.chart-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--delivo-dark);
+}
+
+.chart-tabs {
+  display: flex;
+  background: var(--delivo-bg-light);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid var(--delivo-card-border);
+}
+
+.chart-tab {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--delivo-text-muted);
+  cursor: pointer;
+}
+
+.chart-tab.active {
+  background: white;
+  color: var(--delivo-orange);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Chart Canvas */
+.chart-container {
+  height: 220px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-bottom: 1px solid var(--delivo-card-border);
+  position: relative;
 }
 
 .chart-bar-wrapper {
   flex: 1;
-  width: 100%;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.chart-bar-hover-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--delivo-orange);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chart-bar-wrapper:hover .chart-bar-hover-val {
+  opacity: 1;
 }
 
 .chart-bar {
-  width: 100%;
-  max-width: 60px;
-  border-radius: 10px 10px 4px 4px;
-  background: linear-gradient(to top, #ff6b00, #ff8800) !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: growBar 0.6s ease-out;
-  position: relative;
-  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+  width: 24px;
+  background: linear-gradient(to top, var(--delivo-orange), #ff9f43);
+  border-radius: 6px 6px 0 0;
+  transition: height 0.5s ease;
+  min-height: 4px;
 }
 
-.chart-bar:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.4);
-  transform: scaleY(1.03);
-  transform-origin: bottom;
-}
-
-@keyframes growBar {
-  from { height: 0 !important; }
-}
-
-.chart-label {
-  font-size: 12px;
+.chart-bar-label {
+  font-size: 11px;
   font-weight: 700;
-  color: #64748b;
-  margin: 0;
-}
-
-.chart-value {
-  font-size: 13px;
-  font-weight: 800;
-  color: #ff6b00;
-  margin: 0;
+  color: var(--delivo-text-muted);
+  margin-top: 8px;
 }
 
 /* ---- Transactions Section ---- */
 .transactions-section {
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 22px;
+  border: 1px solid var(--delivo-card-border);
+  border-radius: 24px;
   padding: 24px;
-  margin-bottom: 28px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
-.transactions-section .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.transactions-section .section-header h2 {
-  font-size: 18px;
+.transactions-section h3 {
+  font-size: 16px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0;
+  color: var(--delivo-dark);
+  margin-bottom: 16px;
 }
 
-.download-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  font-size: 13px;
-  font-weight: 700;
-  color: #1e293b;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.download-btn:hover {
-  background: #fff7ed;
-  border-color: #ffc499;
-  color: #ff6b00;
+.transactions-table-wrapper {
+  overflow-x: auto;
 }
 
 .transactions-table {
-  overflow-x: auto;
-  border-radius: 14px;
-  border: 1px solid #f1f5f9;
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
 }
 
-.transactions-table .table-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr 0.8fr 1fr 1.3fr 0.8fr;
-  gap: 12px;
-  padding: 14px 18px;
-  background: #f8fafc;
-  border-radius: 14px 14px 0 0;
+.transactions-table th {
+  padding: 12px 16px;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
+  color: var(--delivo-text-muted);
+  border-bottom: 1px solid var(--delivo-card-border);
 }
 
-.transactions-table .table-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr 0.8fr 1fr 1.3fr 0.8fr;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid #f1f5f9;
-  transition: background 0.2s ease;
-  align-items: center;
+.transactions-table td {
+  padding: 16px;
+  font-size: 14px;
+  color: var(--delivo-slate);
+  border-bottom: 1px solid var(--delivo-card-border);
 }
 
-.transactions-table .table-row:hover {
-  background: #fffbf5;
-}
-
-.transactions-table .table-row:last-child {
+.transactions-table tr:last-child td {
   border-bottom: none;
 }
 
-.transactions-table .cell {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.transactions-table .cell.highlight {
-  color: #ff6b00;
+.transactions-table .amount-col {
   font-weight: 800;
+  color: var(--delivo-dark);
 }
 
-.transactions-table .status-badge.completed {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: capitalize;
-  display: inline-block;
-}
-
-/* ---- Payout Section ---- */
-.payout-section {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 22px;
-  padding: 24px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-}
-
-.payout-section h2 {
-  font-size: 18px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 18px;
-}
-
-.payout-info {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  padding: 18px;
-  background: #f8fafc;
-  border-radius: 16px;
-  border: 1px solid #f1f5f9;
-  margin-bottom: 18px;
-}
-
-.payout-info .info-item label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.payout-info .info-item p {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.payout-info .info-item p.amount {
-  color: #ff6b00;
-  font-size: 20px;
-}
-
-.request-payout-btn {
-  width: 100%;
-  padding: 14px 24px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
-  color: white;
-  font-size: 15px;
-  font-weight: 800;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
-  transition: all 0.2s ease;
-}
-
-.request-payout-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+.transactions-table .amount-col.positive {
+  color: var(--delivo-orange);
 }
 
 /* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1024px) {
-  .rider-earnings .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .earnings-grid-sub {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -449,85 +299,12 @@
     padding: 16px 14px 100px;
   }
 
-  .rider-earnings .page-header h1 {
-    font-size: 22px;
+  .earning-card.primary .main-val {
+    font-size: 32px;
   }
 
-  .earning-card.primary {
-    padding: 22px 20px 18px;
-    border-radius: 20px;
-  }
-
-  .earning-card .card-top .amount {
-    font-size: 30px;
-  }
-
-  .earning-card .card-top .icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-  }
-
-  .timeframe-buttons {
-    flex-wrap: wrap;
-  }
-
-  .tf-btn {
-    min-width: fit-content;
-    padding: 8px 14px;
-    font-size: 12px;
-  }
-
-  .rider-earnings .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .rider-earnings .stat-card {
-    padding: 14px;
-    gap: 10px;
-  }
-
-  .rider-earnings .stat-card .stat-content h3 {
-    font-size: 18px;
-  }
-
-  .simple-chart {
-    height: 160px;
-    gap: 10px;
-  }
-
-  .chart-bar {
-    max-width: 50px;
-  }
-
-  /* Make table scroll horizontally on mobile */
-  .transactions-table .table-header,
-  .transactions-table .table-row {
-    min-width: 600px;
-  }
-
-  .payout-info {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .chart-section,
-  .transactions-section,
-  .payout-section {
-    padding: 18px;
-    border-radius: 18px;
-  }
-
-  .transactions-section .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .download-btn {
-    width: 100%;
-    justify-content: center;
+  .transactions-section {
+    padding: 16px;
   }
 }
 
@@ -537,28 +314,19 @@
   }
 
   .rider-earnings .page-header h1 {
-    font-size: 20px;
+    font-size: 22px;
   }
 
-  .earning-card .card-top {
-    flex-direction: column;
-    gap: 16px;
+  .earning-card.primary {
+    padding: 20px 20px 16px;
   }
 
-  .earning-card .card-top .amount {
+  .earning-card.primary .main-val {
     font-size: 28px;
   }
 
-  .simple-chart {
-    height: 130px;
-    gap: 6px;
-  }
-
-  .chart-label {
-    font-size: 10px;
-  }
-
-  .chart-value {
-    font-size: 11px;
+  .transactions-table td, .transactions-table th {
+    padding: 10px 12px;
+    font-size: 13px;
   }
 }

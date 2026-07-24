@@ -206,6 +206,11 @@ export const sendAdminNotification = async (data) => {
   return res.data;
 };
 
+export const getNotifications = async () => {
+  const res = await api.get('/notifications');
+  return res.data;
+};
+
 export const resendVerificationCode = async (data) => {
   const res = await api.post('/users/resend-verification-code', data);
   return res.data;

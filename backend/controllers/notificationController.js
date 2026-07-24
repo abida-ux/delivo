@@ -107,13 +107,8 @@ exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Get user notifications + broadcast notifications (userId is null)
-    const notifications = await Notification.find({
-      $or: [
-        { userId },
-        { userId: null }, // Broadcast notifications
-      ],
-    })
+    // Get user notifications only (broadcast is created per user by admin broadcast controller)
+    const notifications = await Notification.find({ userId })
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -214,6 +209,27 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error updating notification',
+      error: error.message,
+    });
+  }
+};
+
+// Mark all notifications as read for current user
+exports.markAllAsRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await Notification.updateMany(
+      { userId, isRead: false },
+      { isRead: true }
+    );
+    res.status(200).json({
+      success: true,
+      message: 'All notifications marked as read',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error marking all notifications as read',
       error: error.message,
     });
   }
@@ -424,7 +440,7 @@ exports.registerFcmToken = async (req, res) => {
       const { sendFcmMessage } = require('../utils/firebaseMessaging');
       const user = await require('../models/User').findById(userId);
 
-      if (user) {
+      if (user && !user.welcomeNotificationSent) {
         const welcomePayload = {
           title: 'Welcome to Delivo! 🎉',
           message: `Hi ${user.name}, your account has been created successfully. Start ordering your favorite food now!`,
@@ -438,6 +454,8 @@ exports.registerFcmToken = async (req, res) => {
         };
 
         await sendFcmMessage({ fcmToken, payload: welcomePayload });
+        user.welcomeNotificationSent = true;
+        await user.save();
         console.log(`✅ Welcome notification sent to new user ${userId} after FCM registration`);
       }
     } catch (pushError) {

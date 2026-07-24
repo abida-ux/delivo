@@ -5,7 +5,7 @@
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
-const CACHE_NAME = 'delivo-cache-v3';
+const CACHE_NAME = 'delivo-cache-v4';
 const APP_SHELL = ['/manifest.webmanifest', '/delivos.png'];
 
 // ==================== Firebase FCM Setup ====================

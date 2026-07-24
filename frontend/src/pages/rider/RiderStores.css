@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DELIVO RIDER STORES — Premium Orange Theme & Full Responsive
+   DELIVO RIDER STORES — Clean Theme & Full Responsive
    ========================================================================== */
 
 .rider-stores-container {
@@ -8,17 +8,18 @@
   margin: 0 auto;
   padding: 28px 24px 100px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #1e293b;
+  color: var(--delivo-slate);
   min-height: 100vh;
 }
 
 /* ---- Header ---- */
 .rider-header {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #090d16 100%);
+  background: linear-gradient(180deg, #f8fbf6 0%, #e9f5eb 100%);
   padding: 32px;
   border-radius: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.18);
+  box-shadow: 0 12px 40px rgba(39, 87, 64, 0.08);
   position: relative;
   overflow: hidden;
 }
@@ -30,7 +31,7 @@
   right: -80px;
   width: 280px;
   height: 280px;
-  background: radial-gradient(circle, rgba(255, 107, 0, 0.25) 0%, rgba(255, 107, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0) 70%);
   pointer-events: none;
 }
 
@@ -46,20 +47,20 @@
 .rider-header h1 {
   font-size: 28px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--delivo-dark);
   margin: 0 0 6px 0;
   letter-spacing: -0.5px;
 }
 
 .rider-header p {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--delivo-text-muted);
   margin: 0;
 }
 
 .map-btn {
   padding: 12px 22px;
-  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
+  background: linear-gradient(135deg, var(--delivo-orange) 0%, var(--delivo-orange-hover) 100%);
   border: none;
   border-radius: 14px;
   cursor: pointer;
@@ -71,12 +72,12 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   color: white;
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 6px 18px rgba(255, 107, 53, 0.3);
 }
 
 .map-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.45);
 }
 
 /* ---- Stats Grid ---- */
@@ -95,13 +96,13 @@
   align-items: center;
   gap: 14px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--delivo-card-border);
   transition: all 0.25s ease;
 }
 
 .rider-stat-card:hover {
-  border-color: #ffc499;
-  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.1);
+  border-color: var(--delivo-orange-border);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.1);
   transform: translateY(-3px);
 }
 
@@ -109,7 +110,8 @@
   font-size: 28px;
   width: 48px;
   height: 48px;
-  background: #fff7ed;
+  background: var(--delivo-orange-light);
+  color: var(--delivo-orange);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -125,7 +127,7 @@
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--delivo-text-muted);
   letter-spacing: 0.5px;
   margin: 0;
 }
@@ -133,7 +135,7 @@
 .rider-stat-card .stat-value {
   font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   margin: 4px 0 0 0;
 }
 
@@ -144,7 +146,7 @@
   border-radius: 20px;
   margin-bottom: 24px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--delivo-card-border);
 }
 
 .search-input-wrapper {
@@ -157,30 +159,30 @@
 .search-icon {
   position: absolute;
   left: 16px;
-  color: #94a3b8;
+  color: var(--delivo-text-muted);
   pointer-events: none;
 }
 
 .search-input {
   width: 100%;
   padding: 14px 18px 14px 48px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--delivo-card-border);
   border-radius: 14px;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
-  background: #f8fafc;
-  color: #1e293b;
+  background: var(--delivo-bg-light);
+  color: var(--delivo-slate);
 }
 
 .search-input::placeholder {
-  color: #94a3b8;
+  color: var(--delivo-text-muted);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #ff6b00;
-  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+  border-color: var(--delivo-orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
   background: white;
 }
 
@@ -199,29 +201,29 @@
 .filter-group label {
   font-size: 13px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--delivo-dark);
 }
 
 .filter-select {
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--delivo-card-border);
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: #f8fafc;
-  color: #1e293b;
+  background: var(--delivo-bg-light);
+  color: var(--delivo-slate);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #ff6b00;
-  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+  border-color: var(--delivo-orange);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
 }
 
 .filter-select:hover {
-  border-color: #ffc499;
+  border-color: var(--delivo-orange-border);
 }
 
 /* ---- Deliveries List ---- */
@@ -234,21 +236,21 @@
 .rider-stores-container .delivery-card {
   background: white;
   border-radius: 20px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--delivo-card-border);
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .rider-stores-container .delivery-card:hover {
-  border-color: #ffc499;
-  box-shadow: 0 12px 30px rgba(255, 107, 0, 0.1);
+  border-color: var(--delivo-orange-border);
+  box-shadow: 0 12px 30px rgba(255, 107, 53, 0.1);
   transform: translateY(-4px);
 }
 
 .rider-stores-container .delivery-card.accepted {
-  border-color: #16a34a;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: var(--delivo-green);
+  background: var(--delivo-green-light);
 }
 
 .delivery-card-main {
@@ -276,16 +278,16 @@
 .delivery-header h3 {
   font-size: 16px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   margin: 0;
 }
 
 .status-badge {
   display: inline-block;
   padding: 4px 10px;
-  background: #fff7ed;
-  color: #ff6b00;
-  border: 1px solid #ffedd5;
+  background: var(--delivo-orange-light);
+  color: var(--delivo-orange);
+  border: 1px solid var(--delivo-orange-border);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 800;
@@ -299,13 +301,13 @@
 .customer-name {
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--delivo-dark);
   margin: 0 0 6px 0;
 }
 
 .delivery-address {
   font-size: 13px;
-  color: #64748b;
+  color: var(--delivo-text-muted);
   margin: 0;
   display: flex;
   align-items: center;
@@ -314,7 +316,7 @@
 }
 
 .delivery-address svg {
-  color: #ff6b00;
+  color: var(--delivo-orange);
   flex-shrink: 0;
 }
 
@@ -331,14 +333,14 @@
   gap: 5px;
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--delivo-slate);
   padding: 5px 10px;
-  background: #f1f5f9;
+  background: var(--delivo-bg-light);
   border-radius: 8px;
 }
 
 .detail-item svg {
-  color: #94a3b8;
+  color: var(--delivo-text-muted);
 }
 
 .delivery-price {
@@ -346,19 +348,19 @@
   align-items: center;
   gap: 8px;
   padding: 10px 0 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--delivo-card-border);
 }
 
 .price-label {
   font-size: 13px;
-  color: #64748b;
+  color: var(--delivo-text-muted);
   font-weight: 500;
 }
 
 .price-amount {
   font-size: 20px;
   font-weight: 800;
-  color: #ff6b00;
+  color: var(--delivo-orange);
 }
 
 .delivery-actions {
@@ -381,35 +383,34 @@
 }
 
 .accept-btn {
-  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
+  background: linear-gradient(135deg, var(--delivo-orange) 0%, var(--delivo-orange-hover) 100%);
   color: white;
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 6px 18px rgba(255, 107, 53, 0.3);
 }
 
 .accept-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.45);
 }
 
 .reject-btn {
-  background: #f1f5f9;
-  color: #1e293b;
-  border: 1px solid #e2e8f0;
+  background: var(--delivo-bg-light);
+  color: var(--delivo-slate);
+  border: 1px solid var(--delivo-card-border);
 }
 
 .reject-btn:hover {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
+  background: var(--delivo-card-border);
 }
 
 .accepted-badge {
   padding: 12px 22px;
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  background: linear-gradient(135deg, var(--delivo-green) 0%, #15803d 100%);
   color: white;
   border-radius: 14px;
   font-weight: 800;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 /* ---- Loading State ---- */
@@ -419,16 +420,16 @@
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #64748b;
+  color: var(--delivo-text-muted);
   background: white;
   border-radius: 24px;
   gap: 16px;
-  border: 1px dashed #e2e8f0;
+  border: 1px dashed var(--delivo-card-border);
 }
 
 .spinner {
   animation: riderSpin 1s linear infinite;
-  color: #ff6b00;
+  color: var(--delivo-orange);
 }
 
 @keyframes riderSpin {
@@ -461,26 +462,26 @@
 }
 
 .empty-icon {
-  color: #94a3b8;
+  color: var(--delivo-text-muted);
   margin-bottom: 16px;
 }
 
 .rider-stores-container .empty-state h2 {
   font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   margin: 0 0 8px 0;
 }
 
 .rider-stores-container .empty-state p {
   font-size: 14px;
-  color: #64748b;
+  color: var(--delivo-text-muted);
   margin: 0 0 20px 0;
 }
 
 .refresh-btn {
   padding: 12px 28px;
-  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
+  background: linear-gradient(135deg, var(--delivo-orange) 0%, var(--delivo-orange-hover) 100%);
   color: white;
   border: none;
   border-radius: 14px;
@@ -488,18 +489,18 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
+  box-shadow: 0 6px 18px rgba(255, 107, 53, 0.3);
 }
 
 .refresh-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.45);
 }
 
 /* ---- Tips Section ---- */
 .tips-section {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border: 1px solid #fed7aa;
+  background: var(--delivo-orange-light);
+  border: 1px solid var(--delivo-orange-border);
   border-radius: 20px;
   padding: 24px;
   margin-top: 28px;
@@ -508,7 +509,7 @@
 .tips-section h3 {
   font-size: 17px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   margin: 0 0 16px 0;
 }
 
@@ -520,12 +521,12 @@
 
 .tips-section li {
   font-size: 14px;
-  color: #64748b;
+  color: var(--delivo-slate);
   font-weight: 500;
   padding: 10px 0;
   padding-left: 28px;
   position: relative;
-  border-bottom: 1px solid rgba(255, 107, 0, 0.08);
+  border-bottom: 1px solid rgba(255, 107, 53, 0.08);
 }
 
 .tips-section li:last-child {
@@ -536,7 +537,7 @@
   content: '✓';
   position: absolute;
   left: 0;
-  color: #ff6b00;
+  color: var(--delivo-orange);
   font-weight: 800;
   font-size: 16px;
 }

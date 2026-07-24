@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext as AuthContextValue } from '../../context/AuthContext.jsx';
 import { getOrderById, updateOrder, getUnassignedOrders, claimOrder, getAPIUrl } from '../../services/api';
 import '../pages.css';
+import { LogOut } from 'lucide-react';
 import './RiderDashboard.css';
 
 const RiderDashboard = () => {
@@ -195,7 +196,7 @@ const RiderDashboard = () => {
       const newStatus = profile?.riderStatus === 'offline' ? 'available' : 'offline';
       const token = localStorage.getItem('token');
       const apiUrl = getAPIUrl();
-      const res = await fetch(`${apiUrl}/users/me`, {
+      const res = await fetch(`${apiUrl}/users/me/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ riderStatus: newStatus }),
@@ -208,6 +209,22 @@ const RiderDashboard = () => {
     } catch (err) {
       console.error('Failed to toggle status', err);
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = getAPIUrl();
+      // Set status to offline before logging out
+      await fetch(`${apiUrl}/users/me/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ riderStatus: 'offline' }),
+      });
+    } catch (err) {
+      console.error('Failed to set offline status on logout', err);
+    }
+    authContext?.logout();
   };
 
   const getStepNumber = (status) => {
@@ -263,6 +280,9 @@ const RiderDashboard = () => {
             >
               <div className="toggle-indicator"></div>
               <span>{profile?.riderStatus === 'on-delivery' ? 'On Duty' : profile?.riderStatus === 'offline' ? 'Go Online' : 'Online'}</span>
+            </button>
+            <button className="logout-btn" onClick={handleLogout} title="Logout">
+              <LogOut size={18} />
             </button>
           </div>
         </div>

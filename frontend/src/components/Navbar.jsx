@@ -49,6 +49,7 @@ const Navbar = () => {
     if (notif.type !== 'promotion') return true;
     return promoNotificationsEnabled;
   });
+  const unreadNotifications = visibleNotifications.filter((notif) => !notif.isRead);
 
   useEffect(() => {
     const loadAppSettings = async () => {
@@ -122,6 +123,21 @@ const Navbar = () => {
       setNotifications((current) => current.filter((n) => n._id !== notificationId));
     } catch (error) {
       console.error('Error deleting notification:', error);
+    }
+  };
+
+  // ✅ MARK ALL AS READ ON MODAL OPEN
+  const handleNotificationClick = async () => {
+    const nextState = !showNotifications;
+    setShowNotifications(nextState);
+
+    if (nextState && token) {
+      try {
+        await api.put('/notifications/mark-all-read');
+        setNotifications((current) => current.map((n) => ({ ...n, isRead: true })));
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
     }
   };
 
@@ -224,10 +240,10 @@ const Navbar = () => {
               )}
             </button>
 
-            <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)} title="Notifications">
+            <button className="icon-btn" onClick={handleNotificationClick} title="Notifications">
               <Bell size={20} />
-              {visibleNotifications.length > 0 && (
-                <span className="notification-badge">{visibleNotifications.length}</span>
+              {unreadNotifications.length > 0 && (
+                <span className="notification-badge">{unreadNotifications.length}</span>
               )}
             </button>
 

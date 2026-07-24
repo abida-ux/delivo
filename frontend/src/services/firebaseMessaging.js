@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getAPIUrl } from './api';
 
 const fallbackFirebaseConfig = {
   apiKey: 'AIzaSyA41-p0LVWmexu4jPS48a7UF6iXMVmRlt8',
@@ -154,14 +155,7 @@ export const saveFcmToken = async (fcmToken, userId) => {
       return null;
     }
 
-    // Use the same API URL resolution as the main api module
-    let apiBase = '/api';
-    if (!import.meta.env.DEV) {
-      const rawUrl = import.meta.env.VITE_API_URL?.trim();
-      if (rawUrl) {
-        apiBase = rawUrl.replace(/\/+$/, '');
-      }
-    }
+    const apiBase = getAPIUrl();
 
     const response = await fetch(`${apiBase}/notifications/fcm/register`, {
       method: 'POST',

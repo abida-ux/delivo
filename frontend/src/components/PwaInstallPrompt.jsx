@@ -21,7 +21,8 @@ const PwaInstallPrompt = () => {
 
     const registerServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register(`/sw.js?v=${Date.now()}`);
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) return;
 
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
@@ -36,7 +37,7 @@ const PwaInstallPrompt = () => {
 
         if (reg.waiting) setSwWaiting(reg.waiting);
       } catch (error) {
-        console.error('Service worker registration failed', error);
+        console.error('Service worker registration retrieval failed', error);
       }
     };
 

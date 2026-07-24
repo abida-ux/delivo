@@ -132,9 +132,13 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     select: false,
   },
-  createdAt: {
+   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  welcomeNotificationSent: {
+    type: Boolean,
+    default: false,
   },
 });
 

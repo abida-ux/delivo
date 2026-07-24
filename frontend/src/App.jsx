@@ -51,6 +51,20 @@ const registerServiceWorker = async () => {
 
   try {
     const registration = await navigator.serviceWorker.register('/sw.js');
+    
+    // Detect updates
+    registration.addEventListener('updatefound', () => {
+      const newWorker = registration.installing;
+      if (newWorker) {
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('[sw] New version found. Activating...');
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      }
+    });
+
     await navigator.serviceWorker.ready;
     return registration;
   } catch (error) {
@@ -106,85 +120,30 @@ const registerBrowserPushSubscription = async () => {
   }
 };
 
-const logRefreshNotification = (status, data = {}) => {
-  const entry = { status, timestamp: new Date().toISOString(), ...data };
-  try {
-    const existing = JSON.parse(localStorage.getItem('delivoRefreshNotificationTrace') || '[]');
-    existing.push(entry);
-    localStorage.setItem('delivoRefreshNotificationTrace', JSON.stringify(existing.slice(-20)));
-  } catch (err) {
-    // ignore storage errors
-  }
-};
-
-const registerBrowserPushSubscriptionSilent = async () => {
-  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn('[WebPush] Web push is not supported in this browser environment.');
-    return;
-  }
-
-  // Request permission if default
-  if (Notification.permission === 'default') {
-    try {
-      const res = await Notification.requestPermission();
-      console.log('[WebPush] Notification permission requested:', res);
-    } catch (err) {
-      console.warn('[WebPush] Permission request error:', err);
-    }
-  }
-
-  if (Notification.permission !== 'granted') {
-    console.warn('[WebPush] Permission not granted:', Notification.permission);
-    return;
-  }
-
-  const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BHfiaX7G8DIf2Ryphn3kSRvb1-8vwznP7Og4eu3Q--8ieIVrkyFR6cGYIuGhSNY9yB4MQvRu7E2ixNGuZq7gvW0';
-
-  try {
-    const registration = await registerServiceWorker();
-    if (!registration) {
-      console.warn('[WebPush] Could not register service worker');
-      return;
-    }
-
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      const options = {
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-      };
-      subscription = await registration.pushManager.subscribe(options);
-      console.log('[WebPush] Created new VAPID subscription:', subscription.endpoint.substring(0, 35));
-    }
-
-    const subscriptionData = {
-      endpoint: subscription.endpoint,
-      keys: {
-        p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
-        auth: arrayBufferToBase64(subscription.getKey('auth')),
-      },
-    };
-
-    // Save subscription to backend using public endpoint
-    const apiBase = import.meta.env.DEV ? 'http://localhost:5000/api' : (import.meta.env.VITE_API_URL || '/api');
-    await fetch(`${apiBase}/notifications/public-subscribe`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(subscriptionData),
-    });
-
-    console.log('✅ [WebPush] VAPID push subscription silently registered.');
-  } catch (error) {
-    console.error('[WebPush] Error registering Web Push subscription:', error);
-  }
-};
-
 function App() {
   const { isLoading } = useContext(LoaderContext);
   const { user, token } = useContext(AuthContext);
   const location = useLocation();
 
-  // Initialize Firebase and register Web Push silently
+  // Handle service worker controller change (new SW activated -> reload page)
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    
+    let refreshing = false;
+    const handleControllerChange = () => {
+      if (refreshing) return;
+      refreshing = true;
+      console.log('[sw] Controller activated. Reloading page...');
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
+  }, []);
+
+  // Initialize Firebase
   useEffect(() => {
     initializeFirebase();
 
@@ -193,8 +152,6 @@ function App() {
     };
 
     window.addEventListener('beforeunload', markBeforeUnload);
-    registerBrowserPushSubscriptionSilent();
-
 
     return () => {
       window.removeEventListener('beforeunload', markBeforeUnload);

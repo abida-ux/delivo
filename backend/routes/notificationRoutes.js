@@ -4,6 +4,7 @@ const {
   getNotifications,
   createNotification,
   markAsRead,
+  markAllAsRead,
   deleteNotification,
   deleteAllNotifications,
   savePushSubscription,
@@ -36,6 +37,9 @@ router.get('/', getNotifications);
 
 // Create notification (admin only)
 router.post('/create', createNotification);
+
+// Mark all notifications as read
+router.put('/mark-all-read', markAllAsRead);
 
 // Mark notification as read
 router.put('/:notificationId/read', markAsRead);

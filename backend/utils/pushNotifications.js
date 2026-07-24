@@ -227,14 +227,7 @@ const sendOrderPaymentNotification = async (order, status) => {
       });
       await sendPushToUser({ userId: order.userId, payload });
     } else {
-      // Guest checkout: send to latest active push subscription
-      const activeSubs = await PushSubscription.find({ isActive: true, endpoint: { $ne: null } })
-        .sort({ updatedAt: -1 })
-        .limit(1);
-
-      if (activeSubs.length > 0) {
-        await Promise.all(activeSubs.map((sub) => sendBrowserPush(sub, payload)));
-      }
+      console.log('Skipping push notification for guest checkout order');
     }
   } catch (err) {
     console.error('❌ Error sending order payment notification:', err.message);

@@ -668,6 +668,7 @@ exports.updateRiderStatus = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid rider status' });
     }
 
+    const previousStatus = user.riderStatus;
     user.riderStatus = nextStatus;
     user.isOnline = nextStatus !== 'offline';
     user.lastSeenAt = new Date();
@@ -675,6 +676,37 @@ exports.updateRiderStatus = async (req, res, next) => {
       user.currentOrderId = null;
     }
     await user.save();
+
+    if (previousStatus !== nextStatus) {
+      try {
+        const { createInAppNotification, sendPushToUser } = require('../utils/pushNotifications');
+        const adminUsers = await User.find({ role: 'admin' });
+        const title = 'Rider Status Update';
+        const displayStatus = nextStatus === 'available' ? 'online' : nextStatus;
+        const message = `Rider ${user.name || 'A rider'} is now ${displayStatus}.`;
+
+        for (const adminUser of adminUsers) {
+          await createInAppNotification({
+            userId: adminUser._id,
+            title,
+            message,
+            type: 'system',
+          });
+
+          await sendPushToUser({
+            userId: adminUser._id,
+            payload: {
+              title,
+              message,
+              url: '/admin/riders',
+              tag: `rider-status-${user._id}`,
+            },
+          });
+        }
+      } catch (notifErr) {
+        console.error('⚠️ Rider status notification error:', notifErr.message || notifErr);
+      }
+    }
 
     res.status(200).json({ success: true, data: user });
   } catch (error) {

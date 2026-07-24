@@ -207,3 +207,52 @@
   }
 }
 
+/* Responsive adjustments to prevent button clipping */
+@media (max-width: 768px) {
+  .food-image-wrapper {
+    height: 140px;
+  }
+  .food-info {
+    padding: 12px;
+  }
+  .food-name {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .food-image-wrapper {
+    height: 120px;
+  }
+  .food-info {
+    padding: 10px;
+  }
+  .food-name {
+    font-size: 14px;
+  }
+  .food-vendor {
+    font-size: 12px;
+  }
+  .food-action-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .food-price {
+    font-size: 15px;
+    text-align: center;
+  }
+  .quantity-selector {
+    justify-content: center;
+    width: 100%;
+    padding: 4px 6px;
+  }
+  .add-to-cart-btn, .go-to-cart-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+

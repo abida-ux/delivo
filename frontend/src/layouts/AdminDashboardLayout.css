@@ -253,3 +253,133 @@
 .admin-layout .bottom-nav-item {
   color: #2f855a !important;
 }
+
+/* ==================== ADMIN TOAST NOTIFICATIONS (SICK UI) ==================== */
+.admin-toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  width: calc(100vw - 48px);
+}
+
+.admin-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  border-left: 5px solid #ff6b00 !important; /* Delivo Orange by default */
+  transform: translateX(120%);
+  animation: adminToastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes adminToastSlideIn {
+  to {
+    transform: translateX(0);
+  }
+}
+
+.admin-toast.fade-out {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+}
+
+.admin-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 107, 0, 0.1) !important;
+  color: #ff6b00 !important;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.admin-toast-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.admin-toast-title {
+  margin: 0 0 4px 0;
+  font-weight: 750;
+  font-size: 14.5px;
+  color: #0f172a !important;
+}
+
+.admin-toast-message {
+  margin: 0;
+  font-size: 13px;
+  color: #475569 !important;
+  line-height: 1.4;
+  word-wrap: break-word;
+  text-align: left;
+}
+
+.admin-toast-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8 !important;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+
+.admin-toast-close:hover {
+  background: rgba(15, 23, 42, 0.05);
+  color: #475569 !important;
+}
+
+/* Status variants */
+.admin-toast.status-online {
+  border-left-color: #16a34a !important;
+}
+.admin-toast.status-online .admin-toast-icon {
+  background: rgba(22, 163, 74, 0.1) !important;
+  color: #16a34a !important;
+}
+
+.admin-toast.status-offline {
+  border-left-color: #64748b !important;
+}
+.admin-toast.status-offline .admin-toast-icon {
+  background: rgba(100, 116, 139, 0.1) !important;
+  color: #64748b !important;
+}
+
+.admin-toast.order-grabbed {
+  border-left-color: #ff6b00 !important;
+}
+.admin-toast.order-grabbed .admin-toast-icon {
+  background: rgba(255, 107, 0, 0.1) !important;
+  color: #ff6b00 !important;
+}
+
+.admin-toast.new-order {
+  border-left-color: #f97316 !important;
+}
+.admin-toast.new-order .admin-toast-icon {
+  background: rgba(249, 115, 22, 0.1) !important;
+  color: #f97316 !important;
+}
+

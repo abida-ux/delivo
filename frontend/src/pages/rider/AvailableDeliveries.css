@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DELIVO AVAILABLE DELIVERIES — Premium Orange Theme & Full Responsive
+   DELIVO AVAILABLE DELIVERIES — Clean Theme & Full Responsive
    ========================================================================== */
 
 .available-deliveries {
@@ -7,7 +7,7 @@
   margin: 0 auto;
   padding: 28px 24px 100px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #1e293b;
+  color: var(--delivo-slate);
   min-height: 100vh;
 }
 
@@ -20,25 +20,25 @@
 .available-deliveries .page-header h1 {
   font-size: 28px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   letter-spacing: -0.5px;
 }
 
 .available-deliveries .page-header p {
-  color: #64748b;
+  color: var(--delivo-text-muted);
   font-size: 15px;
   margin-top: 4px;
 }
 
 /* ---- Info Banner ---- */
 .available-deliveries .info-banner {
-  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-  border: 1px solid #fed7aa;
+  background: var(--delivo-orange-light);
+  border: 1px solid var(--delivo-orange-border);
   border-radius: 14px;
   padding: 14px 20px;
   font-size: 14px;
   font-weight: 600;
-  color: #c2410c;
+  color: var(--delivo-orange);
   margin-bottom: 24px;
   display: flex;
   align-items: center;
@@ -59,7 +59,7 @@
 .accepted-deliveries-section h2 {
   font-size: 18px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--delivo-dark);
   margin-bottom: 14px;
 }
 
@@ -74,8 +74,8 @@
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border: 1px solid #bbf7d0;
+  background: var(--delivo-green-light);
+  border: 1px solid var(--delivo-card-border);
   border-radius: 16px;
   transition: transform 0.2s ease;
 }
@@ -88,262 +88,279 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: #16a34a;
+  background: var(--delivo-green);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+  color: white;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 .accepted-delivery-card .delivery-info h3 {
   font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0;
+  color: var(--delivo-dark);
+  margin: 0 0 4px 0;
 }
 
 .accepted-delivery-card .delivery-info p {
   font-size: 13px;
-  color: #64748b;
-  margin: 2px 0 0;
+  color: var(--delivo-text-muted);
+  margin: 0;
 }
 
-.accepted-delivery-card .delivery-meta {
+.accepted-delivery-card .view-btn {
   margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.accepted-delivery-card .delivery-meta .distance {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--delivo-orange-border);
+  color: var(--delivo-orange);
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 700;
-  color: #64748b;
-}
-
-.accepted-delivery-card .delivery-meta .payment {
-  font-size: 15px;
-  font-weight: 800;
-  color: #16a34a;
-}
-
-/* ---- Section Header ---- */
-.deliveries-section .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.deliveries-section .section-header h2 {
-  font-size: 20px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.deliveries-section .sort-select {
-  padding: 10px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e293b;
-  background: white;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.deliveries-section .sort-select:focus {
-  outline: none;
-  border-color: #ff6b00;
-  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+.accepted-delivery-card .view-btn:hover {
+  background: var(--delivo-orange-light);
+  border-color: var(--delivo-orange);
 }
 
-/* ---- Delivery Cards ---- */
-.available-deliveries .deliveries-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-}
-
-.available-deliveries .delivery-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.available-deliveries .delivery-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(255, 107, 0, 0.1);
-  border-color: #ffc499;
-}
-
-.available-deliveries .card-header {
+/* ---- Filter Row ---- */
+.filter-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.available-deliveries .card-header h3 {
-  font-size: 16px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.available-deliveries .badge {
-  padding: 4px 10px;
-  background: #f1f5f9;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #64748b;
-}
-
-/* Route Info */
-.route-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  background: #f8fafc;
-  border-radius: 14px;
-  border: 1px solid #f1f5f9;
-}
-
-.route-info .location {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.route-info .location .icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.route-info .location .label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #94a3b8;
-  letter-spacing: 0.5px;
-  margin: 0;
-}
-
-.route-info .location .name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 2px 0 0;
-}
-
-.route-info .location .address {
-  font-size: 12px;
-  color: #64748b;
-  margin: 2px 0 0;
-}
-
-.route-line {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #ff6b00;
-  padding: 4px 0;
-  position: relative;
-}
-
-.route-line::before {
-  content: '';
-  position: absolute;
-  left: 24px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, #ff6b00, #16a34a);
-  border-radius: 999px;
-}
-
-/* Delivery Details Row */
-.available-deliveries .delivery-details {
-  display: flex;
-  gap: 14px;
+  margin-bottom: 20px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.available-deliveries .delivery-details .detail {
+.filter-pills {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-  padding: 6px 12px;
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-
-.available-deliveries .delivery-details .detail.payment {
-  color: #ff6b00;
-  font-weight: 800;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
-}
-
-/* Accept Button */
-.available-deliveries .accept-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
-  padding: 14px 20px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ff6b00 0%, #ff5500 100%);
-  color: white;
-  font-size: 15px;
-  font-weight: 800;
-  border: none;
+}
+
+.filter-pill {
+  padding: 8px 16px;
+  border: 1px solid var(--delivo-card-border);
+  border-radius: 12px;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--delivo-text-muted);
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.3);
   transition: all 0.2s ease;
 }
 
-.available-deliveries .accept-btn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 24px rgba(255, 107, 0, 0.45);
+.filter-pill:hover {
+  color: var(--delivo-dark);
+  border-color: var(--delivo-orange-border);
+}
+
+.filter-pill.active {
+  background: var(--delivo-dark);
+  color: white;
+  border-color: var(--delivo-dark);
+}
+
+.refresh-trigger {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--delivo-card-border);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--delivo-slate);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.refresh-trigger:hover {
+  border-color: var(--delivo-orange-border);
+  transform: translateY(-1px);
+}
+
+/* ---- Cards Grid ---- */
+.deliveries-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.delivery-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid var(--delivo-card-border);
+  padding: 22px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.delivery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(255, 107, 53, 0.1);
+  border-color: var(--delivo-orange-border);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-tag {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--delivo-dark);
+  text-transform: uppercase;
+  background: var(--delivo-bg-light);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.earning-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--delivo-orange);
+  background: var(--delivo-orange-light);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--delivo-orange-border);
+}
+
+/* Route Timeline */
+.route-timeline {
+  position: relative;
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.route-timeline::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--delivo-orange), var(--delivo-green));
+}
+
+.timeline-point {
+  position: relative;
+  padding-left: 12px;
+}
+
+.timeline-point.pickup {
+  margin-bottom: 16px;
+}
+
+.point-dot {
+  position: absolute;
+  left: -20px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.timeline-point.pickup .point-dot {
+  background: var(--delivo-orange);
+  box-shadow: 0 0 8px var(--delivo-orange);
+}
+
+.timeline-point.dropoff .point-dot {
+  background: var(--delivo-green);
+  box-shadow: 0 0 8px var(--delivo-green);
+}
+
+.point-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--delivo-text-muted);
+}
+
+.point-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--delivo-dark);
+  margin-top: 2px;
+}
+
+/* Card Details */
+.card-details {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid var(--delivo-card-border);
+  padding-top: 14px;
+}
+
+.detail-item {
+  font-size: 13px;
+  color: var(--delivo-text-muted);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--delivo-orange) 0%, var(--delivo-orange-hover) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.25);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(255, 107, 53, 0.35);
 }
 
 /* ---- Empty State ---- */
-.available-deliveries .empty-state {
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
   text-align: center;
-  padding: 60px 24px;
+  border: 1px dashed var(--delivo-card-border);
   background: white;
-  border: 1px dashed #e2e8f0;
   border-radius: 24px;
 }
 
-.available-deliveries .empty-state svg {
-  color: #94a3b8;
+.empty-icon {
+  color: var(--delivo-text-muted);
+  margin-bottom: 16px;
 }
 
-.available-deliveries .empty-state h3 {
+.empty-state h3 {
   font-size: 20px;
   font-weight: 800;
-  color: #0f172a;
-  margin: 16px 0 8px;
+  color: var(--delivo-dark);
+  margin: 0 0 6px 0;
 }
 
-.available-deliveries .empty-state p {
-  color: #64748b;
+.empty-state p {
+  color: var(--delivo-text-muted);
   font-size: 14px;
+  margin: 0;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -353,35 +370,30 @@
     padding: 16px 14px 100px;
   }
 
-  .available-deliveries .page-header h1 {
-    font-size: 22px;
-  }
-
-  .available-deliveries .deliveries-list {
+  .deliveries-grid {
     grid-template-columns: 1fr;
   }
 
-  .deliveries-section .section-header {
+  .filter-row {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: stretch;
   }
 
-  .deliveries-section .sort-select {
+  .filter-pills {
     width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
 
-  .accepted-delivery-card {
-    flex-wrap: wrap;
+  .filter-pill {
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
   }
 
-  .accepted-delivery-card .delivery-meta {
-    margin-left: 0;
+  .refresh-trigger {
     width: 100%;
-    justify-content: flex-start;
-    gap: 16px;
-    padding-top: 8px;
-    border-top: 1px solid #d1fae5;
+    justify-content: center;
   }
 }
 
@@ -391,24 +403,23 @@
   }
 
   .available-deliveries .page-header h1 {
-    font-size: 20px;
+    font-size: 22px;
   }
 
-  .available-deliveries .delivery-card {
+  .delivery-card {
     padding: 16px;
-    border-radius: 16px;
   }
 
-  .available-deliveries .delivery-details {
-    gap: 8px;
+  .accepted-delivery-card {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
   }
 
-  .available-deliveries .delivery-details .detail {
-    font-size: 12px;
-    padding: 5px 10px;
-  }
-
-  .route-info {
-    padding: 10px;
+  .accepted-delivery-card .view-btn {
+    width: 100%;
+    text-align: center;
+    margin-left: 0;
   }
 }
