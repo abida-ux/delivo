@@ -58,19 +58,21 @@ const FoodCard = ({ food }) => {
             </button>
           ) : (
             <div className="quantity-selector">
-              <button
-                className="qty-btn-small"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              >
-                <Minus size={14} />
-              </button>
-              <span className="qty-value">{quantity}</span>
-              <button
-                className="qty-btn-small"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                <Plus size={14} />
-              </button>
+              <div className="qty-controls">
+                <button
+                  className="qty-btn-small"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                >
+                  <Minus size={14} />
+                </button>
+                <span className="qty-value">{quantity}</span>
+                <button
+                  className="qty-btn-small"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
               <button
                 className="add-to-cart-btn"
                 onClick={handleAddToCart}
