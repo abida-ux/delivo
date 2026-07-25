@@ -8,6 +8,13 @@ const { calculateRestaurantEarnings, buildRestaurantFilter, buildRestaurantDashb
 
 const ensureRestaurantOwner = async (req, res, next) => {
   try {
+    if (req.user.role !== 'restaurant' && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Restaurant owner or administrator role required.',
+      });
+    }
+
     let restaurant = await Restaurant.findOne({
       ownerId: req.user.id,
       status: { $ne: 'suspended' },

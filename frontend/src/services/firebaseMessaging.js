@@ -132,7 +132,7 @@ export const listenForFcmMessages = (callback) => {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(notificationData.title, {
           body: notificationData.message,
-          icon: '/delivos.png',
+          icon: '/delivo.jpg',
           data: notificationData.data,
         });
       }

@@ -115,9 +115,10 @@ exports.removeFromCart = async (req, res) => {
     }
 
     // Remove item from cart
-    cart.items = cart.items.filter(
-      (item) => item.foodId.toString() !== foodId
-    );
+    cart.items = cart.items.filter((item) => {
+      const itemFoodId = item.foodId._id ? item.foodId._id.toString() : item.foodId.toString();
+      return itemFoodId !== foodId;
+    });
 
     await cart.save();
     
@@ -160,9 +161,10 @@ exports.updateCartItem = async (req, res) => {
       });
     }
 
-    const item = cart.items.find(
-      (item) => item.foodId.toString() === foodId
-    );
+    const item = cart.items.find((item) => {
+      const itemFoodId = item.foodId._id ? item.foodId._id.toString() : item.foodId.toString();
+      return itemFoodId === foodId;
+    });
 
     if (!item) {
       return res.status(404).json({
@@ -173,9 +175,10 @@ exports.updateCartItem = async (req, res) => {
 
     if (quantity <= 0) {
       // Remove item if quantity is 0 or less
-      cart.items = cart.items.filter(
-        (item) => item.foodId.toString() !== foodId
-      );
+      cart.items = cart.items.filter((item) => {
+        const itemFoodId = item.foodId._id ? item.foodId._id.toString() : item.foodId.toString();
+        return itemFoodId !== foodId;
+      });
     } else {
       item.quantity = parseInt(quantity);
     }

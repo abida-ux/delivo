@@ -211,8 +211,8 @@ const sendOrderPaymentNotification = async (order, status) => {
   const payload = {
     title,
     message,
-    icon: '/delivos.png',
-    badge: '/delivos.png',
+    icon: '/delivo.jpg',
+    badge: '/delivo.jpg',
     url: '/customer/orders',
     tag: 'delivo-order-payment',
   };

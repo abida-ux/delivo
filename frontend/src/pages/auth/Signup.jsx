@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect, useRef } from 'react';
-import { Mail, Lock, User, Eye, EyeOff, Phone } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Phone, MapPin } from 'lucide-react';
 import { registerUser, verifyEmail, resendVerificationCode } from '../../services/api';
 import { requestNotificationPermissionAndRegister } from '../../services/firebaseMessaging';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +28,7 @@ const Signup = ({ isModal = false }) => {
     name: '',
     email: '',
     phone: '',
+    location: '',
     password: '',
     confirmPassword: '',
   };
@@ -257,6 +258,23 @@ const Signup = ({ isModal = false }) => {
                 value={formData.phone}
                 onChange={handleChange}
                 required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="location">
+              Delivery Location <span className="recommended-badge" style={{ color: '#ff9800', fontSize: '12px', fontWeight: 'bold' }}>(Highly Recommended)</span>
+            </label>
+            <div className="input-wrapper">
+              <MapPin size={18} className="input-icon" />
+              <input
+                type="text"
+                id="location"
+                name="location"
+                placeholder="Where should we deliver your food?"
+                value={formData.location}
+                onChange={handleChange}
               />
             </div>
           </div>

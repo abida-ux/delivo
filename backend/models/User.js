@@ -32,6 +32,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  location: {
+    type: String,
+    trim: true,
+  },
   riderStatus: {
     type: String,
     enum: ['available', 'on-delivery', 'offline'],

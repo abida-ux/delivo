@@ -36,6 +36,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [paymentStage, setPaymentStage] = useState('idle');
   const [orderPending, setOrderPending] = useState(false);
   const [redirectingToOrders, setRedirectingToOrders] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const pollInterval = useRef(null);
 
   useEffect(() => {
@@ -55,24 +56,37 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     };
 
     const loadCheckoutProfile = () => {
-      if (!settingsKey) return;
-      try {
-        const savedSettings = localStorage.getItem(settingsKey);
-        if (!savedSettings) return;
-
-        const parsed = JSON.parse(savedSettings);
-        const profile = parsed?.checkoutProfile;
-        if (profile) {
-          setDeliveryInfo((prev) => ({
-            ...prev,
-            fullName: profile.fullName || prev.fullName,
-            address: profile.address || prev.address,
-            whatsapp: profile.whatsapp || prev.whatsapp,
-            mpesaNumber: profile.mpesaNumber || prev.mpesaNumber,
-          }));
+      let loadedFromLocal = false;
+      if (settingsKey) {
+        try {
+          const savedSettings = localStorage.getItem(settingsKey);
+          if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            const profile = parsed?.checkoutProfile;
+            if (profile) {
+              setDeliveryInfo((prev) => ({
+                ...prev,
+                fullName: profile.fullName || prev.fullName || user?.name || '',
+                address: profile.address || prev.address || user?.location || '',
+                whatsapp: profile.whatsapp || prev.whatsapp || user?.phone || '',
+                mpesaNumber: profile.mpesaNumber || prev.mpesaNumber || user?.phone || '',
+              }));
+              loadedFromLocal = true;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load saved checkout profile:', error);
         }
-      } catch (error) {
-        console.error('Failed to load saved checkout profile:', error);
+      }
+
+      if (!loadedFromLocal && user) {
+        setDeliveryInfo((prev) => ({
+          ...prev,
+          fullName: prev.fullName || user.name || '',
+          address: prev.address || user.location || '',
+          whatsapp: prev.whatsapp || user.phone || '',
+          mpesaNumber: prev.mpesaNumber || user.phone || '',
+        }));
       }
     };
 
@@ -99,11 +113,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       window.removeEventListener('storage', storageHandler);
     };
   }, [isOpen]);
-  const isFreeDelivery =
-    cartItems.length > 0 &&
-    deliverySettings.freeDeliveryEnabled &&
-    cartTotal >= deliverySettings.freeDeliveryMinimum;
-  const deliveryFee = cartItems.length > 0 && !isFreeDelivery && deliverySettings.enabled ? deliverySettings.amount : 0;
+  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
   const grandTotal = (parseFloat(cartTotal) + deliveryFee).toFixed(2);
 
   const validateForm = () => {
@@ -190,13 +200,67 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       }
     };
 
-    fetchRestaurants();
+    if (isOpen) {
+      fetchRestaurants();
+    }
 
     return () => {
       clearPolling();
     };
-  }, []);
+  }, [isOpen, cartItems]);
 
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            {
+              headers: {
+                'User-Agent': 'DelivoFoodApp/1.0',
+              },
+            }
+          );
+          const data = await response.json();
+          if (data && data.display_name) {
+            setDeliveryInfo((prev) => ({
+              ...prev,
+              address: data.display_name,
+            }));
+            if (errors.address) setErrors((prev) => ({ ...prev, address: '' }));
+          } else {
+            setDeliveryInfo((prev) => ({
+              ...prev,
+              address: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+            }));
+            if (errors.address) setErrors((prev) => ({ ...prev, address: '' }));
+          }
+        } catch (error) {
+          console.error('Error reverse geocoding:', error);
+          setDeliveryInfo((prev) => ({
+            ...prev,
+            address: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+          }));
+          if (errors.address) setErrors((prev) => ({ ...prev, address: '' }));
+        } finally {
+          setLocationLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        alert(`Failed to fetch location: ${error.message}`);
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const checkOrderStatus = async (id, checkoutRequestIdValue) => {
     try {
@@ -440,6 +504,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                 className={errors.address ? 'error' : ''}
               />
               {errors.address && <span className="field-error">{errors.address}</span>}
+              <button
+                type="button"
+                className="location-btn"
+                onClick={handleUseLocation}
+                disabled={locationLoading || isProcessing || orderPending}
+              >
+                {locationLoading ? 'Fetching location...' : '📍 Use Current Location'}
+              </button>
             </div>
           </div>
 

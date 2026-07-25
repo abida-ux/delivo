@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const {
   getAllRestaurants,
   getRestaurantById,
@@ -10,8 +11,8 @@ const {
 
 router.get('/', getAllRestaurants);
 router.get('/:id', getRestaurantById);
-router.post('/', createRestaurant);
-router.put('/:id', updateRestaurant);
-router.delete('/:id', deleteRestaurant);
+router.post('/', authenticate, authorizeRoles('admin'), createRestaurant);
+router.put('/:id', authenticate, updateRestaurant);
+router.delete('/:id', authenticate, authorizeRoles('admin'), deleteRestaurant);
 
 module.exports = router;

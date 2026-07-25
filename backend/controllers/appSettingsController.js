@@ -27,6 +27,63 @@ exports.getSettings = async (req, res) => {
   }
 };
 
+const dispatchFreeDeliveryPromo = async () => {
+  try {
+    const PushSubscription = require('../models/PushSubscription');
+    const { sendMulticastFcmMessages } = require('../utils/firebaseMessaging');
+    const webPush = require('web-push');
+
+    const payload = {
+      title: 'Free Delivery Active! 🎁',
+      message: 'Delivo is offering FREE delivery on all orders today! Place your order and satisfy your cravings.',
+      icon: '/delivo.jpg',
+      badge: '/delivo.jpg',
+      url: '/menu',
+    };
+
+    const subscriptions = await PushSubscription.find({ isActive: true });
+    const webPushSubscriptions = subscriptions.filter((s) => s.endpoint && s.keys?.p256dh && s.keys?.auth);
+    const fcmTokens = subscriptions.filter((s) => s.fcmToken).map((s) => s.fcmToken);
+
+    // Send Web Push
+    if (webPushSubscriptions.length > 0) {
+      const vapidKeys = {
+        publicKey: process.env.VAPID_PUBLIC_KEY,
+        privateKey: process.env.VAPID_ACCESS_KEY || process.env.VAPID_PRIVATE_KEY,
+      };
+
+      if (vapidKeys.publicKey && vapidKeys.privateKey) {
+        webPush.setVapidDetails('mailto:info@delivo.buzz', vapidKeys.publicKey, vapidKeys.privateKey);
+        webPushSubscriptions.forEach((sub) => {
+          webPush.sendNotification(sub, JSON.stringify(payload)).catch(() => {});
+        });
+      }
+    }
+
+    // Send FCM Multicast
+    if (fcmTokens.length > 0) {
+      sendMulticastFcmMessages({ fcmTokens, payload }).catch(() => {});
+    }
+
+    // Create in-app notification for all users
+    const User = require('../models/User');
+    const Notification = require('../models/Notification');
+    const allUsers = await User.find({}, '_id');
+    if (allUsers.length > 0) {
+      const inAppNotifications = allUsers.map((u) => ({
+        userId: u._id,
+        title: payload.title,
+        message: payload.message,
+        type: 'promotion',
+      }));
+      await Notification.insertMany(inAppNotifications);
+    }
+    console.log(`📡 Broadcasted Free Delivery Promo Notification to ${subscriptions.length} subscribers and ${allUsers.length} users`);
+  } catch (error) {
+    console.error('❌ Failed to dispatch free delivery promo:', error.message);
+  }
+};
+
 exports.updateSettings = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -37,12 +94,15 @@ exports.updateSettings = async (req, res) => {
       });
     }
 
+    const previousSettings = await AppSettings.findOne();
+    const prevEnabled = previousSettings ? previousSettings.deliveryFeeEnabled : true;
+    const currentEnabled = req.body.deliveryFeeEnabled;
+
     const update = {
       deliveryFeeEnabled: req.body.deliveryFeeEnabled,
       deliveryFeeAmount: req.body.deliveryFeeAmount,
       freeDeliveryEnabled: req.body.freeDeliveryEnabled,
-      // If admin enables free delivery, apply to ALL orders by setting minimum to 0
-      freeDeliveryMinimum: req.body.freeDeliveryEnabled ? 0 : req.body.freeDeliveryMinimum,
+      freeDeliveryMinimum: req.body.freeDeliveryMinimum,
       promoNotifications: req.body.promoNotifications,
       notificationMessage: req.body.notificationMessage,
       updatedAt: Date.now(),
@@ -53,6 +113,11 @@ exports.updateSettings = async (req, res) => {
       upsert: true,
       setDefaultsOnInsert: true,
     });
+
+    // If delivery fee is disabled (meaning free delivery is active for everyone!)
+    if (prevEnabled !== false && currentEnabled === false) {
+      dispatchFreeDeliveryPromo();
+    }
 
     res.status(200).json({
       success: true,

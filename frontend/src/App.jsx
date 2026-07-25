@@ -58,8 +58,9 @@ const registerServiceWorker = async () => {
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('[sw] New version found. Activating...');
-            newWorker.postMessage({ type: 'SKIP_WAITING' });
+            console.log('[sw] New version found. Ready to activate on next reload.');
+            // Disabled automatic skip waiting to prevent reload loops in development
+            // newWorker.postMessage({ type: 'SKIP_WAITING' });
           }
         });
       }
@@ -134,7 +135,7 @@ function App() {
   const { user, token } = useContext(AuthContext);
   const location = useLocation();
 
-  // Handle service worker controller change (new SW activated -> reload page)
+  // Handle service worker controller change (new SW activated)
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     
@@ -142,8 +143,9 @@ function App() {
     const handleControllerChange = () => {
       if (refreshing) return;
       refreshing = true;
-      console.log('[sw] Controller activated. Reloading page...');
-      window.location.reload();
+      console.log('[sw] Controller activated.');
+      // Disabled automatic reload on service worker update to prevent jarring user experience
+      // window.location.reload();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);

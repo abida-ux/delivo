@@ -76,9 +76,11 @@ const Orders = () => {
     openCart();
   };
   useEffect(() => {
-    const fetchUserOrders = async () => {
+    const fetchUserOrders = async (isSilent = false) => {
       try {
-        setLoading(true);
+        if (!isSilent) {
+          setLoading(true);
+        }
         if (!user) {
           const guestOrders = getGuestOrders();
           setOrders(guestOrders);
@@ -92,18 +94,20 @@ const Orders = () => {
         console.error('❌ Error fetching orders:', error);
         setOrders([]);
       } finally {
-        setLoading(false);
+        if (!isSilent) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchUserOrders();
+    fetchUserOrders(false);
 
-    const interval = window.setInterval(fetchUserOrders, 10000);
+    const interval = window.setInterval(() => fetchUserOrders(true), 10000);
 
-    const handleFocus = () => fetchUserOrders();
+    const handleFocus = () => fetchUserOrders(true);
     const handleVisibility = () => {
       if (!document.hidden) {
-        fetchUserOrders();
+        fetchUserOrders(true);
       }
     };
 

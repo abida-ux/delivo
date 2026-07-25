@@ -31,8 +31,8 @@ function handleBackgroundMessage(payload) {
   const notificationTitle = payload.notification?.title || 'Delivo Update';
   const notificationOptions = {
     body: payload.notification?.body || 'You have a new update',
-    icon: '/delivos.png',
-    badge: '/delivos.png',
+    icon: '/delivo.jpg',
+    badge: '/delivo.jpg',
     data: payload.data || {},
     actions: [
       { action: 'open', title: 'Open' },
@@ -83,7 +83,7 @@ self.addEventListener('message', (event) => {
       const title = payload.title || 'Delivo SW Test';
       const options = {
         body: payload.body || 'Service worker test notification',
-        icon: payload.icon || '/delivos.png',
+        icon: payload.icon || '/delivo.jpg',
         data: payload.data || {},
       };
       self.registration.showNotification(title, options);

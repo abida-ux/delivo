@@ -119,18 +119,34 @@ exports.createOrder = async (req, res, next) => {
 
 
     const appSettings = (await AppSettings.findOne()) || {};
-    const freeDeliveryEnabled = appSettings.freeDeliveryEnabled === true;
-    const freeDeliveryMinimum = appSettings.freeDeliveryMinimum != null ? Number(appSettings.freeDeliveryMinimum) : 2500;
-    const isFreeDelivery = freeDeliveryEnabled && subtotal >= freeDeliveryMinimum;
 
     let parsedDeliveryFee = Number(deliveryFee);
     if (Number.isNaN(parsedDeliveryFee) || parsedDeliveryFee < 0) {
       parsedDeliveryFee = 0;
     }
-    const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 20;
-    const finalDeliveryFee = isFreeDelivery ? 0 : (deliveryFee !== undefined && deliveryFee !== null ? parsedDeliveryFee : deliveryFeeFromSettings);
+    const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 0;
+    const finalDeliveryFee = deliveryFee !== undefined && deliveryFee !== null ? parsedDeliveryFee : deliveryFeeFromSettings;
     const totalPrice = subtotal + finalDeliveryFee;
 
+
+    // Securing against spoofing userId of other users
+    if (userId) {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required to create order for this user ID.'
+        });
+      }
+      if (req.user.id !== userId) {
+        const reqUser = await User.findById(req.user.id);
+        if (!reqUser || reqUser.role !== 'admin') {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden: You cannot place orders on behalf of other users.'
+          });
+        }
+      }
+    }
 
     // ✅ Create order with userId (if authenticated) or guest info (if guest)
     const order = await Order.create({
@@ -198,6 +214,8 @@ exports.createOrder = async (req, res, next) => {
 
     try {
       const orderIdShort = order._id.toString().slice(-6).toUpperCase();
+      const customerUser = order.userId ? await User.findById(order.userId) : null;
+      const notificationPromises = [];
 
       // 1. Send Admin Order Notification strictly to users with role === 'admin'
       const adminUsers = await User.find({ role: 'admin' });
@@ -210,13 +228,15 @@ exports.createOrder = async (req, res, next) => {
         };
 
         for (const adminUser of adminUsers) {
-          await createInAppNotification({
-            userId: adminUser._id,
-            title: adminPayload.title,
-            message: adminPayload.message,
-            type: 'order',
-          });
-          await sendPushToUser({ userId: adminUser._id, payload: adminPayload });
+          notificationPromises.push(
+            createInAppNotification({
+              userId: adminUser._id,
+              title: adminPayload.title,
+              message: adminPayload.message,
+              type: 'order',
+            }).catch(err => console.error(`Admin in-app notification error for user ${adminUser._id}:`, err.message)),
+            sendPushToUser({ userId: adminUser._id, payload: adminPayload }).catch(err => console.error(`Admin push notification error for user ${adminUser._id}:`, err.message))
+          );
         }
       }
 
@@ -228,13 +248,20 @@ exports.createOrder = async (req, res, next) => {
           url: '/restaurant/orders',
           tag: 'delivo-restaurant-order',
         };
-        await createInAppNotification({
-          userId: restaurantOwner._id,
-          title: restaurantPayload.title,
-          message: restaurantPayload.message,
-          type: 'order',
-        });
-        await sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload });
+        notificationPromises.push(
+          createInAppNotification({
+            userId: restaurantOwner._id,
+            title: restaurantPayload.title,
+            message: restaurantPayload.message,
+            type: 'order',
+          }).catch(err => console.error(`Restaurant in-app notification error for user ${restaurantOwner._id}:`, err.message)),
+          sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload }).catch(err => console.error(`Restaurant push notification error for user ${restaurantOwner._id}:`, err.message))
+        );
+      }
+
+      // Run all notification dispatches concurrently in background without blocking response
+      if (notificationPromises.length > 0) {
+        Promise.all(notificationPromises).catch(err => console.error('Notification dispatch batch failed:', err));
       }
     } catch (notificationError) {
       console.error('⚠️ Order notifications failed:', notificationError.message || notificationError);
@@ -257,6 +284,17 @@ exports.createOrder = async (req, res, next) => {
 // @route GET /api/orders/user/:userId
 exports.getUserOrders = async (req, res, next) => {
   try {
+    // Allow users to get their own orders, and admins to get any user's orders
+    if (req.user.id !== req.params.userId) {
+      const reqUser = await User.findById(req.user.id);
+      if (!reqUser || reqUser.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only access your own orders.',
+        });
+      }
+    }
+
     const orders = await Order.find({ userId: req.params.userId })
       .populate('items.foodId')
       .sort({ createdAt: -1 });
@@ -284,6 +322,29 @@ exports.getOrderById = async (req, res, next) => {
       });
     }
 
+    // Verify user owns the order, is the assigned rider, is the restaurant owner, or is an admin
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const isOwner = order.userId?.toString() === reqUser._id.toString();
+    const isAdmin = reqUser.role === 'admin';
+    const isRider = order.riderId?.toString() === reqUser._id.toString();
+
+    let isRestaurantOwner = false;
+    if (order.restaurantId) {
+      const restaurant = await Restaurant.findById(order.restaurantId);
+      isRestaurantOwner = restaurant?.ownerId?.toString() === reqUser._id.toString();
+    }
+
+    if (!isOwner && !isAdmin && !isRider && !isRestaurantOwner) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You are not authorized to view this order.',
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: order,
@@ -305,6 +366,47 @@ exports.updateOrderStatus = async (req, res, next) => {
         success: false,
         message: 'Order not found',
       });
+    }
+
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const isAdmin = reqUser.role === 'admin';
+    const isAssignedRider = order.riderId?.toString() === reqUser._id.toString();
+
+    let isRestaurantOwner = false;
+    if (order.restaurantId) {
+      const restaurant = await Restaurant.findById(order.restaurantId);
+      isRestaurantOwner = restaurant?.ownerId?.toString() === reqUser._id.toString();
+    }
+
+    // Role checks:
+    // Admin can update anything.
+    // Restaurant owner can update order status for their restaurant.
+    // Rider can only update status if it's assigned to them, and they can't change paymentStatus or riderId.
+    if (!isAdmin && !isRestaurantOwner && !isAssignedRider) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You are not authorized to update this order.',
+      });
+    }
+
+    if (isAssignedRider && !isAdmin && !isRestaurantOwner) {
+      // Rider can update status but not paymentStatus or riderId
+      if (paymentStatus && paymentStatus !== order.paymentStatus) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Riders cannot modify payment status.',
+        });
+      }
+      if (riderId && riderId !== order.riderId?.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. Riders cannot reassign orders.',
+        });
+      }
     }
 
     const nextStatus = status || order.status;
@@ -385,6 +487,8 @@ exports.updateOrderStatus = async (req, res, next) => {
         },
       });
 
+      const notificationPromises = [];
+
       if (status === 'assigned' || status === 'on-delivery') {
         const riderPayload = {
           title: 'New delivery assignment',
@@ -423,41 +527,59 @@ exports.updateOrderStatus = async (req, res, next) => {
         };
 
         for (const adminUser of adminUsers) {
-          await createInAppNotification({ userId: adminUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' });
-          await sendPushToUser({ userId: adminUser._id, payload: riderPayload });
+          notificationPromises.push(
+            createInAppNotification({ userId: adminUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' }).catch(err => console.error(`Admin in-app status notification error:`, err.message)),
+            sendPushToUser({ userId: adminUser._id, payload: riderPayload }).catch(err => console.error(`Admin push status notification error:`, err.message))
+          );
         }
 
         if (restaurantOwner?._id) {
-          await createInAppNotification({ userId: restaurantOwner._id, title: restaurantPayload.title, message: restaurantPayload.message, type: 'order' });
-          await sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload });
+          notificationPromises.push(
+            createInAppNotification({ userId: restaurantOwner._id, title: restaurantPayload.title, message: restaurantPayload.message, type: 'order' }).catch(err => console.error(`Restaurant in-app status notification error:`, err.message)),
+            sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload }).catch(err => console.error(`Restaurant push status notification error:`, err.message))
+          );
         }
 
         if (riderUser?._id) {
-          await createInAppNotification({ userId: riderUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' });
-          await sendPushToUser({ userId: riderUser._id, payload: riderPayload });
+          notificationPromises.push(
+            createInAppNotification({ userId: riderUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' }).catch(err => console.error(`Rider in-app status notification error:`, err.message)),
+            sendPushToUser({ userId: riderUser._id, payload: riderPayload }).catch(err => console.error(`Rider push status notification error:`, err.message))
+          );
         }
       } else {
         const payload = genericPayload;
 
         for (const adminUser of adminUsers) {
-          await createInAppNotification({ userId: adminUser._id, title: payload.title, message: payload.message, type: 'order' });
-          await sendPushToUser({ userId: adminUser._id, payload });
+          notificationPromises.push(
+            createInAppNotification({ userId: adminUser._id, title: payload.title, message: payload.message, type: 'order' }).catch(err => console.error(`Admin generic status notification error:`, err.message)),
+            sendPushToUser({ userId: adminUser._id, payload }).catch(err => console.error(`Admin generic push status notification error:`, err.message))
+          );
         }
 
         if (restaurantOwner?._id) {
-          await createInAppNotification({ userId: restaurantOwner._id, title: payload.title, message: payload.message, type: 'order' });
-          await sendPushToUser({ userId: restaurantOwner._id, payload });
+          notificationPromises.push(
+            createInAppNotification({ userId: restaurantOwner._id, title: payload.title, message: payload.message, type: 'order' }).catch(err => console.error(`Restaurant generic status notification error:`, err.message)),
+            sendPushToUser({ userId: restaurantOwner._id, payload }).catch(err => console.error(`Restaurant generic push status notification error:`, err.message))
+          );
         }
 
         if (customerUser?._id) {
-          await createInAppNotification({ userId: customerUser._id, title: payload.title, message: payload.message, type: 'order' });
-          await sendPushToUser({ userId: customerUser._id, payload });
+          notificationPromises.push(
+            createInAppNotification({ userId: customerUser._id, title: payload.title, message: payload.message, type: 'order' }).catch(err => console.error(`Customer generic status notification error:`, err.message)),
+            sendPushToUser({ userId: customerUser._id, payload }).catch(err => console.error(`Customer generic push status notification error:`, err.message))
+          );
         }
 
         if (riderUser?._id) {
-          await createInAppNotification({ userId: riderUser._id, title: payload.title, message: payload.message, type: 'order' });
-          await sendPushToUser({ userId: riderUser._id, payload });
+          notificationPromises.push(
+            createInAppNotification({ userId: riderUser._id, title: payload.title, message: payload.message, type: 'order' }).catch(err => console.error(`Rider generic status notification error:`, err.message)),
+            sendPushToUser({ userId: riderUser._id, payload }).catch(err => console.error(`Rider generic push status notification error:`, err.message))
+          );
         }
+      }
+
+      if (notificationPromises.length > 0) {
+        Promise.all(notificationPromises).catch(err => console.error('Batch status notification dispatch failed:', err));
       }
     } catch (notificationError) {
       console.error('⚠️ Order status notifications failed:', notificationError.message || notificationError);

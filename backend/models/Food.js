@@ -24,21 +24,25 @@ const FoodSchema = new mongoose.Schema({
     type: String,
     enum: ['Burgers', 'Pizza', 'Drinks', 'Desserts', 'Salads', 'Asian', 'Other'],
     required: [true, 'Please provide a category'],
+    index: true,
   },
   store: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Store',
     default: null,
+    index: true,
   },
   // Keep restaurant for backward compatibility
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',
+    index: true,
   },
   restaurants: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',
     default: [],
+    index: true,
   }],
   isAvailable: {
     type: Boolean,

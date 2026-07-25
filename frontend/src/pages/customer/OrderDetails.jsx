@@ -60,9 +60,11 @@ const OrderDetails = () => {
   useEffect(() => {
     if (!orderId) return undefined;
 
-    const fetchOrder = async () => {
+    const fetchOrder = async (isSilent = false) => {
       try {
-        setLoading(true);
+        if (!isSilent) {
+          setLoading(true);
+        }
         if (!user) {
           const guestOrder = getGuestOrderById(orderId);
           if (guestOrder) {
@@ -78,18 +80,20 @@ const OrderDetails = () => {
       } catch (err) {
         setError('Unable to load order details.');
       } finally {
-        setLoading(false);
+        if (!isSilent) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchOrder();
+    fetchOrder(false);
 
-    const interval = window.setInterval(fetchOrder, 10000);
+    const interval = window.setInterval(() => fetchOrder(true), 10000);
 
-    const handleFocus = () => fetchOrder();
+    const handleFocus = () => fetchOrder(true);
     const handleVisibility = () => {
       if (!document.hidden) {
-        fetchOrder();
+        fetchOrder(true);
       }
     };
 

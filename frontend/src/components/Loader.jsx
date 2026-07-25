@@ -6,7 +6,7 @@ const Loader = () => {
 
       <div className="engine">
         <div className="d-core">
-          <img src="/delivos.png" alt="Delivo" />
+          <img src="/delivo.jpg" alt="Delivo" />
         </div>
 
         <div className="scan"></div>

@@ -108,11 +108,7 @@ const Cart = () => {
     };
   }, []);
 
-  const isFreeDelivery =
-    cartItems.length > 0 &&
-    deliverySettings.freeDeliveryEnabled &&
-    cartTotal >= deliverySettings.freeDeliveryMinimum;
-  const deliveryFee = cartItems.length > 0 && !isFreeDelivery && deliverySettings.enabled ? deliverySettings.amount : 0;
+  const deliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
   const tax = (cartTotal * 0.1).toFixed(2);
   const grandTotal = (parseFloat(cartTotal) + deliveryFee + parseFloat(tax)).toFixed(2);
 

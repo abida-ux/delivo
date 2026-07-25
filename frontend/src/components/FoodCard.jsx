@@ -1,4 +1,4 @@
-import { Star, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { Plus, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { useState } from 'react';
@@ -7,9 +7,11 @@ import './FoodCard.css';
 const FoodCard = ({ food }) => {
   const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
-  const [quantity, setQuantity] = useState(1);
+  const [imageError, setImageError] = useState(false);
 
-  // Derive "in cart" state from actual cart context — no more fake 3-second timer
+  const fallbackImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+
+  // Derive "in cart" state from actual cart context
   const cartItems = getCartItems();
   const isInCart = cartItems.some(item => {
     const id = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
@@ -21,22 +23,18 @@ const FoodCard = ({ food }) => {
     : food.restaurant || 'Restaurant';
 
   const handleAddToCart = () => {
-    addItem(food, quantity);
-    setQuantity(1); // Reset quantity after adding
+    addItem(food, 1); // Add exactly 1 item directly
   };
 
   return (
     <div className="food-card">
       <div className="food-image-wrapper">
         <img
-          src={food.image}
+          src={imageError ? fallbackImage : (food.image || fallbackImage)}
           alt={food.name}
           className="food-image"
+          onError={() => setImageError(true)}
         />
-        <div className="food-rating-tag">
-          <Star size={12} className="star-icon-filled" />
-          <span>{food.rating || 4.5}</span>
-        </div>
       </div>
 
       <div className="food-info">
@@ -51,36 +49,17 @@ const FoodCard = ({ food }) => {
           {isInCart ? (
             <button
               className="go-to-cart-btn"
-              onClick={openCart}
+              onClick={(e) => { e.stopPropagation(); openCart(); }}
             >
-              <ShoppingCart size={16} />
-              <span className="btn-text">In Cart</span>
+              <ShoppingCart size={14} style={{ marginRight: '4px' }} /> Go to Cart
             </button>
           ) : (
-            <div className="quantity-selector">
-              <div className="qty-controls">
-                <button
-                  className="qty-btn-small"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  <Minus size={14} />
-                </button>
-                <span className="qty-value">{quantity}</span>
-                <button
-                  className="qty-btn-small"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  <Plus size={14} />
-                </button>
-              </div>
-              <button
-                className="add-to-cart-btn"
-                onClick={handleAddToCart}
-              >
-                <ShoppingCart size={16} />
-                <span className="btn-text">Add</span>
-              </button>
-            </div>
+            <button
+              className="add-to-cart-btn"
+              onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}
+            >
+              <Plus size={14} style={{ marginRight: '4px' }} /> Add
+            </button>
           )}
         </div>
       </div>

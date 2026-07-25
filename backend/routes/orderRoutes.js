@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, optionalAuthenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
@@ -15,10 +15,10 @@ const {
   claimOrder,
 } = require('../controllers/orderController');
 
-router.post('/', createOrder);
-router.get('/user/:userId', getUserOrders);
-router.get('/rider/unassigned', authenticate, getUnassignedOrders);
-router.put('/:id/claim', authenticate, claimOrder);
+router.post('/', optionalAuthenticate, createOrder);
+router.get('/user/:userId', authenticate, getUserOrders);
+router.get('/rider/unassigned', authenticate, authorizeRoles('rider', 'admin'), getUnassignedOrders);
+router.put('/:id/claim', authenticate, authorizeRoles('rider', 'admin'), claimOrder);
 
 router.get('/rider/assigned', authenticate, async (req, res, next) => {
   try {
@@ -169,8 +169,8 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
   }
 });
 
-router.get('/:id', getOrderById);
-router.put('/:id', updateOrderStatus);
-router.get('/', getAllOrders);
+router.get('/:id', authenticate, getOrderById);
+router.put('/:id', authenticate, updateOrderStatus);
+router.get('/', authenticate, authorizeRoles('admin'), getAllOrders);
 
 module.exports = router;

@@ -124,23 +124,19 @@
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 8px 2px 16px;
+  padding: 12px 4px 32px 4px; /* Increased bottom padding to prevent clipping of shadows and borders */
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
-/* When the trending list is placed in a full-width section, use a responsive grid
-   so food cards span the available width and are left-aligned instead of centered */
-/* Keep the carousel one-line when inside a full-width section
-   - maintain horizontal scroll behavior
-   - left-align items and let the track expand to available width */
+/* When the trending list is placed in a full-width section, use a responsive grid */
 .full-width-section .trending-carousel-track {
   display: flex;
   flex-direction: row;
   gap: 16px;
-  padding: 8px 0 16px;
+  padding: 12px 4px 32px 4px;
   overflow-x: auto;
   overflow-y: hidden;
   justify-content: flex-start;
@@ -157,277 +153,30 @@
   scrollbar-width: none;
 }
 
-/* MODERN MINIMALIST FOOD CARD */
-.food-card {
-  flex: 0 0 260px;
-  width: 260px;
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-/* In grid mode let cards expand to fill column width */
-/* Ensure cards keep their fixed width in carousel mode */
-
-.food-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-}
-
-.food-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 160px;
-  overflow: hidden;
-  background-color: #f3f3f3;
-}
-
-.food-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.food-card:hover .food-image {
-  transform: scale(1.05);
-}
-
-/* RATING FLOATING TAG */
-.food-rating-tag {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  padding: 4px 10px;
-  border-radius: 100px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #000000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-}
-
-.star-icon-filled {
-  fill: #f5b301;
-  color: #f5b301;
-}
-
-/* CARD DETAILS STYLING */
-.food-info {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-grow: 1;
-}
-
-.food-meta-head {
-  margin-bottom: 12px;
-}
-
-.food-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #000000;
-  margin: 0 0 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.food-vendor {
-  font-size: 12px;
-  color: #777777;
-  margin: 0;
-}
-
-.food-action-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.food-price {
-  font-size: 18px;
-  font-weight: 700;
-  color: #000000;
-}
-
-/* PREMIUM ADD BUTTON UI */
-.add-to-cart-ui {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  color: #000000;
-  padding: 6px 14px;
-  border-radius: 100px;
-  font-weight: 600;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
-}
-
-.add-to-cart-ui:hover {
-  background: #f5b301;
-  border-color: #f5b301;
-  box-shadow: 0 6px 14px rgba(245, 179, 1, 0.25);
-}
-
-/* GO TO CART BUTTON */
-.go-to-cart-ui {
-  background: #4caf50;
-  border: none;
-  color: #ffffff;
-  padding: 6px 14px;
-  border-radius: 100px;
-  font-weight: 600;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
-  transition: all 0.2s ease;
-  animation: slideIn 0.3s ease;
-}
-
-.go-to-cart-ui:hover {
-  background: #45a049;
-  box-shadow: 0 6px 14px rgba(76, 175, 80, 0.3);
-  transform: scale(1.05);
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* CARD INTERACTION ANIMATIONS */
-.food-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 32px rgba(0, 0, 0, 0.06);
-  border-color: rgba(245, 179, 1, 0.15);
-}
-
-.food-card:hover .food-image {
-  transform: scale(1.05);
+/* CAROUSEL-SPECIFIC CARD SIZING SANS DESIGN STYLES */
+.trending-carousel-track .food-card {
+  flex: 0 0 270px;
+  width: 270px;
 }
 
 /* RESPONSIVE LAYOUT SYSTEMS */
 @media (max-width: 1200px) {
-  .trending-section {
-    padding: 32px 20px;
-  }
-  
-  .trending-carousel-track {
-    gap: 14px;
-  }
-
-  .food-card {
-    flex-basis: 240px;
-    width: 240px;
+  .trending-carousel-track .food-card {
+    flex: 0 0 250px;
+    width: 250px;
   }
 }
 
 @media (max-width: 768px) {
-  .trending-slider-controls {
-    display: none;
-  }
-
-  .trending-section {
-    padding: 24px 16px;
-  }
-
-  .trending-title {
-    font-size: 22px;
-    margin-bottom: 16px;
-  }
-  
-  .trending-carousel-track {
-    gap: 12px;
-  }
-
-  .food-card {
-    flex-basis: 220px;
-    width: 220px;
-  }
-
-  .food-image-wrapper {
-    height: 140px;
-  }
-
-  .food-name {
-    font-size: 14px;
-  }
-
-  .food-price {
-    font-size: 15px;
+  .trending-carousel-track .food-card {
+    flex: 0 0 230px;
+    width: 230px;
   }
 }
 
 @media (max-width: 600px) {
-  .trending-section {
-    padding: 20px 12px;
-  }
-
-  .trending-title {
-    font-size: 20px;
-    margin-bottom: 12px;
-  }
-  
-  .trending-carousel-track {
-    gap: 10px;
-  }
-
-  .food-card {
-    flex-basis: 180px;
-    width: 180px;
-  }
-
-  .food-image-wrapper {
-    height: 120px;
-  }
-
-  .food-info {
-    padding: 12px;
-  }
-
-  .food-name {
-    font-size: 13px;
-    margin-bottom: 2px;
-  }
-
-  .food-price {
-    font-size: 14px;
-  }
-
-  .food-vendor {
-    font-size: 11px;
-  }
-  
-  .add-to-cart-ui,
-  .go-to-cart-ui {
-    font-size: 12px;
-    padding: 5px 10px;
+  .trending-carousel-track .food-card {
+    flex: 0 0 190px;
+    width: 190px;
   }
 }

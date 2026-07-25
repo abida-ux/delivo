@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, authorizeRoles, optionalAuthenticate } = require('../middleware/authMiddleware');
 const {
   registerUser,
   loginUser,
@@ -19,20 +19,22 @@ const {
 } = require('../controllers/userController');
 
 
-router.post('/register', registerUser);
+router.post('/register', optionalAuthenticate, registerUser);
 router.post('/login', loginUser);
 router.post('/verify-email', verifyEmail);
 router.post('/resend-verification-code', resendVerificationCode);
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password', resetPassword);
-router.post('/', createUser);
-router.get('/admin/stats', authenticate, getAdminStats);
-router.get('/me', authenticate, getCurrentUserProfile);
 
+// Secured user endpoints
+router.post('/', authenticate, authorizeRoles('admin'), createUser);
+router.get('/admin/stats', authenticate, authorizeRoles('admin'), getAdminStats);
+router.get('/me', authenticate, getCurrentUserProfile);
 router.put('/me/status', authenticate, updateRiderStatus);
-router.get('/', getAllUsers);
-router.get('/:id', getUserProfile);
-router.put('/:id', updateUserProfile);
-router.delete('/:id', deleteUser);
+
+router.get('/', authenticate, authorizeRoles('admin'), getAllUsers);
+router.get('/:id', authenticate, getUserProfile);
+router.put('/:id', authenticate, updateUserProfile);
+router.delete('/:id', authenticate, authorizeRoles('admin'), deleteUser);
 
 module.exports = router;

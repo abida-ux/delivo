@@ -5,6 +5,7 @@ const OrderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: false, // ✅ Allow guest orders
+    index: true,
   },
   guestEmail: {
     type: String,
@@ -22,11 +23,13 @@ const OrderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',
     required: false,
+    index: true,
   },
   riderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: false,
+    index: true,
   },
   items: [{
     foodId: {
@@ -53,6 +56,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'confirmed', 'preparing', 'on-delivery', 'out-for-delivery', 'assigned', 'delivered', 'cancelled'],
     default: 'pending',
+    index: true,
   },
   paymentMethod: {
     type: String,
@@ -80,6 +84,7 @@ const OrderSchema = new mongoose.Schema({
   checkoutRequestId: {
     type: String,
     required: false,
+    index: true,
   },
   merchantRequestId: {
     type: String,
@@ -142,6 +147,7 @@ const OrderSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+    index: true,
   },
   updatedAt: {
     type: Date,

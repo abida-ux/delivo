@@ -8,7 +8,7 @@ import {
   Home,
   UtensilsCrossed,
   LogOut,
-  HeartPulse
+  Tag
 } from 'lucide-react';
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -155,7 +155,7 @@ const Navbar = () => {
     const routeToLinkMap = {
       '/': 'Home',
       '/menu': 'Menu',
-      '/wishlist': 'Wishlist',
+      '/offers': 'Offers',
       '/customer/orders': 'Orders'
     };
 
@@ -174,19 +174,19 @@ const Navbar = () => {
 
   const cancelLogout = () => setShowLogoutConfirm(false);
 
-  const navLinks = ['Home', 'Menu', 'Wishlist', 'Orders'];
+  const navLinks = ['Home', 'Menu', 'Offers', 'Orders'];
 
   const iconMap = {
     Home: <Home size={18} />,
     Menu: <UtensilsCrossed size={18} />,
-    Wishlist: <HeartPulse size={18} />,
+    Offers: <Tag size={18} />,
     Orders: <ShoppingBag size={18} />
   };
 
   const routeMap = {
     Home: "/",
     Menu: "/menu",
-    Wishlist: "/wishlist",
+    Offers: "/offers",
     Orders: "/customer/orders"
   };
 
@@ -207,7 +207,7 @@ const Navbar = () => {
           {/* LEFT: LOGO */}
           <div className="navbar-left">
             <div className="logo-image">
-              <img src="/delivos.png" alt="Delivo" />
+              <img src="/delivo.jpg" alt="Delivo" />
             </div>
             <span className="brand-name">Delivo</span>
           </div>

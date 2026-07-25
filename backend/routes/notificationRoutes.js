@@ -17,14 +17,14 @@ const {
   getMyPushSubscriptions,
   debugAllPushSubscriptions,
 } = require('../controllers/notificationController');
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
 
 // Public Web Push endpoints (for browser push testing & guest registration)
 router.post('/public-subscribe', savePushSubscriptionPublic);
-router.post('/public-trigger-test', sendPushNotificationPublic);
 
-// Development-only: public debug route to list all push subscriptions
+// Development-only: public debug and test routes
 if (process.env.NODE_ENV !== 'production') {
+  router.post('/public-trigger-test', sendPushNotificationPublic);
   router.get('/debug/all-subscriptions', debugAllPushSubscriptions);
 }
 
@@ -36,7 +36,7 @@ router.use(authenticate);
 router.get('/', getNotifications);
 
 // Create notification (admin only)
-router.post('/create', createNotification);
+router.post('/create', authorizeRoles('admin'), createNotification);
 
 // Mark all notifications as read
 router.put('/mark-all-read', markAllAsRead);
@@ -52,21 +52,21 @@ router.delete('/', deleteAllNotifications);
 
 // Browser push subscription management
 router.post('/push/subscribe', savePushSubscription);
-router.post('/push/send', sendPushNotification);
+router.post('/push/send', authorizeRoles('admin'), sendPushNotification);
 
 // FCM token management
 router.post('/fcm/register', registerFcmToken);
 
 // Test notification (for local development and verification)
-router.post('/test', sendTestNotification);
+router.post('/test', authorizeRoles('admin'), sendTestNotification);
 
 // Debug: get current user's push subscriptions
 router.get('/push/subscriptions', getMyPushSubscriptions);
 
 // Development-only: list all push subscriptions
-router.get('/debug/all-subscriptions', debugAllPushSubscriptions);
+router.get('/debug/all-subscriptions', authorizeRoles('admin'), debugAllPushSubscriptions);
 
 // Admin broadcast notification
-router.post('/admin/broadcast', sendAdminNotification);
+router.post('/admin/broadcast', authorizeRoles('admin'), sendAdminNotification);
 
 module.exports = router;

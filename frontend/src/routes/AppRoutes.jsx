@@ -14,7 +14,7 @@ const StoreProducts = lazy(() => import("../pages/customer/StoreProducts"));
 const Orders = lazy(() => import("../pages/customer/Orders"));
 const OrderDetails = lazy(() => import("../pages/customer/OrderDetails"));
 const Settings = lazy(() => import("../pages/Settings"));
-const Wishlist = lazy(() => import("../pages/Wishlist"));
+const Offers = lazy(() => import("../pages/Offers"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
@@ -58,7 +58,7 @@ export default function AppRoutes() {
       <Route path="/customer/orders" element={<Orders />} />
       <Route path="/customer/orders/:orderId" element={<OrderDetails />} />
       <Route path="/settings" element={<Settings />} />
-      <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/offers" element={<Offers />} />
 
       {/* Admin Routes - Protected */}
       <Route

@@ -1,5 +1,6 @@
 const Food = require('../models/Food');
 const Restaurant = require('../models/Restaurant');
+const User = require('../models/User');
 
 const normalizeRestaurantIds = (payload) => {
   const values = payload?.restaurants || payload?.restaurant;
@@ -122,6 +123,24 @@ exports.createFood = async (req, res) => {
       });
     }
 
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (reqUser.role !== 'admin') {
+      // Standard restaurant owners must own ALL selected restaurants
+      for (const resId of restaurantIds) {
+        const rest = await Restaurant.findById(resId);
+        if (!rest || rest.ownerId?.toString() !== reqUser._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden: You do not own one or more of the selected restaurants.',
+          });
+        }
+      }
+    }
+
     const restaurants = await Restaurant.find({ _id: { $in: restaurantIds } });
     if (restaurants.length !== restaurantIds.length) {
       return res.status(404).json({
@@ -168,11 +187,48 @@ exports.updateFood = async (req, res) => {
       updateData.restaurants = restaurantIds;
     }
 
-    const food = await Food.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const food = await Food.findById(req.params.id);
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food not found',
+      });
+    }
+
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (reqUser.role !== 'admin') {
+      // Check current food restaurant ownership
+      const currentRestaurantIds = [...new Set([...(food.restaurants || []), food.restaurant].filter(Boolean))];
+      for (const resId of currentRestaurantIds) {
+        const rest = await Restaurant.findById(resId);
+        if (!rest || rest.ownerId?.toString() !== reqUser._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden: You are not authorized to update this food item.',
+          });
+        }
+      }
+
+      // Check new restaurant ownership if updated
+      if (restaurantIds.length) {
+        for (const resId of restaurantIds) {
+          const rest = await Restaurant.findById(resId);
+          if (!rest || rest.ownerId?.toString() !== reqUser._id.toString()) {
+            return res.status(403).json({
+              success: false,
+              message: 'Forbidden: You do not own one or more of the selected new restaurants.',
+            });
+          }
+        }
+      }
+    }
+
+    Object.assign(food, updateData);
+    await food.save();
 
     if (!food) {
       return res.status(404).json({
@@ -200,7 +256,7 @@ exports.updateFood = async (req, res) => {
 // ==================== DELETE FOOD ====================
 exports.deleteFood = async (req, res) => {
   try {
-    const food = await Food.findByIdAndDelete(req.params.id);
+    const food = await Food.findById(req.params.id);
 
     if (!food) {
       return res.status(404).json({
@@ -208,6 +264,26 @@ exports.deleteFood = async (req, res) => {
         message: 'Food not found',
       });
     }
+
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (reqUser.role !== 'admin') {
+      const currentRestaurantIds = [...new Set([...(food.restaurants || []), food.restaurant].filter(Boolean))];
+      for (const resId of currentRestaurantIds) {
+        const rest = await Restaurant.findById(resId);
+        if (!rest || rest.ownerId?.toString() !== reqUser._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'Forbidden: You are not authorized to delete this food item.',
+          });
+        }
+      }
+    }
+
+    await Food.findByIdAndDelete(req.params.id);
 
     const restaurantIds = [...new Set([...(food.restaurants || []), food.restaurant].filter(Boolean))];
     if (restaurantIds.length) {

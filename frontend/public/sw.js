@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
 const CACHE_NAME = 'delivo-cache-v4';
-const APP_SHELL = ['/manifest.webmanifest', '/delivos.png'];
+const APP_SHELL = ['/manifest.webmanifest', '/delivo.jpg'];
 
 // ==================== Firebase FCM Setup ====================
 let firebaseInitialized = false;
@@ -45,8 +45,8 @@ function initFirebase(config) {
       const title = payload.notification?.title || 'Delivo Update';
       const options = {
         body: payload.notification?.body || 'You have a new update',
-        icon: '/delivos.png',
-        badge: '/delivos.png',
+        icon: '/delivo.jpg',
+        badge: '/delivo.jpg',
         data: payload.data || {},
         actions: [
           { action: 'open', title: 'Open' },
@@ -114,7 +114,7 @@ self.addEventListener('message', (event) => {
       const title = payload.title || 'Delivo SW Test';
       const options = {
         body: payload.body || 'Service worker test notification',
-        icon: payload.icon || '/delivos.png',
+        icon: payload.icon || '/delivo.jpg',
         data: payload.data || {},
       };
       self.registration.showNotification(title, options);
@@ -143,8 +143,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: payload.message || 'You have a new update from Delivo.',
-    icon: '/delivos.png',
-    badge: '/delivos.png',
+    icon: '/delivo.jpg',
+    badge: '/delivo.jpg',
     tag: payload.tag || 'delivo-push-alert',
     vibrate: [200, 100, 200],
     data: payload,

@@ -9,6 +9,8 @@ if (fs.existsSync(envPath)) {
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { isAllowedOrigin } = require('./config/cors');
 const errorHandler = require('./middleware/errorMiddleware');
@@ -26,6 +28,7 @@ const storeRoutes = require('./routes/storeRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const appSettingsRoutes = require('./routes/appSettingsRoutes');
+const offerRoutes = require('./routes/offerRoutes');
 
 // Initialize Express app
 const app = express();
@@ -57,9 +60,44 @@ try {
 }
 
 // ==================== MIDDLEWARE ====================
+// Apply security headers
+app.use(helmet());
+
+// Rate limiters
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Limit each IP to 300 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes.'
+  }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 auth requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many login or authentication attempts. Please try again after 15 minutes.'
+  }
+});
+
+// Apply rate limiters
+app.use('/api', apiLimiter);
+app.use('/api/users/login', authLimiter);
+app.use('/api/users/register', authLimiter);
+app.use('/api/users/verify-email', authLimiter);
+app.use('/api/users/resend-verification-code', authLimiter);
+app.use('/api/users/request-password-reset', authLimiter);
+app.use('/api/users/reset-password', authLimiter);
+
 // JSON parsing with size limits
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -96,6 +134,7 @@ app.use('/api/stores', storeRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', appSettingsRoutes);
+app.use('/api/offers', offerRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

@@ -59,7 +59,9 @@ const getCallbackUrl = () => {
   if (!callback) {
     throw new Error('Missing M-Pesa CALLBACK_URL');
   }
-  return callback;
+  const secret = process.env.MPESA_CALLBACK_SECRET || 'delivo_secure_fallback_secret_2026';
+  const separator = callback.includes('?') ? '&' : '?';
+  return `${callback}${separator}secret=${secret}`;
 };
 
 const getAccountReference = (orderReference = '') => {

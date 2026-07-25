@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const { sendVerificationEmail } = require('../config/emailService');
 const { runSmtpDiagnostics } = require('../utils/smtpDiagnostic');
 
-router.post('/verify-email-test', async (req, res) => {
+router.post('/verify-email-test', authenticate, authorizeRoles('admin'), async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
     return res.status(400).json({
@@ -28,7 +29,7 @@ router.post('/verify-email-test', async (req, res) => {
   }
 });
 
-router.get('/smtp-diagnostics', async (req, res) => {
+router.get('/smtp-diagnostics', authenticate, authorizeRoles('admin'), async (req, res) => {
   try {
     const diagnostics = await runSmtpDiagnostics();
     return res.status(200).json({

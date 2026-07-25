@@ -133,16 +133,38 @@ const createPasswordResetCode = async (user) => {
   }
 };
 
-const EMAIL_VERIFICATION = process.env.EMAIL_VERIFICATION === 'true';
+const EMAIL_VERIFICATION = false; // Disabled per user request (will use it later)
 
 exports.registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const { name, email, password, role, phone, location } = req.body;
+
+    let finalRole = role || 'customer';
+    
+    // Strict role validation to prevent privilege escalation:
+    // If attempting to register as any role other than customer, verify the caller is an authenticated admin.
+    if (finalRole !== 'customer') {
+      if (!req.user) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Cannot register with a privileged role.',
+        });
+      }
+
+      const requester = await User.findById(req.user.id);
+      if (!requester || requester.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: Only administrators can register privileged roles.',
+        });
+      }
+    }
 
     console.log('[auth] registration request received', {
       email,
       phone: phone ? 'provided' : 'missing',
-      role: role || 'customer',
+      role: finalRole,
+      location: location ? 'provided' : 'missing',
     });
 
     if (!name || !email || !password || !phone) {
@@ -185,15 +207,17 @@ exports.registerUser = async (req, res, next) => {
       name,
       email,
       phone,
-      role: role || 'customer',
+      role: finalRole,
+      location,
     });
 
     const user = await User.create({
       name,
       email,
       password,
-      role: role || 'customer',
+      role: finalRole,
       phone,
+      location,
       isVerified: EMAIL_VERIFICATION ? false : true,
       verificationResendCount: 0,
       verificationResendWindowStart: new Date(),
@@ -624,7 +648,18 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.getUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    // Only the profile owner or an admin can access this profile
+    if (req.user.id !== req.params.id) {
+      const reqUser = await User.findById(req.user.id);
+      if (!reqUser || reqUser.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view your own profile.',
+        });
+      }
+    }
+
+    const user = await User.findById(req.params.id).select('-password');
 
     if (!user) {
       return res.status(404).json({
@@ -716,6 +751,17 @@ exports.updateRiderStatus = async (req, res, next) => {
 
 exports.updateUserProfile = async (req, res, next) => {
   try {
+    // Only the profile owner or an admin can update this profile
+    if (req.user.id !== req.params.id) {
+      const reqUser = await User.findById(req.user.id);
+      if (!reqUser || reqUser.role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update your own profile.',
+        });
+      }
+    }
+
     const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({
@@ -725,6 +771,14 @@ exports.updateUserProfile = async (req, res, next) => {
     }
 
     const { password, ...updateFields } = req.body;
+
+    // Prevent privilege escalation: only admins can update roles and verification status
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser || reqUser.role !== 'admin') {
+      delete updateFields.role;
+      delete updateFields.isVerified;
+    }
+
     Object.assign(user, updateFields);
     if (password) {
       user.password = password;

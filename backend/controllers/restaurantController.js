@@ -116,11 +116,7 @@ exports.createRestaurant = async (req, res, next) => {
 // @route PUT /api/restaurants/:id
 exports.updateRestaurant = async (req, res, next) => {
   try {
-    const restaurant = await Restaurant.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const restaurant = await Restaurant.findById(req.params.id);
 
     if (!restaurant) {
       return res.status(404).json({
@@ -128,6 +124,30 @@ exports.updateRestaurant = async (req, res, next) => {
         message: 'Restaurant not found',
       });
     }
+
+    // Access Control: Only admin or the restaurant's owner can update the restaurant
+    const reqUser = await User.findById(req.user.id);
+    if (!reqUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (reqUser.role !== 'admin' && restaurant.ownerId?.toString() !== reqUser._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to update this restaurant.',
+      });
+    }
+
+    // Prevent restaurant owners from escalating their own balance or changing ownerId/status
+    if (reqUser.role !== 'admin') {
+      delete req.body.ownerId;
+      delete req.body.status;
+      delete req.body.availableBalance;
+      delete req.body.withdrawnBalance;
+    }
+
+    Object.assign(restaurant, req.body);
+    await restaurant.save();
 
     res.status(200).json({
       success: true,

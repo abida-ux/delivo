@@ -81,16 +81,22 @@ const AdminSettings = () => {
 
     loadSettings();
 
-    const savedPromos = localStorage.getItem('promoCodes');
-    if (savedPromos) {
-      setPromoCodes(JSON.parse(savedPromos));
-    }
+    fetchPromoCodes();
     
     // Fetch notifications from backend
     if (user && token) {
       fetchNotifications();
     }
   }, [user, token]);
+
+  const fetchPromoCodes = async () => {
+    try {
+      const { data } = await api.get('/offers');
+      setPromoCodes(data.data || []);
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -171,7 +177,7 @@ const AdminSettings = () => {
     }));
   };
 
-  const handleAddPromo = (e) => {
+  const handleAddPromo = async (e) => {
     e.preventDefault();
 
     if (!newPromo.code || !newPromo.discount) {
@@ -179,45 +185,47 @@ const AdminSettings = () => {
       return;
     }
 
-    const promoToAdd = {
-      ...newPromo,
-      id: Date.now(),
-      uses: 0,
-      createdAt: new Date().toLocaleDateString(),
-    };
+    try {
+      const payload = {
+        code: newPromo.code.toUpperCase(),
+        title: `${newPromo.discount}${newPromo.type === 'percentage' ? '%' : ' Ksh'} Off`,
+        description: `Enjoy a discount of ${newPromo.discount}${newPromo.type === 'percentage' ? '%' : ' Ksh'} on your order. ${newPromo.maxUses ? `Max ${newPromo.maxUses} uses.` : ''}`,
+        discount: `${newPromo.discount}${newPromo.type === 'percentage' ? '%' : ' KSh'} OFF`,
+        minOrder: 'KSh 0',
+        expiry: newPromo.expiryDate ? `Expires: ${newPromo.expiryDate}` : 'Limited time offer',
+      };
 
-    const updatedPromos = [...promoCodes, promoToAdd];
-    setPromoCodes(updatedPromos);
-    localStorage.setItem('promoCodes', JSON.stringify(updatedPromos));
-
-    // Reset form
-    setNewPromo({
-      code: '',
-      discount: '',
-      type: 'percentage',
-      maxUses: '',
-      expiryDate: '',
-      active: true,
-    });
-    setShowPromoForm(false);
-    alert('Promo code created successfully!');
-  };
-
-  const handleDeletePromo = (id) => {
-    if (window.confirm('Are you sure you want to delete this promo code?')) {
-      const updatedPromos = promoCodes.filter((p) => p.id !== id);
-      setPromoCodes(updatedPromos);
-      localStorage.setItem('promoCodes', JSON.stringify(updatedPromos));
-      alert('Promo code deleted!');
+      await api.post('/offers', payload);
+      
+      // Reset form
+      setNewPromo({
+        code: '',
+        discount: '',
+        type: 'percentage',
+        maxUses: '',
+        expiryDate: '',
+        active: true,
+      });
+      setShowPromoForm(false);
+      alert('Promo code created successfully!');
+      fetchPromoCodes();
+    } catch (error) {
+      console.error('Failed to create offer:', error);
+      alert(error.response?.data?.message || 'Failed to create promo code');
     }
   };
 
-  const togglePromoActive = (id) => {
-    const updatedPromos = promoCodes.map((p) =>
-      p.id === id ? { ...p, active: !p.active } : p
-    );
-    setPromoCodes(updatedPromos);
-    localStorage.setItem('promoCodes', JSON.stringify(updatedPromos));
+  const handleDeletePromo = async (id) => {
+    if (window.confirm('Are you sure you want to delete this promo code?')) {
+      try {
+        await api.delete(`/offers/${id}`);
+        alert('Promo code deleted!');
+        fetchPromoCodes();
+      } catch (error) {
+        console.error('Failed to delete offer:', error);
+        alert('Failed to delete promo code');
+      }
+    }
   };
 
   return (
@@ -396,53 +404,7 @@ const AdminSettings = () => {
           </div>
         </section>
 
-        {/* Free Delivery Section */}
-        <section className="settings-section">
-          <div className="section-header">
-            <Truck size={24} className="section-icon" />
-            <h2>Free Delivery Settings</h2>
-          </div>
 
-          <div className="settings-content">
-            <div className="setting-item">
-              <div className="setting-label">
-                <label className="toggle-label">
-                  <input
-                    type="checkbox"
-                    checked={settings.freeDeliveryEnabled}
-                    onChange={(e) =>
-                      handleSettingChange('freeDeliveryEnabled', e.target.checked)
-                    }
-                  />
-                  <span className="toggle-switch"></span>
-                  Enable Free Delivery Offer
-                </label>
-                <p className="setting-desc">
-                  Activate free delivery for orders above a minimum amount
-                </p>
-              </div>
-            </div>
-
-            {settings.freeDeliveryEnabled && (
-              <div className="setting-item">
-                <label htmlFor="min-amount">Minimum Order Amount (Ksh)</label>
-                <input
-                  type="number"
-                  id="min-amount"
-                  value={settings.freeDeliveryMinimum}
-                  onChange={(e) =>
-                    handleSettingChange('freeDeliveryMinimum', parseFloat(e.target.value))
-                  }
-                  placeholder="Enter minimum amount"
-                  min="0"
-                />
-                <p className="setting-desc">
-                  Orders above Ksh {settings.freeDeliveryMinimum} will get free delivery
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
 
         {/* Delivery Fee Section */}
         <section className="settings-section">
@@ -605,46 +567,23 @@ const AdminSettings = () => {
                 <h3>Active Promo Codes ({promoCodes.length})</h3>
                 <div className="promos-table">
                   {promoCodes.map((promo) => (
-                    <div key={promo.id} className="promo-row">
+                    <div key={promo._id || promo.id} className="promo-row">
                       <div className="promo-info">
                         <div className="promo-code">
-                          {promo.active ? (
-                            <span className="badge-active">ACTIVE</span>
-                          ) : (
-                            <span className="badge-inactive">INACTIVE</span>
-                          )}
+                          <span className="badge-active">ACTIVE</span>
                           <strong>{promo.code}</strong>
                         </div>
                         <div className="promo-details">
-                          <span>
-                            {promo.discount}
-                            {promo.type === 'percentage' ? '%' : ' Ksh'} off
-                          </span>
-                          {promo.maxUses && (
-                            <span>• Max {promo.maxUses} uses</span>
-                          )}
-                          {promo.expiryDate && (
-                            <span>• Expires: {promo.expiryDate}</span>
-                          )}
-                          <span>• Created: {promo.createdAt}</span>
+                          <span>{promo.discount}</span>
+                          <span>• {promo.expiry}</span>
+                          <span>• {promo.description}</span>
                         </div>
                       </div>
 
                       <div className="promo-actions">
                         <button
-                          className={`toggle-btn ${!promo.active ? 'inactive' : ''}`}
-                          onClick={() => togglePromoActive(promo.id)}
-                          title={promo.active ? 'Deactivate' : 'Activate'}
-                        >
-                          {promo.active ? (
-                            <Eye size={18} />
-                          ) : (
-                            <EyeOff size={18} />
-                          )}
-                        </button>
-                        <button
                           className="delete-btn"
-                          onClick={() => handleDeletePromo(promo.id)}
+                          onClick={() => handleDeletePromo(promo._id || promo.id)}
                           title="Delete"
                         >
                           <Trash2 size={18} />

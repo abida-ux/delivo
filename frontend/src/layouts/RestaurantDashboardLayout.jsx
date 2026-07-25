@@ -47,7 +47,7 @@ const RestaurantSidebar = ({ isOpen, setIsOpen }) => {
     <aside className={`restaurant-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="restaurant-sidebar-header">
         <div>
-          <img className="restaurant-logo" src="/delivos.png" alt="Delivo" />
+          <img className="restaurant-logo" src="/delivo.jpg" alt="Delivo" />
           <div>
             <h2>Restaurant Portal</h2>
             <p>{user?.name || 'Partner Owner'}</p>

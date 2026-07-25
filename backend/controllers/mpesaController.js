@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const User = require('../models/User');
 const { sendMpesaStkPush, queryMpesaStkStatus } = require('../utils/mpesaService');
 const { sendOrderPaymentNotification } = require('../utils/pushNotifications');
 
@@ -55,6 +56,13 @@ exports.handleMpesaStkPush = async (req, res, next) => {
 exports.handleMpesaCallback = async (req, res, next) => {
   try {
     console.log('📩 M-Pesa callback received:', JSON.stringify(req.body, null, 2));
+
+    // Securing the callback against spoofing using a callback secret query parameter
+    const callbackSecret = process.env.MPESA_CALLBACK_SECRET || 'delivo_secure_fallback_secret_2026';
+    if (req.query.secret !== callbackSecret) {
+      console.warn('❌ Unauthorized M-Pesa callback attempt rejected - invalid secret token');
+      return res.status(401).json({ success: false, message: 'Unauthorized callback' });
+    }
 
     const body = req.body.Body?.stkCallback;
     if (!body) {
@@ -122,6 +130,17 @@ exports.handleMpesaStatus = async (req, res, next) => {
     const order = await Order.findOne({ checkoutRequestId });
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Access control: if order is mapped to a registered user, ensure only that user or an admin can query it
+    if (order.userId) {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required to view status of this order' });
+      }
+      const reqUser = await User.findById(req.user.id);
+      if (!reqUser || (reqUser.role !== 'admin' && order.userId.toString() !== reqUser._id.toString())) {
+        return res.status(403).json({ success: false, message: 'Access denied. You are not authorized to view this order.' });
+      }
     }
 
     if (order.paymentStatus === 'completed' || order.paymentStatus === 'failed') {

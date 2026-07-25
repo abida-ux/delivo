@@ -332,21 +332,7 @@ const Settings = () => {
             </select>
           </div>
 
-          <div className="setting-item">
-            <div className="setting-info">
-              <label>Theme</label>
-              <p className="setting-description">Choose your preferred theme</p>
-            </div>
-            <select
-              value={settings.theme}
-              onChange={(e) => handleSelectChange('theme', e.target.value)}
-              className="setting-select"
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="auto">Auto (System)</option>
-            </select>
-          </div>
+
         </div>
 
         <div className="settings-section">

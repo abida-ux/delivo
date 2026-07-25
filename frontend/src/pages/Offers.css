@@ -1,0 +1,294 @@
+.offers-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+  min-height: 80vh;
+}
+
+.offers-header-section {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.offers-header-section h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.offers-header-section p {
+  color: #4b5563;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.sparkles-icon {
+  width: 48px;
+  height: 48px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Offers Grid */
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.offer-card {
+  background: #ffffff;
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.offer-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #f97316, #ea580c);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.offer-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.offer-card:hover::before {
+  opacity: 1;
+}
+
+.offer-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.offer-discount-badge {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  color: #ea580c;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(234, 88, 12, 0.15);
+}
+
+.offer-expiry {
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.offer-card-body h3 {
+  font-size: 1.25rem;
+  color: #1f2937;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.offer-card-body p {
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.offer-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 18px;
+  margin-top: auto;
+}
+
+.min-order-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.min-order-hint strong {
+  color: #1f2937;
+}
+
+/* Coupon Box */
+.promo-code-box {
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.promo-code-box:hover {
+  background: #fff7ed;
+  border-color: #f97316;
+}
+
+.promo-code-box.copied {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  border-style: solid;
+}
+
+.code-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.promo-code-box.copied .code-text {
+  color: #15803d;
+}
+
+.copy-icon {
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+
+.promo-code-box:hover .copy-icon {
+  color: #f97316;
+}
+
+/* Auth / Locked view */
+.locked-offers-container {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.blurred-offers-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.offer-card.blurred {
+  opacity: 0.6;
+}
+
+.auth-pitch-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  padding: 24px;
+}
+
+.auth-pitch-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 440px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.lock-icon-wrapper {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  color: #f97316;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.15);
+}
+
+.auth-pitch-card h2 {
+  font-size: 1.5rem;
+  color: #111827;
+  margin: 0 0 12px 0;
+  font-weight: 800;
+}
+
+.auth-pitch-card p {
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 28px 0;
+}
+
+.auth-pitch-btn {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 28px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.25);
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.auth-pitch-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(249, 115, 22, 0.35);
+}
+
+.auth-pitch-btn:active {
+  transform: translateY(0);
+}
