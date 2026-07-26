@@ -145,6 +145,10 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
       alert('Please select or search a valid delivery address');
       return;
     }
+    if (!landmarkVal || landmarkVal.trim().length < 3) {
+      alert('Please enter your exact building details (e.g. room number, hostel name, house/apartment number) so the rider can find you.');
+      return;
+    }
     await updateLocation(coords.lat, coords.lng, addressVal, landmarkVal);
     onClose();
   };

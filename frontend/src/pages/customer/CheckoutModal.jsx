@@ -257,10 +257,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
 
     if (!location.latitude || !location.longitude) {
       newErrors.address = 'Please drag the marker pin on the map to confirm your delivery coordinates';
+    } else if (!location.nearbyLandmark || location.nearbyLandmark.trim().length < 3) {
+      newErrors.address = 'Hostel name, house, or room number is required. Please click "Drag Pin & Pick on Map" and specify your building details.';
     } else if (!deliveryInfo.address.trim()) {
       newErrors.address = 'Precise delivery location is required';
-    } else if (deliveryInfo.address.trim().length < 8) {
-      newErrors.address = 'Please include a clear landmark or house/room detail';
     }
     if (!deliveryInfo.whatsapp.trim()) {
       newErrors.whatsapp = 'WhatsApp number is required';
