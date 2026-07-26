@@ -58,9 +58,22 @@ exports.getAllFoods = async (req, res) => {
 // ==================== GET SINGLE FOOD ====================
 exports.getFoodById = async (req, res) => {
   try {
-    const food = await Food.findById(req.params.id)
+    let food = await Food.findById(req.params.id)
       .populate('categories', 'name icon image')
       .lean();
+
+    let isCombo = false;
+    if (!food) {
+      const FoodCombination = require('../models/FoodCombination');
+      const combo = await FoodCombination.findById(req.params.id).lean();
+      if (combo) {
+        food = {
+          ...combo,
+          category: 'Combinations',
+        };
+        isCombo = true;
+      }
+    }
 
     if (!food) {
       return res.status(404).json({
@@ -69,22 +82,37 @@ exports.getFoodById = async (req, res) => {
       });
     }
 
-    // Fetch all restaurants selling this specific food item
-    const links = await RestaurantFood.find({ foodId: food._id })
-      .populate('restaurantId', 'name bannerImage rating deliveryTime cuisine isOpen')
-      .lean();
+    let restaurantsSelling = [];
+    if (isCombo) {
+      const RestaurantCombination = require('../models/RestaurantCombination');
+      const comboLinks = await RestaurantCombination.find({ combinationId: food._id })
+        .populate('restaurantId', 'name bannerImage rating deliveryTime cuisine isOpen')
+        .lean();
 
-    const restaurantsSelling = links.map(link => ({
-      restaurant: link.restaurantId,
-      price: link.price,
-      discountPrice: link.discountPrice,
-      availability: link.availability,
-      prepTime: link.prepTime,
-      stockStatus: link.stockStatus,
-      specialNotes: link.specialNotes,
-      featured: link.featured,
-      todaySpecial: link.todaySpecial,
-    }));
+      restaurantsSelling = comboLinks.map(link => ({
+        restaurant: link.restaurantId,
+        price: link.price,
+        availability: link.availability !== false,
+        prepTime: 20,
+        stockStatus: 'in-stock',
+      }));
+    } else {
+      const links = await RestaurantFood.find({ foodId: food._id })
+        .populate('restaurantId', 'name bannerImage rating deliveryTime cuisine isOpen')
+        .lean();
+
+      restaurantsSelling = links.map(link => ({
+        restaurant: link.restaurantId,
+        price: link.price,
+        discountPrice: link.discountPrice,
+        availability: link.availability,
+        prepTime: link.prepTime,
+        stockStatus: link.stockStatus,
+        specialNotes: link.specialNotes,
+        featured: link.featured,
+        todaySpecial: link.todaySpecial,
+      }));
+    }
 
     return res.status(200).json({
       success: true,
@@ -376,10 +404,21 @@ exports.getFoodRestaurants = async (req, res) => {
     const { foodId } = req.params;
     const { lat, lng } = req.query;
 
-    const RestaurantFood = require('../models/RestaurantFood');
-    const links = await RestaurantFood.find({ foodId, availability: true })
-      .populate('restaurantId')
-      .lean();
+    const FoodCombination = require('../models/FoodCombination');
+    const isCombo = await FoodCombination.findById(foodId).lean();
+
+    let links = [];
+    if (isCombo) {
+      const RestaurantCombination = require('../models/RestaurantCombination');
+      links = await RestaurantCombination.find({ combinationId: foodId, availability: true })
+        .populate('restaurantId')
+        .lean();
+    } else {
+      const RestaurantFood = require('../models/RestaurantFood');
+      links = await RestaurantFood.find({ foodId, availability: true })
+        .populate('restaurantId')
+        .lean();
+    }
 
     const data = links.map(link => {
       const rest = link.restaurantId;

@@ -42,7 +42,8 @@ const Menu = () => {
 
   const categoryData = [
     { _id: 'all', name: 'All', icon: null },
-    ...categoriesList
+    ...categoriesList,
+    { _id: 'combinations', name: 'Combinations', icon: 'Pizza' }
   ];
 
   useEffect(() => {
@@ -62,7 +63,21 @@ const Menu = () => {
   const fetchFoods = async () => {
     try {
       const response = await getAllFoods();
-      const randomized = [...response].sort(() => Math.random() - 0.5);
+      
+      let combosData = [];
+      try {
+        const combosRes = await api.get('/combinations');
+        combosData = (combosRes.data.data || []).map(c => ({
+          ...c,
+          isCombination: true,
+          category: 'Combinations'
+        }));
+      } catch (err) {
+        console.error('Error fetching combinations for Menu page:', err);
+      }
+
+      const merged = [...response, ...combosData];
+      const randomized = merged.sort(() => Math.random() - 0.5);
       setFoods(randomized);
       setFilteredFoods(randomized);
       setError(null);

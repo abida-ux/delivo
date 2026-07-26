@@ -48,7 +48,15 @@ const FoodCard = ({ food }) => {
         <div className="food-action-row">
           <span className="food-price">KES {food.price}</span>
 
-          {isInCart ? (
+          {food.isCombination ? (
+            <button
+              className="add-to-cart-btn"
+              onClick={(e) => { e.stopPropagation(); navigate(`/food/${food._id}`); }}
+              style={{ background: '#f97316' }}
+            >
+              Customise
+            </button>
+          ) : isInCart ? (
             <button
               className="go-to-cart-btn"
               onClick={(e) => { e.stopPropagation(); openCart(); }}

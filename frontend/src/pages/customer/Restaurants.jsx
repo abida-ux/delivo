@@ -102,7 +102,12 @@ const Restaurants = () => {
   };
 
   const getCustomizedComboTotal = () => {
-    return comboComponents.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const basePrice = customizingCombo?.price || 0;
+    const extraCharges = comboComponents.reduce((sum, item) => {
+      const extraQty = Math.max(0, item.quantity - item.minimumQuantity);
+      return sum + (item.price * extraQty);
+    }, 0);
+    return basePrice + extraCharges;
   };
 
   const updateComponentQty = (idx, change) => {
