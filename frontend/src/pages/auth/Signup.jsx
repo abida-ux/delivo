@@ -25,7 +25,8 @@ const Signup = ({ isModal = false }) => {
   const isSubmittingRef = useRef(false);
 
   const emptyForm = {
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     location: '',
@@ -77,7 +78,11 @@ const Signup = ({ isModal = false }) => {
       isSubmittingRef.current = true;
 
       setLoading(true);
-      const { confirmPassword, ...payload } = formData;
+      const { confirmPassword, firstName, lastName, ...rest } = formData;
+      const payload = {
+        ...rest,
+        name: `${firstName.trim()} ${lastName.trim()}`.trim()
+      };
       const startedAt = Date.now();
 
       sessionStorage.removeItem('pendingVerificationEmail');
@@ -213,24 +218,51 @@ const Signup = ({ isModal = false }) => {
           <p>Please wait while we confirm your code.</p>
         </div>
       ) : !showVerification ? (
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+        <form 
+          onSubmit={handleSubmit} 
+          className="auth-form" 
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: '1fr 1fr', 
+            gap: '16px 20px', 
+            maxWidth: '640px', 
+            width: '100%',
+            padding: isModal ? '0' : '20px 0'
+          }}
+        >
+          <div className="form-group" style={{ gridColumn: 'span 1' }}>
+            <label htmlFor="firstName">First Name</label>
             <div className="input-wrapper">
               <User size={18} className="input-icon" />
               <input
                 type="text"
-                id="name"
-                name="name"
-                placeholder="Enter your full name"
-                value={formData.name}
+                id="firstName"
+                name="firstName"
+                placeholder="First name"
+                value={formData.firstName}
                 onChange={handleChange}
                 required
               />
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: 'span 1' }}>
+            <label htmlFor="lastName">Last Name</label>
+            <div className="input-wrapper">
+              <User size={18} className="input-icon" />
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                placeholder="Last name"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ gridColumn: 'span 1' }}>
             <label htmlFor="email">Email Address</label>
             <div className="input-wrapper">
               <Mail size={18} className="input-icon" />
@@ -246,7 +278,7 @@ const Signup = ({ isModal = false }) => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: 'span 1' }}>
             <label htmlFor="phone">Phone Number</label>
             <div className="input-wrapper">
               <Phone size={18} className="input-icon" />
@@ -254,7 +286,7 @@ const Signup = ({ isModal = false }) => {
                 type="tel"
                 id="phone"
                 name="phone"
-                placeholder="Enter your phone number"
+                placeholder="Enter phone number"
                 value={formData.phone}
                 onChange={handleChange}
                 required
@@ -262,24 +294,7 @@ const Signup = ({ isModal = false }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="location">
-              Delivery Location <span className="recommended-badge" style={{ color: '#ff9800', fontSize: '12px', fontWeight: 'bold' }}>(Highly Recommended)</span>
-            </label>
-            <div className="input-wrapper">
-              <MapPin size={18} className="input-icon" />
-              <input
-                type="text"
-                id="location"
-                name="location"
-                placeholder="Where should we deliver your food?"
-                value={formData.location}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: 'span 1' }}>
             <label htmlFor="password">Password</label>
             <div className="input-wrapper">
               <Lock size={18} className="input-icon" />
@@ -302,7 +317,7 @@ const Signup = ({ isModal = false }) => {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: 'span 1' }}>
             <label htmlFor="confirmPassword">Confirm Password</label>
             <div className="input-wrapper">
               <Lock size={18} className="input-icon" />
@@ -310,7 +325,7 @@ const Signup = ({ isModal = false }) => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 name="confirmPassword"
-                placeholder="Confirm your password"
+                placeholder="Confirm password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
@@ -325,9 +340,54 @@ const Signup = ({ isModal = false }) => {
             </div>
           </div>
 
-          <button type="submit" className="auth-submit-btn" disabled={loading}>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label htmlFor="location">
+              Delivery Location <span className="recommended-badge" style={{ color: '#ff9800', fontSize: '12px', fontWeight: 'bold' }}>(Highly Recommended)</span>
+            </label>
+            <div className="input-wrapper">
+              <MapPin size={18} className="input-icon" />
+              <input
+                type="text"
+                id="location"
+                name="location"
+                placeholder="Where should we deliver your food?"
+                value={formData.location}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            className="auth-submit-btn" 
+            disabled={loading}
+            style={{ gridColumn: 'span 2', height: '48px', marginTop: '10px' }}
+          >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
+
+          {isModal && (
+            <button 
+              type="button" 
+              className="guest-continue-btn"
+              onClick={closeModal}
+              style={{
+                gridColumn: 'span 2',
+                background: 'transparent',
+                border: '1.5px solid #d1d5db',
+                color: '#374151',
+                padding: '12px 24px',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                marginTop: '4px'
+              }}
+            >
+              Continue as Guest
+            </button>
+          )}
         </form>
       ) : (
         <div className="verify-section">

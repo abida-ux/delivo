@@ -40,6 +40,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [promoNotificationsEnabled, setPromoNotificationsEnabled] = useState(true);
+  const [showOffersBadge, setShowOffersBadge] = useState(false);
 
   // ✅ DERIVED DATA
   const cartItems = getCartItems();
@@ -64,6 +65,40 @@ const Navbar = () => {
     loadAppSettings();
   }, []);
 
+  // Dynamic unseen offers badge logic
+  useEffect(() => {
+    const checkUnseenOffers = async () => {
+      if (!user) {
+        setShowOffersBadge(false);
+        return;
+      }
+      try {
+        const { data } = await api.get('/offers');
+        const offersList = data.data || [];
+        const seenCount = localStorage.getItem('delivo_seen_offers_count') || 0;
+        
+        if (offersList.length > Number(seenCount)) {
+          setShowOffersBadge(true);
+        } else {
+          setShowOffersBadge(false);
+        }
+      } catch (err) {
+        console.error('Error checking unseen offers for badge:', err);
+      }
+    };
+
+    checkUnseenOffers();
+
+    const handleOffersViewed = () => {
+      setShowOffersBadge(false);
+    };
+
+    window.addEventListener('delivo_offers_viewed', handleOffersViewed);
+    return () => {
+      window.removeEventListener('delivo_offers_viewed', handleOffersViewed);
+    };
+  }, [user]);
+
   const fetchNotifications = async () => {
     if (!token || !user) return;
 
@@ -75,7 +110,7 @@ const Navbar = () => {
     }
   };
 
-  // ✅ FETCH NOTIFICATIONS FROM BACKEND
+  // ✅ FETCH NOTIFICATIONS FROM BACKEND / DYNAMIC GUEST OFFERS PROMO
   useEffect(() => {
     if (user && token) {
       fetchNotifications();
@@ -97,7 +132,38 @@ const Navbar = () => {
         document.removeEventListener('visibilitychange', handleVisibility);
       };
     } else {
-      setNotifications([]);
+      // Guest users check active offers to display a synthetic promo notification
+      const checkGuestOffers = async () => {
+        try {
+          const { data } = await api.get('/offers');
+          const offersList = data.data || [];
+          if (offersList.length > 0) {
+            const hasDismissed = localStorage.getItem('delivo_dismissed_guest_offers') === 'true';
+            if (!hasDismissed) {
+              setNotifications([
+                {
+                  _id: 'guest_promo_notification',
+                  title: 'New Exclusive Offers Available!',
+                  message: 'Click here to go to the Offers page and unlock exciting deals.',
+                  type: 'promotion',
+                  isRead: false,
+                  createdAt: new Date().toISOString(),
+                  isGuestPromo: true,
+                }
+              ]);
+            } else {
+              setNotifications([]);
+            }
+          } else {
+            setNotifications([]);
+          }
+        } catch (err) {
+          console.error('Error fetching offers for guest notifications:', err);
+          setNotifications([]);
+        }
+      };
+      
+      checkGuestOffers();
     }
   }, [user, token]);
 
@@ -116,6 +182,11 @@ const Navbar = () => {
 
   // ✅ DELETE NOTIFICATION
   const deleteNotification = async (notificationId) => {
+    if (notificationId === 'guest_promo_notification') {
+      localStorage.setItem('delivo_dismissed_guest_offers', 'true');
+      setNotifications([]);
+      return;
+    }
     if (!token) return;
 
     try {
@@ -123,6 +194,13 @@ const Navbar = () => {
       setNotifications((current) => current.filter((n) => n._id !== notificationId));
     } catch (error) {
       console.error('Error deleting notification:', error);
+    }
+  };
+
+  const handleNotificationItemClick = (notif) => {
+    setShowNotifications(false);
+    if (notif.isGuestPromo || notif.type === 'promotion') {
+      handleNavigate('Offers');
     }
   };
 
@@ -197,6 +275,11 @@ const Navbar = () => {
     if (link === 'Home') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    if (link === 'Offers') {
+      setShowOffersBadge(false);
+      window.dispatchEvent(new Event('delivo_offers_viewed'));
+    }
   };
 
   return (
@@ -220,7 +303,24 @@ const Navbar = () => {
                 className={`nav-link ${activeItem === link ? 'active' : ''}`}
                 onClick={() => handleNavigate(link)}
               >
-                {iconMap[link]}
+                <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                  {iconMap[link]}
+                  {link === 'Offers' && showOffersBadge && (
+                    <span 
+                      className="offers-badge" 
+                      style={{ 
+                        position: 'absolute', 
+                        top: -5, 
+                        right: -5, 
+                        width: 8, 
+                        height: 8, 
+                        background: '#ef4444', 
+                        borderRadius: '50%', 
+                        border: '1.5px solid #ffffff' 
+                      }} 
+                    />
+                  )}
+                </div>
                 <span>{link}</span>
                 {activeItem === link && <span className="active-glow" />}
               </button>
@@ -299,6 +399,7 @@ const Navbar = () => {
           onClose={() => setShowNotifications(false)}
           notifications={visibleNotifications}
           onDelete={deleteNotification}
+          onClickItem={handleNotificationItemClick}
         />
 
         {/* CART DRAWER */}

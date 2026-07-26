@@ -1,9 +1,9 @@
 import {useState, useContext, useEffect, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, AlertCircle, Check } from 'lucide-react';
+import { X, AlertCircle, Check, MapPin, ClipboardList } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants, getOrderById } from '../../services/api';
+import api, { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants, getOrderById } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
 
@@ -38,6 +38,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [redirectingToOrders, setRedirectingToOrders] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const pollInterval = useRef(null);
+  
+  // Promo code / voucher states
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -93,6 +99,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     if (isOpen) {
       loadSettings();
       loadCheckoutProfile();
+      setPromoCode('');
+      setAppliedPromo(null);
+      setPromoError('');
     }
 
     const onSettingsUpdated = () => {
@@ -114,7 +123,68 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     };
   }, [isOpen]);
   const deliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
-  const grandTotal = (parseFloat(cartTotal) + deliveryFee).toFixed(2);
+  
+  // Calculate discount based on applied promo
+  let discountAmount = 0;
+  let finalDeliveryFee = deliveryFee;
+  
+  if (appliedPromo) {
+    const discountStr = appliedPromo.discount.toUpperCase();
+    if (discountStr.includes('FREE DELIVERY')) {
+      finalDeliveryFee = 0;
+      discountAmount = deliveryFee;
+    } else if (discountStr.includes('%')) {
+      const percentage = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
+      discountAmount = (parseFloat(cartTotal) * (percentage / 100));
+    } else {
+      const fixed = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
+      discountAmount = fixed;
+    }
+  }
+
+  const grandTotal = Math.max(0, (parseFloat(cartTotal) + finalDeliveryFee - discountAmount)).toFixed(2);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+    setPromoLoading(true);
+    setPromoError('');
+    try {
+      const { data } = await api.get('/offers');
+      const offersList = data.data || [];
+      const match = offersList.find(o => o.code.toUpperCase() === promoCode.trim().toUpperCase());
+      
+      if (!match) {
+        setPromoError('Invalid promo code');
+        setAppliedPromo(null);
+      } else {
+        let minOrderVal = 0;
+        if (match.minOrder) {
+          minOrderVal = parseFloat(match.minOrder.replace(/[^0-9.]/g, '')) || 0;
+        }
+        if (parseFloat(cartTotal) < minOrderVal) {
+          setPromoError(`Minimum order of KES ${minOrderVal} required for this code`);
+          setAppliedPromo(null);
+        } else {
+          setAppliedPromo(match);
+          setPromoError('');
+        }
+      }
+    } catch (err) {
+      console.error('Error validating promo code:', err);
+      setPromoError('Failed to validate promo code');
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode('');
+    setPromoError('');
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -353,9 +423,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         paymentMethod: 'mpesa',
         whatsappNumber: deliveryInfo.whatsapp,
         mpesaNumber: deliveryInfo.mpesaNumber,
-        deliveryFee,
-        specialInstructions: '',
+        deliveryFee: Number(finalDeliveryFee),
+        specialInstructions: appliedPromo ? `Applied Promo: ${appliedPromo.code}` : '',
         restaurantId: selectedRestaurant || undefined,
+        promoCode: appliedPromo ? appliedPromo.code : undefined,
       };
 
       if (user && user.id) {
@@ -404,9 +475,149 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
             <span>{errors.submit}</span>
           </div>
         )}
+        <form className="checkout-form" onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(); }}>
+          <div className="form-section">
+            <h4>Customer Details</h4>
+            <div className="form-group">
+              <label>Full Name *</label>
+              <input
+                type="text"
+                value={deliveryInfo.fullName}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, fullName: e.target.value });
+                  if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                }}
+                placeholder="Enter your full name"
+                disabled={isProcessing || orderPending}
+                className={errors.fullName ? 'error' : ''}
+              />
+              {errors.fullName && <span className="field-error">{errors.fullName}</span>}
+            </div>
+
+            <div className="form-group">
+              <label>WhatsApp Number (For Order Tracking) *</label>
+              <input
+                type="tel"
+                value={deliveryInfo.whatsapp}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, whatsapp: e.target.value });
+                  if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
+                }}
+                placeholder="E.g., 0712345678"
+                disabled={isProcessing || orderPending}
+                className={errors.whatsapp ? 'error' : ''}
+              />
+              {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h4>Delivery Details</h4>
+            <div className="form-group">
+              <label htmlFor="restaurant-select">Prepare Food At *</label>
+              <select
+                id="restaurant-select"
+                value={selectedRestaurant}
+                onChange={(e) => {
+                  setSelectedRestaurant(e.target.value);
+                  if (errors.restaurant) setErrors({ ...errors, restaurant: '' });
+                }}
+                disabled={isProcessing || orderPending}
+                className={errors.restaurant ? 'error' : ''}
+              >
+                <option value="">-- Select Restaurant --</option>
+                {restaurants.map((restaurant) => (
+                  <option 
+                    key={restaurant._id || restaurant.id} 
+                    value={restaurant._id || restaurant.id}
+                    disabled={restaurant.isOpen === false}
+                  >
+                    {restaurant.name} {restaurant.isOpen === false ? '(CLOSED)' : ''}
+                  </option>
+                ))}
+              </select>
+              {errors.restaurant && <span className="field-error">{errors.restaurant}</span>}
+              {restaurants.length === 0 && (
+                <span className="field-error">No restaurants are currently accepting orders. Please try again later.</span>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>Precise Delivery Address / Landmark *</label>
+              <input
+                type="text"
+                value={deliveryInfo.address}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
+                  if (errors.address) setErrors({ ...errors, address: '' });
+                }}
+                placeholder="House number, apartment, gate, landmark, or street"
+                disabled={isProcessing || orderPending}
+                className={errors.address ? 'error' : ''}
+              />
+              {errors.address && <span className="field-error">{errors.address}</span>}
+              <button
+                type="button"
+                className="location-btn"
+                onClick={handleUseLocation}
+                disabled={locationLoading || isProcessing || orderPending}
+              >
+                {locationLoading ? (
+                  'Fetching location...'
+                ) : (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                    <MapPin size={16} /> Use Current Location
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h4>M-Pesa Payment</h4>
+            <div className="form-group">
+              <label>M-Pesa Number *</label>
+              <input
+                type="tel"
+                value={deliveryInfo.mpesaNumber}
+                onChange={(e) => {
+                  setDeliveryInfo({ ...deliveryInfo, mpesaNumber: e.target.value });
+                  if (errors.mpesaNumber) setErrors({ ...errors, mpesaNumber: '' });
+                }}
+                placeholder="Enter M-Pesa phone number"
+                disabled={isProcessing || orderPending}
+                className={errors.mpesaNumber ? 'error' : ''}
+              />
+              {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
+            </div>
+            <div className="payment-note">
+              M-Pesa prompt will be sent to this number.
+            </div>
+
+            <button
+              type="submit"
+              className="confirm-btn"
+              disabled={isProcessing || orderPending}
+            >
+              {isProcessing ? (
+                <>
+                  <span className="spinner"></span>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Check size={18} />
+                  Place Order - KES {grandTotal}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
 
         <div className="checkout-summary">
-          <h3>📋 Order Summary</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ClipboardList size={20} /> Order Summary
+          </h3>
           <div className="summary-items">
             {cartItems.map((item) => {
               const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
@@ -431,159 +642,63 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
               <span>Delivery Fee</span>
               <span>KES {deliveryFee.toFixed(2)}</span>
             </div>
+            {appliedPromo && (
+              <div className="total-row discount" style={{ color: '#22c55e', fontWeight: 600 }}>
+                <span>Discount ({appliedPromo.code})</span>
+                <span>- KES {discountAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="total-row grand-total">
               <span>Total</span>
               <span className="grand-total-amount">KES {grandTotal}</span>
             </div>
           </div>
+
+          {/* Promo Code Input System */}
+          <div className="promo-entry-box" style={{ marginTop: 16, padding: '14px 16px', background: '#f9fafb', borderRadius: 16, border: '1px dashed #e5e7eb' }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Have a Promo / Voucher Code?</label>
+            {appliedPromo ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(34, 197, 94, 0.1)', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                <div>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#166534' }}>{appliedPromo.code}</span>
+                  <span style={{ fontSize: 12, color: '#166534', marginLeft: 8 }}>Applied successfully!</span>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={handleRemovePromo}
+                  style={{ background: 'transparent', border: 'none', color: '#ef4444', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <input
+                  type="text"
+                  placeholder="Enter code (e.g. SUMMER50)"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  disabled={promoLoading}
+                  style={{ flex: 1, padding: '10px 12px', border: '1.5px solid #d1d5db', borderRadius: 10, fontSize: 14, outline: 'none', background: '#ffffff' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyPromo}
+                  disabled={promoLoading}
+                  style={{ background: '#f97316', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  {promoLoading ? 'Validating...' : 'Apply'}
+                </button>
+              </div>
+            )}
+            {promoError && (
+              <span style={{ display: 'block', fontSize: 12, color: '#ef4444', marginTop: 6, fontWeight: 600 }}>
+                ⚠️ {promoError}
+              </span>
+            )}
+          </div>
         </div>
 
-        <form className="checkout-form" onSubmit={(e) => { e.preventDefault(); handlePlaceOrder(); }}>
-          <div className="form-section">
-            <h4>Customer Details</h4>
-            <div className="form-group">
-              <label>Full Name *</label>
-              <input
-                type="text"
-                value={deliveryInfo.fullName}
-                onChange={(e) => {
-                  setDeliveryInfo({ ...deliveryInfo, fullName: e.target.value });
-                  if (errors.fullName) setErrors({ ...errors, fullName: '' });
-                }}
-                placeholder="Enter your full name"
-                disabled={isProcessing || orderPending}
-                className={errors.fullName ? 'error' : ''}
-              />
-              {errors.fullName && <span className="field-error">{errors.fullName}</span>}
-            </div>
-            <div className="form-group">
-              <label>Restaurant *</label>
-              <select
-                value={selectedRestaurant}
-                onChange={(e) => {
-                  setSelectedRestaurant(e.target.value);
-                  if (errors.restaurant) setErrors({ ...errors, restaurant: '' });
-                }}
-                disabled={isProcessing || orderPending}
-                className={errors.restaurant ? 'error' : ''}
-              >
-                <option value="">Select restaurant</option>
-                {restaurants.map((r) => {
-                  const id = r._id || r.id;
-                  const disabled = r.isOpen === false;
-                  return (
-                    <option key={id} value={id} disabled={disabled}>
-                      {r.name}{disabled ? ' — Closed' : ''}
-                    </option>
-                  );
-                })}
-              </select>
-              {restaurants.length === 0 ? (
-                <span className="field-error">No restaurants are currently accepting orders. Please try again later.</span>
-              ) : null}
-              {restaurants.length > 0 && restaurants.every((restaurant) => restaurant.isOpen === false) ? (
-                <span className="field-error">All restaurants are currently closed. Please try again later.</span>
-              ) : null}
-              {errors.restaurant && <span className="field-error">{errors.restaurant}</span>}
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h4>Delivery Location</h4>
-            <div className="form-group">
-              <label>Precise delivery location *</label>
-              <input
-                type="text"
-                value={deliveryInfo.address}
-                onChange={(e) => {
-                  setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
-                  if (errors.address) setErrors({ ...errors, address: '' });
-                }}
-                placeholder="House number, apartment, gate, landmark, or street"
-                disabled={isProcessing || orderPending}
-                className={errors.address ? 'error' : ''}
-              />
-              {errors.address && <span className="field-error">{errors.address}</span>}
-              <button
-                type="button"
-                className="location-btn"
-                onClick={handleUseLocation}
-                disabled={locationLoading || isProcessing || orderPending}
-              >
-                {locationLoading ? 'Fetching location...' : '📍 Use Current Location'}
-              </button>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h4>M-Pesa Payment</h4>
-            <div className="form-group">
-              <label>M-Pesa Number *</label>
-              <input
-                type="tel"
-                value={deliveryInfo.mpesaNumber}
-                onChange={(e) => {
-                  setDeliveryInfo({ ...deliveryInfo, mpesaNumber: e.target.value });
-                  if (errors.mpesaNumber) setErrors({ ...errors, mpesaNumber: '' });
-                }}
-                placeholder="0722 000 000"
-                disabled={isProcessing || orderPending}
-                className={errors.mpesaNumber ? 'error' : ''}
-              />
-              {errors.mpesaNumber && <span className="field-error">{errors.mpesaNumber}</span>}
-            </div>
-            <div className="payment-note">
-              M-Pesa prompt will be sent to this number.
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h4>Contact Details</h4>
-            <div className="form-group">
-              <label>WhatsApp Number *</label>
-              <input
-                type="tel"
-                value={deliveryInfo.whatsapp}
-                onChange={(e) => {
-                  setDeliveryInfo({ ...deliveryInfo, whatsapp: e.target.value });
-                  if (errors.whatsapp) setErrors({ ...errors, whatsapp: '' });
-                }}
-                placeholder="0722 000 000"
-                disabled={isProcessing || orderPending}
-                className={errors.whatsapp ? 'error' : ''}
-              />
-              {errors.whatsapp && <span className="field-error">{errors.whatsapp}</span>}
-            </div>
-          </div>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={onClose}
-              disabled={isProcessing || orderPending}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="confirm-btn"
-              disabled={isProcessing || orderPending}
-            >
-              {isProcessing ? (
-                <>
-                  <span className="spinner"></span>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Check size={18} />
-                  Place Order - KES {grandTotal}
-                </>
-              )}
-            </button>
-          </div>
-        </form>
 
         {paymentStage === 'success' ? (
           <div className="payment-success-state">

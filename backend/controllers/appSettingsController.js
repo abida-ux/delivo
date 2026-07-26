@@ -34,7 +34,7 @@ const dispatchFreeDeliveryPromo = async () => {
     const webPush = require('web-push');
 
     const payload = {
-      title: 'Free Delivery Active! 🎁',
+      title: 'Free Delivery Active!',
       message: 'Delivo is offering FREE delivery on all orders today! Place your order and satisfy your cravings.',
       icon: '/delivo.jpg',
       badge: '/delivo.jpg',
@@ -115,7 +115,7 @@ exports.updateSettings = async (req, res) => {
     });
 
     // If delivery fee is disabled (meaning free delivery is active for everyone!)
-    if (prevEnabled !== false && currentEnabled === false) {
+    if (currentEnabled === false) {
       dispatchFreeDeliveryPromo();
     }
 

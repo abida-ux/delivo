@@ -6,7 +6,8 @@ const NotificationModal = ({
   isOpen, 
   onClose, 
   notifications, 
-  onDelete 
+  onDelete,
+  onClickItem
 }) => {
 
   // Close on Escape key
@@ -36,7 +37,12 @@ const NotificationModal = ({
         <div className="notifications-modal-items">
           {notifications.length > 0 ? (
             notifications.map((notif) => (
-              <div key={notif._id} className="notification-item">
+              <div 
+                key={notif._id} 
+                className="notification-item"
+                onClick={() => onClickItem && onClickItem(notif)}
+                style={{ cursor: onClickItem ? 'pointer' : 'default' }}
+              >
                 <div className="notification-content">
                   <p className="notification-title">{notif.title}</p>
                   <p className="notification-message">{notif.message}</p>
@@ -46,7 +52,10 @@ const NotificationModal = ({
                 </div>
                 <button 
                   className="notification-close-btn" 
-                  onClick={() => onDelete(notif._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(notif._id);
+                  }}
                 >
                   <X size={18} />
                 </button>

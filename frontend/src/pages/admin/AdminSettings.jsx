@@ -32,11 +32,11 @@ const AdminSettings = () => {
   const [promoCodes, setPromoCodes] = useState([]);
   const [newPromo, setNewPromo] = useState({
     code: '',
+    title: '',
+    description: '',
     discount: '',
-    type: 'percentage', // percentage or fixed
-    maxUses: '',
-    expiryDate: '',
-    active: true,
+    minOrder: 'KSh 0',
+    expiry: '',
   });
 
   const [showPromoForm, setShowPromoForm] = useState(false);
@@ -180,7 +180,7 @@ const AdminSettings = () => {
   const handleAddPromo = async (e) => {
     e.preventDefault();
 
-    if (!newPromo.code || !newPromo.discount) {
+    if (!newPromo.code || !newPromo.title || !newPromo.description || !newPromo.discount || !newPromo.expiry) {
       alert('Please fill in all required fields');
       return;
     }
@@ -188,11 +188,11 @@ const AdminSettings = () => {
     try {
       const payload = {
         code: newPromo.code.toUpperCase(),
-        title: `${newPromo.discount}${newPromo.type === 'percentage' ? '%' : ' Ksh'} Off`,
-        description: `Enjoy a discount of ${newPromo.discount}${newPromo.type === 'percentage' ? '%' : ' Ksh'} on your order. ${newPromo.maxUses ? `Max ${newPromo.maxUses} uses.` : ''}`,
-        discount: `${newPromo.discount}${newPromo.type === 'percentage' ? '%' : ' KSh'} OFF`,
-        minOrder: 'KSh 0',
-        expiry: newPromo.expiryDate ? `Expires: ${newPromo.expiryDate}` : 'Limited time offer',
+        title: newPromo.title,
+        description: newPromo.description,
+        discount: newPromo.discount,
+        minOrder: newPromo.minOrder || 'KSh 0',
+        expiry: newPromo.expiry,
       };
 
       await api.post('/offers', payload);
@@ -200,14 +200,14 @@ const AdminSettings = () => {
       // Reset form
       setNewPromo({
         code: '',
+        title: '',
+        description: '',
         discount: '',
-        type: 'percentage',
-        maxUses: '',
-        expiryDate: '',
-        active: true,
+        minOrder: 'KSh 0',
+        expiry: '',
       });
       setShowPromoForm(false);
-      alert('Promo code created successfully!');
+      alert('Offer created successfully!');
       fetchPromoCodes();
     } catch (error) {
       console.error('Failed to create offer:', error);
@@ -489,60 +489,75 @@ const AdminSettings = () => {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="discount">Discount Value *</label>
+                    <label htmlFor="title">Offer Title *</label>
                     <input
-                      type="number"
-                      id="discount"
-                      value={newPromo.discount}
+                      type="text"
+                      id="title"
+                      value={newPromo.title}
                       onChange={(e) =>
-                        setNewPromo({ ...newPromo, discount: e.target.value })
+                        setNewPromo({ ...newPromo, title: e.target.value })
                       }
-                      placeholder="Enter amount or percentage"
-                      min="0"
-                      step="0.1"
+                      placeholder="E.g., Free Food Voucher or KES 500 Off"
                       required
                     />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="type">Discount Type *</label>
-                    <select
-                      id="type"
-                      value={newPromo.type}
-                      onChange={(e) =>
-                        setNewPromo({ ...newPromo, type: e.target.value })
-                      }
-                    >
-                      <option value="percentage">Percentage (%)</option>
-                      <option value="fixed">Fixed Amount (Ksh)</option>
-                    </select>
                   </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="maxUses">Max Uses (Optional)</label>
+                    <label htmlFor="discount">Discount Label *</label>
                     <input
-                      type="number"
-                      id="maxUses"
-                      value={newPromo.maxUses}
+                      type="text"
+                      id="discount"
+                      value={newPromo.discount}
                       onChange={(e) =>
-                        setNewPromo({ ...newPromo, maxUses: e.target.value })
+                        setNewPromo({ ...newPromo, discount: e.target.value })
                       }
-                      placeholder="Leave empty for unlimited"
-                      min="0"
+                      placeholder="E.g., FREE SODA, 50% OFF, FREE FOOD"
+                      required
                     />
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="expiryDate">Expiry Date (Optional)</label>
+                    <label htmlFor="minOrder">Minimum Order Amount (Optional)</label>
                     <input
-                      type="date"
-                      id="expiryDate"
-                      value={newPromo.expiryDate}
+                      type="text"
+                      id="minOrder"
+                      value={newPromo.minOrder}
                       onChange={(e) =>
-                        setNewPromo({ ...newPromo, expiryDate: e.target.value })
+                        setNewPromo({ ...newPromo, minOrder: e.target.value })
                       }
+                      placeholder="E.g., KSh 500 or KSh 0"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="expiry">Expiry Details *</label>
+                    <input
+                      type="text"
+                      id="expiry"
+                      value={newPromo.expiry}
+                      onChange={(e) =>
+                        setNewPromo({ ...newPromo, expiry: e.target.value })
+                      }
+                      placeholder="E.g., Expires tonight, Valid till Sunday"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="description">Description *</label>
+                    <input
+                      type="text"
+                      id="description"
+                      value={newPromo.description}
+                      onChange={(e) =>
+                        setNewPromo({ ...newPromo, description: e.target.value })
+                      }
+                      placeholder="E.g., Get a free soda with orders above KES 1,000"
+                      required
                     />
                   </div>
                 </div>
@@ -556,7 +571,7 @@ const AdminSettings = () => {
                     Cancel
                   </button>
                   <button type="submit" className="btn-save">
-                    Create Promo Code
+                    Create Offer
                   </button>
                 </div>
               </form>
@@ -571,11 +586,12 @@ const AdminSettings = () => {
                       <div className="promo-info">
                         <div className="promo-code">
                           <span className="badge-active">ACTIVE</span>
-                          <strong>{promo.code}</strong>
+                          <strong>{promo.code}</strong> - <span style={{ color: '#555555', fontWeight: 600 }}>{promo.title}</span>
                         </div>
                         <div className="promo-details">
-                          <span>{promo.discount}</span>
+                          <span>Label: {promo.discount}</span>
                           <span>• {promo.expiry}</span>
+                          <span>• Min Order: {promo.minOrder}</span>
                           <span>• {promo.description}</span>
                         </div>
                       </div>

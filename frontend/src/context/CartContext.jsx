@@ -47,13 +47,17 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems, user, token, authLoading]);
 
-  // ✅ Fetch cart from database when user logs in
+  // ✅ Fetch cart from database when user logs in, and clear cart when user logs out
   useEffect(() => {
     if (authLoading) return;
     
     if (user && token) {
       console.log('👤 User logged in, syncing cart with database...');
       fetchCartFromDatabase();
+    } else {
+      console.log('👤 User logged out, clearing state & guest cart...');
+      setCartItems([]);
+      localStorage.removeItem(GUEST_CART_KEY);
     }
   }, [user?._id, token, authLoading]);
 

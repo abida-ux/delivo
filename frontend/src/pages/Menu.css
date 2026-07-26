@@ -49,9 +49,16 @@
 
 .search-box input {
   flex: 1;
-  border: none;
-  outline: none;
+  border: none !important;
+  outline: none !important;
   font-size: 14px;
+  box-shadow: none !important;
+}
+
+.search-box input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .search-box input::placeholder {

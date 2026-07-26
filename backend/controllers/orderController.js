@@ -125,8 +125,37 @@ exports.createOrder = async (req, res, next) => {
       parsedDeliveryFee = 0;
     }
     const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 0;
-    const finalDeliveryFee = deliveryFee !== undefined && deliveryFee !== null ? parsedDeliveryFee : deliveryFeeFromSettings;
-    const totalPrice = subtotal + finalDeliveryFee;
+    let finalDeliveryFee = deliveryFee !== undefined && deliveryFee !== null ? parsedDeliveryFee : deliveryFeeFromSettings;
+    
+    // Apply promo code discount securely on the server
+    let discountAmount = 0;
+    const { promoCode } = req.body;
+    
+    if (promoCode) {
+      const Offer = require('../models/Offer');
+      const matchingOffer = await Offer.findOne({ code: promoCode.trim().toUpperCase() });
+      if (matchingOffer) {
+        let minOrderVal = 0;
+        if (matchingOffer.minOrder) {
+          minOrderVal = parseFloat(matchingOffer.minOrder.replace(/[^0-9.]/g, '')) || 0;
+        }
+        if (subtotal >= minOrderVal) {
+          const discountStr = matchingOffer.discount.toUpperCase();
+          if (discountStr.includes('FREE DELIVERY')) {
+            finalDeliveryFee = 0;
+          } else if (discountStr.includes('%')) {
+            const percentage = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
+            discountAmount = (subtotal * (percentage / 100));
+          } else {
+            const fixed = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
+            discountAmount = fixed;
+          }
+        }
+      }
+    }
+    
+    const totalPrice = Math.max(0, subtotal + finalDeliveryFee - discountAmount);
+    const isFreeDelivery = finalDeliveryFee === 0;
 
 
     // Securing against spoofing userId of other users
