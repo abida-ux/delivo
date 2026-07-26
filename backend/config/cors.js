@@ -40,6 +40,8 @@ const isAllowedOrigin = (origin) => {
 
   if (/^https:\/\/.*\.netlify\.app$/i.test(origin)) return true;
 
+  if (/^https:\/\/(www\.)?delivo\.buzz$/i.test(origin)) return true;
+
   return false;
 };
 
