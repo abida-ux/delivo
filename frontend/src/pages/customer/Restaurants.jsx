@@ -471,6 +471,7 @@ const Restaurants = () => {
             </button>
           </div>
         </div>
+      )}
       {/* COMBINATION CUSTOMIZER MODAL */}
       {customizingCombo && (
         <div className="cart-modal-overlay" style={{ zIndex: 3000 }}>
