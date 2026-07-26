@@ -2,6 +2,13 @@
 const errorHandler = (err, req, res, next) => {
   console.error(`❌ Error: ${err.message}`);
 
+  const { isAllowedOrigin } = require('../config/cors');
+  const origin = req.get('origin');
+  if (origin && isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map((e) => e.message);

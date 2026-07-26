@@ -32,6 +32,36 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Smart response retry interceptor with exponential backoff
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+    const shouldRetry = config && (config.method === 'get' || config.retry);
+    
+    if (!shouldRetry) return Promise.reject(error);
+    
+    config.__retryCount = config.__retryCount || 0;
+    const maxRetries = config.retryLimit || 3;
+    
+    if (config.__retryCount >= maxRetries) {
+      return Promise.reject(error);
+    }
+    
+    // Retry on network errors or 5xx server statuses
+    const isRetryable = !error.response || (error.response.status >= 500 && error.response.status <= 599);
+    if (!isRetryable) return Promise.reject(error);
+    
+    config.__retryCount += 1;
+    const delay = Math.pow(2, config.__retryCount) * 1000;
+    
+    console.warn(`⚠️ Axios: Request to ${config.url} failed. Retrying in ${delay}ms... (Attempt ${config.__retryCount}/${maxRetries})`);
+    
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return api(config);
+  }
+);
+
 let foodsCache = null;
 let foodsPromise = null;
 

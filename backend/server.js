@@ -36,6 +36,22 @@ const addressRoutes = require('./routes/addressRoutes');
 // Initialize Express app
 const app = express();
 
+// CORS configuration - Executes first to intercept all preflight options requests
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+    // Block origin gracefully without throwing hard 500 error
+    callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 // ==================== ENVIRONMENT VALIDATION ====================
 console.log('🔧 ENVIRONMENT CHECK:');
 console.log(`  ✓ PORT: ${process.env.BACKEND_PORT || process.env.PORT || 5000}`);
@@ -63,44 +79,57 @@ try {
 }
 
 // ==================== MIDDLEWARE ====================
-// Apply security headers
-app.use(helmet());
+// Disable fingerprinting server header
+app.disable('x-powered-by');
 
-// Rate limiters
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes.'
-  }
-});
+// Apply Helmet security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "http:", "https://*.tile.openstreetmap.org", "https://unpkg.com"],
+      connectSrc: ["'self'", "https://delivo-d5r8.onrender.com", "http://localhost:5000", "https://*.firebaseio.com", "https://*.googleapis.com", "https://nominatim.openstreetmap.org"]
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 auth requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Too many login or authentication attempts. Please try again after 15 minutes.'
-  }
-});
+const {
+  smartRateLimiter,
+  cacheResponse,
+  invalidateCache,
+  idempotencyCheck,
+  validateObjectId
+} = require('./middleware/securityMiddleware');
 
-// Apply rate limiters
-app.use('/api', apiLimiter);
-app.use('/api/users/login', authLimiter);
-app.use('/api/users/register', authLimiter);
-app.use('/api/users/verify-email', authLimiter);
-app.use('/api/users/resend-verification-code', authLimiter);
-app.use('/api/users/request-password-reset', authLimiter);
-app.use('/api/users/reset-password', authLimiter);
+// Generous global rate limiter for legitimate browsing
+app.use('/api', smartRateLimiter({ limit: 120, windowMs: 60000 }));
+
+// Strict progressive authentication limits
+app.use('/api/users/login', smartRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }));
+app.use('/api/users/register', smartRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }));
+app.use('/api/users/verify-email', smartRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }));
+app.use('/api/users/resend-verification-code', smartRateLimiter({ limit: 15, windowMs: 15 * 60 * 1000 }));
+app.use('/api/users/request-password-reset', smartRateLimiter({ limit: 5, windowMs: 15 * 60 * 1000 }));
+app.use('/api/users/reset-password', smartRateLimiter({ limit: 5, windowMs: 15 * 60 * 1000 }));
+
+// Route specific query sanitizers and caching controls
+app.use('/api/foods', validateObjectId(['id']), cacheResponse(60), invalidateCache(['/foods', '/menu']));
+app.use('/api/restaurants', validateObjectId(['id']), cacheResponse(120), invalidateCache(['/restaurants']));
+app.use('/api/categories', validateObjectId(['id']), cacheResponse(300), invalidateCache(['/categories']));
+app.use('/api/offers', cacheResponse(300), invalidateCache(['/offers']));
+app.use('/api/settings', cacheResponse(300), invalidateCache(['/settings']));
+
+// Strict idempotent filters for payment processing & double order placement prevention
+app.use('/api/mpesa', idempotencyCheck());
+app.use('/api/orders', validateObjectId(['id']), idempotencyCheck());
 
 // JSON parsing with size limits
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ limit: '5mb', extended: true }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ limit: '2mb', extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -108,22 +137,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS configuration - Works for BOTH development and production
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (isAllowedOrigin(origin)) {
-      console.log(`✅ CORS: Allowed origin: ${origin || 'no-origin'}`);
-      return callback(null, true);
-    }
 
-    console.log(`❌ CORS: Rejected origin: ${origin}`);
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
 
 // ==================== ROUTES ====================
 app.use('/api/restaurants', restaurantRoutes);

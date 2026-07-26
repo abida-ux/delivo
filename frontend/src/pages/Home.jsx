@@ -36,8 +36,8 @@ export default function Home() {
   useEffect(() => {
     const fetchRealCategories = async () => {
       try {
-        const res = await api.get('/foods');
-        const foodsList = res.data.data || [];
+        const { getAllFoods } = await import('../services/api');
+        const foodsList = await getAllFoods();
         const counts = {};
         foodsList.forEach(food => {
           if (food.category) {
