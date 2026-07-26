@@ -1,0 +1,195 @@
+/* Food Details Page CSS */
+.food-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.food-details-hero {
+  display: flex;
+  gap: 40px;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .food-details-hero {
+    flex-direction: column;
+    gap: 20px;
+    padding: 16px;
+  }
+}
+
+.food-details-img-wrapper {
+  flex: 1;
+  max-width: 500px;
+  height: 350px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.food-details-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.food-details-info {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.food-details-name {
+  font-size: 32px;
+  font-weight: 900;
+  color: #111827;
+  margin: 0;
+}
+
+.food-details-desc {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.food-details-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.meta-pill {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.restaurants-section-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  margin-top: 16px;
+}
+
+.restaurants-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+.restaurant-selling-card {
+  background: white;
+  border-radius: 20px;
+  border: 1.5px solid #f3f4f6;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.restaurant-selling-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  border-color: #f97316;
+}
+
+.rest-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rest-card-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.rest-card-rating {
+  background: #fef3c7;
+  color: #d97706;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rest-card-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 0;
+}
+
+.detail-item-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-item-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.detail-item-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.rest-card-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.rest-card-price {
+  font-size: 20px;
+  font-weight: 900;
+  color: #f97316;
+}
+
+.order-now-cta-btn {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.order-now-cta-btn:hover {
+  background: #ea580c;
+}
+
+.order-now-cta-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}

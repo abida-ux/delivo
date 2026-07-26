@@ -46,6 +46,32 @@ const OrderSchema = new mongoose.Schema({
       type: Number,
       required: true,
     },
+    name: {
+      type: String,
+    },
+    isCombination: {
+      type: Boolean,
+      default: false,
+    },
+    combinationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FoodCombination',
+    },
+    components: [{
+      foodId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Food',
+      },
+      name: {
+        type: String,
+      },
+      quantity: {
+        type: Number,
+      },
+      price: {
+        type: Number,
+      },
+    }],
   }],
   totalPrice: {
     type: Number,
@@ -117,6 +143,14 @@ const OrderSchema = new mongoose.Schema({
   deliveryAddress: {
     type: String,
     required: true,
+  },
+  deliveryLatitude: {
+    type: Number,
+    required: [true, 'Please provide delivery latitude coordinates'],
+  },
+  deliveryLongitude: {
+    type: Number,
+    required: [true, 'Please provide delivery longitude coordinates'],
   },
   specialInstructions: {
     type: String,

@@ -9,6 +9,7 @@ const Menu = lazy(() => import("../pages/Menu"));
 const PushDiagnostics = lazy(() => import("../pages/PushDiagnostics"));
 const AllRestaurants = lazy(() => import("../pages/customer/AllRestaurants"));
 const Restaurants = lazy(() => import("../pages/customer/Restaurants"));
+const FoodDetailsPage = lazy(() => import("../pages/customer/FoodDetailsPage"));
 const StoresByType = lazy(() => import("../pages/customer/StoresByType"));
 const StoreProducts = lazy(() => import("../pages/customer/StoreProducts"));
 const Orders = lazy(() => import("../pages/customer/Orders"));
@@ -19,6 +20,9 @@ const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
 const AdminFoods = lazy(() => import("../pages/admin/AdminFoods"));
+const AdminCategories = lazy(() => import("../pages/admin/AdminCategories"));
+const AdminCombinations = lazy(() => import("../pages/admin/AdminCombinations"));
+const AdminRestaurantFoods = lazy(() => import("../pages/admin/AdminRestaurantFoods"));
 const AdminRiders = lazy(() => import("../pages/admin/AdminRiders"));
 const AdminOrders = lazy(() => import("../pages/admin/AdminOrders"));
 const AdminStoreTypes = lazy(() => import("../pages/admin/AdminStoreTypes"));
@@ -53,6 +57,7 @@ export default function AppRoutes() {
       <Route path="/push-diagnostics" element={<PushDiagnostics />} />
       <Route path="/restaurants" element={<AllRestaurants />} />
       <Route path="/restaurants/:id" element={<Restaurants />} />
+      <Route path="/food/:foodId" element={<FoodDetailsPage />} />
       <Route path="/stores/:typeId" element={<StoresByType />} />
       <Route path="/store/:storeId" element={<StoreProducts />} />
       <Route path="/customer/orders" element={<Orders />} />
@@ -90,6 +95,30 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminFoods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/categories"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminCategories />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/combinations"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminCombinations />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/restaurant-foods"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminRestaurantFoods />
           </ProtectedRoute>
         }
       />

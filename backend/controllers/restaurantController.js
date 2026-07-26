@@ -5,12 +5,25 @@ const User = require('../models/User');
 // @route GET /api/restaurants
 exports.getAllRestaurants = async (req, res, next) => {
   try {
-    const restaurants = await Restaurant.find().populate('foods');
+    const restaurants = await Restaurant.find().lean();
+    const RestaurantFood = require('../models/RestaurantFood');
+
+    const data = await Promise.all(restaurants.map(async (rest) => {
+      const links = await RestaurantFood.find({ restaurantId: rest._id, availability: true })
+        .populate('foodId')
+        .lean();
+      
+      const foods = links.map(l => l.foodId).filter(Boolean);
+      return {
+        ...rest,
+        foods,
+      };
+    }));
 
     res.status(200).json({
       success: true,
-      count: restaurants.length,
-      data: restaurants,
+      count: data.length,
+      data,
     });
   } catch (error) {
     next(error);
@@ -21,7 +34,7 @@ exports.getAllRestaurants = async (req, res, next) => {
 // @route GET /api/restaurants/:id
 exports.getRestaurantById = async (req, res, next) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.id).populate('foods');
+    const restaurant = await Restaurant.findById(req.params.id).lean();
 
     if (!restaurant) {
       return res.status(404).json({
@@ -29,6 +42,23 @@ exports.getRestaurantById = async (req, res, next) => {
         message: 'Restaurant not found',
       });
     }
+
+    const RestaurantFood = require('../models/RestaurantFood');
+    const links = await RestaurantFood.find({ restaurantId: restaurant._id, availability: true })
+      .populate('foodId')
+      .lean();
+    
+    const foods = links.map(l => {
+      if (!l.foodId) return null;
+      return {
+        ...l.foodId,
+        price: l.price,
+        discountPrice: l.discountPrice,
+        availability: l.availability
+      };
+    }).filter(Boolean);
+    
+    restaurant.foods = foods;
 
     res.status(200).json({
       success: true,
@@ -174,6 +204,45 @@ exports.deleteRestaurant = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Restaurant deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getMatchingRestaurants = async (req, res, next) => {
+  try {
+    const { foodIds } = req.query;
+    if (!foodIds) {
+      return res.status(400).json({ success: false, message: 'foodIds query parameter is required' });
+    }
+
+    const ids = foodIds.split(',').filter(Boolean);
+    if (ids.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const RestaurantFood = require('../models/RestaurantFood');
+    
+    // For each food ID, find all restaurant IDs that sell it
+    const sets = await Promise.all(ids.map(async (foodId) => {
+      const links = await RestaurantFood.find({ foodId, availability: true }).select('restaurantId');
+      return links.map(l => l.restaurantId.toString());
+    }));
+
+    // Find the intersection of restaurant IDs across all food sets
+    let intersected = sets[0] || [];
+    for (let i = 1; i < sets.length; i++) {
+      intersected = intersected.filter(id => sets[i].includes(id));
+    }
+
+    // Fetch details of those restaurants
+    const restaurants = await Restaurant.find({ _id: { $in: intersected }, isOpen: true });
+
+    return res.status(200).json({
+      success: true,
+      count: restaurants.length,
+      data: restaurants,
     });
   } catch (error) {
     next(error);

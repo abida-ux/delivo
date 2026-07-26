@@ -75,32 +75,11 @@ export const CartProvider = ({ children }) => {
       if (guestCart) {
         try {
           const guestItems = JSON.parse(guestCart);
-          console.log(`📦 Found guest cart with ${guestItems.length} items, merging with database cart...`);
-
-          // ✅ Merge guest items with database items
-          for (const guestItem of guestItems) {
-            const guestFoodId = getNormalizedFoodId(guestItem);
-            const existingItem = dbCartItems.find((item) => getNormalizedFoodId(item) === guestFoodId);
-
-            if (existingItem) {
-              existingItem.quantity += guestItem.quantity;
-            } else {
-              dbCartItems.push(guestItem);
-            }
+          if (guestItems.length > 0) {
+            console.log(`📦 Found guest cart with ${guestItems.length} items, merging via /cart/merge...`);
+            const mergeRes = await api.post('/cart/merge', { items: guestItems });
+            dbCartItems = mergeRes.data.cart?.items || [];
           }
-
-          // ✅ Clear backend cart before rewriting
-          await api.delete('/cart/clear');
-
-          // ✅ Re-add all merged items to database
-          for (const item of dbCartItems) {
-            const foodId = getNormalizedFoodId(item);
-            await api.post('/cart/add', {
-              foodId,
-              quantity: item.quantity,
-            });
-          }
-
           localStorage.removeItem(GUEST_CART_KEY);
           console.log('✅ Guest cart merged and cleared');
         } catch (error) {

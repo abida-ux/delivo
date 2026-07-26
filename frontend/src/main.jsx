@@ -7,6 +7,7 @@ import { AuthModalProvider } from './context/AuthModalContext'
 import { AuthProvider } from './context/AuthContext'
 import PwaInstallPrompt from './components/PwaInstallPrompt'
 import ErrorBoundary from './components/ErrorBoundary'
+import { LocationProvider } from './context/LocationContext'
 import './index.css'
 import App from './App.jsx'
 
@@ -15,14 +16,16 @@ createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <LoaderProvider>
         <AuthProvider>
-          <AuthModalProvider>
-            <CartProvider>
-              <CartUIProvider>
-                <App />
-                <PwaInstallPrompt />
-              </CartUIProvider>
-            </CartProvider>
-          </AuthModalProvider>
+          <LocationProvider>
+            <AuthModalProvider>
+              <CartProvider>
+                <CartUIProvider>
+                  <App />
+                  <PwaInstallPrompt />
+                </CartUIProvider>
+              </CartProvider>
+            </AuthModalProvider>
+          </LocationProvider>
         </AuthProvider>
       </LoaderProvider>
     </ErrorBoundary>

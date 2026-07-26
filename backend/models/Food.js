@@ -13,7 +13,6 @@ const FoodSchema = new mongoose.Schema({
   },
   price: {
     type: Number,
-    required: [true, 'Please provide a price'],
     min: [0, 'Price cannot be negative'],
   },
   image: {
@@ -22,9 +21,33 @@ const FoodSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Burgers', 'Pizza', 'Drinks', 'Desserts', 'Salads', 'Asian', 'Other'],
-    required: [true, 'Please provide a category'],
     index: true,
+  },
+  categories: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'FoodCategory',
+    index: true,
+  }],
+  tags: [{
+    type: String,
+  }],
+  keywords: [{
+    type: String,
+  }],
+  defaultPrepTime: {
+    type: Number,
+    default: 15,
+  },
+  defaultAvailability: {
+    type: Boolean,
+    default: true,
+  },
+  nutritionalInfo: {
+    type: String,
+  },
+  featured: {
+    type: Boolean,
+    default: false,
   },
   store: {
     type: mongoose.Schema.Types.ObjectId,
@@ -32,7 +55,6 @@ const FoodSchema = new mongoose.Schema({
     default: null,
     index: true,
   },
-  // Keep restaurant for backward compatibility
   restaurant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant',

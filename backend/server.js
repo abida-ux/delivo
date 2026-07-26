@@ -29,6 +29,9 @@ const cartRoutes = require('./routes/cartRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const appSettingsRoutes = require('./routes/appSettingsRoutes');
 const offerRoutes = require('./routes/offerRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const combinationRoutes = require('./routes/combinationRoutes');
+const addressRoutes = require('./routes/addressRoutes');
 
 // Initialize Express app
 const app = express();
@@ -135,6 +138,9 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', appSettingsRoutes);
 app.use('/api/offers', offerRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/combinations', combinationRoutes);
+app.use('/api/addresses', addressRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

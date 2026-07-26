@@ -6,6 +6,7 @@ const {
   removeFromCart,
   updateCartItem,
   clearCart,
+  mergeCart,
 } = require('../controllers/cartController');
 const { authenticate } = require('../middleware/authMiddleware');
 
@@ -26,5 +27,8 @@ router.delete('/remove/:foodId', removeFromCart);
 
 // Clear entire cart
 router.delete('/clear', clearCart);
+
+// Merge guest cart items
+router.post('/merge', mergeCart);
 
 module.exports = router;

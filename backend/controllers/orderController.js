@@ -21,11 +21,14 @@ exports.createOrder = async (req, res, next) => {
       customerName,
       items,
       deliveryAddress,
+      deliveryLatitude,
+      deliveryLongitude,
       specialInstructions,
       whatsappNumber,
       mpesaNumber,
       deliveryFee = 20,
       restaurantId,
+      expectedTotal,
     } = req.body;
 
     console.log('🛒 Creating order with data:', {
@@ -77,35 +80,96 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
+    let finalRestaurantId = restaurantId;
+    if (!finalRestaurantId && items.length > 0) {
+      const firstItem = items[0];
+      if (firstItem.isCombination) {
+        const RestaurantCombination = require('../models/RestaurantCombination');
+        const link = await RestaurantCombination.findOne({ combinationId: firstItem.foodId });
+        finalRestaurantId = link?.restaurantId;
+      } else {
+        const RestaurantFood = require('../models/RestaurantFood');
+        const link = await RestaurantFood.findOne({ foodId: firstItem.foodId });
+        finalRestaurantId = link?.restaurantId;
+      }
+    }
+
     let subtotal = 0;
     const populatedItems = [];
-    let inferredRestaurantId = null;
 
     for (const item of items) {
-      const food = await Food.findById(item.foodId);
-      if (!food) {
-        console.log('❌ Food not found:', item.foodId);
-        return res.status(404).json({
-          success: false,
-          message: `Food item with ID ${item.foodId} not found`,
-        });
+      let itemPrice = 0;
+      let itemName = '';
+
+      if (item.isCombination) {
+        const FoodCombination = require('../models/FoodCombination');
+        const combo = await FoodCombination.findById(item.foodId);
+        if (!combo) {
+          return res.status(404).json({
+            success: false,
+            message: `Combination meal with ID ${item.foodId} not found`,
+          });
+        }
+        itemName = combo.name;
+
+        let comboSum = 0;
+        const RestaurantFood = require('../models/RestaurantFood');
+        for (const comp of (item.components || [])) {
+          const rf = await RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId: comp.foodId });
+          const compPrice = rf ? rf.price : 0;
+          comboSum += compPrice * comp.quantity;
+        }
+
+        if (comboSum === 0) {
+          const RestaurantCombination = require('../models/RestaurantCombination');
+          const rc = await RestaurantCombination.findOne({ restaurantId: finalRestaurantId, combinationId: item.foodId });
+          comboSum = rc ? rc.price : 0;
+        }
+
+        itemPrice = comboSum;
+      } else {
+        const Food = require('../models/Food');
+        const food = await Food.findById(item.foodId);
+        if (!food) {
+          return res.status(404).json({
+            success: false,
+            message: `Food item with ID ${item.foodId} not found`,
+          });
+        }
+        itemName = food.name;
+
+        const RestaurantFood = require('../models/RestaurantFood');
+        const rf = await RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId: item.foodId });
+        if (!rf) {
+          return res.status(400).json({
+            success: false,
+            message: `Food item '${itemName}' is not sold by this restaurant.`,
+          });
+        }
+        if (rf.availability === false) {
+          return res.status(400).json({
+            success: false,
+            message: `Food item '${itemName}' is currently sold out.`,
+          });
+        }
+        itemPrice = rf.price;
       }
 
-      if (!inferredRestaurantId && food.restaurant) {
-        inferredRestaurantId = typeof food.restaurant === 'object' ? food.restaurant._id : food.restaurant;
-      }
-
-      const itemTotal = food.price * item.quantity;
+      const itemTotal = itemPrice * item.quantity;
       subtotal += itemTotal;
 
       populatedItems.push({
-        foodId: food._id,
+        foodId: item.foodId,
         quantity: item.quantity,
-        price: food.price,
+        price: itemPrice,
+        name: itemName,
+        isCombination: item.isCombination || false,
+        combinationId: item.isCombination ? item.foodId : undefined,
+        components: item.components || undefined,
       });
     }
 
-    const finalRestaurantId = restaurantId || inferredRestaurantId;
+    const finalRestaurantIdObj = finalRestaurantId;
     let restaurant = null;
     if (finalRestaurantId && mongoose.Types.ObjectId.isValid(finalRestaurantId)) {
       restaurant = await Restaurant.findById(finalRestaurantId);
@@ -157,6 +221,13 @@ exports.createOrder = async (req, res, next) => {
     const totalPrice = Math.max(0, subtotal + finalDeliveryFee - discountAmount);
     const isFreeDelivery = finalDeliveryFee === 0;
 
+    if (expectedTotal && Math.abs(totalPrice - parseFloat(expectedTotal)) > 1.0) {
+      return res.status(400).json({
+        success: false,
+        message: `Prices or delivery fee have changed since you opened checkout. Expected KES ${expectedTotal}, but current total is KES ${totalPrice.toFixed(2)}. Please review and try again.`,
+        priceChange: true
+      });
+    }
 
     // Securing against spoofing userId of other users
     if (userId) {
@@ -183,6 +254,8 @@ exports.createOrder = async (req, res, next) => {
       guestEmail: guestEmail || undefined,
       guestPhone: guestPhone || undefined,
       restaurantId: finalRestaurantId || undefined,
+      deliveryLatitude: deliveryLatitude ? parseFloat(deliveryLatitude) : 0,
+      deliveryLongitude: deliveryLongitude ? parseFloat(deliveryLongitude) : 0,
       items: populatedItems,
       totalPrice,
       deliveryFee: finalDeliveryFee,

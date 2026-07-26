@@ -271,12 +271,25 @@ const OrderDetails = () => {
             const unitPrice = Number(item.price ?? item.unitPrice ?? food?.price ?? 0);
             const lineTotal = unitPrice * Number(item.quantity ?? 1);
             return (
-              <div key={key} className="order-item-row">
-                <div>
-                  <p className="item-name">{getOrderItemName(item)}</p>
-                  <p className="item-qty">Qty: {item.quantity} • Unit price: {formatCurrency(unitPrice)}</p>
+              <div key={key} className="order-item-row" style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p className="item-name" style={{ margin: 0, fontWeight: '700' }}>{getOrderItemName(item)}</p>
+                    <p className="item-qty" style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+                      Qty: {item.quantity} • Unit price: {formatCurrency(unitPrice)}
+                    </p>
+                  </div>
+                  <p className="item-total" style={{ margin: 0, fontWeight: '700' }}>{formatCurrency(lineTotal)}</p>
                 </div>
-                <p className="item-total">{formatCurrency(lineTotal)}</p>
+                {item.isCombination && item.components && item.components.length > 0 && (
+                  <div className="order-item-components" style={{ paddingLeft: '16px', fontSize: '12px', color: '#4b5563', borderLeft: '2px solid #e5e7eb', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {item.components.map((comp, compIdx) => (
+                      <span key={compIdx}>
+                        • {comp.name} ×{comp.quantity}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

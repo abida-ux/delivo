@@ -30,6 +30,29 @@ const CartSchema = new mongoose.Schema({
       min: 1,
       default: 1,
     },
+    isCombination: {
+      type: Boolean,
+      default: false,
+    },
+    combinationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FoodCombination',
+    },
+    components: [{
+      foodId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Food',
+      },
+      name: {
+        type: String,
+      },
+      quantity: {
+        type: Number,
+      },
+      price: {
+        type: Number,
+      },
+    }],
   }],
   createdAt: {
     type: Date,

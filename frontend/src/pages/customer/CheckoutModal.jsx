@@ -1,8 +1,10 @@
 import {useState, useContext, useEffect, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, AlertCircle, Check, MapPin, ClipboardList } from 'lucide-react';
+import { X, AlertCircle, Check, MapPin, ClipboardList, Map, Navigation, UserCheck } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useLocation } from '../../context/LocationContext';
+import LocationPickerModal from '../../components/LocationPickerModal';
 import api, { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants, getOrderById } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
@@ -21,6 +23,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     freeDeliveryEnabled: false,
     freeDeliveryMinimum: 0,
   });
+  const { location, updateLocation, detectLocation, loading: geoLoading, error: geoError } = useLocation();
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [specialInstructions, setSpecialInstructions] = useState('');
+
   const [deliveryInfo, setDeliveryInfo] = useState({
     fullName: '',
     address: '',
@@ -44,6 +51,47 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+
+  // Update input address from location coordinates context dynamically
+  useEffect(() => {
+    if (location.formattedAddress) {
+      setDeliveryInfo(prev => ({
+        ...prev,
+        address: location.formattedAddress,
+      }));
+    }
+  }, [location.formattedAddress]);
+
+  // Load saved addresses on open if user is logged in
+  useEffect(() => {
+    const fetchSavedAddresses = async () => {
+      if (user && isOpen) {
+        try {
+          const res = await api.get('/addresses');
+          setSavedAddresses(res.data.data || []);
+          const def = res.data.data?.find(a => a.isDefault);
+          if (def) {
+            setDeliveryInfo(prev => ({
+              ...prev,
+              address: def.formattedAddress,
+            }));
+            updateLocation(def.latitude, def.longitude, def.formattedAddress);
+          }
+        } catch (err) {
+          console.error('Failed to load saved addresses:', err);
+        }
+      }
+    };
+    fetchSavedAddresses();
+  }, [user?._id, isOpen]);
+
+  const handleSelectSavedAddress = (addressItem) => {
+    setDeliveryInfo(prev => ({
+      ...prev,
+      address: addressItem.formattedAddress,
+    }));
+    updateLocation(addressItem.latitude, addressItem.longitude, addressItem.formattedAddress);
+  };
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -207,7 +255,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       newErrors.restaurant = 'This restaurant is currently closed and cannot receive orders right now';
     }
 
-    if (!deliveryInfo.address.trim()) {
+    if (!location.latitude || !location.longitude) {
+      newErrors.address = 'Please drag the marker pin on the map to confirm your delivery coordinates';
+    } else if (!deliveryInfo.address.trim()) {
       newErrors.address = 'Precise delivery location is required';
     } else if (deliveryInfo.address.trim().length < 8) {
       newErrors.address = 'Please include a clear landmark or house/room detail';
@@ -240,24 +290,27 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   };
 
   useEffect(() => {
-    // fetch available restaurants for the select list
     const fetchRestaurants = async () => {
-      try {
-        const data = await getAllRestaurants();
-        const allRestaurants = Array.isArray(data) ? data : [];
-        setRestaurants(allRestaurants);
+      if (!cartItems || cartItems.length === 0) return;
 
-        const openRestaurants = allRestaurants.filter((restaurant) => restaurant.isOpen !== false);
+      try {
+        const foodIds = cartItems.map(item => {
+          return typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+        }).join(',');
+
+        const res = await api.get(`/restaurants/match?foodIds=${foodIds}`);
+        const matched = res.data.data || [];
+        setRestaurants(matched);
+
+        const openRestaurants = matched.filter((restaurant) => restaurant.isOpen !== false);
         
         let defaultId = '';
-        if (cartItems && cartItems.length > 0) {
-          const firstItem = cartItems[0];
-          const raw = firstItem?.restaurantId || firstItem?.restaurant || firstItem?.foodId?.restaurant;
-          if (raw) {
-            const id = typeof raw === 'object' ? (raw._id || raw.id) : raw;
-            const found = openRestaurants.find((r) => (r._id || r.id) === id);
-            if (found) defaultId = found._id || found.id;
-          }
+        const firstItem = cartItems[0];
+        const raw = firstItem?.restaurantId || firstItem?.restaurant || firstItem?.foodId?.restaurant;
+        if (raw) {
+          const id = typeof raw === 'object' ? (raw._id || raw.id) : raw;
+          const found = openRestaurants.find((r) => (r._id || r.id) === id);
+          if (found) defaultId = found._id || found.id;
         }
 
         if (!defaultId && openRestaurants.length > 0) {
@@ -266,7 +319,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
 
         setSelectedRestaurant((currentSelection) => currentSelection || defaultId);
       } catch (err) {
-        console.error('Error loading restaurants for checkout:', err);
+        console.error('Error loading matching restaurants for checkout:', err);
       }
     };
 
@@ -410,29 +463,38 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
 
     setIsProcessing(true);
     try {
-      const items = cartItems.map(item => ({
-        foodId: item.foodId._id || item.foodId,
-        quantity: item.quantity,
-        price: item.price,
-      }));
+      const items = cartItems.map(item => {
+        const itemFoodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+        return {
+          foodId: itemFoodId,
+          quantity: item.quantity,
+          price: item.price,
+          isCombination: !!item.isCombination,
+          components: item.isCombination ? item.components : undefined,
+        };
+      });
 
       const orderData = {
         items,
         customerName: deliveryInfo.fullName,
         deliveryAddress: deliveryInfo.address,
+        deliveryLatitude: location.latitude || 0,
+        deliveryLongitude: location.longitude || 0,
         paymentMethod: 'mpesa',
         whatsappNumber: deliveryInfo.whatsapp,
         mpesaNumber: deliveryInfo.mpesaNumber,
         deliveryFee: Number(finalDeliveryFee),
-        specialInstructions: appliedPromo ? `Applied Promo: ${appliedPromo.code}` : '',
+        specialInstructions: specialInstructions.trim() || (appliedPromo ? `Promo: ${appliedPromo.code}` : ''),
         restaurantId: selectedRestaurant || undefined,
         promoCode: appliedPromo ? appliedPromo.code : undefined,
+        expectedTotal: grandTotal,
       };
 
-      if (user && user.id) {
-        orderData.userId = user.id;
+      if (user) {
+        orderData.userId = user.id || user._id;
       } else {
-        orderData.guestEmail = '';
+        orderData.guestEmail = `${deliveryInfo.fullName.replace(/\s+/g, '').toLowerCase()}@delivo-guest.com`;
+        orderData.guestPhone = deliveryInfo.whatsapp;
       }
 
       console.log('🛒 Creating order with data:', orderData);
@@ -469,6 +531,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       </div>
 
       <div className="checkout-modal-content">
+        {!user && (
+          <div className="info-alert" style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', color: '#1e3a8a', fontSize: '13px', fontWeight: '500' }}>
+            <UserCheck size={18} />
+            <span>You are checking out as a <strong>Guest</strong>. You can register later using this phone number to see your order history.</span>
+          </div>
+        )}
+
         {errors.submit && (
           <div className="error-alert">
             <AlertCircle size={20} />
@@ -542,34 +611,94 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
               )}
             </div>
 
+            {/* SAVED ADDRESSES SELECTOR */}
+            {user && savedAddresses.length > 0 && (
+              <div className="form-group">
+                <label>Choose a Saved Address</label>
+                <select
+                  onChange={(e) => {
+                    const addr = savedAddresses.find(a => a._id === e.target.value);
+                    if (addr) handleSelectSavedAddress(addr);
+                  }}
+                  disabled={isProcessing || orderPending}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    border: '1.5px solid #d1d5db',
+                    borderRadius: '10px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    background: '#f9fafb'
+                  }}
+                >
+                  <option value="">-- Use current selected location --</option>
+                  {savedAddresses.map((addr) => (
+                    <option key={addr._id} value={addr._id}>
+                      {addr.label}: {addr.formattedAddress.slice(0, 50)}...
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="form-group">
-              <label>Precise Delivery Address / Landmark *</label>
+              <label>Precise Delivery Address / Coordinates *</label>
               <input
                 type="text"
+                readOnly
                 value={deliveryInfo.address}
-                onChange={(e) => {
-                  setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
-                  if (errors.address) setErrors({ ...errors, address: '' });
-                }}
-                placeholder="House number, apartment, gate, landmark, or street"
+                placeholder="Click 'Pick on Map' to select your coordinates"
                 disabled={isProcessing || orderPending}
                 className={errors.address ? 'error' : ''}
+                style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
               />
               {errors.address && <span className="field-error">{errors.address}</span>}
+              
               <button
                 type="button"
                 className="location-btn"
-                onClick={handleUseLocation}
-                disabled={locationLoading || isProcessing || orderPending}
+                onClick={() => setIsLocationPickerOpen(true)}
+                disabled={isProcessing || orderPending}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  justifyContent: 'center',
+                  background: '#f97316',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  marginTop: '8px',
+                  width: '100%',
+                  boxShadow: '0 4px 10px rgba(249, 115, 22, 0.2)'
+                }}
               >
-                {locationLoading ? (
-                  'Fetching location...'
-                ) : (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                    <MapPin size={16} /> Use Current Location
-                  </span>
-                )}
+                <Map size={16} /> Drag Pin & Pick on Map
               </button>
+            </div>
+
+            {/* SPECIAL INSTRUCTIONS */}
+            <div className="form-group">
+              <label>Special Instructions (Optional)</label>
+              <textarea
+                value={specialInstructions}
+                onChange={(e) => setSpecialInstructions(e.target.value)}
+                placeholder="E.g., Ring bell twice, drop at reception desk, leave at gate"
+                disabled={isProcessing || orderPending}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1.5px solid #d1d5db',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  minHeight: '60px',
+                  resize: 'vertical'
+                }}
+              />
             </div>
           </div>
 
@@ -622,10 +751,17 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
             {cartItems.map((item) => {
               const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
               return (
-                <div key={foodId} className="summary-item">
+                <div key={foodId} className="summary-item" style={{ height: 'auto', padding: '10px 0' }}>
                   <div className="item-info">
-                    <span className="item-name">{item.name}</span>
+                    <span className="item-name" style={{ fontWeight: '700' }}>{item.name}</span>
                     <span className="item-qty">x{item.quantity}</span>
+                    {item.isCombination && item.components && (
+                      <div className="combo-sub-components" style={{ display: 'flex', flexDirection: 'column', fontSize: '11px', color: '#6b7280', paddingLeft: '8px', borderLeft: '1.5px solid #d1d5db', marginTop: '4px', gap: '2px' }}>
+                        {item.components.map((comp, idx) => (
+                          <span key={idx}>• {comp.name} ×{comp.quantity}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <span className="item-total">KES {(item.price * item.quantity).toFixed(2)}</span>
                 </div>
@@ -725,11 +861,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   );
 
   return (
-    <div className={`checkout-modal-overlay ${inline ? 'inline' : ''}`}>
-      <div className={`checkout-modal-container ${inline ? 'inline' : ''}`}>
-        {renderCheckoutContent()}
+    <>
+      <div className={`checkout-modal-overlay ${inline ? 'inline' : ''}`}>
+        <div className={`checkout-modal-container ${inline ? 'inline' : ''}`}>
+          {renderCheckoutContent()}
+        </div>
       </div>
-    </div>
+      <LocationPickerModal isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
+    </>
   );
 };
 

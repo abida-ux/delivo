@@ -36,6 +36,16 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  lastLatitude: {
+    type: Number,
+  },
+  lastLongitude: {
+    type: Number,
+  },
+  lastAddress: {
+    type: String,
+    trim: true,
+  },
   riderStatus: {
     type: String,
     enum: ['available', 'on-delivery', 'offline'],

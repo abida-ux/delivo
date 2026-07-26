@@ -446,6 +446,29 @@ exports.verifyEmail = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
+    // Auto-link previous guest orders using email or phone matching
+    try {
+      const Order = require('../models/Order');
+      const orConditions = [{ guestEmail: user.email.toLowerCase() }];
+      if (user.phone) {
+        orConditions.push({ guestPhone: user.phone });
+        orConditions.push({ mpesaNumber: user.phone });
+      }
+
+      const updateResult = await Order.updateMany(
+        {
+          $or: orConditions,
+          userId: null
+        },
+        {
+          userId: user._id
+        }
+      );
+      console.log(`🔗 Auto-linked ${updateResult.modifiedCount} previous guest orders to verified user ID: ${user._id}`);
+    } catch (err) {
+      console.error('❌ Failed to link guest orders on email verification:', err);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Email verified successfully',
@@ -896,6 +919,35 @@ exports.getAdminStats = async (req, res, next) => {
         orders: orderCount,
         revenue,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateUserLocation = async (req, res, next) => {
+  try {
+    const { latitude, longitude, address } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.lastLatitude = parseFloat(latitude);
+    user.lastLongitude = parseFloat(longitude);
+    user.lastAddress = address;
+    user.location = address;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Location coordinates updated successfully',
+      data: {
+        lastLatitude: user.lastLatitude,
+        lastLongitude: user.lastLongitude,
+        lastAddress: user.lastAddress,
+      }
     });
   } catch (error) {
     next(error);

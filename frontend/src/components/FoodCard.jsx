@@ -1,10 +1,12 @@
 import { Plus, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { useState } from 'react';
 import './FoodCard.css';
 
 const FoodCard = ({ food }) => {
+  const navigate = useNavigate();
   const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
   const [imageError, setImageError] = useState(false);
@@ -27,7 +29,7 @@ const FoodCard = ({ food }) => {
   };
 
   return (
-    <div className="food-card">
+    <div className="food-card" onClick={() => navigate(`/food/${food._id}`)} style={{ cursor: 'pointer' }}>
       <div className="food-image-wrapper">
         <img
           src={imageError ? fallbackImage : (food.image || fallbackImage)}

@@ -174,6 +174,13 @@ const Cart = () => {
                   )}
                   <div className="item-details">
                     <h3 className="item-name">{item.name}</h3>
+                    {item.isCombination && item.components && (
+                      <div className="combo-sub-components" style={{ display: 'flex', flexDirection: 'column', fontSize: '11px', color: '#6b7280', paddingLeft: '8px', borderLeft: '1.5px solid #d1d5db', marginTop: '4px', gap: '2px', marginBottom: '4px' }}>
+                        {item.components.map((comp, idx) => (
+                          <span key={idx}>• {comp.name} ×{comp.quantity}</span>
+                        ))}
+                      </div>
+                    )}
                     {item.restaurant && (
                       <p className="item-restaurant">{item.restaurant}</p>
                     )}

@@ -7,8 +7,10 @@ const {
   createRestaurant,
   updateRestaurant,
   deleteRestaurant,
+  getMatchingRestaurants,
 } = require('../controllers/restaurantController');
 
+router.get('/match', getMatchingRestaurants);
 router.get('/', getAllRestaurants);
 router.get('/:id', getRestaurantById);
 router.post('/', authenticate, authorizeRoles('admin'), createRestaurant);

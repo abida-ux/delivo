@@ -1,22 +1,37 @@
-import {useRef} from 'react';
-import { ChevronLeft, ChevronRight, UtensilsCrossed, Coffee, Utensils, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Utensils, Coffee, UtensilsCrossed, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant, Pizza } from 'lucide-react';
+import api from '../services/api';
 import './Categories.css';
+
+const iconMap = {
+  Coffee,
+  Utensils,
+  UtensilsCrossed,
+  Flame,
+  MapPin,
+  Snail,
+  Wine,
+  Cake,
+  Apple,
+  Croissant,
+  Pizza,
+};
 
 const Categories = ({ onSelectCategory, selectedCategory }) => {
   const scrollContainerRef = useRef(null);
+  const [categoriesList, setCategoriesList] = useState([]);
 
-  const categoryData = [
-    { id: 1, name: 'Breakfast', icon: Coffee },
-    { id: 2, name: 'Lunch', icon: Utensils },
-    { id: 3, name: 'Dinner', icon: UtensilsCrossed },
-    { id: 4, name: 'Fast Food', icon: Flame },
-    { id: 5, name: 'Street Food', icon: MapPin },
-    { id: 6, name: 'Snacks', icon: Snail },
-    { id: 7, name: 'Drinks', icon: Wine },
-    { id: 8, name: 'Desserts', icon: Cake },
-    { id: 9, name: 'Healthy', icon: Apple },
-    { id: 10, name: 'Bakery', icon: Croissant },
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories');
+        setCategoriesList(res.data.data || []);
+      } catch (error) {
+        console.error('Error fetching categories in slider:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const scroll = (direction) => {
     const { current } = scrollContainerRef;
@@ -41,7 +56,6 @@ const Categories = ({ onSelectCategory, selectedCategory }) => {
           <p className="categories-subtitle">Find food by your cravings</p>
         </div>
         
-        {/* Navigation Arrows for Desktop */}
         <div className="carousel-controls">
           <button className="control-btn" onClick={() => scroll('left')} aria-label="Scroll Left">
             <ChevronLeft size={20} />
@@ -52,14 +66,13 @@ const Categories = ({ onSelectCategory, selectedCategory }) => {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Container */}
       <div className="categories-slider-container" ref={scrollContainerRef}>
-        {categoryData.map((category) => {
-          const IconComponent = category.icon;
+        {categoriesList.map((category) => {
+          const IconComponent = iconMap[category.icon] || Utensils;
           const isSelected = selectedCategory === category.name;
           return (
             <div 
-              key={category.id} 
+              key={category._id} 
               className={`category-pill-card ${isSelected ? 'selected' : ''}`}
               onClick={() => handleCategoryClick(category.name)}
               style={{ cursor: 'pointer' }}

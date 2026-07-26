@@ -66,7 +66,8 @@ const AllRestaurants = () => {
       (restaurant) =>
         restaurant.name?.toLowerCase().includes(term) ||
         restaurant.cuisineType?.toLowerCase().includes(term) ||
-        restaurant.city?.toLowerCase().includes(term)
+        restaurant.city?.toLowerCase().includes(term) ||
+        restaurant.foods?.some(f => f.name?.toLowerCase().includes(term) || f.description?.toLowerCase().includes(term))
     );
     setFilteredRestaurants(filtered);
   };

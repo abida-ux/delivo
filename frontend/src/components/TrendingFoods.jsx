@@ -72,8 +72,13 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
     // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter(item => {
-        const itemCategory = item.category || '';
-        return itemCategory.toLowerCase() === selectedCategory.toLowerCase();
+        if (item.category && item.category.toLowerCase() === selectedCategory.toLowerCase()) return true;
+        if (item.categories && Array.isArray(item.categories)) {
+          return item.categories.some(cat => 
+            (typeof cat === 'object' ? cat.name : cat).toLowerCase() === selectedCategory.toLowerCase()
+          );
+        }
+        return false;
       });
     }
 

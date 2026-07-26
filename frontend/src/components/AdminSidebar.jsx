@@ -13,6 +13,9 @@ import {
   Settings,
   Truck,
   Bell,
+  Layers,
+  ListFilter,
+  DollarSign,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import './AdminSidebar.css';
@@ -26,7 +29,10 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { label: 'Users', path: '/admin/users', icon: Users },
     { label: 'Restaurants', path: '/admin/restaurants', icon: Store },
-    { label: 'Foods', path: '/admin/foods', icon: UtensilsCrossed },
+    { label: 'Foods Template', path: '/admin/foods', icon: UtensilsCrossed },
+    { label: 'Categories', path: '/admin/categories', icon: ListFilter },
+    { label: 'Combinations', path: '/admin/combinations', icon: Layers },
+    { label: 'Restaurant Pricing', path: '/admin/restaurant-foods', icon: DollarSign },
     { label: 'Riders', path: '/admin/riders', icon: Truck },
     { label: 'Orders', path: '/admin/orders', icon: ShoppingCart },
     { label: 'Notifications', path: '/admin/notifications', icon: Bell },

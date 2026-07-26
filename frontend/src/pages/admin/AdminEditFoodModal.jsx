@@ -1,18 +1,44 @@
-import {useState, useEffect} from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Plus, Check } from 'lucide-react';
+import api from '../../services/api';
 import './AdminEditFoodModal.css';
 
 const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [createNewCategory, setCreateNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('Utensils');
+  const [newCategoryImage, setNewCategoryImage] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     price: '',
-    category: '',
     image: '',
     restaurants: [],
     description: '',
   });
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories');
+      setCategoriesList(res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching categories in modal:', error);
+    }
+  };
 
   useEffect(() => {
     if (food) {
@@ -24,16 +50,22 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
           ? [typeof food.restaurant === 'object' ? food.restaurant._id : food.restaurant]
           : [];
 
+      const initialCats = Array.isArray(food.categories)
+        ? food.categories.map(c => typeof c === 'object' ? c._id : c).filter(Boolean)
+        : food.category
+          ? [food.category]
+          : [];
+
       setFormData({
         name: food.name || '',
         price: food.price || '',
-        category: food.category || '',
         image: food.image || '',
         restaurants: selectedRestaurants,
         description: food.description || '',
       });
+      setSelectedCategories(initialCats);
     }
-  }, [food]);
+  }, [food, isOpen]);
 
   if (!isOpen) return null;
 
@@ -45,21 +77,79 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
     }));
   };
 
+  const handleCategoryToggle = (categoryId) => {
+    const isSelected = selectedCategories.includes(categoryId);
+    setSelectedCategories(isSelected
+      ? selectedCategories.filter(id => id !== categoryId)
+      : [...selectedCategories, categoryId]
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.restaurants.length) {
+      alert('Please select at least one restaurant');
+      return;
+    }
+    if (!formData.name.trim()) {
+      alert('Please enter food name');
+      return;
+    }
+    if (!formData.price) {
+      alert('Please enter price');
+      return;
+    }
+    if (selectedCategories.length === 0 && !newCategoryName.trim()) {
+      alert('Please link this food to at least one category');
+      return;
+    }
+
     setLoading(true);
     try {
+      let finalCategories = [...selectedCategories];
+      const firstCat = categoriesList.find(c => 
+        selectedCategories.includes(c._id) || selectedCategories.includes(c.name)
+      );
+      let firstCategoryName = firstCat ? firstCat.name : '';
+
+      finalCategories = finalCategories.map(catVal => {
+        const found = categoriesList.find(c => c._id === catVal || c.name === catVal);
+        return found ? found._id : null;
+      }).filter(Boolean);
+
+      if (createNewCategory && newCategoryName.trim()) {
+        const catRes = await api.post('/categories', {
+          name: newCategoryName.trim(),
+          icon: newCategoryIcon,
+          image: newCategoryImage.trim() || 'https://via.placeholder.com/300x160?text=Category',
+          order: categoriesList.length,
+          isEnabled: true,
+        });
+        if (catRes.data.data?._id) {
+          finalCategories.push(catRes.data.data._id);
+          firstCategoryName = newCategoryName.trim();
+        }
+      }
+
       const updateData = {
         ...formData,
+        categories: finalCategories,
+        category: firstCategoryName || 'Other',
         restaurant: formData.restaurants[0] || '',
         restaurants: formData.restaurants,
       };
+
       const result = await onSave(updateData);
       
-      // Only close if save was successful
       if (result !== false) {
         onClose();
+        setCreateNewCategory(false);
+        setNewCategoryName('');
+        setNewCategoryImage('');
       }
+    } catch (err) {
+      alert('Error updating food: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -67,7 +157,7 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto', width: '90%', maxWidth: '600px' }}>
         <div className="modal-header">
           <h2>Edit Food Item</h2>
           <button className="modal-close" onClick={onClose}>
@@ -76,6 +166,34 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="edit-form">
+          <div className="form-group">
+            <label style={{ fontWeight: '700', marginBottom: '6px', display: 'block' }}>Choose Restaurants *</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', background: '#f9fafb', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e5e7eb', maxHeight: '120px', overflowY: 'auto' }}>
+              {restaurants?.map((restaurant) => (
+                <label key={restaurant._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.restaurants.includes(restaurant._id)}
+                    onChange={(e) => {
+                      const id = restaurant._id;
+                      setFormData(prev => {
+                        const nextRes = e.target.checked 
+                          ? [...prev.restaurants, id]
+                          : prev.restaurants.filter(rId => rId !== id);
+                        return { ...prev, restaurants: nextRes };
+                      });
+                    }}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  {restaurant.name}
+                </label>
+              ))}
+            </div>
+            <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+              Select all restaurants selling this food.
+            </small>
+          </div>
+
           <div className="form-group">
             <label htmlFor="name">Food Name *</label>
             <input
@@ -89,34 +207,103 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="price">Price (Ksh) *</label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="Enter price"
-                step="0.01"
-                min="0"
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label htmlFor="price">Default Price (KSh) *</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              placeholder="Enter price"
+              required
+            />
+          </div>
 
-            <div className="form-group">
-              <label htmlFor="category">Category *</label>
-              <input
-                type="text"
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                placeholder="E.g., Main Course"
-                required
-              />
+          <div className="form-group">
+            <label style={{ fontWeight: '700', display: 'block', marginBottom: '6px' }}>Link to Categories</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+              {categoriesList.map(cat => {
+                const isSelected = selectedCategories.includes(cat._id) || selectedCategories.includes(cat.name);
+                return (
+                  <button
+                    type="button"
+                    key={cat._id}
+                    onClick={() => {
+                      const matchesId = selectedCategories.includes(cat._id);
+                      const matchesName = selectedCategories.includes(cat.name);
+                      
+                      let nextSelected = [...selectedCategories];
+                      if (matchesId) {
+                        nextSelected = nextSelected.filter(id => id !== cat._id);
+                      } else if (matchesName) {
+                        nextSelected = nextSelected.filter(name => name !== cat.name);
+                      } else {
+                        nextSelected.push(cat._id);
+                      }
+                      setSelectedCategories(nextSelected);
+                    }}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '9999px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      border: isSelected ? '1.5px solid #f97316' : '1.5px solid #d1d5db',
+                      background: isSelected ? '#f97316' : 'white',
+                      color: isSelected ? 'white' : '#4b5563',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
             </div>
+            
+            <button
+              type="button"
+              onClick={() => setCreateNewCategory(!createNewCategory)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#f97316',
+                fontWeight: '700',
+                fontSize: '13px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                marginTop: '6px'
+              }}
+            >
+              + Create a New Category
+            </button>
+
+            {createNewCategory && (
+              <div style={{ border: '1px dashed #f97316', padding: '16px', borderRadius: '12px', background: 'rgba(249, 115, 22, 0.02)', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#ea580c' }}>New Category Details</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label>Category Name *</label>
+                    <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="E.g., Snacks" style={{ padding: '8px 12px' }} />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label>Icon *</label>
+                    <select value={newCategoryIcon} onChange={e => setNewCategoryIcon(e.target.value)} style={{ padding: '8px 12px' }}>
+                      <option value="Utensils">Utensils</option>
+                      <option value="Coffee">Coffee</option>
+                      <option value="CupSoda">CupSoda</option>
+                      <option value="Pizza">Pizza</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label>Image URL</label>
+                  <input type="url" value={newCategoryImage} onChange={e => setNewCategoryImage(e.target.value)} placeholder="https://example.com/banner.jpg" style={{ padding: '8px 12px' }} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -144,27 +331,6 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="restaurants">Restaurants</label>
-            <select
-              id="restaurants"
-              name="restaurants"
-              multiple
-              value={formData.restaurants}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions, (option) => option.value);
-                setFormData((prev) => ({ ...prev, restaurants: selected }));
-              }}
-            >
-              {restaurants?.map((restaurant) => (
-                <option key={restaurant._id} value={restaurant._id}>
-                  {restaurant.name}
-                </option>
-              ))}
-            </select>
-            <small>Select one or more restaurants for this food.</small>
-          </div>
-
           <div className="image-preview">
             {formData.image && (
               <>
@@ -180,7 +346,7 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
             )}
           </div>
 
-          <div className="form-actions">
+          <div className="form-actions" style={{ marginTop: '20px' }}>
             <button type="button" className="btn-cancel" onClick={onClose}>
               Cancel
             </button>

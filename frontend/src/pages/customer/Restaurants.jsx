@@ -22,23 +22,38 @@ const Restaurants = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [customizingCombo, setCustomizingCombo] = useState(null);
+  const [comboComponents, setComboComponents] = useState([]);
 
   const fetchRestaurantData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch restaurant details
       const restaurantData = await getRestaurantById(restaurantId);
       setRestaurant(restaurantData);
 
-      // Fetch foods for this restaurant
       const foodsData = await getFoodsByRestaurant(restaurantId);
-      setFoods(foodsData);
+      
+      let combosData = [];
+      try {
+        const combosRes = await api.get(`/combinations?restaurantId=${restaurantId}`);
+        combosData = combosRes.data.data || [];
+      } catch (err) {
+        console.error('Failed to load combos for restaurant:', err);
+      }
 
-      // Extract unique categories from foods
-      const uniqueCategories = [...new Set(foodsData.map(food => food.category))];
-      setCategories(uniqueCategories);
+      const mergedMenu = [...foodsData, ...combosData];
+      setFoods(mergedMenu);
+
+      const uniqueCategories = [...new Set(mergedMenu.map(item => {
+        if (item.category) return item.category;
+        if (item.categories && item.categories.length > 0) {
+          return typeof item.categories[0] === 'object' ? item.categories[0].name : item.categories[0];
+        }
+        return 'Other';
+      }))];
+      setCategories(uniqueCategories.filter(Boolean));
       if (uniqueCategories.length > 0) {
         setActiveCategory(uniqueCategories[0]);
       }
@@ -66,7 +81,59 @@ const Restaurants = () => {
       alert('This restaurant is currently closed and cannot receive orders right now.');
       return;
     }
-    addItem(food, 1);
+
+    if (food.isCombination) {
+      const mapped = food.components.map(comp => {
+        const matchingFood = foods.find(f => f._id === (comp.foodId?._id || comp.foodId));
+        return {
+          foodId: comp.foodId?._id || comp.foodId,
+          name: comp.foodId?.name || matchingFood?.name || 'Component Item',
+          quantity: comp.defaultQuantity,
+          minimumQuantity: comp.minimumQuantity,
+          maximumQuantity: comp.maximumQuantity,
+          price: matchingFood ? matchingFood.price : 0,
+        };
+      });
+      setComboComponents(mapped);
+      setCustomizingCombo(food);
+    } else {
+      addItem(food, 1);
+    }
+  };
+
+  const getCustomizedComboTotal = () => {
+    return comboComponents.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
+
+  const updateComponentQty = (idx, change) => {
+    const updated = [...comboComponents];
+    const comp = updated[idx];
+    const newQty = comp.quantity + change;
+    if (newQty >= comp.minimumQuantity && newQty <= comp.maximumQuantity) {
+      comp.quantity = newQty;
+      setComboComponents(updated);
+    }
+  };
+
+  const handleAddCustomizedCombo = () => {
+    const comboPrice = getCustomizedComboTotal();
+    const customizedItem = {
+      _id: customizingCombo._id,
+      name: customizingCombo.name,
+      image: customizingCombo.image,
+      price: comboPrice,
+      isCombination: true,
+      combinationId: customizingCombo._id,
+      components: comboComponents.map(c => ({
+        foodId: c.foodId,
+        name: c.name,
+        quantity: c.quantity,
+        price: c.price,
+      })),
+    };
+
+    addItem(customizedItem, 1);
+    setCustomizingCombo(null);
   };
 
   const handleRemoveFromCart = (foodId) => {
@@ -130,7 +197,15 @@ const Restaurants = () => {
   };
 
   const getFoodsByCategory = (category) => {
-    return foods.filter(food => food.category === category);
+    return foods.filter(item => {
+      if (item.category === category) return true;
+      if (item.categories && Array.isArray(item.categories)) {
+        return item.categories.some(cat => 
+          (typeof cat === 'object' ? cat.name : cat) === category
+        );
+      }
+      return false;
+    });
   };
 
   const scrollToCategory = (category) => {
@@ -393,6 +468,98 @@ const Restaurants = () => {
               ) : (
                 'Checkout'
               )}
+            </button>
+          </div>
+        </div>
+      {/* COMBINATION CUSTOMIZER MODAL */}
+      {customizingCombo && (
+        <div className="cart-modal-overlay" style={{ zIndex: 3000 }}>
+          <div className="cart-modal" style={{ maxWidth: '500px', width: '90%' }}>
+            <div className="cart-modal-header" style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: '12px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Customise {customizingCombo.name}</h2>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '2px' }}>Adjust components to your liking</p>
+              </div>
+              <button className="close-btn" onClick={() => setCustomizingCombo(null)}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="cart-modal-items" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px 0' }}>
+              {comboComponents.map((comp, idx) => (
+                <div key={comp.foodId} className="combo-customiser-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                  <div>
+                    <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1f2937' }}>{comp.name}</h4>
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}>KES {comp.price} each</span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => updateComponentQty(idx, -1)}
+                      disabled={comp.quantity <= comp.minimumQuantity}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: '1.5px solid #d1d5db',
+                        background: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: comp.quantity <= comp.minimumQuantity ? 'not-allowed' : 'pointer',
+                        opacity: comp.quantity <= comp.minimumQuantity ? 0.4 : 1
+                      }}
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <span style={{ fontSize: '16px', fontWeight: '800', width: '20px', textAlign: 'center' }}>{comp.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateComponentQty(idx, 1)}
+                      disabled={comp.quantity >= comp.maximumQuantity}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: '1.5px solid #d1d5db',
+                        background: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: comp.quantity >= comp.maximumQuantity ? 'not-allowed' : 'pointer',
+                        opacity: comp.quantity >= comp.maximumQuantity ? 0.4 : 1
+                      }}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="cart-modal-total" style={{ borderTop: '1px solid #f3f4f6', paddingTop: '16px', marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong>Total: KES {getCustomizedComboTotal()}</strong>
+            </div>
+
+            <button
+              className="cart-modal-btn"
+              onClick={handleAddCustomizedCombo}
+              style={{
+                width: '100%',
+                background: '#f97316',
+                color: 'white',
+                border: 'none',
+                padding: '14px',
+                borderRadius: '12px',
+                fontWeight: '700',
+                fontSize: '15px',
+                marginTop: '16px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(249, 115, 22, 0.4)'
+              }}
+            >
+              Add to Basket
             </button>
           </div>
         </div>

@@ -1,10 +1,24 @@
 import {useState, useEffect} from 'react';
-import { Star, Search, Plus, Check, Coffee, Utensils, UtensilsCrossed, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant } from 'lucide-react';
-import { getAllFoods } from '../services/api';
+import { Star, Search, Plus, Check, Coffee, Utensils, UtensilsCrossed, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant, Pizza } from 'lucide-react';
+import api, { getAllFoods } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { resolveImageUrl, handleImageError } from '../utils/placeholderImage';
 import './Menu.css';
+
+const iconMap = {
+  Coffee,
+  Utensils,
+  UtensilsCrossed,
+  Flame,
+  MapPin,
+  Snail,
+  Wine,
+  Cake,
+  Apple,
+  Croissant,
+  Pizza,
+};
 
 const Menu = () => {
   const [foods, setFoods] = useState([]);
@@ -22,26 +36,28 @@ const Menu = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [categoriesList, setCategoriesList] = useState([]);
   const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
 
   const categoryData = [
-    { id: 1, name: 'All', icon: null },
-    { id: 2, name: 'Breakfast', icon: Coffee },
-    { id: 3, name: 'Lunch', icon: Utensils },
-    { id: 4, name: 'Dinner', icon: UtensilsCrossed },
-    { id: 5, name: 'Fast Food', icon: Flame },
-    { id: 6, name: 'Street Food', icon: MapPin },
-    { id: 7, name: 'Snacks', icon: Snail },
-    { id: 8, name: 'Drinks', icon: Wine },
-    { id: 9, name: 'Desserts', icon: Cake },
-    { id: 10, name: 'Healthy', icon: Apple },
-    { id: 11, name: 'Bakery', icon: Croissant },
+    { _id: 'all', name: 'All', icon: null },
+    ...categoriesList
   ];
 
   useEffect(() => {
     fetchFoods();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories');
+      setCategoriesList(res.data.data || []);
+    } catch (err) {
+      console.error('Error fetching categories in Menu:', err);
+    }
+  };
 
   const fetchFoods = async () => {
     try {
@@ -104,7 +120,18 @@ const Menu = () => {
     let filtered = foods;
     const normalizedSearch = search?.toString().toLowerCase().trim() || '';
 
-    // Search by name or description
+    if (category && category !== 'All') {
+      filtered = filtered.filter((food) => {
+        if (food.category === category) return true;
+        if (food.categories && Array.isArray(food.categories)) {
+          return food.categories.some(cat => 
+            (typeof cat === 'object' ? cat.name : cat) === category
+          );
+        }
+        return false;
+      });
+    }
+
     if (normalizedSearch) {
       const searchWords = normalizedSearch.split(/\s+/).filter(Boolean);
       filtered = filtered.filter((food) => {
@@ -186,10 +213,10 @@ const Menu = () => {
 
       <div className="category-filters">
         {categoryData.map((category) => {
-          const IconComponent = category.icon;
+          const IconComponent = category.icon ? iconMap[category.icon] || Utensils : null;
           return (
             <button
-              key={category.id}
+              key={category._id || category.name}
               className={`category-pill ${selectedCategory === category.name ? 'active' : ''}`}
               onClick={() => handleCategoryFilter(category.name)}
             >

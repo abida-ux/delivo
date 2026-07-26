@@ -16,6 +16,7 @@ const {
   deleteUser,
   createUser,
   getAdminStats,
+  updateUserLocation,
 } = require('../controllers/userController');
 
 
@@ -31,6 +32,7 @@ router.post('/', authenticate, authorizeRoles('admin'), createUser);
 router.get('/admin/stats', authenticate, authorizeRoles('admin'), getAdminStats);
 router.get('/me', authenticate, getCurrentUserProfile);
 router.put('/me/status', authenticate, updateRiderStatus);
+router.put('/me/location', authenticate, updateUserLocation);
 
 router.get('/', authenticate, authorizeRoles('admin'), getAllUsers);
 router.get('/:id', authenticate, getUserProfile);

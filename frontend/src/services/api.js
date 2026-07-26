@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-// Determine API URL based on environment
+// Clear stale sessionStorage cache on module load to force-load corrected prices
+try {
+  sessionStorage.removeItem('delivo_foods_cache');
+} catch (e) {}
+
 const PRODUCTION_API_URL = 'https://delivo-d5r8.onrender.com/api';
 
 const getAPIUrl = () => {
@@ -255,16 +259,25 @@ export const updateOrder = async (id, data) => {
 };
 
 export const deleteFood = async (id) => {
+  sessionStorage.removeItem('delivo_foods_cache');
+  foodsCache = null;
+  foodsPromise = null;
   const res = await api.delete(`/foods/${id}`);
   return res.data;
 };
 
 export const updateFood = async (id, data) => {
+  sessionStorage.removeItem('delivo_foods_cache');
+  foodsCache = null;
+  foodsPromise = null;
   const res = await api.put(`/foods/${id}`, data);
   return res.data;
 };
 
 export const createFood = async (data) => {
+  sessionStorage.removeItem('delivo_foods_cache');
+  foodsCache = null;
+  foodsPromise = null;
   const res = await api.post('/foods', data);
   return res.data;
 };
