@@ -47,7 +47,26 @@ exports.getCombinations = async (req, res) => {
       .populate('categories', 'name icon image')
       .lean();
 
-    return res.status(200).json({ success: true, count: combos.length, data: combos });
+    const data = await Promise.all(combos.map(async (combo) => {
+      const links = await RestaurantCombination.find({ combinationId: combo._id }).lean();
+      
+      let price = links[0]?.price;
+      if (price == null) {
+        price = combo.components.reduce((sum, c) => {
+          const compPrice = c.foodId?.price || 0;
+          return sum + (compPrice * (c.defaultQuantity || 1));
+        }, 0);
+      }
+
+      return {
+        ...combo,
+        price,
+        isCombination: true,
+        restaurantCount: links.length,
+      };
+    }));
+
+    return res.status(200).json({ success: true, count: data.length, data });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

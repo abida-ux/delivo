@@ -115,15 +115,11 @@ const Signup = ({ isModal = false }) => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Signup failed';
       if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('user already exists')) {
-        setVerificationEmail(formData.email);
-        setShowVerification(true);
-        setVerifyMessage('An account with this email already exists. Please enter the verification code from the email sent to your inbox.');
-        setOtp('');
-        setError('');
+        setError('An account with this email already exists. Please log in instead.');
       } else {
-        setShowVerification(false);
         setError(errorMsg);
       }
+      setShowVerification(false);
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
