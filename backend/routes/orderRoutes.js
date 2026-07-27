@@ -14,6 +14,7 @@ const {
   getUnassignedOrders,
   claimOrder,
 } = require('../controllers/orderController');
+const { getRiderAvailabilityStatus } = require('../utils/riderWorkflow');
 
 router.post('/', optionalAuthenticate, createOrder);
 router.get('/user/:userId', authenticate, getUserOrders);
@@ -56,7 +57,7 @@ router.get('/rider/available', authenticate, async (req, res, next) => {
 
     const normalizedRiders = availableRiders.map((rider) => ({
       ...rider.toObject(),
-      riderStatus: rider.riderStatus === 'on-delivery' ? 'on-delivery' : 'available',
+      riderStatus: getRiderAvailabilityStatus(rider),
     }));
 
     res.status(200).json({ success: true, data: normalizedRiders });
@@ -92,7 +93,7 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
     }
 
     const activeOrderCount = await Order.countDocuments({ riderId, status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] } });
-    const isBusy = activeOrderCount > 0 || !!riderUser.currentOrderId || riderUser.riderStatus === 'on-delivery';
+    const isBusy = activeOrderCount > 0 || !!riderUser.currentOrderId || getRiderAvailabilityStatus(riderUser) !== 'available';
     if (isBusy) {
       return res.status(400).json({ success: false, message: 'Rider is not available for assignment' });
     }
