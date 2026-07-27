@@ -1,6 +1,6 @@
 import {useState, useContext, useEffect, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, AlertCircle, Check, MapPin, ClipboardList, Map, Navigation, UserCheck } from 'lucide-react';
+import { X, AlertCircle, Check, MapPin, ClipboardList, Map, Navigation, UserCheck, Plus, Minus, Layers } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../context/LocationContext';
@@ -51,6 +51,22 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+
+  // Combo component quantity edits in checkout summary
+  const [comboEdits, setComboEdits] = useState({});
+
+  const getComboComponentQty = (comboFoodId, compFoodId, defaultQty) => {
+    return comboEdits?.[comboFoodId]?.[compFoodId] ?? defaultQty;
+  };
+
+  const handleComboComponentQtyChange = (comboFoodId, compFoodId, delta, min, max, defaultQty) => {
+    const current = getComboComponentQty(comboFoodId, compFoodId, defaultQty);
+    const next = Math.min(max ?? 10, Math.max(min ?? 0, current + delta));
+    setComboEdits(prev => ({
+      ...prev,
+      [comboFoodId]: { ...(prev[comboFoodId] || {}), [compFoodId]: next },
+    }));
+  };
 
   // Update input address from location coordinates context dynamically
   useEffect(() => {
@@ -750,20 +766,64 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
           <div className="summary-items">
             {cartItems.map((item) => {
               const foodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+              const isComboItem = item.isCombination && item.components?.length > 0;
+
+              // Compute dynamic price for combo items considering edits
+              const getItemPrice = () => {
+                if (!isComboItem) return item.price;
+                const edits = comboEdits[foodId];
+                if (!edits) return item.price;
+                return item.components.reduce((sum, comp) => {
+                  const compQty = edits[comp.foodId] ?? comp.quantity;
+                  return sum + (comp.price || 0) * compQty;
+                }, 0);
+              };
+              const itemPrice = getItemPrice();
+
               return (
-                <div key={foodId} className="summary-item" style={{ height: 'auto', padding: '10px 0' }}>
-                  <div className="item-info">
-                    <span className="item-name" style={{ fontWeight: '700' }}>{item.name}</span>
-                    <span className="item-qty">x{item.quantity}</span>
-                    {item.isCombination && item.components && (
-                      <div className="combo-sub-components" style={{ display: 'flex', flexDirection: 'column', fontSize: '11px', color: '#6b7280', paddingLeft: '8px', borderLeft: '1.5px solid #d1d5db', marginTop: '4px', gap: '2px' }}>
-                        {item.components.map((comp, idx) => (
-                          <span key={idx}>• {comp.name} ×{comp.quantity}</span>
-                        ))}
-                      </div>
-                    )}
+                <div key={foodId} className="summary-item" style={{ height: 'auto', padding: '10px 0', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <div className="item-info" style={{ flexDirection: 'row', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {isComboItem && <Layers size={13} style={{ color: '#f97316', flexShrink: 0 }} />}
+                      <span className="item-name" style={{ fontWeight: '700' }}>{item.name}</span>
+                      <span className="item-qty">&times;{item.quantity}</span>
+                    </div>
+                    <span className="item-total">KES {(itemPrice * item.quantity).toFixed(2)}</span>
                   </div>
-                  <span className="item-total">KES {(item.price * item.quantity).toFixed(2)}</span>
+
+                  {/* Combo component quantity editor */}
+                  {isComboItem && (
+                    <div style={{ width: '100%', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {item.components.map((comp, idx) => {
+                        const compQty = getComboComponentQty(foodId, comp.foodId, comp.quantity);
+                        return (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fafafa', borderRadius: '8px', padding: '6px 10px', border: '1px solid #f0f0f0' }}>
+                            <span style={{ fontSize: '12px', color: '#374151', fontWeight: '600', flex: 1 }}>&bull; {comp.name}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleComboComponentQtyChange(foodId, comp.foodId, -1, 0, 10, comp.quantity)}
+                                disabled={compQty <= 0 || isProcessing || orderPending}
+                                style={{ width: '22px', height: '22px', borderRadius: '6px', border: '1px solid #e5e7eb', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: compQty <= 0 ? 'not-allowed' : 'pointer', padding: 0, color: '#374151', opacity: compQty <= 0 ? 0.35 : 1 }}
+                              >
+                                <Minus size={11} />
+                              </button>
+                              <span style={{ fontSize: '13px', fontWeight: '700', minWidth: '20px', textAlign: 'center' }}>{compQty}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleComboComponentQtyChange(foodId, comp.foodId, 1, 0, 10, comp.quantity)}
+                                disabled={isProcessing || orderPending}
+                                style={{ width: '22px', height: '22px', borderRadius: '6px', border: '1px solid #e5e7eb', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, color: '#374151' }}
+                              >
+                                <Plus size={11} />
+                              </button>
+                              <span style={{ fontSize: '12px', color: '#f97316', fontWeight: '600', minWidth: '64px', textAlign: 'right' }}>KES {((comp.price || 0) * compQty).toFixed(0)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}

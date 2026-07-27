@@ -761,3 +761,17 @@
     height: 11px;
   }
 }
+
+/* Combo meal badge in menu card */
+.menu-combo-badge {
+  display: inline-block;
+  background: #f97316;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}

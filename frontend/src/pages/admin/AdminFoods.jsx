@@ -1,9 +1,10 @@
 import {useState, useEffect} from 'react';
-import { Trash2, Edit, Search, Plus, Star, Store } from 'lucide-react';
+import { Trash2, Edit, Search, Plus, Star, Store, Layers } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import AdminEditFoodModal from './AdminEditFoodModal';
 import AdminCreateFoodModal from './AdminCreateFoodModal';
 import { getAllFoods, deleteFood, updateFood, createFood, getAllRestaurants } from '../../services/api';
+import api from '../../services/api';
 import { resolveImageUrl } from '../../utils/placeholderImage';
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
@@ -28,10 +29,40 @@ const AdminFoods = () => {
   const fetchFoods = async () => {
     try {
       setLoading(true);
-      const res = await getAllFoods();
-      const data = Array.isArray(res) ? res : res.data || [];
-      setFoods(data);
-      setFilteredFoods(data);
+      // Fetch both regular foods AND combinations and merge
+      const [foodsRes, combosRes] = await Promise.allSettled([
+        getAllFoods(),
+        api.get('/combinations'),
+      ]);
+
+      const regularFoods = foodsRes.status === 'fulfilled'
+        ? (Array.isArray(foodsRes.value) ? foodsRes.value : foodsRes.value?.data || [])
+        : [];
+
+      const rawCombos = combosRes.status === 'fulfilled'
+        ? (combosRes.value?.data?.data || [])
+        : [];
+
+      // Compute price for each combo (sum of components)
+      const combosAsFood = rawCombos.map(combo => {
+        let comboPrice = combo.price;
+        if (comboPrice == null) {
+          comboPrice = (combo.components || []).reduce((sum, comp) => {
+            const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || 0);
+            return sum + unitPrice * (comp.defaultQuantity || 1);
+          }, 0);
+        }
+        return {
+          ...combo,
+          price: comboPrice,
+          isCombination: true,
+          category: 'Combo Meal',
+        };
+      });
+
+      const merged = [...regularFoods, ...combosAsFood];
+      setFoods(merged);
+      setFilteredFoods(merged);
     } catch (error) {
       console.error('Error fetching foods:', error);
     } finally {
@@ -165,35 +196,53 @@ const AdminFoods = () => {
           <div className="foods-grid">
             {filteredFoods.length > 0 ? (
               filteredFoods.map((food) => (
-                <div key={food._id} className="food-item-card">
+                <div key={food._id} className={`food-item-card${food.isCombination ? ' food-item-card--combo' : ''}`}>
                   <div
                     className="food-image"
                     style={{
                       backgroundImage: `url(${resolveImageUrl(food.image)})`,
                     }}
                   >
-                    <span className="food-rating"><Star size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', fill: '#f59e0b', color: '#f59e0b' }} /> {food.rating || 4.5}</span>
+                    {food.isCombination ? (
+                      <span className="food-combo-badge">
+                        <Layers size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '3px' }} />
+                        Combo
+                      </span>
+                    ) : (
+                      <span className="food-rating">
+                        <Star size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', fill: '#f59e0b', color: '#f59e0b' }} />
+                        {food.rating || 4.5}
+                      </span>
+                    )}
                   </div>
 
                   <div className="food-details">
                     <h3>{food.name}</h3>
                     <p className="category">{food.category}</p>
-                    <p className="restaurant">
-                      <Store size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
-                      {getRestaurantNames(food).join(', ')}
-                    </p>
-
+                    {!food.isCombination && (
+                      <p className="restaurant">
+                        <Store size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
+                        {getRestaurantNames(food).join(', ')}
+                      </p>
+                    )}
+                    {food.isCombination && food.components?.length > 0 && (
+                      <p className="restaurant" style={{ color: '#6b7280', fontSize: '12px' }}>
+                        {food.components.map(c => c.foodId?.name || 'Item').join(' + ')}
+                      </p>
+                    )}
 
                     <div className="food-price">{formatCurrency(food.price || 0)}</div>
 
                     <div className="food-actions">
-                      <button
-                        className="action-btn edit-btn"
-                        onClick={() => handleEdit(food)}
-                        title="Edit food"
-                      >
-                        <Edit size={16} />
-                      </button>
+                      {!food.isCombination && (
+                        <button
+                          className="action-btn edit-btn"
+                          onClick={() => handleEdit(food)}
+                          title="Edit food"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      )}
                       <button
                         className="action-btn delete-btn"
                         onClick={() => handleDelete(food._id)}

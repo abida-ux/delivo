@@ -1,4 +1,5 @@
-import {useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Star, Search, Plus, Check, Coffee, Utensils, UtensilsCrossed, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant, Pizza } from 'lucide-react';
 import api, { getAllFoods } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -21,6 +22,8 @@ const iconMap = {
 };
 
 const Menu = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [foods, setFoods] = useState([]);
   const [filteredFoods, setFilteredFoods] = useState([]);
   const [loading, setLoading] = useState(() => {
@@ -47,9 +50,17 @@ const Menu = () => {
   ];
 
   useEffect(() => {
-    fetchFoods();
     fetchCategories();
+    fetchFoods();
   }, []);
+
+  useEffect(() => {
+    const searchParam = searchParams.get('search') || '';
+    const categoryParam = searchParams.get('category') || 'All';
+    setSearchTerm(searchParam);
+    setSelectedCategory(categoryParam);
+    filterFoods(searchParam, categoryParam, foods);
+  }, [searchParams, foods]);
 
   const fetchCategories = async () => {
     try {
@@ -67,11 +78,22 @@ const Menu = () => {
       let combosData = [];
       try {
         const combosRes = await api.get('/combinations');
-        combosData = (combosRes.data.data || []).map(c => ({
-          ...c,
-          isCombination: true,
-          category: 'Combinations'
-        }));
+        combosData = (combosRes.data.data || []).map(c => {
+          // Calculate price from components if not set
+          let price = c.price;
+          if (price == null || price === 0) {
+            price = (c.components || []).reduce((sum, comp) => {
+              const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || 0);
+              return sum + unitPrice * (comp.defaultQuantity || 1);
+            }, 0);
+          }
+          return {
+            ...c,
+            price,
+            isCombination: true,
+            category: 'Combinations',
+          };
+        });
       } catch (err) {
         console.error('Error fetching combinations for Menu page:', err);
       }
@@ -79,7 +101,11 @@ const Menu = () => {
       const merged = [...response, ...combosData];
       const randomized = merged.sort(() => Math.random() - 0.5);
       setFoods(randomized);
-      setFilteredFoods(randomized);
+      const searchParam = searchParams.get('search') || '';
+      const categoryParam = searchParams.get('category') || 'All';
+      setSearchTerm(searchParam);
+      setSelectedCategory(categoryParam);
+      filterFoods(searchParam, categoryParam, randomized);
       setError(null);
     } catch (err) {
       console.error('Error fetching foods:', err);
@@ -131,8 +157,8 @@ const Menu = () => {
     filterFoods(searchTerm, category);
   };
 
-  const filterFoods = (search, category) => {
-    let filtered = foods;
+  const filterFoods = (search, category, listToFilter = foods) => {
+    let filtered = listToFilter;
     const normalizedSearch = search?.toString().toLowerCase().trim() || '';
 
     if (category && category !== 'All') {
@@ -156,6 +182,10 @@ const Menu = () => {
     }
 
     setFilteredFoods(filtered);
+  };
+
+  const handleFoodClick = (food) => {
+    navigate(`/food/${food._id}`);
   };
 
   const handleAddToCart = (food) => {
@@ -251,7 +281,12 @@ const Menu = () => {
       ) : (
         <div className="foods-grid">
           {filteredFoods.map((food) => (
-            <div key={food._id} className="food-menu-card">
+            <div 
+              key={food._id} 
+              className="food-menu-card" 
+              onClick={() => handleFoodClick(food)}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="food-image-wrapper">
                 <img
                   src={resolveImageUrl(food.image)}
@@ -265,15 +300,21 @@ const Menu = () => {
               </div>
 
               <div className="food-details">
-                <h3 className="food-name">{food.name}</h3>
+                <h3 className="food-name">
+                  {food.name}
+                  {food.isCombination && <span className="menu-combo-badge">🍱 Combo</span>}
+                </h3>
                 <p className="food-description">{food.description}</p>
 
                 <div className="food-footer">
-                  <span className="food-price">KES {food.price}</span>
+                  <span className="food-price">KES {food.price ?? 0}</span>
                   {cartItemIds.includes(food._id) ? (
                     <button
                       className="go-to-cart-ui"
-                      onClick={handleGoToCart}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleGoToCart();
+                      }}
                     >
                       <Check size={18} />
                       <span>Go to Cart</span>
@@ -281,7 +322,10 @@ const Menu = () => {
                   ) : (
                     <button
                       className="add-to-cart-ui"
-                      onClick={() => handleAddToCart(food)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(food);
+                      }}
                     >
                       <Plus size={18} />
                       <span>Add</span>

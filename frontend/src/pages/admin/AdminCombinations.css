@@ -175,19 +175,23 @@
 }
 
 .component-builder-row select {
-  flex: 2;
-  padding: 8px 12px;
+  flex: 1.5;
+  min-width: 145px;
+  padding: 8px 10px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
+  font-size: 13px;
+  outline: none;
 }
 
 .component-builder-row input[type="number"] {
-  flex: 0.8;
-  width: 60px;
-  padding: 8px;
+  width: 55px;
+  padding: 8px 4px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   text-align: center;
+  font-size: 13px;
+  outline: none;
 }
 
 .remove-component-btn {
@@ -252,4 +256,101 @@
   background: #f97316;
   border-color: #f97316;
   color: white;
+}
+
+/* Modal footer actions styling */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 20px;
+  margin-top: 24px;
+}
+
+.cancel-modal-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-modal-btn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.submit-modal-btn {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+}
+
+.submit-modal-btn:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.45);
+}
+
+/* ── Price & Badge additions ────────────────────────── */
+.combo-badge {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.combo-price-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #374151;
+  font-size: 13px;
+  margin: 2px 0 6px;
+}
+
+.combo-price-value {
+  font-weight: 800;
+  font-size: 16px;
+  color: #111827;
+}
+
+.combo-price-label {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.combo-price-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #374151;
+  flex-wrap: wrap;
+}
+
+.combo-price-preview strong {
+  color: #f97316;
+  font-size: 16px;
+  font-weight: 800;
 }

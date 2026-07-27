@@ -225,3 +225,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Combo badge & card ───────────────────── */
+.food-combo-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #f97316;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+}
+
+.food-item-card--combo {
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.food-item-card--combo .food-price {
+  color: #f97316;
+}
+
+.food-item-card--combo:hover {
+  box-shadow: 0 14px 26px rgba(249, 115, 22, 0.12);
+}

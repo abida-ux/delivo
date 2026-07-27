@@ -117,7 +117,7 @@ app.use('/api/users/request-password-reset', smartRateLimiter({ limit: 5, window
 app.use('/api/users/reset-password', smartRateLimiter({ limit: 5, windowMs: 15 * 60 * 1000 }));
 
 // Route specific query sanitizers and caching controls
-app.use('/api/foods', validateObjectId(['id']), cacheResponse(60), invalidateCache(['/foods', '/menu']));
+app.use('/api/foods', validateObjectId(['id']));
 app.use('/api/restaurants', validateObjectId(['id']), cacheResponse(120), invalidateCache(['/restaurants']));
 app.use('/api/categories', validateObjectId(['id']), cacheResponse(300), invalidateCache(['/categories']));
 app.use('/api/offers', cacheResponse(300), invalidateCache(['/offers']));

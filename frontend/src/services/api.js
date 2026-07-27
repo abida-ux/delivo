@@ -62,28 +62,7 @@ api.interceptors.response.use(
   }
 );
 
-let foodsCache = null;
-let foodsPromise = null;
 
-const getCachedFoods = () => {
-  try {
-    const cached = sessionStorage.getItem('delivo_foods_cache');
-    if (!cached) return null;
-
-    const parsed = JSON.parse(cached);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
-const setCachedFoods = (data) => {
-  try {
-    sessionStorage.setItem('delivo_foods_cache', JSON.stringify(data));
-  } catch {
-    // ignore storage errors
-  }
-};
 
 // ================= TOKEN ATTACHMENT (IMPORTANT) =================
 api.interceptors.request.use((config) => {
@@ -124,33 +103,8 @@ export const getRestaurantById = async (id) => {
 
 // ================= FOODS =================
 export const getAllFoods = async () => {
-  const cached = getCachedFoods();
-  if (cached) {
-    foodsCache = cached;
-    return cached;
-  }
-
-  if (foodsCache) {
-    return foodsCache;
-  }
-
-  if (foodsPromise) {
-    return foodsPromise;
-  }
-
-  foodsPromise = api.get('/foods')
-    .then((res) => {
-      const data = res.data.data || [];
-      foodsCache = data;
-      setCachedFoods(data);
-      return data;
-    })
-    .catch((error) => {
-      foodsPromise = null;
-      throw error;
-    });
-
-  return foodsPromise;
+  const res = await api.get('/foods');
+  return res.data.data || [];
 };
 
 export const getFoodsByRestaurant = async (restaurantId) => {

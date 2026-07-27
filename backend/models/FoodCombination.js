@@ -3,15 +3,15 @@ const mongoose = require('mongoose');
 const FoodCombinationSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Please provide a combination name'],
     trim: true,
+    default: 'Combo Meal',
   },
   description: {
     type: String,
   },
   image: {
     type: String,
-    required: [true, 'Please provide a combination image URL'],
+    default: 'https://via.placeholder.com/400x300?text=Combo+Meal',
   },
   categories: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -42,6 +42,10 @@ const FoodCombinationSchema = new mongoose.Schema({
     isOptional: {
       type: Boolean,
       default: false,
+    },
+    customPrice: {
+      type: Number,
+      min: 0,
     },
   }],
   isEnabled: {

@@ -34,16 +34,30 @@ exports.getAllFoods = async (req, res) => {
       .limit(limit)
       .lean();
 
-    // Map counts and populate helper variables for backward compatibility
-    const foodsWithStats = await Promise.all(foods.map(async (food) => {
-      const links = await RestaurantFood.find({ foodId: food._id }).lean();
+    // Map counts and populate helper variables in a single bulk query (reduces N+1 network requests)
+    const foodIds = foods.map(f => f._id);
+    const allLinks = await RestaurantFood.find({ foodId: { $in: foodIds } }).lean();
+
+    const linksByFood = {};
+    allLinks.forEach(link => {
+      if (!link.foodId) return;
+      const fId = link.foodId.toString();
+      if (!linksByFood[fId]) {
+        linksByFood[fId] = [];
+      }
+      linksByFood[fId].push(link);
+    });
+
+    const foodsWithStats = foods.map(food => {
+      const fId = food._id.toString();
+      const links = linksByFood[fId] || [];
       return {
         ...food,
         restaurantCount: links.length,
         price: links[0]?.price || food.price || 0,
         isAvailable: food.defaultAvailability,
       };
-    }));
+    });
 
     return res.status(200).json({
       success: true,
@@ -70,11 +84,23 @@ exports.getFoodById = async (req, res) => {
     let isCombo = false;
     if (!food) {
       const FoodCombination = require('../models/FoodCombination');
-      const combo = await FoodCombination.findById(req.params.id).lean();
+      const combo = await FoodCombination.findById(req.params.id)
+        .populate('components.foodId', 'name price image')
+        .lean();
       if (combo) {
+        // Calculate total price from components if not set
+        let comboPrice = combo.price;
+        if (comboPrice == null || comboPrice === 0) {
+          comboPrice = (combo.components || []).reduce((sum, comp) => {
+            const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || 0);
+            return sum + unitPrice * (comp.defaultQuantity || 1);
+          }, 0);
+        }
         food = {
           ...combo,
+          price: comboPrice,
           category: 'Combinations',
+          isCombination: true,
         };
         isCombo = true;
       }

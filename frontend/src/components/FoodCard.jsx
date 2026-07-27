@@ -20,9 +20,11 @@ const FoodCard = ({ food }) => {
     return id === food._id;
   });
 
+  const isObjectId = (str) => typeof str === 'string' && /^[0-9a-fA-F]{24}$/.test(str);
+
   const restaurantName = typeof food.restaurant === 'object'
     ? food.restaurant?.name
-    : food.restaurant || 'Restaurant';
+    : (food.restaurant && !isObjectId(food.restaurant) ? food.restaurant : '');
 
   const handleAddToCart = () => {
     addItem(food, 1); // Add exactly 1 item directly

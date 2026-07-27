@@ -22,6 +22,7 @@ import FeaturedRestaurants from "../components/RestaurantCard";
 import Categories from "../components/Categories";
 import TrendingFoods from "../components/TrendingFoods";
 import HowItWorks from "../components/HowItWorks";
+import ComboMealsSection from "../components/ComboMealsSection";
 
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,34 +65,19 @@ export default function Home() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setSearchTerm(searchInput);
-    setTimeout(() => {
-      const trendingSection = document.querySelector('.popular-meals-section');
-      if (trendingSection) {
-        trendingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+    if (searchInput.trim()) {
+      navigate(`/menu?search=${encodeURIComponent(searchInput.trim())}`);
+    }
   };
 
   const handleQuickSearch = (term) => {
     setSearchInput(term);
-    setSearchTerm(term);
-    setTimeout(() => {
-      const trendingSection = document.querySelector('.popular-meals-section');
-      if (trendingSection) {
-        trendingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+    navigate(`/menu?search=${encodeURIComponent(term)}`);
   };
 
   const handleCategorySelect = (categoryName) => {
     setSelectedCategory(categoryName);
-    setTimeout(() => {
-      const trendingSection = document.querySelector('.popular-meals-section');
-      if (trendingSection) {
-        trendingSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+    navigate(`/menu?category=${encodeURIComponent(categoryName)}`);
   };
 
   const handleClearFilter = () => {
@@ -176,6 +162,9 @@ export default function Home() {
           <TrendingFoods searchTerm={searchTerm} selectedCategory={selectedCategory} onClearFilter={handleClearFilter} />
         </div>
       </section>
+
+      {/* ===== COMBO MEALS SECTION ===== */}
+      <ComboMealsSection />
 
       {/* ===== 6. POPULAR RESTAURANTS ===== */}
       <FeaturedRestaurants />

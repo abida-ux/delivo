@@ -47,13 +47,27 @@ exports.getCombinations = async (req, res) => {
       .populate('categories', 'name icon image')
       .lean();
 
-    const data = await Promise.all(combos.map(async (combo) => {
-      const links = await RestaurantCombination.find({ combinationId: combo._id }).lean();
+    const comboIds = combos.map(c => c._id);
+    const allComboLinks = await RestaurantCombination.find({ combinationId: { $in: comboIds } }).lean();
+
+    const linksByCombo = {};
+    allComboLinks.forEach(link => {
+      if (!link.combinationId) return;
+      const cId = link.combinationId.toString();
+      if (!linksByCombo[cId]) {
+        linksByCombo[cId] = [];
+      }
+      linksByCombo[cId].push(link);
+    });
+
+    const data = combos.map((combo) => {
+      const cId = combo._id.toString();
+      const links = linksByCombo[cId] || [];
       
       let price = links[0]?.price;
       if (price == null) {
         price = combo.components.reduce((sum, c) => {
-          const compPrice = c.foodId?.price || 0;
+          const compPrice = c.customPrice != null ? c.customPrice : (c.foodId?.price || 0);
           return sum + (compPrice * (c.defaultQuantity || 1));
         }, 0);
       }
@@ -64,7 +78,7 @@ exports.getCombinations = async (req, res) => {
         isCombination: true,
         restaurantCount: links.length,
       };
-    }));
+    });
 
     return res.status(200).json({ success: true, count: data.length, data });
   } catch (error) {
@@ -75,7 +89,29 @@ exports.getCombinations = async (req, res) => {
 // Create combination template
 exports.createCombination = async (req, res) => {
   try {
-    const combo = await FoodCombination.create(req.body);
+    const body = { ...req.body };
+
+    // ── Auto-generate name from component food names if not provided ──
+    if (!body.name || !body.name.trim()) {
+      if (Array.isArray(body.components) && body.components.length > 0) {
+        const Food = require('../models/Food');
+        const foodIds = body.components.map(c => c.foodId).filter(Boolean);
+        const foods = await Food.find({ _id: { $in: foodIds } }).select('name').lean();
+        const foodMap = {};
+        foods.forEach(f => { foodMap[f._id.toString()] = f.name; });
+        const names = body.components
+          .map(c => foodMap[c.foodId?.toString()])
+          .filter(Boolean);
+        body.name = names.join(' & ');
+      }
+    }
+
+    // ── Use a placeholder image if none provided ──
+    if (!body.image || !body.image.trim()) {
+      body.image = 'https://via.placeholder.com/400x300?text=Combo+Meal';
+    }
+
+    const combo = await FoodCombination.create(body);
     return res.status(201).json({ success: true, message: 'Combination created successfully', data: combo });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

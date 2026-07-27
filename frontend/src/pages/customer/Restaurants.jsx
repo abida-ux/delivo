@@ -85,13 +85,16 @@ const Restaurants = () => {
     if (food.isCombination) {
       const mapped = food.components.map(comp => {
         const matchingFood = foods.find(f => f._id === (comp.foodId?._id || comp.foodId));
+        const resolvedPrice = comp.customPrice !== undefined && comp.customPrice !== null && comp.customPrice !== ''
+          ? comp.customPrice
+          : (matchingFood ? matchingFood.price : 0);
         return {
           foodId: comp.foodId?._id || comp.foodId,
           name: comp.foodId?.name || matchingFood?.name || 'Component Item',
           quantity: comp.defaultQuantity,
           minimumQuantity: comp.minimumQuantity,
           maximumQuantity: comp.maximumQuantity,
-          price: matchingFood ? matchingFood.price : 0,
+          price: resolvedPrice,
         };
       });
       setComboComponents(mapped);
@@ -102,12 +105,9 @@ const Restaurants = () => {
   };
 
   const getCustomizedComboTotal = () => {
-    const basePrice = customizingCombo?.price || 0;
-    const extraCharges = comboComponents.reduce((sum, item) => {
-      const extraQty = Math.max(0, item.quantity - item.minimumQuantity);
-      return sum + (item.price * extraQty);
+    return comboComponents.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
     }, 0);
-    return basePrice + extraCharges;
   };
 
   const updateComponentQty = (idx, change) => {

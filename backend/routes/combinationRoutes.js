@@ -12,9 +12,9 @@ const {
 } = require('../controllers/combinationController');
 
 router.get('/', getCombinations);
-router.post('/', authenticate, authorizeRoles('admin'), createCombination);
-router.put('/:id', authenticate, authorizeRoles('admin'), updateCombination);
-router.delete('/:id', authenticate, authorizeRoles('admin'), deleteCombination);
+router.post('/', authenticate, authorizeRoles('admin', 'restaurant'), createCombination);
+router.put('/:id', authenticate, authorizeRoles('admin', 'restaurant'), updateCombination);
+router.delete('/:id', authenticate, authorizeRoles('admin', 'restaurant'), deleteCombination);
 
 // Restaurant specific links & settings for combinations
 router.post('/assign', authenticate, authorizeRoles('admin'), assignCombinationToRestaurant);
