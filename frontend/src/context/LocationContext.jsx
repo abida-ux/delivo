@@ -34,12 +34,14 @@ export const LocationProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const res = await api.get('/users/profile');
-          const profile = res.data.data || res.data.user || {};
-          if (profile.lastLatitude && profile.lastLongitude) {
+          const res = await api.get('/users/me');
+          const profile = res.data?.data || res.data?.user || {};
+          const latitude = Number(profile.lastLatitude);
+          const longitude = Number(profile.lastLongitude);
+          if (Number.isFinite(latitude) && Number.isFinite(longitude) && latitude !== 0 && longitude !== 0) {
             const profileLoc = {
-              latitude: profile.lastLatitude,
-              longitude: profile.lastLongitude,
+              latitude,
+              longitude,
               formattedAddress: profile.lastAddress || profile.location || '',
               nearbyLandmark: '',
             };
@@ -57,9 +59,16 @@ export const LocationProvider = ({ children }) => {
 
   // Save/Update location coordinate values
   const updateLocation = async (lat, lng, address, landmark = '') => {
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return;
+    }
+
     const newLoc = {
-      latitude: parseFloat(lat),
-      longitude: parseFloat(lng),
+      latitude,
+      longitude,
       formattedAddress: address || '',
       nearbyLandmark: landmark || '',
     };
@@ -71,7 +80,7 @@ export const LocationProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        await api.put('/users/location', {
+        await api.put('/users/me/location', {
           latitude: newLoc.latitude,
           longitude: newLoc.longitude,
           address: newLoc.formattedAddress,
@@ -87,6 +96,13 @@ export const LocationProvider = ({ children }) => {
   const detectLocation = async (retries = 3) => {
     setLoading(true);
     setError(null);
+
+    if (!navigator.geolocation) {
+      const msg = 'Geolocation is not supported by this browser.';
+      setError(msg);
+      setLoading(false);
+      return { success: false, error: msg };
+    }
 
     const options = {
       enableHighAccuracy: true,
@@ -105,11 +121,16 @@ export const LocationProvider = ({ children }) => {
         const position = await getGeo();
         const { latitude, longitude } = position.coords;
 
-        // Perform reverse geocoding to address via OpenStreetMap Nominatim
-        const geoRes = await axios.get(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-        );
-        const address = geoRes.data.display_name || `Coordinates: ${latitude}, ${longitude}`;
+        let address = `Coordinates: ${latitude}, ${longitude}`;
+
+        try {
+          const geoRes = await axios.get(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+          );
+          address = geoRes?.data?.display_name || address;
+        } catch (geoErr) {
+          console.warn('Reverse geocoding failed, using coordinates instead:', geoErr);
+        }
 
         await updateLocation(latitude, longitude, address);
         setLoading(false);
@@ -129,8 +150,7 @@ export const LocationProvider = ({ children }) => {
           setLoading(false);
           return { success: false, error: msg };
         }
-        // Brief sleep before retry
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 1000));
       }
     }
   };

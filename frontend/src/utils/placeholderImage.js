@@ -29,6 +29,14 @@ export const resolveImageUrl = (image) => {
   return value;
 };
 
+export const resolveRestaurantImageUrl = (restaurant) => {
+  if (!restaurant || typeof restaurant !== 'object') {
+    return PLACEHOLDER_IMAGE;
+  }
+
+  return resolveImageUrl(restaurant.bannerImage || restaurant.image || restaurant.coverImage || '');
+};
+
 export const handleImageError = (event) => {
   if (event?.currentTarget) {
     event.currentTarget.onerror = null;

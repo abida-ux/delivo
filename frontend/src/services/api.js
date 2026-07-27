@@ -98,14 +98,27 @@ api.interceptors.request.use((config) => {
 
 
 // ================= RESTAURANTS =================
+const normalizeRestaurantData = (restaurant) => {
+  if (!restaurant || typeof restaurant !== 'object') {
+    return restaurant;
+  }
+
+  return {
+    ...restaurant,
+    image: restaurant.image || restaurant.bannerImage || restaurant.coverImage || '',
+    bannerImage: restaurant.bannerImage || restaurant.image || restaurant.coverImage || '',
+  };
+};
+
 export const getAllRestaurants = async () => {
   const res = await api.get('/restaurants');
-  return res.data.data || [];
+  const data = res.data.data || [];
+  return Array.isArray(data) ? data.map(normalizeRestaurantData) : data;
 };
 
 export const getRestaurantById = async (id) => {
   const res = await api.get(`/restaurants/${id}`);
-  return res.data.data;
+  return normalizeRestaurantData(res.data.data);
 };
 
 

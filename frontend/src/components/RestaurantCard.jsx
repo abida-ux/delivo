@@ -2,6 +2,7 @@ import {useState, useEffect, useRef} from 'react';
 import { Star, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAllRestaurants } from '../services/api';
+import { resolveRestaurantImageUrl, handleImageError } from '../utils/placeholderImage';
 import './RestaurantCard.css';
 
 const RestaurantCard = () => {
@@ -127,9 +128,10 @@ const RestaurantCard = () => {
               <div className="card-image-container">
 
                 <img
-                  src={restaurant.bannerImage}
+                  src={resolveRestaurantImageUrl(restaurant)}
                   alt={restaurant.name}
                   className="restaurant-img"
+                  onError={handleImageError}
                 />
 
               </div>

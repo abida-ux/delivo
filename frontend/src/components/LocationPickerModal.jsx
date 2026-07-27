@@ -1,28 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { X, MapPin, Navigation, Search, Check, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { useLocation } from '../context/LocationContext';
 import './LocationPickerModal.css';
 
-// WORKAROUND: Resolve default marker assets inside bundler environment
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
 const LocationPickerModal = ({ isOpen, onClose }) => {
   const { location, loading: geoLoading, error: geoError, detectLocation, updateLocation } = useLocation();
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markerInstanceRef = useRef(null);
 
   const [coords, setCoords] = useState({ lat: -1.2921, lng: 36.8219 }); // Nairobi Default
   const [addressVal, setAddressVal] = useState('');
@@ -43,51 +26,15 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen, location]);
 
-  // Leaflet map initialization
+  // Keep the selected coordinates available for confirmation even without a map widget.
   useEffect(() => {
     if (!isOpen) return;
 
-    // Wait for the DOM container to be fully rendered
-    const timer = setTimeout(() => {
-      if (!mapContainerRef.current) return;
-
-      // 1. Create Map Instance if it doesn't exist
-      if (!mapInstanceRef.current) {
-        mapInstanceRef.current = L.map(mapContainerRef.current).setView([coords.lat, coords.lng], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
-        }).addTo(mapInstanceRef.current);
-
-        // 2. Add Draggable Marker Pin
-        markerInstanceRef.current = L.marker([coords.lat, coords.lng], { draggable: true }).addTo(mapInstanceRef.current);
-
-        // 3. Bind Marker Drag Stop Events
-        markerInstanceRef.current.on('dragend', async (event) => {
-          const marker = event.target;
-          const position = marker.getLatLng();
-          const lat = position.lat;
-          const lng = position.lng;
-          setCoords({ lat, lng });
-          
-          // Reverse geocode new coordinate drag pin location
-          try {
-            const geoRes = await axios.get(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-            );
-            setAddressVal(geoRes.data.display_name || `${lat}, ${lng}`);
-          } catch (err) {
-            console.error('Error reverse geocoding drag coordinates:', err);
-          }
-        });
-      } else {
-        // Map already exists, update view and marker
-        mapInstanceRef.current.setView([coords.lat, coords.lng], 15);
-        markerInstanceRef.current.setLatLng([coords.lat, coords.lng]);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isOpen, coords.lat, coords.lng]);
+    if (location.latitude && location.longitude) {
+      setCoords({ lat: location.latitude, lng: location.longitude });
+      setAddressVal(location.formattedAddress || '');
+    }
+  }, [isOpen, location.latitude, location.longitude]);
 
   if (!isOpen) return null;
 
@@ -133,10 +80,6 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
     setSearchQuery('');
     setSuggestions([]);
 
-    if (mapInstanceRef.current && markerInstanceRef.current) {
-      mapInstanceRef.current.setView([lat, lng], 15);
-      markerInstanceRef.current.setLatLng([lat, lng]);
-    }
   };
 
   // Confirm and Save Coordinates Selection
@@ -218,12 +161,14 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* PICK / DRAG PIN ON MAP */}
+          {/* CURRENT COORDINATES PREVIEW */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: '700', color: '#374151' }}>Pick / Drag Pin on Map</label>
-            <div ref={mapContainerRef} className="map-view-frame" />
+            <label style={{ fontSize: '13px', fontWeight: '700', color: '#374151' }}>Selected Coordinates</label>
+            <div className="map-view-frame" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontSize: '13px' }}>
+              {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+            </div>
             <span style={{ fontSize: '11px', color: '#6b7280', fontStyle: 'italic', marginTop: '2px' }}>
-              Drag the marker on the map to fine-tune your exact coordinates.
+              Your selected location will be saved once you confirm it.
             </span>
           </div>
 

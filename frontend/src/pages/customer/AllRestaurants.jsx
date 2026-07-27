@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Star, MapPin, Clock, Search } from 'lucide-react';
 import { getAllRestaurants } from '../../services/api';
-import { resolveImageUrl, handleImageError } from '../../utils/placeholderImage';
+import { resolveRestaurantImageUrl, handleImageError } from '../../utils/placeholderImage';
 import './AllRestaurants.css';
 
 const AllRestaurants = () => {
@@ -132,7 +132,7 @@ const AllRestaurants = () => {
             >
               <div className="restaurant-image">
                 <img
-                  src={resolveImageUrl(restaurant.image)}
+                  src={resolveRestaurantImageUrl(restaurant)}
                   alt={restaurant.name}
                   onError={handleImageError}
                 />

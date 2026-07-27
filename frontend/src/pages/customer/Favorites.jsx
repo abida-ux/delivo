@@ -1,6 +1,7 @@
 import {useState, useEffect} from 'react';
 import { Heart, MapPin, Star, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { resolveRestaurantImageUrl, handleImageError } from '../../utils/placeholderImage';
 import '../pages.css';
 import './Favorites.css';
 
@@ -77,7 +78,7 @@ const Favorites = () => {
           {favorites.map((restaurant) => (
             <div key={restaurant.id} className="favorite-card">
               <div className="card-image-container">
-                <img src={restaurant.image} alt={restaurant.name} className="card-image" />
+                <img src={resolveRestaurantImageUrl(restaurant)} alt={restaurant.name} className="card-image" onError={handleImageError} />
                 <button 
                   className="remove-favorite-btn"
                   onClick={() => handleRemoveFavorite(restaurant.id)}
