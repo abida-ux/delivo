@@ -2,6 +2,11 @@ const Food = require('../models/Food');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const RestaurantFood = require('../models/RestaurantFood');
+const {
+  normalizeCategorySelection,
+  normalizeRestaurantSelection,
+  getPrimaryCategoryName,
+} = require('../utils/foodAssignment');
 
 // ==================== GET ALL FOODS (Catalogue) ====================
 exports.getAllFoods = async (req, res) => {
@@ -136,27 +141,33 @@ exports.getFoodById = async (req, res) => {
 exports.createFood = async (req, res) => {
   try {
     const { name, description, image, price, restaurants = [], categories = [], category } = req.body;
-    
+    const { ids: normalizedCategoryIds, primaryName } = normalizeCategorySelection(categories);
+    const { ids: normalizedRestaurantIds, primaryId } = normalizeRestaurantSelection(restaurants);
+
     const food = await Food.create({
       name,
       description,
       image,
       price: parseFloat(price) || 0,
-      categories,
-      category,
-      restaurants
+      categories: normalizedCategoryIds,
+      category: category || primaryName || getPrimaryCategoryName(categories),
+      restaurant: primaryId || undefined,
+      restaurants: normalizedRestaurantIds,
     });
 
-    if (Array.isArray(restaurants) && restaurants.length > 0) {
-      const RestaurantFood = require('../models/RestaurantFood');
-      await Promise.all(restaurants.map(async (restId) => {
-        await RestaurantFood.create({
-          restaurantId: restId,
-          foodId: food._id,
-          price: parseFloat(price) || 0,
-          availability: true,
-          prepTime: 15,
-        });
+    if (normalizedRestaurantIds.length > 0) {
+      await Promise.all(normalizedRestaurantIds.map(async (restId) => {
+        await RestaurantFood.findOneAndUpdate(
+          { restaurantId: restId, foodId: food._id },
+          {
+            restaurantId: restId,
+            foodId: food._id,
+            price: parseFloat(price) || 0,
+            availability: true,
+            prepTime: 15,
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
       }));
     }
 
@@ -178,15 +189,18 @@ exports.createFood = async (req, res) => {
 exports.updateFood = async (req, res) => {
   try {
     const { name, description, image, price, restaurants = [], categories = [], category } = req.body;
-    
+    const { ids: normalizedCategoryIds, primaryName } = normalizeCategorySelection(categories);
+    const { ids: normalizedRestaurantIds, primaryId } = normalizeRestaurantSelection(restaurants);
+
     const food = await Food.findByIdAndUpdate(req.params.id, {
       name,
       description,
       image,
       price: parseFloat(price) || 0,
-      categories,
-      category,
-      restaurants
+      categories: normalizedCategoryIds,
+      category: category || primaryName || getPrimaryCategoryName(categories),
+      restaurant: primaryId || undefined,
+      restaurants: normalizedRestaurantIds,
     }, { new: true, runValidators: true });
 
     if (!food) {
@@ -197,18 +211,22 @@ exports.updateFood = async (req, res) => {
     }
 
     if (Array.isArray(restaurants)) {
-      const RestaurantFood = require('../models/RestaurantFood');
-      
       await RestaurantFood.deleteMany({
         foodId: food._id,
-        restaurantId: { $nin: restaurants }
+        restaurantId: { $nin: normalizedRestaurantIds }
       });
 
-      await Promise.all(restaurants.map(async (restId) => {
+      await Promise.all(normalizedRestaurantIds.map(async (restId) => {
         await RestaurantFood.findOneAndUpdate(
           { restaurantId: restId, foodId: food._id },
-          { price: parseFloat(price) || 0 },
-          { upsert: true, new: true }
+          {
+            restaurantId: restId,
+            foodId: food._id,
+            price: parseFloat(price) || 0,
+            availability: true,
+            prepTime: 15,
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
         );
       }));
     }
