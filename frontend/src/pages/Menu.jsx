@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Star, Search, Plus, Check, Coffee, Utensils, UtensilsCrossed, Flame, MapPin, Snail, Wine, Cake, Apple, Croissant, Pizza } from 'lucide-react';
 import api, { getAllFoods } from '../services/api';
+import { readSessionStorageJson, writeSessionStorageJson } from '../services/menuCache';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { resolveImageUrl, handleImageError } from '../utils/placeholderImage';
@@ -21,6 +22,8 @@ const iconMap = {
   Pizza,
 };
 
+const MENU_CACHE_KEY = 'delivo_menu_cache_v1';
+
 const Menu = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -28,8 +31,8 @@ const Menu = () => {
   const [filteredFoods, setFilteredFoods] = useState([]);
   const [loading, setLoading] = useState(() => {
     try {
-      const cached = sessionStorage.getItem('delivo_foods_cache');
-      return !cached;
+      const cached = readSessionStorageJson(MENU_CACHE_KEY);
+      return !cached?.foods?.length;
     } catch {
       return true;
     }
@@ -50,8 +53,19 @@ const Menu = () => {
   ];
 
   useEffect(() => {
-    fetchCategories();
-    fetchFoods();
+    const cachedMenu = readSessionStorageJson(MENU_CACHE_KEY);
+
+    if (cachedMenu?.foods?.length) {
+      const cachedFoods = cachedMenu.foods || [];
+      const cachedCategories = cachedMenu.categories || [];
+      setFoods(cachedFoods);
+      setCategoriesList(cachedCategories);
+      setFilteredFoods(cachedFoods);
+      setError(null);
+      setLoading(false);
+    }
+
+    fetchMenuData();
   }, []);
 
   useEffect(() => {
@@ -62,53 +76,53 @@ const Menu = () => {
     filterFoods(searchParam, categoryParam, foods);
   }, [searchParams, foods]);
 
-  const fetchCategories = async () => {
+  const fetchMenuData = async () => {
     try {
-      const res = await api.get('/categories');
-      setCategoriesList(res.data.data || []);
-    } catch (err) {
-      console.error('Error fetching categories in Menu:', err);
-    }
-  };
+      const [categoriesRes, foodsResponse, combosRes] = await Promise.all([
+        api.get('/categories').then((res) => res.data.data || []).catch((err) => {
+          console.error('Error fetching categories in Menu:', err);
+          return [];
+        }),
+        getAllFoods(),
+        api.get('/combinations').then((res) => res.data.data || []).catch((err) => {
+          console.error('Error fetching combinations for Menu page:', err);
+          return [];
+        }),
+      ]);
 
-  const fetchFoods = async () => {
-    try {
-      const response = await getAllFoods();
-      
-      let combosData = [];
-      try {
-        const combosRes = await api.get('/combinations');
-        combosData = (combosRes.data.data || []).map(c => {
-          // Calculate price from components if not set
-          let price = c.price;
-          if (price == null || price === 0) {
-            price = (c.components || []).reduce((sum, comp) => {
-              const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || 0);
-              return sum + unitPrice * (comp.defaultQuantity || 1);
-            }, 0);
-          }
-          return {
-            ...c,
-            price,
-            isCombination: true,
-            category: 'Combinations',
-          };
-        });
-      } catch (err) {
-        console.error('Error fetching combinations for Menu page:', err);
-      }
+      const combosData = (combosRes || []).map((c) => {
+        let price = c.price;
+        if (price == null || price === 0) {
+          price = (c.components || []).reduce((sum, comp) => {
+            const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || 0);
+            return sum + unitPrice * (comp.defaultQuantity || 1);
+          }, 0);
+        }
+        return {
+          ...c,
+          price,
+          isCombination: true,
+          category: 'Combinations',
+        };
+      });
 
-      const merged = [...response, ...combosData];
+      const merged = [...(foodsResponse || []), ...combosData];
       const randomized = merged.sort(() => Math.random() - 0.5);
       setFoods(randomized);
+      setCategoriesList(categoriesRes || []);
       const searchParam = searchParams.get('search') || '';
       const categoryParam = searchParams.get('category') || 'All';
       setSearchTerm(searchParam);
       setSelectedCategory(categoryParam);
+      setFilteredFoods(randomized);
       filterFoods(searchParam, categoryParam, randomized);
       setError(null);
+      writeSessionStorageJson(MENU_CACHE_KEY, {
+        foods: randomized,
+        categories: categoriesRes || [],
+      });
     } catch (err) {
-      console.error('Error fetching foods:', err);
+      console.error('Error fetching menu data:', err);
       setError('Failed to load foods');
     } finally {
       setLoading(false);

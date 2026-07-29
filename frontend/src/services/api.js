@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Clear stale sessionStorage cache on module load to force-load corrected prices
-try {
-  sessionStorage.removeItem('delivo_foods_cache');
-} catch (e) {}
+let foodsCache = null;
+let foodsPromise = null;
 
 const PRODUCTION_API_URL = 'https://delivo-d5r8.onrender.com/api';
 
@@ -103,8 +101,29 @@ export const getRestaurantById = async (id) => {
 
 // ================= FOODS =================
 export const getAllFoods = async () => {
-  const res = await api.get('/foods');
-  return res.data.data || [];
+  if (foodsCache) {
+    return foodsCache;
+  }
+
+  if (foodsPromise) {
+    return foodsPromise;
+  }
+
+  foodsPromise = api.get('/foods')
+    .then((res) => {
+      const data = res.data.data || [];
+      foodsCache = Array.isArray(data) ? data : [];
+      return foodsCache;
+    })
+    .catch((error) => {
+      foodsPromise = null;
+      throw error;
+    })
+    .finally(() => {
+      foodsPromise = null;
+    });
+
+  return foodsPromise;
 };
 
 export const getFoodsByRestaurant = async (restaurantId) => {
