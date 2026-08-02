@@ -20,6 +20,8 @@ const Marketplace = () => {
   const [activeType, setActiveType] = useState('supermarket');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [addingId, setAddingId] = useState(null);
+  const [feedback, setFeedback] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -43,7 +45,17 @@ const Marketplace = () => {
   const featured = useMemo(() => products.filter((item) => item.featured).slice(0, 3), [products]);
 
   const handleAddToCart = async (product) => {
-    await addItem({ ...product, productType: 'marketplace' }, 1);
+    try {
+      setAddingId(product._id);
+      setFeedback('');
+      await addItem({ ...product, productType: 'marketplace' }, 1);
+      setFeedback(`${product.name} added to your cart.`);
+    } catch (error) {
+      console.error('Unable to add marketplace item', error);
+      setFeedback('Unable to add this item right now.');
+    } finally {
+      setAddingId(null);
+    }
   };
 
   return (
@@ -61,6 +73,10 @@ const Marketplace = () => {
       </section>
 
       <div className="section-inner" style={{ marginTop: '1.5rem' }}>
+        {feedback && (
+          <div className="marketplace-feedback" style={{ marginBottom: '1rem' }}>{feedback}</div>
+        )}
+
         <div className="hero-search-wrapper" style={{ marginBottom: '1.25rem' }}>
           <div className="hero-search-form">
             <Search className="search-icon" size={20} />
@@ -94,7 +110,7 @@ const Marketplace = () => {
                     <h3>{product.name}</h3>
                     <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>{product.brand}</p>
                     <p style={{ fontWeight: '700', color: '#ff6b00' }}>KES {Number(product.finalPrice || product.price).toFixed(2)}</p>
-                    <button className="cta-button" onClick={() => handleAddToCart(product)}>Add to cart</button>
+                    <button className="cta-button" disabled={addingId === product._id || product.stock === 0} onClick={() => handleAddToCart(product)}>{addingId === product._id ? 'Adding...' : 'Add to cart'}</button>
                   </div>
                 </div>
               ))}
@@ -117,7 +133,7 @@ const Marketplace = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.6rem' }}>
                   {product.prescriptionRequired ? <span style={{ color: '#dc2626', fontSize: '0.8rem' }}><ShieldCheck size={14} /> Prescription needed</span> : <span style={{ color: '#2563eb', fontSize: '0.8rem' }}><BadgeCheck size={14} /> Verified</span>}
-                  <button className="cta-button" onClick={() => handleAddToCart(product)}>Add</button>
+                  <button className="cta-button" disabled={addingId === product._id || product.stock === 0} onClick={() => handleAddToCart(product)}>{addingId === product._id ? 'Adding...' : 'Add'}</button>
                 </div>
               </div>
             </div>

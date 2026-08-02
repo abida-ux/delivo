@@ -1,5 +1,6 @@
 const MarketplaceCategory = require('../models/MarketplaceCategory');
 const MarketplaceProduct = require('../models/MarketplaceProduct');
+const { normalizeMarketplaceProductPayload } = require('../utils/marketplacePayload');
 
 const normalizeProduct = (product) => {
   if (!product) return null;
@@ -30,6 +31,7 @@ exports.createCategory = async (req, res) => {
     const category = await MarketplaceCategory.create(payload);
     res.status(201).json({ success: true, data: category });
   } catch (error) {
+    console.error('createCategory error', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -44,6 +46,7 @@ exports.updateCategory = async (req, res) => {
     if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
     res.status(200).json({ success: true, data: category });
   } catch (error) {
+    console.error('updateCategory error', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -98,29 +101,46 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const payload = {
+    const matchingCategory = req.body.category
+      ? await MarketplaceCategory.findById(req.body.category)
+      : await MarketplaceCategory.findOne({ categoryType: req.body.categoryType, isActive: true });
+
+    const payload = normalizeMarketplaceProductPayload({
       ...req.body,
       slug: req.body.slug || req.body.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       image: req.body.image || req.body.images?.[0] || '',
-    };
+      category: req.body.category || matchingCategory?._id,
+      categoryType: req.body.categoryType || matchingCategory?.categoryType || 'supermarket',
+    }, matchingCategory);
+
     const product = await MarketplaceProduct.create(payload);
     res.status(201).json({ success: true, data: product });
   } catch (error) {
+    console.error('createProduct error', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 exports.updateProduct = async (req, res) => {
   try {
-    const payload = { ...req.body };
-    if (payload.name && !payload.slug) {
-      payload.slug = payload.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    }
+    const matchingCategory = req.body.category
+      ? await MarketplaceCategory.findById(req.body.category)
+      : await MarketplaceCategory.findOne({ categoryType: req.body.categoryType, isActive: true });
+
+    const payload = normalizeMarketplaceProductPayload({
+      ...req.body,
+      slug: req.body.slug || req.body.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      image: req.body.image || req.body.images?.[0] || '',
+      category: req.body.category || matchingCategory?._id,
+      categoryType: req.body.categoryType || matchingCategory?.categoryType || 'supermarket',
+    }, matchingCategory);
+
     if (payload.images?.length && !payload.image) payload.image = payload.images[0];
     const product = await MarketplaceProduct.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     res.status(200).json({ success: true, data: product });
   } catch (error) {
+    console.error('updateProduct error', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

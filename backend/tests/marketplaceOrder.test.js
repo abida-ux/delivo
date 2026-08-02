@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { buildPopulatedOrderItems } = require('../utils/orderItems');
+const { normalizeMarketplaceProductPayload } = require('../utils/marketplacePayload');
 
 test('buildPopulatedOrderItems resolves marketplace products for mixed checkout orders', async () => {
   const marketplaceProduct = {
@@ -27,4 +28,15 @@ test('buildPopulatedOrderItems resolves marketplace products for mixed checkout 
   assert.equal(items[0].categoryType, 'groceries');
   assert.equal(items[0].price, 160);
   assert.equal(items[0].quantity, 2);
+});
+
+test('normalizeMarketplaceProductPayload preserves a category reference when provided', () => {
+  const payload = normalizeMarketplaceProductPayload({
+    name: 'Laundry Detergent',
+    category: { _id: 'cat123' },
+    categoryType: 'supermarket',
+  });
+
+  assert.equal(payload.category.toString(), 'cat123');
+  assert.equal(payload.categoryType, 'supermarket');
 });

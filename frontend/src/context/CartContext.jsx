@@ -102,48 +102,14 @@ export const CartProvider = ({ children }) => {
 
   // ✅ Add item to cart (works for both authenticated and guest users)
   const addItem = async (food, quantity = 1) => {
-    const productType = food?.productType === 'marketplace' || food?.categoryType ? 'marketplace' : 'meal';
-    const itemId = productType === 'marketplace' ? (food._id || food.marketplaceProductId || food.foodId) : (food._id || food.foodId);
+    const productType = food?.productType === 'marketplace' || food?.categoryType || food?.marketplaceProductId ? 'marketplace' : 'meal';
+    const itemId = food?._id || food?.marketplaceProductId || food?.foodId || food?.id;
 
-    if (user && token) {
-      const optimisticCart = [...cartItems];
-      const existingItem = optimisticCart.find(
-        (item) => getNormalizedFoodId(item) === itemId && (item.productType || 'meal') === productType
-      );
-
-      if (existingItem) {
-        existingItem.quantity += quantity;
-      } else {
-        optimisticCart.push({
-          productType,
-          foodId: productType === 'marketplace' ? itemId : itemId,
-          marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
-          name: food.name,
-          price: food.finalPrice ?? food.price,
-          image: food.image,
-          quantity,
-        });
-      }
-
-      setCartItems(optimisticCart);
-
-      try {
-        const { data } = await api.post('/cart/add', {
-          foodId: productType === 'meal' ? itemId : undefined,
-          marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
-          quantity,
-          productType,
-          price: food.finalPrice ?? food.price,
-        });
-
-        setCartItems(data.cart?.items || optimisticCart);
-        console.log('✅ Item added to account cart:', food.name);
-      } catch (error) {
-        console.error('❌ Error adding to cart:', error);
-      }
-      return;
+    if (!itemId) {
+      throw new Error('This item is missing an identifier and could not be added to the cart.');
     }
 
+    const normalizedPrice = Number(food?.finalPrice ?? food?.price ?? 0);
     const optimisticCart = [...cartItems];
     const existingItem = optimisticCart.find(
       (item) => getNormalizedFoodId(item) === itemId && (item.productType || 'meal') === productType
@@ -154,17 +120,39 @@ export const CartProvider = ({ children }) => {
     } else {
       optimisticCart.push({
         productType,
-        foodId: itemId,
+        foodId: productType === 'marketplace' ? undefined : itemId,
         marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
         name: food.name,
-        price: food.finalPrice ?? food.price,
-        image: food.image,
+        price: normalizedPrice,
+        image: food.image || food.images?.[0],
         quantity,
+        categoryType: food.categoryType || (productType === 'marketplace' ? 'marketplace' : 'meal'),
       });
     }
 
     setCartItems(optimisticCart);
     localStorage.setItem(GUEST_CART_KEY, JSON.stringify(optimisticCart));
+
+    if (user && token) {
+      try {
+        const { data } = await api.post('/cart/add', {
+          foodId: productType === 'meal' ? itemId : undefined,
+          marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
+          quantity,
+          productType,
+          price: normalizedPrice,
+          categoryType: food.categoryType || (productType === 'marketplace' ? 'marketplace' : 'meal'),
+        });
+
+        setCartItems(data.cart?.items || optimisticCart);
+        console.log('✅ Item added to account cart:', food.name);
+      } catch (error) {
+        console.error('❌ Error adding to cart:', error);
+        setCartItems(optimisticCart);
+      }
+      return;
+    }
+
     console.log('✅ Item added to guest cart:', food.name);
   };
 
