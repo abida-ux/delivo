@@ -4,6 +4,7 @@ import { Search, ShoppingCart, ShieldCheck, Sparkles, Package, BadgeCheck } from
 import { useCart } from '../../context/CartContext';
 import { getMarketplaceCategories, getMarketplaceProducts } from '../../services/api';
 import '../pages.css';
+import '../Menu.css';
 
 const categoryMeta = {
   supermarket: { title: 'Supermarket', description: 'Everyday essentials, household supplies, and pantry staples.' },
@@ -100,17 +101,22 @@ const Marketplace = () => {
         {!loading && featured.length > 0 && (
           <div style={{ marginBottom: '1.25rem' }}>
             <h3 style={{ marginBottom: '0.75rem' }}>Featured picks</h3>
-            <div style={{ display: 'grid', gap: '0.8rem', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+            <div className="foods-grid">
               {featured.map((product) => (
-                <div key={product._id} className="food-menu-card" style={{ padding: '1rem' }}>
-                  <div className="food-image-wrapper" style={{ height: '140px' }}>
+                <div key={product._id} className="food-menu-card">
+                  <div className="food-image-wrapper">
                     <img src={product.image || product.images?.[0] || '/delivo.jpg'} alt={product.name} />
+                    <span className="food-badge">Featured</span>
                   </div>
                   <div className="food-details">
-                    <h3>{product.name}</h3>
-                    <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>{product.brand}</p>
-                    <p style={{ fontWeight: '700', color: '#ff6b00' }}>KES {Number(product.finalPrice || product.price).toFixed(2)}</p>
-                    <button className="cta-button" disabled={addingId === product._id || product.stock === 0} onClick={() => handleAddToCart(product)}>{addingId === product._id ? 'Adding...' : 'Add to cart'}</button>
+                    <h3 className="food-name">{product.name}</h3>
+                    <p className="food-description">{product.brand || product.description}</p>
+                    <div className="food-footer">
+                      <span className="food-price">KES {Number(product.finalPrice || product.price).toFixed(2)}</span>
+                      <button className="add-to-cart-ui" disabled={addingId === product._id || product.stock === 0} onClick={() => handleAddToCart(product)}>
+                        <ShoppingCart size={14} /> {addingId === product._id ? 'Adding...' : 'Add'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -118,22 +124,29 @@ const Marketplace = () => {
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        <div className="foods-grid">
           {products.map((product) => (
-            <div key={product._id} className="food-menu-card" style={{ padding: '1rem' }}>
-              <div className="food-image-wrapper" style={{ height: '140px' }}>
+            <div key={product._id} className="food-menu-card">
+              <div className="food-image-wrapper">
                 <img src={product.image || product.images?.[0] || '/delivo.jpg'} alt={product.name} />
+                {product.prescriptionRequired ? (
+                  <span className="food-badge">Rx</span>
+                ) : product.featured ? (
+                  <span className="food-badge">Featured</span>
+                ) : null}
               </div>
               <div className="food-details">
-                <h3>{product.name}</h3>
-                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>{product.description}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
-                  <span style={{ fontWeight: '700', color: '#ff6b00' }}>KES {Number(product.finalPrice || product.price).toFixed(2)}</span>
-                  <span style={{ fontSize: '0.8rem', color: '#16a34a' }}>{product.stock > 0 ? 'In stock' : 'Out of stock'}</span>
+                <h3 className="food-name">{product.name}</h3>
+                <p className="food-description">{product.description || product.brand}</p>
+                <div className="food-footer">
+                  <span className="food-price">KES {Number(product.finalPrice || product.price).toFixed(2)}</span>
+                  <button className="add-to-cart-ui" disabled={addingId === product._id || product.stock === 0} onClick={() => handleAddToCart(product)}>
+                    <ShoppingCart size={14} /> {addingId === product._id ? 'Adding...' : 'Add'}
+                  </button>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.6rem' }}>
-                  {product.prescriptionRequired ? <span style={{ color: '#dc2626', fontSize: '0.8rem' }}><ShieldCheck size={14} /> Prescription needed</span> : <span style={{ color: '#2563eb', fontSize: '0.8rem' }}><BadgeCheck size={14} /> Verified</span>}
-                  <button className="cta-button" disabled={addingId === product._id || product.stock === 0} onClick={() => handleAddToCart(product)}>{addingId === product._id ? 'Adding...' : 'Add'}</button>
+                <div style={{ marginTop: '0.7rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {product.prescriptionRequired ? <span style={{ color: '#dc2626', fontSize: '0.8rem' }}><ShieldCheck size={14} /> Prescription</span> : <span style={{ color: '#2563eb', fontSize: '0.8rem' }}><BadgeCheck size={14} /> Verified</span>}
+                  <span style={{ fontSize: '0.8rem', color: product.stock > 0 ? '#16a34a' : '#dc2626' }}>{product.stock > 0 ? 'In stock' : 'Out of stock'}</span>
                 </div>
               </div>
             </div>
