@@ -146,7 +146,7 @@ const AdminMarketplace = () => {
                 </select>
               </div>
               <div className="marketplace-form-actions">
-                <button type="submit" className="cta-button">Save Category</button>
+                <button type="submit" className="add-btn">Save Category</button>
                 <button type="button" className="secondary-btn" onClick={resetCategoryForm}>Reset</button>
               </div>
             </form>
@@ -207,7 +207,7 @@ const AdminMarketplace = () => {
                 <label className="marketplace-checkbox-row"><input type="checkbox" checked={productForm.requiresAgeVerification} onChange={(e) => setProductForm({ ...productForm, requiresAgeVerification: e.target.checked })} /> Age verification required</label>
               </div>
               <div className="marketplace-form-actions">
-                <button type="submit" className="cta-button">Save Product</button>
+                <button type="submit" className="add-btn">Save Product</button>
                 <button type="button" className="secondary-btn" onClick={resetProductForm}>Reset</button>
               </div>
             </form>
@@ -224,8 +224,8 @@ const AdminMarketplace = () => {
                   <div className="marketplace-pill">{category.categoryType}</div>
                 </div>
                 <div className="marketplace-form-actions">
-                  <button className="cta-button" onClick={() => { setCategoryForm(category); setEditingCategoryId(category._id); }}>Edit</button>
-                  <button className="secondary-btn" onClick={() => handleDeleteCategory(category._id)}>Delete</button>
+                  <button className="add-btn marketplace-inline-btn" onClick={() => { setCategoryForm(category); setEditingCategoryId(category._id); }}>Edit</button>
+                  <button className="secondary-btn marketplace-inline-btn" onClick={() => handleDeleteCategory(category._id)}>Delete</button>
                 </div>
               </div>
             ))}
@@ -239,8 +239,8 @@ const AdminMarketplace = () => {
                   <div className="marketplace-pill">stock {product.stock}</div>
                 </div>
                 <div className="marketplace-form-actions">
-                  <button className="cta-button" onClick={() => { setProductForm(product); setEditingProductId(product._id); }}>Edit</button>
-                  <button className="secondary-btn" onClick={() => handleDeleteProduct(product._id)}>Delete</button>
+                  <button className="add-btn marketplace-inline-btn" onClick={() => { setProductForm(product); setEditingProductId(product._id); }}>Edit</button>
+                  <button className="secondary-btn marketplace-inline-btn" onClick={() => handleDeleteProduct(product._id)}>Delete</button>
                 </div>
               </div>
             ))}

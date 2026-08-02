@@ -343,10 +343,18 @@
   padding: 10px 16px;
   font-weight: 700;
   cursor: pointer;
+  font-family: 'Poppins', sans-serif;
 }
 
 .secondary-btn:hover {
   background: #eef3eb;
+}
+
+.marketplace-inline-btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  min-width: 72px;
+  justify-content: center;
 }
 
 .marketplace-list-card {
