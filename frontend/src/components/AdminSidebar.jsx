@@ -76,22 +76,116 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         <nav className="sidebar-nav">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.path}
-                className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
-                onClick={() => {
-                  navigate(item.path);
-                  setIsOpen(false);
-                }}
-              >
-                <Icon size={20} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+          {/* ── MAIN GROUP ── */}
+          <div className="nav-group">
+            <span className="nav-group-label">MAIN</span>
+            <button
+              className={`nav-item ${isActive('/admin') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin'); setIsOpen(false); }}
+            >
+              <LayoutDashboard size={20} />
+              <span>Dashboard</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/analytics') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/analytics'); setIsOpen(false); }}
+            >
+              <TrendingUp size={20} />
+              <span>Analytics</span>
+            </button>
+          </div>
+
+          {/* ── MANAGEMENT GROUP ── */}
+          <div className="nav-group">
+            <span className="nav-group-label">MANAGEMENT</span>
+            <button
+              className={`nav-item ${isActive('/admin/users') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/users'); setIsOpen(false); }}
+            >
+              <Users size={20} />
+              <span>Users</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/restaurants') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/restaurants'); setIsOpen(false); }}
+            >
+              <Store size={20} />
+              <span>Restaurants</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/marketplace') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/marketplace'); setIsOpen(false); }}
+            >
+              <ShoppingBasket size={20} />
+              <span>Marketplace</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/orders') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/orders'); setIsOpen(false); }}
+            >
+              <ShoppingCart size={20} />
+              <span>Orders</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/categories') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/categories'); setIsOpen(false); }}
+            >
+              <ListFilter size={20} />
+              <span>Categories</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/foods') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/foods'); setIsOpen(false); }}
+            >
+              <UtensilsCrossed size={20} />
+              <span>Foods</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/restaurant-foods') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/restaurant-foods'); setIsOpen(false); }}
+            >
+              <DollarSign size={20} />
+              <span>Pricing</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/combinations') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/combinations'); setIsOpen(false); }}
+            >
+              <Layers size={20} />
+              <span>Combinations</span>
+            </button>
+          </div>
+
+          {/* ── OPERATIONS GROUP ── */}
+          <div className="nav-group">
+            <span className="nav-group-label">OPERATIONS</span>
+            <button
+              className={`nav-item ${isActive('/admin/riders') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/riders'); setIsOpen(false); }}
+            >
+              <Truck size={20} />
+              <span>Riders</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/notifications') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/notifications'); setIsOpen(false); }}
+            >
+              <Bell size={20} />
+              <span>Notifications</span>
+            </button>
+          </div>
+
+          {/* ── SYSTEM GROUP ── */}
+          <div className="nav-group">
+            <span className="nav-group-label">SYSTEM</span>
+            <button
+              className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/settings'); setIsOpen(false); }}
+            >
+              <Settings size={20} />
+              <span>Settings</span>
+            </button>
+          </div>
         </nav>
 
         <div className="sidebar-footer">

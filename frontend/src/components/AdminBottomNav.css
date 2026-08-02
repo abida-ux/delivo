@@ -1,5 +1,5 @@
 /* ================================================
-   ADMIN BOTTOM NAV (mobile)
+   ADMIN BOTTOM NAV (mobile) — Premium Clean Style
    ================================================ */
 
 .admin-bottom-nav {
@@ -8,50 +8,85 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 64px;
-  background: var(--color-gray-900);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  height: 60px;
+  background: #ffffff; /* Secondary Background (#FFFFFF) */
+  border-top: 1px solid #e5e7eb; /* Borders (#E5E7EB) */
   justify-content: space-around;
   align-items: center;
   z-index: var(--z-sticky);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.03);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 @media (max-width: 1024px) {
-  .admin-bottom-nav { display: flex; }
+  .admin-bottom-nav {
+    display: flex;
+  }
 }
 
-.admin-bottom-nav-item {
+.bottom-nav-item {
   flex: 1;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   background: none;
   border: none;
   cursor: pointer;
-  color: rgba(255,255,255,0.45);
-  font-size: 10px;
-  font-weight: 600;
-  transition: color var(--transition-fast);
+  color: #64748b; /* Secondary Text (#64748B) */
+  font-family: inherit;
+  transition: all var(--transition-fast);
   text-decoration: none;
   outline: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.admin-bottom-nav-item svg {
-  width: 22px;
-  height: 22px;
+.bottom-nav-item svg {
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+  transition: color var(--transition-fast), transform var(--transition-bounce);
 }
 
-.admin-bottom-nav-item.active {
-  color: var(--color-orange);
+.bottom-nav-item:hover svg {
+  color: #111827; /* Primary Text (#111827) */
 }
 
-.admin-bottom-nav-item span {
-  font-size: 10px;
+.bottom-nav-item.active {
+  color: #f97316; /* Brand Accent (#F97316) */
+}
+
+.bottom-nav-item.active svg {
+  color: #f97316;
+  transform: scale(1.05);
+}
+
+.bottom-nav-item span {
+  font-size: 9px;
+  font-weight: 500;
   letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.bottom-nav-item.active span {
+  font-weight: 700;
+}
+
+/* On small screens, hide text labels to avoid cramming 8 items */
+@media (max-width: 520px) {
+  .admin-bottom-nav {
+    height: 56px;
+  }
+  .bottom-nav-item span {
+    display: none;
+  }
+  .bottom-nav-item {
+    gap: 0;
+  }
+  .bottom-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
 }

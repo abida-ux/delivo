@@ -1,85 +1,194 @@
 /* ================================================
-   ADMIN NAVBAR — Compact page header
+   ADMIN TOPBAR — Matches AdminNavbar.jsx
    ================================================ */
 
-.admin-navbar {
+.admin-header-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-4) var(--space-6);
-  background: transparent;
-  border-bottom: none;
-  box-shadow: none;
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  width: 100%;
+  padding: 0 var(--space-4);
+  height: 56px;
 }
 
-.admin-navbar .navbar-left { flex: 1; }
-
-.page-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.admin-navbar .navbar-right {
+/* ── Breadcrumbs ── */
+.header-left {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
 }
 
-.navbar-user-section {
+.breadcrumbs {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-gray-150);
-  border-radius: var(--radius-md);
-}
-
-.user-info-small {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  text-align: right;
-}
-
-.user-name-small {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.user-role-small {
+  gap: var(--space-2);
   font-size: var(--text-xs);
   color: var(--text-muted);
-  text-transform: capitalize;
+  font-weight: 500;
 }
 
-.user-avatar-small {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-pill);
+.breadcrumb-separator {
+  color: var(--color-gray-300);
+}
+
+.breadcrumb-active {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* ── Global Search ── */
+.header-search-wrapper {
+  position: relative;
+  max-width: 320px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: var(--color-gray-100);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm); /* 14px spec radius for inputs */
+  padding: 6px var(--space-3);
+  transition: all var(--transition-fast);
+  margin-left: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .header-search-wrapper {
+    display: none; /* Hide search on small screens */
+  }
+}
+
+.header-search-wrapper:focus-within {
+  background: #ffffff;
+  border-color: var(--color-orange);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.search-bar-icon {
+  color: var(--text-muted);
+  margin-right: var(--space-2);
+  flex-shrink: 0;
+}
+
+.header-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+.header-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Right Actions ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* Create Button */
+.create-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   background: var(--color-orange);
-  color: #fff;
+  color: #ffffff;
+  border: none;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  padding: 8px var(--space-3);
+  border-radius: 10px; /* spec radius */
+  cursor: pointer;
+  box-shadow: var(--shadow-orange);
+  transition: all var(--transition-fast);
+}
+.create-action-btn:hover {
+  background: var(--color-orange-dark);
+  transform: translateY(-1px);
+}
+.create-action-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .create-action-btn span {
+    display: none; /* Hide text on extra small screens */
+  }
+  .create-action-btn {
+    padding: var(--space-2);
+  }
+}
+
+/* Icon triggers */
+.header-icon-trigger {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+.header-icon-trigger:hover {
+  background: var(--color-gray-100);
+  color: var(--text-primary);
+}
+
+.notification-dot-active {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  width: 6px;
+  height: 6px;
+  background: var(--color-error);
+  border-radius: 50%;
+  border: 1px solid var(--color-surface);
+}
+
+/* User profile avatar section */
+.header-user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.profile-avatar-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--color-gray-200);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
 }
 
-@media (max-width: 768px) {
-  .admin-navbar { padding: var(--space-3) var(--space-4); }
-  .page-title { font-size: var(--text-xl); }
-  .navbar-user-section { display: none; }
+.profile-details-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
 }
 
-@media (max-width: 480px) {
-  .page-title { font-size: var(--text-lg); }
+@media (max-width: 640px) {
+  .profile-details-text {
+    display: none; /* Hide text on small screens */
+  }
+}
+
+.profile-username {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.profile-user-role {
+  font-size: 10px;
+  color: var(--text-muted);
 }
