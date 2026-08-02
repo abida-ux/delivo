@@ -219,3 +219,100 @@ html {
 .section-see-all:hover {
   background: var(--color-orange-faint);
 }
+
+/* ==========================================================
+   LOGOUT CONFIRMATION MODAL
+   ========================================================== */
+.logout-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.2s ease forwards;
+}
+
+.logout-confirm-dialog {
+  background: #ffffff;
+  border-radius: 20px; /* V2 Dialogs 20px */
+  border: 1px solid #e2e8f0;
+  width: min(400px, 90vw);
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+  animation: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.logout-confirm-icon {
+  width: 56px;
+  height: 56px;
+  background: #fee2e2;
+  color: #ef4444; /* Alert color */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.logout-confirm-dialog h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+.logout-confirm-dialog p {
+  font-size: var(--text-sm);
+  color: #64748b;
+  margin: 0 0 24px;
+}
+
+.logout-confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.logout-btn-cancel {
+  flex: 1;
+  height: 48px; /* Button min height 48px */
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px; /* Buttons 14px */
+  color: #64748b;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.logout-btn-cancel:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.logout-btn-confirm {
+  flex: 1;
+  height: 48px;
+  background: #ef4444; /* Danger red */
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  transition: all var(--transition-fast);
+}
+.logout-btn-confirm:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+.logout-btn-confirm:active {
+  transform: translateY(0);
+}
+

@@ -58,8 +58,8 @@
 
 .header-search-wrapper:focus-within {
   background: #ffffff;
-  border-color: var(--color-orange);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .search-bar-icon {
@@ -92,7 +92,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  background: var(--color-orange);
+  background: #16a34a; /* Success Green */
   color: #ffffff;
   border: none;
   font-size: var(--text-xs);
@@ -100,11 +100,11 @@
   padding: 8px var(--space-3);
   border-radius: 10px; /* spec radius */
   cursor: pointer;
-  box-shadow: var(--shadow-orange);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
   transition: all var(--transition-fast);
 }
 .create-action-btn:hover {
-  background: var(--color-orange-dark);
+  background: #15803d;
   transform: translateY(-1px);
 }
 .create-action-btn:active {

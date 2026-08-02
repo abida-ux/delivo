@@ -29,8 +29,8 @@
 }
 
 .search-box:focus-within {
-  border-color: #f97316; /* V2 SPEC: Orange Accent #F97316 */
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  border-color: #16a34a; /* V2 SPEC: Green Accent #16A34A */
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 .search-box svg {
@@ -56,19 +56,19 @@
   gap: var(--space-2);
   height: 48px; /* V2 SPEC: Buttons 48px minimum height */
   padding: 0 var(--space-5);
-  background: #f97316; /* V2 SPEC: Orange Accent */
+  background: #16a34a; /* V2 SPEC: Green Accent */
   color: #ffffff;
   border: none;
   border-radius: 14px; /* V2 SPEC: Buttons 14px */
   font-weight: 700;
   font-size: var(--text-xs);
   cursor: pointer;
-  box-shadow: var(--shadow-orange);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
   transition: all var(--transition-fast);
 }
 
 .add-btn:hover {
-  background: #ea580c;
+  background: #15803d;
   transform: translateY(-1px);
 }
 .add-btn:active {
@@ -213,7 +213,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e2e8f0;
-  border-top-color: #f97316;
+  border-top-color: #16a34a; /* Success Green */
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: var(--space-3);

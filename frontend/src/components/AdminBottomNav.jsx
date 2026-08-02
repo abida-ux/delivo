@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -8,12 +9,15 @@ import {
   TrendingUp,
   Settings,
   ShoppingBasket,
+  LogOut,
 } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 import './AdminBottomNav.css';
 
 const AdminBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useContext(AuthContext);
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -24,9 +28,19 @@ const AdminBottomNav = () => {
     { label: 'Orders', path: '/admin/orders', icon: ShoppingCart },
     { label: 'Analytics', path: '/admin/analytics', icon: TrendingUp },
     { label: 'Settings', path: '/admin/settings', icon: Settings },
+    { label: 'Logout', path: 'logout', icon: LogOut },
   ];
 
   const isActive = (path) => location.pathname === path;
+
+  const handleItemClick = (path) => {
+    if (path === 'logout') {
+      logout();
+      navigate('/');
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <nav className="admin-bottom-nav">
@@ -36,7 +50,7 @@ const AdminBottomNav = () => {
           <button
             key={item.path}
             className={`bottom-nav-item ${isActive(item.path) ? 'active' : ''}`}
-            onClick={() => navigate(item.path)}
+            onClick={() => handleItemClick(item.path)}
             title={item.label}
           >
             <Icon size={24} />

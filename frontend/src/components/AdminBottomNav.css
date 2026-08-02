@@ -55,11 +55,11 @@
 }
 
 .bottom-nav-item.active {
-  color: #f97316; /* Brand Accent (#F97316) */
+  color: #16a34a; /* Success Green (#16A34A) */
 }
 
 .bottom-nav-item.active svg {
-  color: #f97316;
+  color: #16a34a;
   transform: scale(1.05);
 }
 

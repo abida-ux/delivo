@@ -151,13 +151,13 @@
 
 .sparkline-bar {
   flex: 1;
-  background: rgba(37, 99, 235, 0.15); /* Subtle blue bars */
+  background: rgba(22, 163, 74, 0.15); /* Subtle green bars */
   border-radius: 3px 3px 0 0;
   transition: background var(--transition-fast), height 0.5s ease;
 }
 
 .large-kpi-card:hover .sparkline-bar {
-  background: #2563eb; /* Chart Blue (#2563EB) */
+  background: #16a34a; /* Chart Success Green (#16A34A) */
 }
 
 .kpi-footer-text {
@@ -197,7 +197,7 @@
 }
 
 .bar-fill.highlight {
-  background: #f97316; /* Chart Orange (#F97316) */
+  background: #16a34a; /* Success Green */
 }
 
 .bar-label {
@@ -246,8 +246,8 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(249, 115, 22, 0.08);
-  color: #f97316;
+  background: rgba(22, 163, 74, 0.08); /* Success Green faint */
+  color: #16a34a; /* Success Green */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -467,7 +467,7 @@
   margin-top: 5px;
 }
 
-.dot-orange { background: #f97316; }
+.dot-orange { background: #16a34a; }
 .dot-green { background: #22c55e; }
 .dot-blue { background: #3b82f6; }
 
@@ -628,7 +628,7 @@
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
   font-weight: 800;
-  color: #2563eb; /* Chart Blue */
+  color: #16a34a; /* Chart Success Green */
 }
 
 .analytic-lbl {
@@ -667,7 +667,7 @@
 }
 
 .trend-bar.highlight {
-  background: #2563eb;
+  background: #16a34a; /* Success Green */
 }
 
 .trend-month-bar span {
@@ -713,7 +713,7 @@
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
   font-weight: 850;
-  color: #8b5cf6; /* Chart Purple (#8B5CF6) */
+  color: #16a34a; /* Success Green */
   letter-spacing: -0.04em;
 }
 
@@ -739,7 +739,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid #e2e8f0;
-  border-top-color: #f97316;
+  border-top-color: #16a34a; /* Success Green */
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
