@@ -145,14 +145,14 @@ const AdminUsers = () => {
                 <tbody>
                   {filteredUsers.map((user) => (
                     <tr key={user._id}>
-                      <td className="user-name">
+                      <td className="user-name" data-label="Name">
                         <div className="user-avatar">
                           {user.name?.charAt(0).toUpperCase()}
                         </div>
                         {user.name}
                       </td>
-                      <td>{user.email}</td>
-                      <td>
+                      <td data-label="Email">{user.email}</td>
+                      <td data-label="Role">
                         <span
                           className="role-badge"
                           style={{ backgroundColor: `${getRoleColor(user.role)}20`, color: getRoleColor(user.role) }}
@@ -160,9 +160,9 @@ const AdminUsers = () => {
                           {user.role}
                         </span>
                       </td>
-                      <td>{user.phone || '-'}</td>
-                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                      <td className="actions-cell">
+                      <td data-label="Phone">{user.phone || '-'}</td>
+                      <td data-label="Joined">{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td className="actions-cell" data-label="Actions">
                         <button
                           className="action-btn edit-btn"
                           title="Edit"
