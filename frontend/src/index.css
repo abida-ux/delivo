@@ -10,82 +10,58 @@
   box-sizing: border-box;
 }
 
-/* Smooth font rendering */
 html {
   scroll-behavior: smooth;
 }
 
-/* BODY BASE */
 body {
   font-family: var(--font-family);
-  background: var(--color-white);
-  color: var(--color-black);
+  background: var(--color-page-bg);
+  color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: var(--text-base);
+  line-height: 1.5;
 }
 
-/* REMOVE DEFAULT BUTTON STYLES */
 button {
   font-family: inherit;
   background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* REMOVE LIST STYLES */
-ul {
-  list-style: none;
-}
+ul { list-style: none; }
 
-/* LINKS */
 a {
   text-decoration: none;
   color: inherit;
 }
 
-/* IMAGE SAFETY */
 img {
   max-width: 100%;
   display: block;
 }
 
-/* INPUT BASE RESET */
-input {
+input, textarea, select {
   font-family: inherit;
+  font-size: inherit;
 }
 
-/* SELECTION STYLING */
+/* Selection */
 ::selection {
-  background: rgba(245, 179, 1, 0.25);
-  color: var(--color-black);
+  background: rgba(255, 107, 74, 0.2);
+  color: var(--text-primary);
 }
 
-/* FOCUS OUTLINE (ACCESSIBLE — only visible for keyboard users) */
+/* Focus (keyboard only) */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-  box-shadow: 0 0 0 4px rgba(245, 179, 1, 0.25);
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
 }
 
 :focus:not(:focus-visible) {
   outline: none;
-}
-
-/* SCROLLBAR CLEAN LOOK */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
-  transition: background var(--transition-smooth);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-gray-100);
 }

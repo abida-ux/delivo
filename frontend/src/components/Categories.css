@@ -1,215 +1,117 @@
+/* ================================================
+   CATEGORIES — Munchify icon grid style
+   ================================================ */
+
 .categories-section {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 28px 60px;
-  background-color: #ffffff;
-  box-sizing: border-box;
-  position: relative;
+  background: var(--color-surface);
+  padding: var(--space-4) 0;
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-100);
+  border-bottom: 1px solid var(--color-gray-100);
 }
 
-/* HEADER DESIGN */
 .categories-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 16px;
+  display: none; /* Clean look — no header, just the icons */
 }
 
-.categories-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #000000;
-  letter-spacing: -0.5px;
-  margin: 0 0 4px 0;
-}
-
-.categories-subtitle {
-  font-size: 14px;
-  color: #666666;
-  margin: 0;
-}
-
-/* CAROUSEL ARROWS */
-.carousel-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.control-btn {
-  background: #f7f7f7;
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  color: #000000;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.control-btn:hover {
-  background: #000000;
-  color: #ffffff;
-  transform: scale(1.05);
-}
-
-/* HORIZONTAL CAROUSEL TRACK */
+/* ── Scrollable slider ── */
 .categories-slider-container {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   overflow-x: auto;
-  scroll-behavior: smooth;
-  padding: 8px 2px;
-  -webkit-overflow-scrolling: touch; /* Mobile physics momentum */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: var(--space-1) var(--space-6) var(--space-2);
+  width: min(var(--content-max), 100% - 2rem);
+  margin-inline: auto;
 }
 
-/* Hide Scrollbar Standard browser logic */
-.categories-slider-container::-webkit-scrollbar {
-  display: none;
-}
+.categories-slider-container::-webkit-scrollbar { display: none; }
 
-.categories-slider-container {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-/* PREMIUM PILL CARD DESIGN */
+/* ── Category pill card ── */
 .category-pill-card {
-  flex: 0 0 auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  background: var(--color-white);
-  border: 1px solid var(--color-gray-200);
-  padding: 10px 22px 10px 12px;
-  border-radius: var(--radius-pill);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-gray-150);
+  border-radius: var(--radius-md);
   cursor: pointer;
+  flex-shrink: 0;
+  min-width: 80px;
+  text-align: center;
+  transition: all var(--transition);
+  user-select: none;
+}
+
+.category-pill-card:hover {
+  border-color: var(--color-orange);
+  background: var(--color-orange-faint);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-smooth);
+}
+
+.category-pill-card:active {
+  transform: translateY(0);
+}
+
+.category-pill-card.selected {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  box-shadow: var(--shadow-orange);
+  transform: translateY(-2px);
 }
 
 .category-icon-wrapper {
-  width: 42px;
-  height: 42px;
-  background-color: var(--color-gray-100);
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-black);
-  transition: all var(--transition-smooth);
-}
-
-.category-icon {
-  color: var(--color-black);
-  stroke-width: 1.8;
-  transition: color var(--transition-fast);
-}
-
-.category-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-black);
-  white-space: nowrap;
-}
-
-/* HOVER EFFECTS & GESTURES */
-.category-pill-card:hover {
-  transform: translateY(-4px) scale(1.03);
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-glow-yellow);
-}
-
-.category-pill-card:hover .category-icon-wrapper {
-  background-color: rgba(245, 179, 1, 0.2);
-}
-
-.category-pill-card:hover .category-icon {
-  color: var(--color-primary-dark);
-}
-
-/* SELECTED STATE */
-.category-pill-card.selected {
-  background: var(--grad-primary);
-  border-color: transparent;
-  color: var(--color-black);
-  box-shadow: var(--shadow-glow-yellow);
-  transform: translateY(-2px) scale(1.04);
+  background: var(--color-gray-100);
+  transition: background var(--transition-fast);
 }
 
 .category-pill-card.selected .category-icon-wrapper {
-  background-color: var(--color-black);
+  background: rgba(255,255,255,0.25);
 }
 
-.category-pill-card.selected .category-icon {
-  color: var(--color-white);
+.category-icon {
+  color: var(--color-orange);
+  transition: color var(--transition-fast), transform var(--transition);
 }
 
-.category-pill-card.selected .category-name {
-  color: var(--color-black);
-  font-weight: 700;
+.category-pill-card.selected .category-icon { color: #fff; }
+.category-pill-card:hover .category-icon   { transform: scale(1.1); }
+
+.category-name {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+  line-height: 1;
 }
 
+.category-pill-card.selected .category-name { color: #fff; }
+.category-pill-card:hover:not(.selected) .category-name { color: var(--color-orange); }
 
-/* RESPONSIVE LAYOUT RESPONSES */
-@media (max-width: 1200px) {
-  .categories-section {
-    padding: 40px;
-  }
-}
-
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .carousel-controls {
-    display: none; /* Hide controls on touch displays */
-  }
-  
-  .categories-section {
-    padding: 30px 16px;
+  .categories-slider-container {
+    padding: var(--space-1) var(--space-4) var(--space-2);
   }
 
-  .categories-title {
-    font-size: 22px;
-    margin-bottom: 16px;
-  }
-  
   .category-pill-card {
-    padding: 8px 16px 8px 10px;
+    min-width: 70px;
+    padding: var(--space-3);
   }
 
   .category-icon-wrapper {
-    width: 38px;
-    height: 38px;
-    font-size: 18px;
-  }
-
-  .category-name {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .categories-section {
-    padding: 24px 12px;
-  }
-
-  .categories-title {
-    font-size: 18px;
-    margin-bottom: 12px;
-  }
-  
-  .category-pill-card {
-    padding: 6px 12px 6px 8px;
-  }
-
-  .category-icon-wrapper {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
-  }
-
-  .category-name {
-    font-size: 11px;
+    width: 36px;
+    height: 36px;
   }
 }

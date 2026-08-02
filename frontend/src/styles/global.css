@@ -9,13 +9,12 @@
   min-height: 100vh;
 }
 
-/* Main content container - ensures proper vertical flow */
 main {
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding-top: 80px;
+  padding-top: 104px; /* navbar (56px) + tab bar (48px) */
 }
 
 .admin-main {
@@ -28,50 +27,195 @@ main {
   overflow: hidden;
 }
 
-/* Ensure sections stack vertically */
 section {
   width: 100%;
   display: block;
 }
 
-@media (max-width: 768px) {
+/* ── Content Container ── */
+.content-wrap {
+  width: min(var(--content-max), 100% - 2rem);
+  margin-inline: auto;
+}
+
+/* ── Responsive Breakpoints ── */
+@media (max-width: 1100px) {
   main {
-    padding-top: 72px;
+    padding-top: 56px; /* only navbar height, tabs hidden on mobile */
+    padding-bottom: 72px; /* bottom nav */
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   main {
-    padding-top: 64px;
+    padding-top: 56px;
+    padding-bottom: 72px;
   }
 }
 
 /* =========================
    RESPONSIVE TYPOGRAPHY
-   Minimum 14px to stay accessible
    ========================= */
 
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
 @media (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
+  html { font-size: 15px; }
 }
 
 @media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
-  body {
-    font-size: 14px;
-  }
+  html { font-size: 14px; }
 }
 
-/* 480px and below: stay at 14px — never shrink below readable size */
 @media (max-width: 480px) {
-  html {
-    font-size: 14px;
-  }
-  body {
-    font-size: 14px;
-  }
+  html { font-size: 14px; }
+}
+
+/* =========================
+   SKELETON LOADING SYSTEM
+   ========================= */
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: var(--grad-skeleton);
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-text {
+  height: 0.875rem;
+  width: 100%;
+  border-radius: var(--radius-pill);
+}
+
+.skeleton-text.sm { height: 0.75rem; width: 60%; }
+.skeleton-text.lg { height: 1.125rem; }
+
+.skeleton-card {
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+/* =========================
+   PAGE TRANSITIONS
+   ========================= */
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes badge-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.25); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 107, 74, 0.35); }
+  70%  { box-shadow: 0 0 0 8px rgba(255, 107, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 107, 74, 0); }
+}
+
+.page-enter {
+  animation: fade-in-up 0.3s ease forwards;
+}
+
+/* =========================
+   UTILITY CLASSES
+   ========================= */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-gray-400); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Hide scrollbar for carousels */
+.scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-x::-webkit-scrollbar { display: none; }
+
+/* Section heading */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.section-see-all {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-orange);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+.section-see-all:hover {
+  background: var(--color-orange-faint);
 }

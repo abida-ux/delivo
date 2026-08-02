@@ -1,331 +1,245 @@
-/* Food Details Page CSS */
-.food-details-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+/* ================================================
+   FOOD DETAILS PAGE — Premium layout
+   ================================================ */
+
+.food-details-page {
+  min-height: 100vh;
+  background: var(--color-page-bg);
 }
 
-.food-details-hero {
-  display: flex;
-  gap: 40px;
-  background: white;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  padding: 24px;
+.food-details-back-bar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-gray-150);
+  padding: var(--space-3) var(--space-6);
+  position: sticky;
+  top: 56px;
+  z-index: 10;
 }
 
-@media (max-width: 768px) {
-  .food-details-hero {
-    flex-direction: column;
-    gap: 20px;
-    padding: 16px;
+.food-details-back-inner {
+  width: min(var(--content-max), 100% - 2rem);
+  margin-inline: auto;
+}
+
+.food-details-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  padding: 0;
+}
+.food-details-back-btn:hover { color: var(--color-orange); }
+
+/* ── Main content ── */
+.food-details-content {
+  padding: var(--space-5) var(--space-4);
+}
+
+.food-details-inner {
+  width: min(900px, 100% - 2rem);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .food-details-inner {
+    grid-template-columns: 1fr;
+    max-width: 600px;
   }
 }
 
-.food-details-img-wrapper {
-  flex: 1;
-  max-width: 500px;
-  height: 350px;
-  border-radius: 16px;
+/* ── Image section ── */
+.food-details-image-wrap {
+  border-radius: var(--radius);
   overflow: hidden;
+  background: var(--color-gray-100);
+  aspect-ratio: 4/3;
 }
 
-.food-details-img {
+.food-details-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
+/* ── Info section ── */
 .food-details-info {
-  flex: 1.2;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .food-details-name {
-  font-size: 32px;
-  font-weight: 900;
-  color: #111827;
-  margin: 0;
-}
-
-.food-details-desc {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #4b5563;
-}
-
-.food-details-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.meta-pill {
-  background: #f3f4f6;
-  color: #374151;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
   font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.restaurants-section-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #111827;
-  margin-top: 16px;
-}
-
-.restaurants-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
-}
-
-.restaurant-selling-card {
-  background: white;
-  border-radius: 20px;
-  border: 1.5px solid #f3f4f6;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
-}
-
-.restaurant-selling-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  border-color: #f97316;
-}
-
-.rest-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.rest-card-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: #111827;
-  margin: 0;
-}
-
-.rest-card-rating {
-  background: #fef3c7;
-  color: #d97706;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
+.food-details-restaurant {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2);
 }
 
-.rest-card-details {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  border-top: 1px solid #f3f4f6;
-  border-bottom: 1px solid #f3f4f6;
-  padding: 12px 0;
-}
-
-.detail-item-col {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.detail-item-label {
-  font-size: 11px;
-  color: #9ca3af;
-  text-transform: uppercase;
+.food-details-restaurant-link {
+  color: var(--color-orange);
   font-weight: 600;
-}
-
-.detail-item-val {
-  font-size: 13px;
-  font-weight: 700;
-  color: #374151;
-}
-
-.rest-card-action-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.rest-card-price {
-  font-size: 20px;
-  font-weight: 900;
-  color: #f97316;
-}
-
-.order-now-cta-btn {
-  background: #f97316;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+}
+.food-details-restaurant-link:hover { text-decoration: underline; }
+
+.food-details-price {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-orange);
 }
 
-.order-now-cta-btn:hover {
-  background: #ea580c;
+.food-details-description {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.7;
 }
 
-.order-now-cta-btn:disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
+.food-details-divider {
+  height: 1px;
+  background: var(--color-gray-100);
 }
 
-/* -- Combo Component Editor -- */
-.combo-component-editor {
-  margin-top: 24px;
-  background: linear-gradient(135deg, #fff7ed 0%, #fff 100%);
-  border: 1.5px solid rgba(249, 115, 22, 0.2);
-  border-radius: 18px;
-  padding: 20px;
-}
-
-.combo-editor-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: #111827;
-  margin: 0 0 4px;
-}
-
-.combo-editor-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.combo-editor-row {
+/* ── Quantity + Add to cart ── */
+.food-details-order-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: white;
-  border-radius: 12px;
-  padding: 12px 14px;
-  border: 1px solid #f3f4f6;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
-.combo-editor-food-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.combo-editor-food-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.combo-editor-food-price {
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.combo-optional-tag {
-  display: inline-block;
-  background: #f3f4f6;
-  color: #6b7280;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  width: fit-content;
-}
-
-.combo-editor-qty-ctrl {
+.food-qty-stepper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #f9fafb;
-  border-radius: 10px;
-  padding: 6px 10px;
-  border: 1px solid #e5e7eb;
+  gap: var(--space-3);
+  background: var(--color-gray-50);
+  border: 1.5px solid var(--color-gray-200);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-3);
 }
 
-.combo-qty-btn {
+.food-qty-btn {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
-  border: 1.5px solid #e5e7eb;
-  background: white;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-gray-200);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #374151;
-  transition: all 0.15s ease;
-  padding: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  transition: all var(--transition-fast);
 }
-
-.combo-qty-btn:hover:not(:disabled) {
-  background: #f97316;
-  border-color: #f97316;
-  color: white;
+.food-qty-btn:hover:not(:disabled) {
+  background: var(--color-orange);
+  color: #fff;
+  border-color: var(--color-orange);
 }
+.food-qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-.combo-qty-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.combo-qty-value {
-  font-size: 16px;
-  font-weight: 800;
-  color: #111827;
+.food-qty-val {
+  font-size: var(--text-md);
+  font-weight: 700;
   min-width: 24px;
   text-align: center;
 }
 
-.combo-editor-line-total {
-  font-size: 14px;
+.food-add-cart-btn {
+  flex: 1;
+  padding: var(--space-4);
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--color-orange);
+  color: #fff;
+  font-size: var(--text-md);
   font-weight: 700;
-  color: #f97316;
-  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-orange);
+}
+.food-add-cart-btn:hover {
+  background: var(--color-orange-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+}
+.food-add-cart-btn:disabled { background: var(--color-gray-300); cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ── Combo Selector ── */
+.combo-selector-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-gray-150);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: var(--space-4);
 }
 
-.combo-editor-total-row {
+.combo-selector-header {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-gray-50);
+  border-bottom: 1px solid var(--color-gray-100);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.combo-selector-body {
+  padding: var(--space-3) var(--space-4);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1.5px dashed rgba(249, 115, 22, 0.3);
-  font-size: 15px;
-  color: #374151;
-  font-weight: 600;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.combo-editor-total-row strong {
-  font-size: 20px;
-  font-weight: 900;
-  color: #f97316;
+.combo-component {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
+
+.combo-component-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.combo-component-select {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.combo-component-select:focus { border-color: var(--color-orange); }

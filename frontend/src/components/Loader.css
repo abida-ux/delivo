@@ -1,39 +1,43 @@
+/* ================================================
+   LOADER — Premium orbital design (polished)
+   ================================================ */
+
 .glass-loader {
   position: fixed;
   inset: 0;
-  background: #f5f6f8;
+  background: var(--color-page-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  z-index: 999999;
+  z-index: var(--z-loader);
 }
 
-/* subtle moving noise (whole screen) */
+/* Subtle grid texture */
 .noise {
   position: absolute;
   inset: 0;
-  opacity: 0.05;
+  opacity: 0.04;
   pointer-events: none;
-  background: 
+  background:
     repeating-linear-gradient(
       0deg,
-      rgba(0, 0, 0, 0.05) 0px,
-      rgba(0, 0, 0, 0.05) 1px,
+      rgba(0, 0, 0, 0.06) 0px,
+      rgba(0, 0, 0, 0.06) 1px,
       transparent 1px,
-      transparent 2px
+      transparent 24px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.05) 0px,
-      rgba(0, 0, 0, 0.05) 1px,
+      rgba(0, 0, 0, 0.06) 0px,
+      rgba(0, 0, 0, 0.06) 1px,
       transparent 1px,
-      transparent 2px
+      transparent 24px
     );
 }
 
-/* ENGINE CENTER (NOT A BOX) */
+/* ── Engine ── */
 .engine {
   position: relative;
   width: 200px;
@@ -43,16 +47,16 @@
   justify-content: center;
 }
 
-/* D CORE */
+/* Core */
 .d-core {
-  width: 140px;
-  height: 140px;
-  border-radius: 24px;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius);
   overflow: hidden;
   display: grid;
   place-items: center;
-  filter: drop-shadow(0 12px 30px rgba(0,0,0,0.12));
-  animation: pulse 2s infinite ease-in-out;
+  filter: drop-shadow(0 8px 24px rgba(255,107,74,0.2));
+  animation: pulse 2.4s infinite ease-in-out;
 }
 
 .d-core img {
@@ -61,81 +65,83 @@
   object-fit: cover;
 }
 
-/* SCAN */
+/* Scan bar */
 .scan {
   position: absolute;
-  width: 160px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, rgba(255,107,53,0.7), transparent);
-  animation: scan 1.2s linear infinite;
+  width: 140px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 107, 74, 0.6), transparent);
+  animation: scan 1.4s linear infinite;
 }
 
-/* ORBITS */
+/* Orbits */
 .orbit {
   position: absolute;
   border-radius: 50%;
-  border: 1px dashed rgba(255,107,53,0.25);
+  border: 1px dashed rgba(255, 107, 74, 0.2);
   animation: spin linear infinite;
 }
 
-.o1 { width: 150px; height: 150px; animation-duration: 3s; }
-.o2 { width: 190px; height: 190px; animation-duration: 5s; }
-.o3 { width: 230px; height: 230px; animation-duration: 7s; }
+.o1 { width: 148px; height: 148px; animation-duration: 4s; }
+.o2 { width: 190px; height: 190px; animation-duration: 7s; }
+.o3 { width: 232px; height: 232px; animation-duration: 10s; border-color: rgba(245, 179, 1, 0.15); }
 
-/* PARTICLES */
+/* Particles */
 .particle {
   position: absolute;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  animation: float 3s infinite ease-in-out;
+  animation: float 3.5s infinite ease-in-out;
 }
 
-.p1 { background: #ff6b35; top: 10px; left: 80px; }
-.p2 { background: #ffd166; bottom: 20px; left: 30px; animation-delay: .4s; }
-.p3 { background: #06d6a0; top: 60px; right: 10px; animation-delay: .8s; }
-.p4 { background: #ff8c42; bottom: 10px; right: 40px; animation-delay: 1.2s; }
+.p1 { background: var(--color-orange);  top: 8px;    left: 85px;  }
+.p2 { background: var(--color-primary); bottom: 18px; left: 28px; animation-delay: 0.5s; }
+.p3 { background: var(--color-orange);  top: 55px;   right: 8px;  animation-delay: 1s; }
+.p4 { background: var(--color-primary); bottom: 8px; right: 38px; animation-delay: 1.5s; }
 
-/* TEXT (FLOATING, NOT INSIDE BOX) */
+/* Text */
 .reveal {
-  margin-top: 40px;
-  font-size: 28px;
+  margin-top: 36px;
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
   font-weight: 900;
-  letter-spacing: 10px;
-  color: #222;
+  letter-spacing: 0.15em;
+  color: var(--text-primary);
   animation: fadeUp 2s ease forwards;
 }
 
 .subtitle {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #777;
-  letter-spacing: 3px;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   animation: fadeUp 2.5s ease forwards;
 }
 
-/* ANIMATIONS */
+/* ── Keyframes ── */
 @keyframes spin {
   100% { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.06); }
 }
 
 @keyframes scan {
-  0% { transform: translateY(-80px); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateY(80px); opacity: 0; }
+  0%   { transform: translateY(-70px); opacity: 0; }
+  50%  { opacity: 1; }
+  100% { transform: translateY(70px);  opacity: 0; }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50%      { transform: translateY(-10px); }
 }
 
 @keyframes fadeUp {
-  0% { opacity: 0; transform: translateY(18px); }
+  0%   { opacity: 0; transform: translateY(16px); }
   100% { opacity: 1; transform: translateY(0); }
 }

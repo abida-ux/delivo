@@ -1,182 +1,121 @@
+/* ================================================
+   TRENDING FOODS — Compact horizontal carousel
+   ================================================ */
+
 .trending-section {
-  width: 100%;
-  margin: 0;
-  padding: 40px 16px;
-  background-color: #ffffff;
-  box-sizing: border-box;
+  padding: 0;
+  background: transparent;
 }
 
-/* SECTION HEADER CONFIGURATION */
 .trending-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 28px;
-  width: 100%;
-  max-width: 100%;
-  margin-left: 0;
-  margin-right: 0;
+  padding: 0 var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
-/* FILTER INDICATOR */
+.header-left { }
+
+.trending-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.trending-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Arrow buttons */
+.trending-slider-controls {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.arrow-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.arrow-btn:hover {
+  background: var(--color-orange);
+  color: #fff;
+  border-color: var(--color-orange);
+}
+
+/* ── Carousel track ── */
+.trending-carousel-track {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: var(--space-1) var(--space-2) var(--space-3);
+  scroll-behavior: smooth;
+}
+
+.trending-carousel-track::-webkit-scrollbar { display: none; }
+
+/* ── Loading text ── */
+.loading-text {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  padding: var(--space-4) var(--space-2);
+}
+
+/* ── Filter indicator ── */
 .trending-filter-indicator {
-  background: #f9f9f9;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 100%;
-  margin-left: 0;
-  margin-right: 0;
+  margin-bottom: var(--space-3);
 }
 
 .filter-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
 .filter-tag {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #ff6b35;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  gap: var(--space-1);
+  background: var(--color-orange-faint);
+  color: var(--color-orange-dark);
+  border: 1px solid rgba(255,107,74,0.2);
+  padding: 4px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
   font-weight: 600;
-}
-
-.filter-tag strong {
-  font-weight: 700;
 }
 
 .filter-clear-btn {
   background: none;
   border: none;
-  color: white;
+  color: inherit;
   cursor: pointer;
   padding: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
 }
-
-.filter-clear-btn:hover {
-  transform: scale(1.2);
-}
+.filter-clear-btn:hover { opacity: 1; }
 
 .filter-results {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-}
-
-.trending-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #000000;
-  letter-spacing: -0.5px;
-  margin: 0 0 4px 0;
-}
-
-.trending-subtitle {
-  font-size: 14px;
-  color: #666666;
-  margin: 0;
-}
-
-/* CONTROLS ARROWS */
-.trending-slider-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.arrow-btn {
-  background: #f7f7f7;
-  border: 1px solid rgba(0, 0, 0, 0.02);
-  color: #000000;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.arrow-btn:hover {
-  background: #000000;
-  color: #ffffff;
-  transform: scale(1.05);
-}
-
-/* HORIZONTAL SCROLL LAYOUT */
-.trending-carousel-track {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 12px 4px 32px 4px; /* Increased bottom padding to prevent clipping of shadows and borders */
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* When the trending list is placed in a full-width section, use a responsive grid */
-.full-width-section .trending-carousel-track {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  padding: 12px 4px 32px 4px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  justify-content: flex-start;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Hide Track Scrollbars */
-.trending-carousel-track::-webkit-scrollbar {
-  display: none;
-}
-
-.trending-carousel-track {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* CAROUSEL-SPECIFIC CARD SIZING SANS DESIGN STYLES */
-.trending-carousel-track .food-card {
-  flex: 0 0 270px;
-  width: 270px;
-}
-
-/* RESPONSIVE LAYOUT SYSTEMS */
-@media (max-width: 1200px) {
-  .trending-carousel-track .food-card {
-    flex: 0 0 250px;
-    width: 250px;
-  }
-}
-
-@media (max-width: 768px) {
-  .trending-carousel-track .food-card {
-    flex: 0 0 230px;
-    width: 230px;
-  }
-}
-
-@media (max-width: 600px) {
-  .trending-carousel-track .food-card {
-    flex: 0 0 190px;
-    width: 190px;
-  }
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }

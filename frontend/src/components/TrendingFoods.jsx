@@ -4,6 +4,17 @@ import { getAllFoods } from '../services/api';
 import FoodCard from './FoodCard';
 import './TrendingFoods.css';
 
+const SkeletonFoodCard = () => (
+  <div className="food-card-skeleton">
+    <div className="skeleton-img skeleton" />
+    <div className="skeleton-body">
+      <div className="skeleton skeleton-text" style={{ width: '80%' }} />
+      <div className="skeleton skeleton-text sm" />
+      <div className="skeleton skeleton-text sm" style={{ width: '50%' }} />
+    </div>
+  </div>
+);
+
 const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false }) => {
   const scrollContainerRef = useRef(null);
   const autoScrollRef = useRef(null);
@@ -16,11 +27,7 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
     const fetchFoods = async () => {
       try {
         setLoading(true);
-
         const foods = await getAllFoods();
-
-        // ✅ API service returns array directly
-        // Randomize foods
         const randomized = [...foods].sort(() => Math.random() - 0.5);
         setTrendingItems(randomized);
       } catch (err) {
@@ -58,7 +65,6 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
   const filteredItems = useMemo(() => {
     let filtered = [...trendingItems];
 
-    // Filter by search term (name or category field)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
@@ -69,12 +75,11 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
       );
     }
 
-    // Filter by category
     if (selectedCategory) {
       filtered = filtered.filter(item => {
         if (item.category && item.category.toLowerCase() === selectedCategory.toLowerCase()) return true;
         if (item.categories && Array.isArray(item.categories)) {
-          return item.categories.some(cat => 
+          return item.categories.some(cat =>
             (typeof cat === 'object' ? cat.name : cat).toLowerCase() === selectedCategory.toLowerCase()
           );
         }
@@ -87,12 +92,9 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
 
   const handleScroll = (direction) => {
     const { current } = scrollContainerRef;
-
     if (current) {
-      const offset = 340;
-
       current.scrollBy({
-        left: direction === 'left' ? -offset : offset,
+        left: direction === 'left' ? -220 : 220,
         behavior: 'smooth',
       });
     }
@@ -110,16 +112,11 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
     <section className="trending-section">
       <div className="trending-header">
         <div className="header-left">
-          <h2 className="trending-title">
-            {selectedCategory ? `${selectedCategory} Foods` : 'Handpicked for You'}
-          </h2>
-          <p className="trending-subtitle">
-            {selectedCategory 
-              ? `Showing ${selectedCategory.toLowerCase()} items` 
-              : searchTerm 
-              ? `Search results for "${searchTerm}"` 
-              : 'Top-rated meals from trusted local kitchens'}
-          </p>
+          {(selectedCategory || searchTerm) && (
+            <p className="trending-subtitle">
+              {selectedCategory ? `Showing: ${selectedCategory}` : `Results for "${searchTerm}"`}
+            </p>
+          )}
         </div>
 
         <div className="trending-slider-controls">
@@ -128,15 +125,14 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
             onClick={() => handleScroll('left')}
             aria-label="Previous items"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={16} />
           </button>
-
           <button
             className="arrow-btn"
             onClick={() => handleScroll('right')}
             aria-label="Next items"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
@@ -147,53 +143,37 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
           <div className="filter-info">
             {selectedCategory && (
               <span className="filter-tag">
-                Category: <strong>{selectedCategory}</strong>
-                <button 
-                  onClick={() => onClearFilter()}
-                  className="filter-clear-btn"
-                  title="Clear category filter"
-                >
-                  <X size={14} />
+                {selectedCategory}
+                <button onClick={() => onClearFilter()} className="filter-clear-btn" title="Clear filter">
+                  <X size={12} />
                 </button>
               </span>
             )}
-            {searchTerm && (
-              <span className="filter-tag">
-                Search: <strong>"{searchTerm}"</strong>
-              </span>
-            )}
-            {(selectedCategory || searchTerm) && filteredItems.length > 0 && (
-              <span className="filter-results">
-                Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
-              </span>
+            {filteredItems.length > 0 && (
+              <span className="filter-results">{filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}</span>
             )}
           </div>
         </div>
       )}
 
-      {/* LOADING STATE */}
-      {loading ? (
-        <p className="loading-text">Loading foods...</p>
-      ) : (
-        <div
-          className="trending-carousel-track"
-          ref={scrollContainerRef}
-          onMouseEnter={pauseAutoScroll}
-          onMouseLeave={resumeAutoScroll}
-        >
-          {filteredItems.length === 0 ? (
-            <p className="loading-text">
-              {selectedCategory || searchTerm 
-                ? 'No foods match your search or category' 
-                : 'No foods available'}
+      {/* CAROUSEL */}
+      <div
+        className="trending-carousel-track"
+        ref={scrollContainerRef}
+        onMouseEnter={pauseAutoScroll}
+        onMouseLeave={resumeAutoScroll}
+      >
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonFoodCard key={i} />)
+          : filteredItems.length === 0
+          ? <p className="loading-text">
+              {selectedCategory || searchTerm ? 'No foods match your search' : 'No foods available'}
             </p>
-          ) : (
-            filteredItems.map((item) => (
+          : filteredItems.map((item) => (
               <FoodCard key={item._id} food={item} />
             ))
-          )}
-        </div>
-      )}
+        }
+      </div>
     </section>
   );
 };

@@ -1,10 +1,11 @@
 import {useState, useEffect} from 'react';
 import { Star, Clock, ShoppingBag, Plus, Minus, Heart, Share2, ShieldCheck, X, Loader } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRestaurantById, getFoodsByRestaurant, createOrder } from '../../services/api';
+import api, { getRestaurantById, getFoodsByRestaurant, createOrder } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { resolveImageUrl, handleImageError } from '../../utils/placeholderImage';
 import './Restaurants.css';
+
 
 const Restaurants = () => {
   const { id: restaurantId } = useParams();
