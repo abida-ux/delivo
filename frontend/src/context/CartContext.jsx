@@ -13,6 +13,9 @@ export const CartProvider = ({ children }) => {
   // Helper helper to reliably extract food ID string across guest and backend objects
   const getNormalizedFoodId = (item) => {
     if (!item) return null;
+    if (item.productType === 'marketplace') {
+      return item.marketplaceProductId || item.foodId || item._id;
+    }
     return typeof item.foodId === 'object' && item.foodId !== null ? item.foodId._id : item.foodId;
   };
 
@@ -99,19 +102,24 @@ export const CartProvider = ({ children }) => {
 
   // ✅ Add item to cart (works for both authenticated and guest users)
   const addItem = async (food, quantity = 1) => {
+    const productType = food?.productType === 'marketplace' || food?.categoryType ? 'marketplace' : 'meal';
+    const itemId = productType === 'marketplace' ? (food._id || food.marketplaceProductId || food.foodId) : (food._id || food.foodId);
+
     if (user && token) {
       const optimisticCart = [...cartItems];
       const existingItem = optimisticCart.find(
-        (item) => getNormalizedFoodId(item) === food._id
+        (item) => getNormalizedFoodId(item) === itemId && (item.productType || 'meal') === productType
       );
 
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
         optimisticCart.push({
-          foodId: food._id,
+          productType,
+          foodId: productType === 'marketplace' ? itemId : itemId,
+          marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
           name: food.name,
-          price: food.price,
+          price: food.finalPrice ?? food.price,
           image: food.image,
           quantity,
         });
@@ -121,8 +129,11 @@ export const CartProvider = ({ children }) => {
 
       try {
         const { data } = await api.post('/cart/add', {
-          foodId: food._id,
+          foodId: productType === 'meal' ? itemId : undefined,
+          marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
           quantity,
+          productType,
+          price: food.finalPrice ?? food.price,
         });
 
         setCartItems(data.cart?.items || optimisticCart);
@@ -135,16 +146,18 @@ export const CartProvider = ({ children }) => {
 
     const optimisticCart = [...cartItems];
     const existingItem = optimisticCart.find(
-      (item) => getNormalizedFoodId(item) === food._id
+      (item) => getNormalizedFoodId(item) === itemId && (item.productType || 'meal') === productType
     );
 
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
       optimisticCart.push({
-        foodId: food._id,
+        productType,
+        foodId: itemId,
+        marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
         name: food.name,
-        price: food.price,
+        price: food.finalPrice ?? food.price,
         image: food.image,
         quantity,
       });

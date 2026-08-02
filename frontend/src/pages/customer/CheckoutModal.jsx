@@ -481,10 +481,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     try {
       const items = cartItems.map(item => {
         const itemFoodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
+        const marketplaceProductId = typeof item.marketplaceProductId === 'object' ? item.marketplaceProductId._id : item.marketplaceProductId;
         return {
-          foodId: itemFoodId,
+          productType: item.productType === 'marketplace' ? 'marketplace' : 'meal',
+          foodId: item.productType === 'marketplace' ? undefined : itemFoodId,
+          marketplaceProductId: item.productType === 'marketplace' ? marketplaceProductId : undefined,
           quantity: item.quantity,
           price: item.price,
+          categoryType: item.categoryType || (item.productType === 'marketplace' ? 'marketplace' : 'meal'),
           isCombination: !!item.isCombination,
           components: item.isCombination ? item.components : undefined,
         };

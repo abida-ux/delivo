@@ -232,7 +232,8 @@ const Navbar = () => {
   useEffect(() => {
     const routeToLinkMap = {
       '/': 'Home',
-      '/menu': 'Menu',
+      '/menu': 'Meals',
+      '/marketplace': 'Marketplace',
       '/offers': 'Offers',
       '/customer/orders': 'Orders'
     };
@@ -252,18 +253,20 @@ const Navbar = () => {
 
   const cancelLogout = () => setShowLogoutConfirm(false);
 
-  const navLinks = ['Home', 'Menu', 'Offers', 'Orders'];
+  const navLinks = ['Home', 'Meals', 'Marketplace', 'Offers', 'Orders'];
 
   const iconMap = {
     Home: <Home size={18} />,
-    Menu: <UtensilsCrossed size={18} />,
+    Meals: <UtensilsCrossed size={18} />,
+    Marketplace: <ShoppingCart size={18} />,
     Offers: <Tag size={18} />,
     Orders: <ShoppingBag size={18} />
   };
 
   const routeMap = {
     Home: "/",
-    Menu: "/menu",
+    Meals: "/menu",
+    Marketplace: "/marketplace",
     Offers: "/offers",
     Orders: "/customer/orders"
   };

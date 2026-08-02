@@ -32,15 +32,29 @@ const OrderSchema = new mongoose.Schema({
     index: true,
   },
   items: [{
+    productType: {
+      type: String,
+      enum: ['meal', 'marketplace'],
+      default: 'meal',
+    },
     foodId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Food',
-      required: true,
+      required: false,
+    },
+    marketplaceProductId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'MarketplaceProduct',
+      required: false,
     },
     quantity: {
       type: Number,
       required: true,
       min: 1,
+    },
+    categoryType: {
+      type: String,
+      default: 'meal',
     },
     price: {
       type: Number,

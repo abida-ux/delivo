@@ -10,6 +10,7 @@ const PushDiagnostics = lazy(() => import("../pages/PushDiagnostics"));
 const AllRestaurants = lazy(() => import("../pages/customer/AllRestaurants"));
 const Restaurants = lazy(() => import("../pages/customer/Restaurants"));
 const FoodDetailsPage = lazy(() => import("../pages/customer/FoodDetailsPage"));
+const Marketplace = lazy(() => import("../pages/customer/Marketplace"));
 const StoresByType = lazy(() => import("../pages/customer/StoresByType"));
 const StoreProducts = lazy(() => import("../pages/customer/StoreProducts"));
 const Orders = lazy(() => import("../pages/customer/Orders"));
@@ -20,6 +21,7 @@ const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
 const AdminFoods = lazy(() => import("../pages/admin/AdminFoods"));
+const AdminMarketplace = lazy(() => import("../pages/admin/AdminMarketplace"));
 const AdminCategories = lazy(() => import("../pages/admin/AdminCategories"));
 const AdminCombinations = lazy(() => import("../pages/admin/AdminCombinations"));
 const AdminRestaurantFoods = lazy(() => import("../pages/admin/AdminRestaurantFoods"));
@@ -58,6 +60,7 @@ export default function AppRoutes() {
       <Route path="/restaurants" element={<AllRestaurants />} />
       <Route path="/restaurants/:id" element={<Restaurants />} />
       <Route path="/food/:foodId" element={<FoodDetailsPage />} />
+      <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/stores/:typeId" element={<StoresByType />} />
       <Route path="/store/:storeId" element={<StoreProducts />} />
       <Route path="/customer/orders" element={<Orders />} />
@@ -95,6 +98,14 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminFoods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/marketplace"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminMarketplace />
           </ProtectedRoute>
         }
       />

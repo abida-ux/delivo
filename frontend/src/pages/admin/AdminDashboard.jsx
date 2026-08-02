@@ -11,9 +11,10 @@ import {
   BarChart3,
   Bell,
   Activity,
+  ShoppingBasket,
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
-import { getAdminStats } from '../../services/api';
+import { getAdminStats, getMarketplaceAdminOverview } from '../../services/api';
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminDashboard.css';
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
     foods: 0,
     revenue: 0,
   });
+  const [marketplaceOverview, setMarketplaceOverview] = useState({ categories: 0, products: 0, lowStockProducts: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const data = await getAdminStats();
+      const [data, marketplaceData] = await Promise.all([getAdminStats(), getMarketplaceAdminOverview()]);
       if (data) {
         setStats({
           users: data.users || 0,
@@ -44,6 +46,9 @@ const AdminDashboard = () => {
           foods: data.foods || 0,
           revenue: data.revenue || 0,
         });
+      }
+      if (marketplaceData) {
+        setMarketplaceOverview(marketplaceData);
       }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -154,6 +159,15 @@ const AdminDashboard = () => {
                 <p>Total Revenue: <strong>{formatCurrency(stats.revenue)}</strong></p>
                 <p>Total Menu Items: <strong>{stats.foods}</strong></p>
                 <p>Avg Order Value: <strong>{formatCurrency(stats.orders > 0 ? Math.round(stats.revenue / stats.orders) : 0)}</strong></p>
+              </div>
+
+              <div className="info-box">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShoppingBasket size={18} color="#f59e0b" /> Marketplace Overview
+                </h3>
+                <p>Categories: <strong>{marketplaceOverview.categories}</strong></p>
+                <p>Products: <strong>{marketplaceOverview.products}</strong></p>
+                <p>Low stock alerts: <strong>{marketplaceOverview.lowStockProducts?.length || 0}</strong></p>
               </div>
             </div>
           </>

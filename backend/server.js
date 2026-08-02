@@ -30,6 +30,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const appSettingsRoutes = require('./routes/appSettingsRoutes');
 const offerRoutes = require('./routes/offerRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const combinationRoutes = require('./routes/combinationRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 
@@ -153,6 +154,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', appSettingsRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/combinations', combinationRoutes);
 app.use('/api/addresses', addressRoutes);
 

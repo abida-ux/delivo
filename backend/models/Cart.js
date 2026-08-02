@@ -8,10 +8,20 @@ const CartSchema = new mongoose.Schema({
     unique: true,
   },
   items: [{
+    productType: {
+      type: String,
+      enum: ['meal', 'marketplace'],
+      default: 'meal',
+    },
     foodId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Food',
-      required: true,
+      required: false,
+    },
+    marketplaceProductId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'MarketplaceProduct',
+      required: false,
     },
     name: {
       type: String,
@@ -29,6 +39,10 @@ const CartSchema = new mongoose.Schema({
       required: true,
       min: 1,
       default: 1,
+    },
+    categoryType: {
+      type: String,
+      default: 'meal',
     },
     isCombination: {
       type: Boolean,

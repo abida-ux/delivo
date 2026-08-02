@@ -16,6 +16,7 @@ import {
   Layers,
   ListFilter,
   DollarSign,
+  ShoppingBasket,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import './AdminSidebar.css';
@@ -30,6 +31,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
     { label: 'Users', path: '/admin/users', icon: Users },
     { label: 'Restaurants', path: '/admin/restaurants', icon: Store },
     { label: 'Foods Template', path: '/admin/foods', icon: UtensilsCrossed },
+    { label: 'Marketplace', path: '/admin/marketplace', icon: ShoppingBasket },
     { label: 'Categories', path: '/admin/categories', icon: ListFilter },
     { label: 'Combinations', path: '/admin/combinations', icon: Layers },
     { label: 'Restaurant Pricing', path: '/admin/restaurant-foods', icon: DollarSign },

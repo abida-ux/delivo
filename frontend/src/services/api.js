@@ -172,6 +172,52 @@ export const getAllOrders = async () => {
   return res.data.data || [];
 };
 
+// ================= MARKETPLACE =================
+export const getMarketplaceCategories = async () => {
+  const res = await api.get('/marketplace/categories');
+  return res.data.data || [];
+};
+
+export const createMarketplaceCategory = async (payload) => {
+  const res = await api.post('/marketplace/categories', payload);
+  return res.data.data;
+};
+
+export const updateMarketplaceCategory = async (id, payload) => {
+  const res = await api.put(`/marketplace/categories/${id}`, payload);
+  return res.data.data;
+};
+
+export const deleteMarketplaceCategory = async (id) => {
+  const res = await api.delete(`/marketplace/categories/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceProducts = async (params = {}) => {
+  const res = await api.get('/marketplace/products', { params });
+  return res.data;
+};
+
+export const createMarketplaceProduct = async (payload) => {
+  const res = await api.post('/marketplace/products', payload);
+  return res.data.data;
+};
+
+export const updateMarketplaceProduct = async (id, payload) => {
+  const res = await api.put(`/marketplace/products/${id}`, payload);
+  return res.data.data;
+};
+
+export const deleteMarketplaceProduct = async (id) => {
+  const res = await api.delete(`/marketplace/products/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceAdminOverview = async () => {
+  const res = await api.get('/marketplace/admin/overview');
+  return res.data.data;
+};
+
 export const getUnassignedOrders = async () => {
   const res = await api.get('/orders/rider/unassigned');
   return res.data.data || [];

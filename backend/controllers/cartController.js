@@ -1,5 +1,6 @@
 const Cart = require('../models/Cart');
 const Food = require('../models/Food');
+const MarketplaceProduct = require('../models/MarketplaceProduct');
 const User = require('../models/User');
 
 // Get user's cart
@@ -7,7 +8,7 @@ exports.getCart = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    let cart = await Cart.findOne({ userId }).populate('items.foodId');
+    let cart = await Cart.findOne({ userId }).populate('items.foodId').populate('items.marketplaceProductId');
     
     // Create empty cart if doesn't exist
     if (!cart) {
@@ -31,18 +32,26 @@ exports.getCart = async (req, res) => {
 exports.addToCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { foodId, quantity = 1, isCombination = false, components = [], price } = req.body;
+    const { foodId, marketplaceProductId, quantity = 1, isCombination = false, components = [], price, productType = 'meal' } = req.body;
 
-    if (!foodId) {
+    if (!foodId && !marketplaceProductId) {
       return res.status(400).json({
         success: false,
-        message: 'Food ID is required',
+        message: 'A product ID is required',
       });
     }
 
     let name, image, itemPrice;
 
-    if (isCombination) {
+    if (productType === 'marketplace') {
+      const product = await MarketplaceProduct.findById(marketplaceProductId);
+      if (!product) {
+        return res.status(404).json({ success: false, message: 'Marketplace product not found' });
+      }
+      name = product.name;
+      image = product.image || product.images?.[0] || '';
+      itemPrice = price || product.price - (product.discount || 0);
+    } else if (isCombination) {
       const FoodCombination = require('../models/FoodCombination');
       const combo = await FoodCombination.findById(foodId);
       if (!combo) {
@@ -67,6 +76,9 @@ exports.addToCart = async (req, res) => {
     }
 
     const existingItem = cart.items.find((item) => {
+      if (productType === 'marketplace') {
+        return item.marketplaceProductId?.toString() === marketplaceProductId && item.productType === 'marketplace';
+      }
       if (item.foodId.toString() !== foodId) return false;
       if (isCombination) {
         if (item.components.length !== components.length) return false;
@@ -81,7 +93,9 @@ exports.addToCart = async (req, res) => {
       existingItem.quantity += parseInt(quantity);
     } else {
       cart.items.push({
-        foodId,
+        productType,
+        foodId: productType === 'marketplace' ? undefined : foodId,
+        marketplaceProductId: productType === 'marketplace' ? marketplaceProductId : undefined,
         name,
         price: itemPrice,
         image,
@@ -98,6 +112,7 @@ exports.addToCart = async (req, res) => {
       path: 'items.foodId',
       match: { _id: { $exists: true } }
     });
+    await cart.populate('items.marketplaceProductId');
 
     res.status(200).json({
       success: true,
@@ -310,6 +325,7 @@ exports.mergeCart = async (req, res) => {
 
     await cart.save();
     await cart.populate('items.foodId');
+    await cart.populate('items.marketplaceProductId');
 
     return res.status(200).json({
       success: true,

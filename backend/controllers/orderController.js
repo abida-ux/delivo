@@ -8,6 +8,7 @@ const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
 const { isActiveDeliveryStatus, isRiderAssignable, getRiderAvailabilityStatus } = require('../utils/riderWorkflow');
+const { buildPopulatedOrderItems } = require('../utils/orderItems');
 
 
 // @desc Create order
@@ -95,78 +96,31 @@ exports.createOrder = async (req, res, next) => {
     }
 
     let subtotal = 0;
-    const populatedItems = [];
-
-    for (const item of items) {
-      let itemPrice = 0;
-      let itemName = '';
-
-      if (item.isCombination) {
-        const FoodCombination = require('../models/FoodCombination');
-        const combo = await FoodCombination.findById(item.foodId);
-        if (!combo) {
-          return res.status(404).json({
-            success: false,
-            message: `Combination meal with ID ${item.foodId} not found`,
-          });
-        }
-        itemName = combo.name;
-
-        let comboSum = 0;
-        const RestaurantFood = require('../models/RestaurantFood');
-        for (const comp of (item.components || [])) {
-          const rf = await RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId: comp.foodId });
-          const compPrice = rf ? rf.price : 0;
-          comboSum += compPrice * comp.quantity;
-        }
-
-        if (comboSum === 0) {
-          const RestaurantCombination = require('../models/RestaurantCombination');
-          const rc = await RestaurantCombination.findOne({ restaurantId: finalRestaurantId, combinationId: item.foodId });
-          comboSum = rc ? rc.price : 0;
-        }
-
-        itemPrice = comboSum;
-      } else {
+    const populatedItems = await buildPopulatedOrderItems(items, {
+      getMarketplaceProductById: async (id) => {
+        const MarketplaceProduct = require('../models/MarketplaceProduct');
+        return MarketplaceProduct.findById(id);
+      },
+      getFoodById: async (id) => {
         const Food = require('../models/Food');
-        const food = await Food.findById(item.foodId);
-        if (!food) {
-          return res.status(404).json({
-            success: false,
-            message: `Food item with ID ${item.foodId} not found`,
-          });
-        }
-        itemName = food.name;
-
+        return Food.findById(id);
+      },
+      getRestaurantFoodById: async (foodId) => {
         const RestaurantFood = require('../models/RestaurantFood');
-        const rf = await RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId: item.foodId });
-        if (!rf) {
-          return res.status(400).json({
-            success: false,
-            message: `Food item '${itemName}' is not sold by this restaurant.`,
-          });
-        }
-        if (rf.availability === false) {
-          return res.status(400).json({
-            success: false,
-            message: `Food item '${itemName}' is currently sold out.`,
-          });
-        }
-        itemPrice = rf.price;
-      }
+        return RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId });
+      },
+      getCombinationById: async (id) => {
+        const FoodCombination = require('../models/FoodCombination');
+        return FoodCombination.findById(id);
+      },
+      getRestaurantCombinationById: async (combinationId) => {
+        const RestaurantCombination = require('../models/RestaurantCombination');
+        return RestaurantCombination.findOne({ restaurantId: finalRestaurantId, combinationId });
+      },
+    }, finalRestaurantId);
 
-      const itemTotal = itemPrice * item.quantity;
-      subtotal += itemTotal;
-
-      populatedItems.push({
-        foodId: item.foodId,
-        quantity: item.quantity,
-        price: itemPrice,
-        name: itemName,
-        isCombination: item.isCombination || false,
-        combinationId: item.isCombination ? item.foodId : undefined,
-        components: item.components || undefined,
-      });
+    for (const item of populatedItems) {
+      subtotal += (item.price || 0) * (item.quantity || 1);
     }
 
     const finalRestaurantIdObj = finalRestaurantId;

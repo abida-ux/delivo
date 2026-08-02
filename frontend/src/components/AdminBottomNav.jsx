@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Settings,
+  ShoppingBasket,
 } from 'lucide-react';
 import './AdminBottomNav.css';
 
@@ -19,6 +20,7 @@ const AdminBottomNav = () => {
     { label: 'Users', path: '/admin/users', icon: Users },
     { label: 'Restaurants', path: '/admin/restaurants', icon: Store },
     { label: 'Foods', path: '/admin/foods', icon: UtensilsCrossed },
+    { label: 'Marketplace', path: '/admin/marketplace', icon: ShoppingBasket },
     { label: 'Orders', path: '/admin/orders', icon: ShoppingCart },
     { label: 'Analytics', path: '/admin/analytics', icon: TrendingUp },
     { label: 'Settings', path: '/admin/settings', icon: Settings },
