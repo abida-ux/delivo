@@ -74,7 +74,6 @@
   margin-bottom: 50px;
   overflow-x: auto;
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   padding-bottom: 8px;
 }
@@ -566,6 +565,7 @@
   .food-description {
     font-size: 10px;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     margin-bottom: 8px;
   }
 
@@ -664,6 +664,7 @@
   .food-description {
     font-size: 9px;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     margin-bottom: 6px;
   }
 
@@ -740,7 +741,12 @@
 
   .food-description {
     font-size: 8px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
+    /* Standard property for compatibility */
+    line-clamp: 1;
+    overflow: hidden;
     margin-bottom: 4px;
   }
 
