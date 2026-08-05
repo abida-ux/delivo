@@ -35,6 +35,49 @@
   font-weight: 700;
 }
 
+/* ================================================
+   EXPERIENCE SWITCHER TOGGLE PILL
+   ================================================ */
+.admin-experience-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.exp-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  outline: none;
+}
+
+.exp-switcher-btn:hover {
+  color: #0f172a;
+}
+
+.exp-switcher-btn.active {
+  background: #ffffff;
+  color: #FF6B4A;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+
 /* ── Global Search ── */
 .header-search-wrapper {
   position: relative;
