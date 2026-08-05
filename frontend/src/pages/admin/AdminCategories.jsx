@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Edit, Plus, ToggleLeft, ToggleRight, Loader } from 'lucide-react';
+import { Trash2, Edit, Plus, ToggleLeft, ToggleRight, Loader, X } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import api from '../../services/api';
 import './AdminCategories.css';
+
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -172,9 +173,10 @@ const AdminCategories = () => {
             <div className="category-modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h3>{currentCategory ? 'Edit Category' : 'Create Category'}</h3>
-                <button className="close-modal-btn" onClick={handleCloseModal}>
-                  Close
+                <button className="close-modal-btn" onClick={handleCloseModal} aria-label="Close modal">
+                  <X size={18} />
                 </button>
+
               </div>
               <div className="modal-body">
                 <form className="category-form" onSubmit={handleSubmit}>
