@@ -1,8 +1,9 @@
-import { Plus, ShoppingCart } from 'lucide-react';
+import { Plus, Check, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { useState } from 'react';
+import { resolveImageUrl } from '../utils/placeholderImage';
 import './FoodCard.css';
 
 const FoodCard = ({ food }) => {
@@ -13,9 +14,8 @@ const FoodCard = ({ food }) => {
 
   const fallbackImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
 
-  // Derive "in cart" state from actual cart context
   const cartItems = getCartItems();
-  const isInCart = cartItems.some(item => {
+  const isInCart = cartItems.some((item) => {
     const id = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
     return id === food._id;
   });
@@ -24,54 +24,74 @@ const FoodCard = ({ food }) => {
 
   const restaurantName = typeof food.restaurant === 'object'
     ? food.restaurant?.name
-    : (food.restaurant && !isObjectId(food.restaurant) ? food.restaurant : '');
+    : (food.restaurant && !isObjectId(food.restaurant) ? food.restaurant : 'Delivo Kitchen');
 
-  const handleAddToCart = () => {
-    addItem(food, 1); // Add exactly 1 item directly
+  const ratingScore = food.rating > 0 ? food.rating : null;
+  const imageSrc = imageError ? fallbackImage : resolveImageUrl(food.image || fallbackImage);
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    addItem(food, 1);
+  };
+
+  const handleOpenCart = (e) => {
+    e.stopPropagation();
+    openCart();
   };
 
   return (
-    <div className="food-card" onClick={() => navigate(`/food/${food._id}`)} style={{ cursor: 'pointer' }}>
-      <div className="food-image-wrapper">
+    <div className="food-card" onClick={() => navigate(`/food/${food._id}`)}>
+      {/* Warm Cream Image Frame */}
+      <div className="food-image-card">
         <img
-          src={imageError ? fallbackImage : (food.image || fallbackImage)}
+          src={imageSrc}
           alt={food.name}
           className="food-image"
           onError={() => setImageError(true)}
+          loading="lazy"
         />
+
+        {/* Floating Discount Tag */}
+        {food.originalPrice && food.originalPrice > food.price && (
+          <span className="food-discount-badge">
+            {Math.round(((food.originalPrice - food.price) / food.originalPrice) * 100)}% OFF
+          </span>
+        )}
+
+        {/* Floating Plus Button on bottom-right of image frame */}
+        <button
+          className={`floating-plus-btn ${isInCart ? 'in-cart' : ''}`}
+          onClick={isInCart ? handleOpenCart : handleAddToCart}
+          title={isInCart ? 'In Cart - View Order' : 'Add to Order'}
+        >
+          {isInCart ? <Check size={16} /> : <Plus size={16} />}
+        </button>
       </div>
 
-      <div className="food-info">
-        <div className="food-meta-head">
-          <h3 className="food-name">{food.name}</h3>
-          <p className="food-vendor">{restaurantName}</p>
+      {/* Card Details Below Image Card */}
+      <div className="food-card-details">
+        <div className="vendor-rating-row">
+          <div className="vendor-info">
+            <span className="vendor-dot"></span>
+            <span className="vendor-name" title={restaurantName}>{restaurantName}</span>
+          </div>
+
+          {ratingScore > 0 && (
+            <div className="rating-tag">
+              <Star size={11} fill="#f5b301" color="#f5b301" />
+              <span>{ratingScore}</span>
+            </div>
+          )}
         </div>
 
-        <div className="food-action-row">
-          <span className="food-price">KES {food.price}</span>
 
-          {food.isCombination ? (
-            <button
-              className="add-to-cart-btn"
-              onClick={(e) => { e.stopPropagation(); navigate(`/food/${food._id}`); }}
-              style={{ background: '#f97316' }}
-            >
-              Customise
-            </button>
-          ) : isInCart ? (
-            <button
-              className="go-to-cart-btn"
-              onClick={(e) => { e.stopPropagation(); openCart(); }}
-            >
-              <ShoppingCart size={14} style={{ marginRight: '4px' }} /> Go to Cart
-            </button>
-          ) : (
-            <button
-              className="add-to-cart-btn"
-              onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}
-            >
-              <Plus size={14} style={{ marginRight: '4px' }} /> Add
-            </button>
+
+        <h3 className="food-name" title={food.name}>{food.name}</h3>
+
+        <div className="food-price-row">
+          <span className="food-price">KES {food.price?.toLocaleString('en-KE')}</span>
+          {food.originalPrice && food.originalPrice > food.price && (
+            <span className="food-old-price">KES {food.originalPrice.toLocaleString('en-KE')}</span>
           )}
         </div>
       </div>

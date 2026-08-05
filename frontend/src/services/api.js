@@ -577,7 +577,17 @@ export const getMarketplaceAdminOverview = async () => {
   return res.data.data;
 };
 
+// ================= FOOD DISH RATING =================
+export const rateFood = async (foodId, rating) => {
+  const res = await api.post(`/foods/${foodId}/rate`, { rating });
+  return res.data;
+};
+
 // ================= EXPORT UTILITIES =================
 export { getAPIUrl };
 
 export default api;
+
+
+
+

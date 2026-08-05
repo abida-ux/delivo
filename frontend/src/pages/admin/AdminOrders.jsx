@@ -1,18 +1,18 @@
-import {useState, useEffect, useMemo} from 'react';
-import { Eye, Search, UserCheck } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Eye, Search, UserCheck, CheckCircle2, Clock, Truck, AlertCircle, XCircle } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
-import { getAllOrders, updateOrder } from '../../services/api';
+import { getAllOrders, updateOrder, getAllStores, getAllRestaurants } from '../../services/api';
 import AdminEditOrderModal from './AdminEditOrderModal';
 import { formatCurrency } from '../../utils/currency';
-import { getAllStores, getAllRestaurants } from '../../services/api';
 import '../pages.css';
 import './AdminOrders.css';
 
-const AdminOrders = () => {
+export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState('ALL');
   const [editingOrder, setEditingOrder] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [storesMap, setStoresMap] = useState({});
@@ -37,7 +37,6 @@ const AdminOrders = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const ridersData = await ridersRes.json();
-      console.debug('Available riders response', ridersData);
       if (ridersData?.success) {
         setAvailableRiders(ridersData.data || []);
       } else {
@@ -54,7 +53,6 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-
       const [data, ridersRes, storesList, restaurantsList] = await Promise.all([
         getAllOrders().catch(() => []),
         fetch('/api/orders/rider/available', {
@@ -66,12 +64,10 @@ const AdminOrders = () => {
 
       const ordersList = Array.isArray(data) ? data : [];
       setOrders(ordersList);
-      setFilteredOrders(ordersList);
+      applyFilter(ordersList, searchTerm, activeFilter);
 
       if (ridersRes?.success) {
         setAvailableRiders(ridersRes.data || []);
-      } else {
-        setAvailableRiders([]);
       }
 
       const storesObj = {};
@@ -93,7 +89,6 @@ const AdminOrders = () => {
     }
   };
 
-
   const resolveRestaurantName = (order) => {
     const explicit = ((order && order.restaurant && order.restaurant.name) || order.restaurantName || '');
     if (explicit) return explicit;
@@ -111,22 +106,15 @@ const AdminOrders = () => {
     return 'N/A';
   };
 
-  const handleSearch = (value) => {
-    try {
-      console.debug('[AdminOrders] search:', value);
-      setSearchTerm(value);
-      const q = String(value || '').trim().toLowerCase();
-      if (!q) {
-        setFilteredOrders(orders);
-        return;
-      }
-
-      const filtered = orders.filter((order) => {
+  const applyFilter = (list, searchVal, filterVal) => {
+    let result = list;
+    const q = String(searchVal || '').trim().toLowerCase();
+    if (q) {
+      result = result.filter((order) => {
         const customerName = ((order && order.customer && order.customer.name) || order.customerName || order.guestEmail || order.guestPhone || '').toString();
         const restaurantName = (resolveRestaurantName(order) || '').toString();
         const id = String(order?._id || '').toString();
         const status = String(order?.status || '');
-
         return (
           id.toLowerCase().includes(q) ||
           customerName.toLowerCase().includes(q) ||
@@ -134,25 +122,37 @@ const AdminOrders = () => {
           status.toLowerCase().includes(q)
         );
       });
-
-      // if nothing matched, keep filtered empty so UI shows "No orders found"
-      setFilteredOrders(filtered);
-    } catch (err) {
-      console.error('Search error:', err);
-      setFilteredOrders(orders);
     }
+
+    if (filterVal !== 'ALL') {
+      result = result.filter((o) => (o.status || 'pending').toUpperCase() === filterVal);
+    }
+
+    setFilteredOrders(result);
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#f59e0b',
-      confirmed: '#3b82f6',
-      preparing: '#8b5cf6',
-      ready: '#22c55e',
-      delivered: '#059669',
-      cancelled: '#ef4444',
-    };
-    return colors[status?.toLowerCase()] || '#666';
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    applyFilter(orders, value, activeFilter);
+  };
+
+  const handleFilterClick = (filter) => {
+    setActiveFilter(filter);
+    applyFilter(orders, searchTerm, filter);
+  };
+
+  const renderStatusBadge = (statusStr) => {
+    const st = (statusStr || 'pending').toLowerCase();
+    if (st === 'delivered' || st === 'completed' || st === 'ready') {
+      return <span className="admin-order-badge badge-success"><CheckCircle2 size={13} /> {st}</span>;
+    }
+    if (st === 'confirmed' || st === 'processing') {
+      return <span className="admin-order-badge badge-info"><Clock size={13} /> {st}</span>;
+    }
+    if (st === 'cancelled') {
+      return <span className="admin-order-badge badge-danger"><XCircle size={13} /> {st}</span>;
+    }
+    return <span className="admin-order-badge badge-warning"><AlertCircle size={13} /> {st}</span>;
   };
 
   const handleEdit = (order) => {
@@ -166,21 +166,19 @@ const AdminOrders = () => {
       setIsEditModalOpen(false);
       setEditingOrder(null);
       await fetchOrders();
-      alert('Order updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating order:', error);
       alert(`Failed to update order: ${error.response?.data?.message || error.message}`);
       return false;
     }
   };
 
-  const openAssignModal = async (order) => {
+  const openAssignModal = (order) => {
     setSelectedOrderForAssignment(order);
     setSelectedRiderId('');
     setRiderSearchTerm('');
-    await fetchAvailableRiders();
     setIsAssignModalOpen(true);
+    fetchAvailableRiders();
   };
 
   const closeAssignModal = () => {
@@ -215,9 +213,7 @@ const AdminOrders = () => {
       }
       await fetchOrders();
       closeAssignModal();
-      alert('Rider assigned successfully');
     } catch (error) {
-      console.error('Assignment failed:', error);
       alert(error.message || 'Unable to assign rider');
     } finally {
       setAssigningOrderId(null);
@@ -226,28 +222,41 @@ const AdminOrders = () => {
 
   return (
     <AdminDashboardLayout pageTitle="Orders Management">
-      <div className="admin-orders">
-        <div className="orders-header">
-          <div className="search-box">
-            <Search size={20} />
+      <div className="admin-orders-page">
+        {/* TOP FILTER & SEARCH BAR */}
+        <div className="orders-top-controls">
+          <div className="orders-search-input-wrap">
+            <Search size={18} className="search-icon" />
             <input
               type="text"
-              placeholder="Search by order ID, customer name or status..."
+              placeholder="Search by order ID, customer, restaurant, status..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
+
+          <div className="orders-filter-pills">
+            {['ALL', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'].map((f) => (
+              <button
+                key={f}
+                className={`order-filter-pill ${activeFilter === f ? 'active' : ''}`}
+                onClick={() => handleFilterClick(f)}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
+          <div className="orders-loading-state">
+            <div className="spinner" />
             <p>Loading orders...</p>
           </div>
         ) : (
-          <div className="orders-table-container">
-            {filteredOrders.length > 0 ? (
-              <table className="orders-table">
+          <div className="orders-table-card">
+            <div className="table-responsive">
+              <table className="admin-orders-table">
                 <thead>
                   <tr>
                     <th>Order ID</th>
@@ -260,54 +269,46 @@ const AdminOrders = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map((order) => (
-                    <tr key={order._id}>
-                      <td className="order-id">#{order._id?.slice(-6).toUpperCase()}</td>
-                      <td>{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'N/A'}</td>
-                      <td>{resolveRestaurantName(order)}</td>
-                      <td className="amount">
-                        {formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}
-                      </td>
-                      <td>
-                        <span
-                          className="status-badge"
-                          style={{
-                            backgroundColor: `${getStatusColor(order.status)}20`,
-                            color: getStatusColor(order.status),
-                          }}
-                        >
-                          {order.status || 'Pending'}
-                        </span>
-                      </td>
-                      <td>{order?.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</td>
-                      <td className="actions-cell">
-                        <button
-                          className="action-btn view-btn"
-                          title="View/Edit Details"
-                          onClick={() => handleEdit(order)}
-                        >
-                          <Eye size={18} />
-                        </button>
-                        {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <tr key={order._id}>
+                        <td className="order-id-cell">#{order._id?.slice(-6).toUpperCase()}</td>
+                        <td className="customer-cell">{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer'}</td>
+                        <td>{resolveRestaurantName(order)}</td>
+                        <td className="amount-cell">{formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}</td>
+                        <td>{renderStatusBadge(order.status)}</td>
+                        <td className="date-cell">{order?.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</td>
+                        <td className="actions-cell">
                           <button
-                            className="action-btn assign-btn"
-                            title="Assign Rider"
-                            onClick={() => openAssignModal(order)}
-                            disabled={assigningOrderId === order._id}
+                            className="order-btn-view"
+                            title="View / Edit Details"
+                            onClick={() => handleEdit(order)}
                           >
-                            <UserCheck size={18} />
+                            <Eye size={16} />
                           </button>
-                        )}
+                          {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                            <button
+                              className="order-btn-assign"
+                              onClick={() => openAssignModal(order)}
+                              disabled={assigningOrderId === order._id}
+                            >
+                              <UserCheck size={15} />
+                              <span>Assign</span>
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '48px 0', color: '#64748b' }}>
+                        No orders match your search criteria.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
-            ) : (
-              <div className="empty-state">
-                <p>No orders found</p>
-              </div>
-            )}
+            </div>
           </div>
         )}
       </div>
@@ -382,6 +383,4 @@ const AdminOrders = () => {
       />
     </AdminDashboardLayout>
   );
-};
-
-export default AdminOrders;
+}

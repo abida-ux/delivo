@@ -23,6 +23,7 @@ import {
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
 import { getAdminStats, getMarketplaceAdminOverview } from '../../services/api';
+
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminDashboard.css';
@@ -65,6 +66,8 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
+
 
   // Date and Greeting helpers
   const hour = new Date().getHours();
@@ -512,6 +515,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Customer Activity */}
+              {/* Customer Activity */}
               <div className="widget-card">
                 <h3>Customer Engagement</h3>
                 <div className="engagement-metric">
@@ -523,8 +527,10 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
     </AdminDashboardLayout>
   );
 };
+
 
 export default AdminDashboard;

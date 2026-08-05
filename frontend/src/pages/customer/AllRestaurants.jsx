@@ -128,19 +128,22 @@ const AllRestaurants = () => {
             <div
               key={restaurant._id}
               className={`restaurant-card ${restaurant.isOpen === false ? 'restaurant-card-closed' : ''}`}
-              onClick={() => handleRestaurantClick(restaurant._id, restaurant)}
             >
+
               <div className="restaurant-image">
                 <img
                   src={resolveRestaurantImageUrl(restaurant)}
                   alt={restaurant.name}
                   onError={handleImageError}
                 />
-                <div className="restaurant-badge">
-                  <Star size={16} fill="currentColor" />
-                  <span>{restaurant.rating || 4.5}</span>
-                </div>
+                {restaurant.rating > 0 && (
+                  <div className="restaurant-badge">
+                    <Star size={14} fill="currentColor" />
+                    <span>{restaurant.rating}</span>
+                  </div>
+                )}
               </div>
+
 
               <div className="restaurant-info">
                 <h3>{restaurant.name}</h3>

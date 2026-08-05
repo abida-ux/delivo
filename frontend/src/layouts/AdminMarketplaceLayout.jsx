@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UtensilsCrossed, ShoppingBag, X, Bell, User } from 'lucide-react';
+import { UtensilsCrossed, ShoppingBag, Menu, X, Bell, User } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import AdminMarketplaceSidebar from '../components/admin/AdminMarketplaceSidebar';
 import AdminSwitchModal from '../components/admin/AdminSwitchModal';
@@ -20,6 +20,9 @@ export default function AdminMarketplaceLayout({ children, pageTitle = 'Marketpl
         {/* Navbar with Experience Switcher */}
         <header className="mkt-admin-navbar">
           <div className="mkt-navbar-title-group">
+            <button className="mkt-hamburger-btn" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle Navigation">
+              <Menu size={20} />
+            </button>
             <h2 className="mkt-navbar-title">{pageTitle}</h2>
           </div>
 
@@ -45,13 +48,13 @@ export default function AdminMarketplaceLayout({ children, pageTitle = 'Marketpl
           </div>
 
           {/* RIGHT USER INFO */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{user?.name || 'Admin'}</div>
+          <div className="mkt-user-info-wrap">
+            <span className="mkt-user-name">{user?.name || 'Admin'}</span>
           </div>
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="admin-content-area" style={{ padding: 24 }}>
+        <main className="admin-content-area">
           {children}
         </main>
       </div>

@@ -150,12 +150,13 @@ exports.cacheResponse = (ttlSeconds = 60) => {
         });
         resolvePromise(body);
       } else {
-        rejectPromise(new Error(`Request failed with status ${res.statusCode}`));
+        resolvePromise(body);
       }
       
       pendingRequests.delete(cacheKey);
       return originalJson.call(this, body);
     };
+
 
     res.setHeader('X-Cache', 'MISS');
     next();

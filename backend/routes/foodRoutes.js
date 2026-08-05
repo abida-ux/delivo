@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorizeRoles } = require('../middleware/authMiddleware');
+const { authenticate, optionalAuthenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const {
   getAllFoods,
   getFoodById,
@@ -13,12 +13,18 @@ const {
   removeFoodFromRestaurant,
   bulkUpdateRestaurantFoods,
   getFoodRestaurants,
+  rateFood,
 } = require('../controllers/foodController');
 
 // Global Catalogue routes
 router.get('/', getAllFoods);
-router.get('/:id', getFoodById);
+router.get('/:id', optionalAuthenticate, getFoodById);
+
 router.get('/:foodId/restaurants', getFoodRestaurants);
+
+// Rating route (requires user authentication)
+router.post('/:foodId/rate', authenticate, rateFood);
+
 router.post('/', authenticate, authorizeRoles('admin'), createFood);
 router.put('/:id', authenticate, authorizeRoles('admin'), updateFood);
 router.delete('/:id', authenticate, authorizeRoles('admin'), deleteFood);

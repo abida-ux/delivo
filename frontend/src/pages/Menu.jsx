@@ -307,11 +307,14 @@ const Menu = () => {
                   alt={food.name}
                   onError={handleImageError}
                 />
-                <div className="food-badge">
-                  <Star size={16} fill="currentColor" />
-                  <span>4.5</span>
-                </div>
+                {food.rating > 0 && (
+                  <div className="food-badge">
+                    <Star size={14} fill="currentColor" />
+                    <span>{food.rating}</span>
+                  </div>
+                )}
               </div>
+
 
               <div className="food-details">
                 <h3 className="food-name">

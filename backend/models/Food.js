@@ -45,6 +45,21 @@ const FoodSchema = new mongoose.Schema({
   nutritionalInfo: {
     type: String,
   },
+  rating: {
+    type: Number,
+    default: 0,
+  },
+  numReviews: {
+    type: Number,
+    default: 0,
+  },
+  ingredients: [{
+    type: String,
+  }],
+  allergens: [{
+    type: String,
+  }],
+
   featured: {
     type: Boolean,
     default: false,

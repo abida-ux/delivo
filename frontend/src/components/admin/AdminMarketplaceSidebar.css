@@ -35,6 +35,46 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
+.mkt-sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.mkt-sidebar-close-btn:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.mkt-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+  .mkt-sidebar-close-btn {
+    display: flex;
+  }
+  .mkt-sidebar-overlay.visible {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 .mkt-admin-brand-group {
   display: flex;
   align-items: center;

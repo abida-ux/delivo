@@ -211,8 +211,9 @@ const AdminFoods = () => {
                     ) : (
                       <span className="food-rating">
                         <Star size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', fill: '#f59e0b', color: '#f59e0b' }} />
-                        {food.rating || 4.5}
+                        {food.rating > 0 ? food.rating : 'Unrated'}
                       </span>
+
                     )}
                   </div>
 

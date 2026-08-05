@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Sparkles } from 'lucide-react';
 import api from '../services/api';
 import { resolveImageUrl, handleImageError } from '../utils/placeholderImage';
 import './ComboMealsSection.css';
@@ -16,7 +16,7 @@ const ComboMealsSection = () => {
       try {
         const res = await api.get('/combinations');
         const raw = res.data.data || [];
-        const processed = raw.map(combo => {
+        const processed = raw.map((combo) => {
           let price = combo.price;
           if (price == null || price === 0) {
             price = (combo.components || []).reduce((sum, comp) => {
@@ -47,61 +47,79 @@ const ComboMealsSection = () => {
   return (
     <section className="combo-section">
       <div className="combo-section-inner">
+        {/* Header */}
         <div className="combo-section-header">
           <div>
-            <div className="combo-section-label">
-              <Layers size={18} />
-              <span>Combo Meals</span>
-            </div>
-            <h2 className="combo-section-title">Mix &amp; Match Favourites</h2>
-            <p className="combo-section-sub">Curated meal combinations — more food, better value</p>
+            <h2 className="combo-section-title">Chef's Special Bundles</h2>
+            <p className="combo-section-sub">Perfectly paired meals crafted for maximum flavor</p>
           </div>
+
           <div className="combo-scroll-controls">
             <button className="combo-arrow-btn" onClick={() => scroll('left')} aria-label="Previous">
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
             <button className="combo-arrow-btn" onClick={() => scroll('right')} aria-label="Next">
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
 
         {loading ? (
-          <p style={{ color: '#9ca3af', padding: '20px 0' }}>Loading combo meals...</p>
+          <div className="combo-skeleton-row">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="combo-skeleton-card shimmer"></div>
+            ))}
+          </div>
         ) : (
           <div className="combo-carousel" ref={scrollRef}>
-            {combos.map(combo => {
+            {combos.map((combo) => {
               const componentNames = (combo.components || [])
-                .map(c => c.foodId?.name || '')
+                .map((c) => c.foodId?.name || '')
                 .filter(Boolean)
-                .join(' + ');
+                .join(' • ');
+
               return (
                 <div
                   key={combo._id}
-                  className="combo-card-home"
+                  className="clean-combo-card"
                   onClick={() => navigate(`/food/${combo._id}`)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && navigate(`/food/${combo._id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/food/${combo._id}`)}
                 >
-                  <div className="combo-card-img-wrap">
-                    <img
-                      src={resolveImageUrl(combo.image)}
-                      alt={combo.name}
-                      onError={handleImageError}
-                    />
-                    <span className="combo-card-badge">
-                      <Layers size={11} style={{ marginRight: '3px', display: 'inline', verticalAlign: 'middle' }} />
-                      Combo
-                    </span>
+                  {/* Clean Dish Image Frame */}
+                  <div className="clean-dish-frame">
+                    <div className="clean-circle-img-wrap">
+                      <img
+                        src={resolveImageUrl(combo.image)}
+                        alt={combo.name}
+                        className="clean-circle-img"
+                        onError={handleImageError}
+                        loading="lazy"
+                      />
+                      <button
+                        className="clean-floating-plus"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/food/${combo._id}`);
+                        }}
+                        title="Add Meal"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="combo-card-body">
-                    <h3 className="combo-card-name">{combo.name}</h3>
+
+                  {/* Clean Minimalist Details */}
+                  <div className="clean-card-body">
+                    <h3 className="clean-dish-title" title={combo.name}>{combo.name}</h3>
+
                     {componentNames && (
-                      <p className="combo-card-components">{componentNames}</p>
+                      <p className="clean-components-sub">{componentNames}</p>
                     )}
-                    <div className="combo-card-price">
-                      KES {Number(combo.price).toLocaleString('en-KE', { minimumFractionDigits: 2 })}
+
+                    <div className="clean-price-row">
+                      <span className="clean-price-val">KES {Number(combo.price).toLocaleString('en-KE')}</span>
                     </div>
                   </div>
                 </div>

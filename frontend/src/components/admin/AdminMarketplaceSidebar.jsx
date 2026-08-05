@@ -15,6 +15,7 @@ import {
   Users,
   BarChart2,
   Settings,
+  X,
 } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import AdminSwitchModal from './AdminSwitchModal';
@@ -63,6 +64,9 @@ export default function AdminMarketplaceSidebar({ isOpen, setIsOpen }) {
               <span className="mkt-admin-brand-tag">Marketplace</span>
             </div>
           </div>
+          <button className="mkt-sidebar-close-btn" onClick={() => setIsOpen && setIsOpen(false)} aria-label="Close Sidebar">
+            <X size={20} />
+          </button>
         </div>
 
         <div className="sidebar-user">
@@ -139,6 +143,11 @@ export default function AdminMarketplaceSidebar({ isOpen, setIsOpen }) {
           </button>
         </div>
       </aside>
+
+      <div
+        className={`mkt-sidebar-overlay ${isOpen ? 'visible' : ''}`}
+        onClick={() => setIsOpen && setIsOpen(false)}
+      />
 
       <AdminSwitchModal
         isOpen={showSwitchModal}

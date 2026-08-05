@@ -81,12 +81,8 @@ const RestaurantCard = () => {
               <div
                 key={restaurant._id}
                 className="restaurant-card"
-                onClick={() => handleRestaurantClick(restaurant._id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && handleRestaurantClick(restaurant._id)}
-                aria-label={`View ${restaurant.name}`}
               >
+
                 {/* IMAGE */}
                 <div className="card-image-container">
                   <img
@@ -106,11 +102,14 @@ const RestaurantCard = () => {
                 <div className="card-details">
                   <div className="card-title-row">
                     <h3 className="restaurant-name">{restaurant.name}</h3>
-                    <div className="rating-badge">
-                      <Star className="icon-star" size={11} fill="currentColor" />
-                      <span>{restaurant.rating || '4.0'}</span>
-                    </div>
+                    {restaurant.rating > 0 && (
+                      <div className="rating-badge">
+                        <Star className="icon-star" size={11} fill="currentColor" />
+                        <span>{restaurant.rating}</span>
+                      </div>
+                    )}
                   </div>
+
 
                   <p className="cuisine-text">
                     {restaurant.cuisine?.join(' • ') || 'Restaurant'}

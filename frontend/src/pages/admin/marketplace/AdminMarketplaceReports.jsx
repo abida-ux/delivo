@@ -30,18 +30,18 @@ export default function AdminMarketplaceReports() {
   return (
     <AdminMarketplaceLayout pageTitle="Analytics & Sales Reports">
       <div className="admin-mkt-container" style={{ padding: 0 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <div className="admin-mkt-card" style={{ marginBottom: 0 }}>
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>TOTAL SALES REVENUE</span>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#16a34a', margin: '6px 0 0' }}>KES {totalRevenue.toLocaleString()}</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+          <div className="admin-mkt-card" style={{ marginBottom: 0, padding: '16px' }}>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>TOTAL SALES REVENUE</span>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#16a34a', margin: '4px 0 0' }}>KES {totalRevenue.toLocaleString()}</h2>
           </div>
-          <div className="admin-mkt-card" style={{ marginBottom: 0 }}>
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>TOTAL FULFILLED ORDERS</span>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0284c7', margin: '6px 0 0' }}>{totalOrdersCount} Orders</h2>
+          <div className="admin-mkt-card" style={{ marginBottom: 0, padding: '16px' }}>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>TOTAL FULFILLED ORDERS</span>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0284c7', margin: '4px 0 0' }}>{totalOrdersCount} Orders</h2>
           </div>
-          <div className="admin-mkt-card" style={{ marginBottom: 0 }}>
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 700 }}>AVERAGE BASKET VALUE</span>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#ff6b00', margin: '6px 0 0' }}>KES {avgOrderValue.toLocaleString('en-KE', { maximumFractionDigits: 2 })}</h2>
+          <div className="admin-mkt-card" style={{ marginBottom: 0, padding: '16px' }}>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>AVERAGE BASKET VALUE</span>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#ff6b00', margin: '4px 0 0' }}>KES {avgOrderValue.toLocaleString('en-KE', { maximumFractionDigits: 2 })}</h2>
           </div>
         </div>
 

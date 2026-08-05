@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import AppRoutes from "./routes/AppRoutes";
 import Loader from "./components/Loader";
 import AuthModal from "./components/AuthModal";
+
 import { LoaderContext } from "./context/LoaderContext";
 import { AuthContext } from "./context/AuthContext";
 import { savePushSubscription } from './services/api';
@@ -205,6 +206,8 @@ function App() {
     </div>
   );
 }
+
+
 
 
 export default App;

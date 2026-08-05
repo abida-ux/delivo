@@ -34,6 +34,7 @@ const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const combinationRoutes = require('./routes/combinationRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 
+
 // Initialize Express app
 const app = express();
 
@@ -157,6 +158,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/combinations', combinationRoutes);
 app.use('/api/addresses', addressRoutes);
+
 
 // Health check route
 app.get('/api/health', (req, res) => {

@@ -13,8 +13,17 @@ exports.getAllFoods = async (req, res) => {
   try {
     let filter = {};
     if (req.query.category) {
-      filter.categories = req.query.category;
+      const mongoose = require('mongoose');
+      if (mongoose.Types.ObjectId.isValid(req.query.category)) {
+        filter.categories = req.query.category;
+      } else {
+        filter.$or = [
+          { category: { $regex: req.query.category, $options: 'i' } },
+          { name: { $regex: req.query.category, $options: 'i' } }
+        ];
+      }
     }
+
     if (req.query.search) {
       filter.name = { $regex: req.query.search, $options: 'i' };
     }
@@ -75,6 +84,7 @@ exports.getAllFoods = async (req, res) => {
 };
 
 // ==================== GET SINGLE FOOD ====================
+
 exports.getFoodById = async (req, res) => {
   try {
     let food = await Food.findById(req.params.id)
@@ -145,14 +155,23 @@ exports.getFoodById = async (req, res) => {
       }));
     }
 
+    let userRating = 0;
+    if (req.user) {
+      const FoodRating = require('../models/FoodRating');
+      const userRatingRec = await FoodRating.findOne({ food: food._id, user: req.user._id || req.user.id });
+      if (userRatingRec) userRating = userRatingRec.rating;
+    }
+
     return res.status(200).json({
       success: true,
       data: {
         ...food,
+        userRating,
         restaurantsSelling,
         restaurantCount: restaurantsSelling.length,
       },
     });
+
 
   } catch (error) {
     console.error('❌ getFoodById error:', error.message);
@@ -513,3 +532,64 @@ exports.getFoodRestaurants = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ==================== RATE FOOD DISH (AUTHENTICATED) ====================
+exports.rateFood = async (req, res) => {
+  try {
+    const FoodRating = require('../models/FoodRating');
+    const { foodId } = req.params;
+    const { rating } = req.body;
+
+    const ratingNum = Number(rating);
+    if (!ratingNum || ratingNum < 1 || ratingNum > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid rating between 1 and 5',
+      });
+    }
+
+    const food = await Food.findById(foodId);
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: 'Food dish not found',
+      });
+    }
+
+    const userId = req.user.id || req.user._id;
+
+    // Upsert rating (user can update their rating if already rated)
+    await FoodRating.findOneAndUpdate(
+      { food: foodId, user: userId },
+      { rating: ratingNum },
+      { upsert: true, new: true }
+    );
+
+    // Recalculate average rating for this food
+    const allRatings = await FoodRating.find({ food: foodId });
+    const count = allRatings.length;
+    const avgRating = parseFloat(
+      (allRatings.reduce((acc, r) => acc + r.rating, 0) / count).toFixed(1)
+    );
+
+    food.rating = avgRating;
+    food.numReviews = count;
+    await food.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Thank you for rating this dish!',
+      data: {
+        rating: avgRating,
+        numReviews: count,
+        userRating: ratingNum,
+      },
+    });
+  } catch (error) {
+    console.error('❌ rateFood error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to submit rating',
+    });
+  }
+};
