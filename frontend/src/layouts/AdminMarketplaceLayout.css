@@ -1,0 +1,95 @@
+/* ================================================
+   DEDICATED MARKETPLACE ADMIN LAYOUT & NAVBAR
+   Matches Food Delivery Admin Topbar (56px) 100%
+   ================================================ */
+
+.mkt-admin-layout {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  font-family: inherit;
+}
+
+.mkt-admin-main {
+  flex: 1;
+  margin-left: 240px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .mkt-admin-main {
+    margin-left: 0;
+  }
+}
+
+.mkt-admin-navbar {
+  height: 56px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  gap: 12px;
+}
+
+.mkt-navbar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mkt-navbar-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Experience Switcher Pill */
+.admin-experience-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.exp-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.exp-switcher-btn:hover {
+  color: #0f172a;
+}
+
+.exp-switcher-btn.active {
+  background: #ffffff;
+  color: #16a34a;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}

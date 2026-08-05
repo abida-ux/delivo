@@ -172,52 +172,6 @@ export const getAllOrders = async () => {
   return res.data.data || [];
 };
 
-// ================= MARKETPLACE =================
-export const getMarketplaceCategories = async () => {
-  const res = await api.get('/marketplace/categories');
-  return res.data.data || [];
-};
-
-export const createMarketplaceCategory = async (payload) => {
-  const res = await api.post('/marketplace/categories', payload);
-  return res.data.data;
-};
-
-export const updateMarketplaceCategory = async (id, payload) => {
-  const res = await api.put(`/marketplace/categories/${id}`, payload);
-  return res.data.data;
-};
-
-export const deleteMarketplaceCategory = async (id) => {
-  const res = await api.delete(`/marketplace/categories/${id}`);
-  return res.data;
-};
-
-export const getMarketplaceProducts = async (params = {}) => {
-  const res = await api.get('/marketplace/products', { params });
-  return res.data;
-};
-
-export const createMarketplaceProduct = async (payload) => {
-  const res = await api.post('/marketplace/products', payload);
-  return res.data.data;
-};
-
-export const updateMarketplaceProduct = async (id, payload) => {
-  const res = await api.put(`/marketplace/products/${id}`, payload);
-  return res.data.data;
-};
-
-export const deleteMarketplaceProduct = async (id) => {
-  const res = await api.delete(`/marketplace/products/${id}`);
-  return res.data;
-};
-
-export const getMarketplaceAdminOverview = async () => {
-  const res = await api.get('/marketplace/admin/overview');
-  return res.data.data;
-};
-
 export const getUnassignedOrders = async () => {
   const res = await api.get('/orders/rider/unassigned');
   return res.data.data || [];
@@ -419,6 +373,207 @@ export const addProductToStore = async (data) => {
 
 export const removeProductFromStore = async (data) => {
   const res = await api.post('/stores/product/remove', data);
+  return res.data.data;
+};
+
+// ================= MARKETPLACE API =================
+export const getMarketplaceCategories = async (params) => {
+  const res = await api.get('/marketplace/categories', { params });
+  return res.data.data || [];
+};
+
+export const createMarketplaceCategory = async (data) => {
+  const res = await api.post('/marketplace/categories', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceCategory = async (id, data) => {
+  const res = await api.put(`/marketplace/categories/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceCategory = async (id) => {
+  const res = await api.delete(`/marketplace/categories/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceProducts = async (params) => {
+  const res = await api.get('/marketplace/products', { params });
+  return res.data || { data: [], count: 0 };
+};
+
+export const getMarketplaceProductById = async (id) => {
+  const res = await api.get(`/marketplace/products/${id}`);
+  return res.data.data;
+};
+
+export const createMarketplaceProduct = async (data) => {
+  const res = await api.post('/marketplace/products', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceProduct = async (id, data) => {
+  const res = await api.put(`/marketplace/products/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceProduct = async (id) => {
+  const res = await api.delete(`/marketplace/products/${id}`);
+  return res.data;
+};
+
+export const duplicateMarketplaceProduct = async (id) => {
+  const res = await api.post(`/marketplace/products/${id}/duplicate`);
+  return res.data.data;
+};
+
+export const bulkMarketplaceProductAction = async (data) => {
+  const res = await api.post('/marketplace/products/bulk', data);
+  return res.data;
+};
+
+export const getMarketplaceStores = async () => {
+  const res = await api.get('/marketplace/stores');
+  return res.data.data || [];
+};
+
+export const createMarketplaceStore = async (data) => {
+  const res = await api.post('/marketplace/stores', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceStore = async (id, data) => {
+  const res = await api.put(`/marketplace/stores/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceStore = async (id) => {
+  const res = await api.delete(`/marketplace/stores/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceBanners = async (params) => {
+  const res = await api.get('/marketplace/banners', { params });
+  return res.data.data || [];
+};
+
+export const createMarketplaceBanner = async (data) => {
+  const res = await api.post('/marketplace/banners', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceBanner = async (id, data) => {
+  const res = await api.put(`/marketplace/banners/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceBanner = async (id) => {
+  const res = await api.delete(`/marketplace/banners/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceFlashSales = async () => {
+  const res = await api.get('/marketplace/flash-sales');
+  return res.data.data || [];
+};
+
+export const createMarketplaceFlashSale = async (data) => {
+  const res = await api.post('/marketplace/flash-sales', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceFlashSale = async (id, data) => {
+  const res = await api.put(`/marketplace/flash-sales/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceFlashSale = async (id) => {
+  const res = await api.delete(`/marketplace/flash-sales/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceCoupons = async () => {
+  const res = await api.get('/marketplace/coupons');
+  return res.data.data || [];
+};
+
+export const createMarketplaceCoupon = async (data) => {
+  const res = await api.post('/marketplace/coupons', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceCoupon = async (id, data) => {
+  const res = await api.put(`/marketplace/coupons/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceCoupon = async (id) => {
+  const res = await api.delete(`/marketplace/coupons/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceReviews = async () => {
+  const res = await api.get('/marketplace/reviews');
+  return res.data.data || [];
+};
+
+export const createMarketplaceReview = async (data) => {
+  const res = await api.post('/marketplace/reviews', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceReview = async (id, data) => {
+  const res = await api.put(`/marketplace/reviews/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceReview = async (id) => {
+  const res = await api.delete(`/marketplace/reviews/${id}`);
+  return res.data;
+};
+
+export const getSecondHandListings = async (params) => {
+  const res = await api.get('/marketplace/second-hand', { params });
+  return res.data.data || [];
+};
+
+export const createSecondHandListing = async (data) => {
+  const res = await api.post('/marketplace/second-hand', data);
+  return res.data.data;
+};
+
+export const updateSecondHandListing = async (id, data) => {
+  const res = await api.put(`/marketplace/second-hand/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteSecondHandListing = async (id) => {
+  const res = await api.delete(`/marketplace/second-hand/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceOrders = async () => {
+  const res = await api.get('/marketplace/orders');
+  return res.data.data || [];
+};
+
+export const createMarketplaceOrder = async (data) => {
+  const res = await api.post('/marketplace/orders', data);
+  return res.data.data;
+};
+
+export const updateMarketplaceOrder = async (id, data) => {
+  const res = await api.put(`/marketplace/orders/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteMarketplaceOrder = async (id) => {
+  const res = await api.delete(`/marketplace/orders/${id}`);
+  return res.data;
+};
+
+export const getMarketplaceAdminOverview = async () => {
+  const res = await api.get('/marketplace/admin/overview');
   return res.data.data;
 };
 

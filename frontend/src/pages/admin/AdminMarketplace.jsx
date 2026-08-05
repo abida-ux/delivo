@@ -1,254 +1,183 @@
-import { useEffect, useState } from 'react';
-import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
-import { getMarketplaceCategories, getMarketplaceProducts, createMarketplaceCategory, createMarketplaceProduct, updateMarketplaceCategory, updateMarketplaceProduct, deleteMarketplaceCategory, deleteMarketplaceProduct, getMarketplaceAdminOverview } from '../../services/api';
+import { useEffect, useState, useContext } from 'react';
+import AdminMarketplaceLayout from '../../layouts/AdminMarketplaceLayout';
+import { AuthContext } from '../../context/AuthContext';
+import {
+  getMarketplaceAdminOverview,
+  getMarketplaceOrders,
+} from '../../services/api';
+import {
+  Package,
+  Layers,
+  Store,
+  ShoppingCart,
+  Tag,
+  Calendar,
+} from 'lucide-react';
 import '../pages.css';
+import './AdminDashboard.css';
+import './AdminMarketplace.css';
 
-const emptyCategory = { name: '', description: '', image: '', icon: '🛍️', categoryType: 'supermarket', isActive: true, sortOrder: 0 };
-const emptyProduct = { name: '', description: '', brand: '', categoryType: 'supermarket', category: '', price: 0, discount: 0, stock: 0, images: [], image: '', weightOrSize: '', availability: true, featured: false, prescriptionRequired: false, requiresAgeVerification: false, isActive: true };
+export default function AdminMarketplace() {
+  const { user } = useContext(AuthContext);
+  const [overview, setOverview] = useState({ categories: 0, products: 0, stores: 0, orders: 0, secondHandPending: 0, banners: 0 });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const AdminMarketplace = () => {
-  const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [overview, setOverview] = useState({ categories: 0, products: 0, lowStockProducts: [] });
-  const [categoryForm, setCategoryForm] = useState(emptyCategory);
-  const [productForm, setProductForm] = useState(emptyProduct);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
-  const [editingProductId, setEditingProductId] = useState(null);
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
-
-  const loadData = async () => {
+  const loadDashboardData = async () => {
     try {
-      const [cats, prodRes, overviewRes] = await Promise.all([
-        getMarketplaceCategories(),
-        getMarketplaceProducts({ limit: 50 }),
-        getMarketplaceAdminOverview(),
+      setLoading(true);
+      const [overviewData, ordersData] = await Promise.all([
+        getMarketplaceAdminOverview().catch(() => ({})),
+        getMarketplaceOrders().catch(() => []),
       ]);
-      setCategories(cats);
-      setProducts(prodRes.data || []);
-      setOverview(overviewRes || { categories: 0, products: 0, lowStockProducts: [] });
-    } catch (error) {
-      console.error('Marketplace data failed', error);
+      if (overviewData) setOverview(overviewData);
+      if (Array.isArray(ordersData)) setRecentOrders(ordersData);
+    } catch (err) {
+      console.error('Error loading marketplace dashboard:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const resetCategoryForm = () => {
-    setCategoryForm(emptyCategory);
-    setEditingCategoryId(null);
-  };
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  const currentFormattedDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
-  const resetProductForm = () => {
-    setProductForm(emptyProduct);
-    setEditingProductId(null);
-  };
-
-  const handleCategorySubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        ...categoryForm,
-        slug: categoryForm.slug || categoryForm.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      };
-      if (editingCategoryId) {
-        await updateMarketplaceCategory(editingCategoryId, payload);
-      } else {
-        await createMarketplaceCategory(payload);
-      }
-      resetCategoryForm();
-      await loadData();
-    } catch (error) {
-      console.error('Category save failed', error);
-      alert(error.response?.data?.message || 'Failed to save category');
-    }
-  };
-
-  const handleProductSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const selectedCategory = categories.find((item) => item.categoryType === productForm.categoryType);
-      const payload = {
-        ...productForm,
-        category: selectedCategory?._id || productForm.category || '',
-        images: productForm.images?.length ? productForm.images : [productForm.image].filter(Boolean),
-        image: productForm.image || (productForm.images?.[0] || ''),
-        slug: productForm.slug || productForm.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      };
-      if (editingProductId) {
-        await updateMarketplaceProduct(editingProductId, payload);
-      } else {
-        await createMarketplaceProduct(payload);
-      }
-      resetProductForm();
-      await loadData();
-    } catch (error) {
-      console.error('Product save failed', error);
-      alert(error.response?.data?.message || 'Failed to save product');
-    }
-  };
-
-  const handleDeleteCategory = async (id) => {
-    await deleteMarketplaceCategory(id);
-    await loadData();
-  };
-
-  const handleDeleteProduct = async (id) => {
-    await deleteMarketplaceProduct(id);
-    await loadData();
-  };
+  const statCards = [
+    {
+      label: 'Products',
+      value: overview.products || 0,
+      icon: Package,
+      desc: 'Active catalog items',
+    },
+    {
+      label: 'Categories',
+      value: overview.categories || 0,
+      icon: Layers,
+      desc: 'Marketplace categories',
+    },
+    {
+      label: 'Stores',
+      value: overview.stores || 0,
+      icon: Store,
+      desc: 'Verified merchants',
+    },
+    {
+      label: 'Second-Hand',
+      value: overview.secondHandPending || 0,
+      icon: Tag,
+      desc: 'Pending pre-owned reviews',
+    },
+    {
+      label: 'Orders',
+      value: overview.orders || recentOrders.length || 0,
+      icon: ShoppingCart,
+      desc: 'Total marketplace orders',
+    },
+  ];
 
   return (
-    <AdminDashboardLayout pageTitle="Marketplace Management">
-      <div className="admin-dashboard marketplace-admin-shell">
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-content">
-              <p className="stat-label">Categories</p>
-              <h3 className="stat-value">{overview.categories}</h3>
+    <AdminMarketplaceLayout pageTitle="Dashboard">
+      <div className="admin-dashboard-v2">
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading marketplace metrics...</p>
+          </div>
+        ) : (
+          <div className="dashboard-grid-container">
+            {/* ── WELCOME BANNER SECTION ── */}
+            <div className="welcome-banner">
+              <div className="welcome-text">
+                <h2>{greeting}, {user?.name || 'Admin'} 👋</h2>
+                <p>Here's what's happening across Delivo Marketplace today.</p>
+              </div>
+              <div className="welcome-date">
+                <Calendar size={14} />
+                <span>{currentFormattedDate}</span>
+              </div>
+            </div>
+
+            {/* ── KPI CARDS GRID ── */}
+            <div className="layout-row-two">
+              {statCards.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={index} className="v2-stat-card">
+                    <div className="v2-stat-header">
+                      <div className="v2-icon-box" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                        <Icon size={20} />
+                      </div>
+                    </div>
+                    <div className="v2-stat-body">
+                      <span className="v2-label">{stat.label}</span>
+                      <h4 className="v2-value">{stat.value}</h4>
+                    </div>
+                    <p className="v2-desc">{stat.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── RECENT MARKETPLACE TRANSACTIONS TABLE ── */}
+            <div className="layout-row-three">
+              <div className="large-table-card">
+                <div className="table-card-header">
+                  <div className="header-left">
+                    <h3>Recent Marketplace Orders</h3>
+                    <p>Live marketplace checkout stream logs</p>
+                  </div>
+                </div>
+                <div className="table-responsive">
+                  <table className="stripe-table">
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentOrders.length > 0 ? (
+                        recentOrders.map((o) => (
+                          <tr key={o._id}>
+                            <td className="font-mono text-xs">#{o.orderNumber || o._id.slice(-6).toUpperCase()}</td>
+                            <td>{o.customerName || 'Customer'}</td>
+                            <td className="font-semibold">KES {Number(o.totalAmount || 0).toLocaleString()}</td>
+                            <td>
+                              <span className={`badge ${o.status === 'delivered' || o.status === 'paid' ? 'badge-success' : o.status === 'cancelled' ? 'badge-danger' : 'badge-warning'}`}>
+                                {(o.status || 'pending').toUpperCase()}
+                              </span>
+                            </td>
+                            <td>{new Date(o.createdAt || Date.now()).toLocaleDateString()}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} style={{ textAlign: 'center', padding: '32px 0', color: '#64748b' }}>
+                            No marketplace orders recorded in the database yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-content">
-              <p className="stat-label">Products</p>
-              <h3 className="stat-value">{overview.products}</h3>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-content">
-              <p className="stat-label">Low stock alerts</p>
-              <h3 className="stat-value">{overview.lowStockProducts?.length || 0}</h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-info marketplace-form-grid">
-          <div className="info-box marketplace-form-card">
-            <h3>Create Category</h3>
-            <form onSubmit={handleCategorySubmit} className="checkout-form marketplace-form">
-              <div className="marketplace-form-field">
-                <label>Name</label>
-                <input placeholder="Name" value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} required />
-              </div>
-              <div className="marketplace-form-field">
-                <label>Description</label>
-                <input placeholder="Description" value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })} />
-              </div>
-              <div className="marketplace-form-field">
-                <label>Image URL</label>
-                <input placeholder="Image URL" value={categoryForm.image} onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })} />
-              </div>
-              <div className="marketplace-form-field">
-                <label>Category Type</label>
-                <select value={categoryForm.categoryType} onChange={(e) => setCategoryForm({ ...categoryForm, categoryType: e.target.value })}>
-                  <option value="supermarket">Supermarket</option>
-                  <option value="groceries">Groceries</option>
-                  <option value="pharmacy">Pharmacy</option>
-                  <option value="liquor">Liquor</option>
-                </select>
-              </div>
-              <div className="marketplace-form-actions">
-                <button type="submit" className="add-btn">Save Category</button>
-                <button type="button" className="secondary-btn" onClick={resetCategoryForm}>Reset</button>
-              </div>
-            </form>
-          </div>
-
-          <div className="info-box marketplace-form-card">
-            <h3>Create Product</h3>
-            <form onSubmit={handleProductSubmit} className="checkout-form marketplace-form">
-              <div className="marketplace-form-field">
-                <label>Product Name</label>
-                <input placeholder="Product name" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} required />
-              </div>
-              <div className="marketplace-form-field">
-                <label>Brand</label>
-                <input placeholder="Brand" value={productForm.brand} onChange={(e) => setProductForm({ ...productForm, brand: e.target.value })} />
-              </div>
-              <div className="marketplace-form-field">
-                <label>Description</label>
-                <input placeholder="Description" value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} />
-              </div>
-              <div className="marketplace-form-field">
-                <label>Image URL</label>
-                <input placeholder="Image URL" value={productForm.image} onChange={(e) => setProductForm({ ...productForm, image: e.target.value })} />
-              </div>
-              <div className="marketplace-form-grid compact-grid">
-                <div className="marketplace-form-field">
-                  <label>Price</label>
-                  <input type="number" placeholder="Price" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })} />
-                </div>
-                <div className="marketplace-form-field">
-                  <label>Discount</label>
-                  <input type="number" placeholder="Discount" value={productForm.discount} onChange={(e) => setProductForm({ ...productForm, discount: Number(e.target.value) })} />
-                </div>
-              </div>
-              <div className="marketplace-form-grid compact-grid">
-                <div className="marketplace-form-field">
-                  <label>Stock</label>
-                  <input type="number" placeholder="Stock" value={productForm.stock} onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })} />
-                </div>
-                <div className="marketplace-form-field">
-                  <label>Weight/Size</label>
-                  <input placeholder="Weight/Size" value={productForm.weightOrSize} onChange={(e) => setProductForm({ ...productForm, weightOrSize: e.target.value })} />
-                </div>
-              </div>
-              <div className="marketplace-form-field">
-                <label>Category Type</label>
-                <select value={productForm.categoryType} onChange={(e) => setProductForm({ ...productForm, categoryType: e.target.value })}>
-                  <option value="supermarket">Supermarket</option>
-                  <option value="groceries">Groceries</option>
-                  <option value="pharmacy">Pharmacy</option>
-                  <option value="liquor">Liquor</option>
-                </select>
-              </div>
-              <div className="marketplace-toggle-group">
-                <label className="marketplace-checkbox-row"><input type="checkbox" checked={productForm.availability} onChange={(e) => setProductForm({ ...productForm, availability: e.target.checked })} /> Available</label>
-                <label className="marketplace-checkbox-row"><input type="checkbox" checked={productForm.featured} onChange={(e) => setProductForm({ ...productForm, featured: e.target.checked })} /> Featured</label>
-                <label className="marketplace-checkbox-row"><input type="checkbox" checked={productForm.prescriptionRequired} onChange={(e) => setProductForm({ ...productForm, prescriptionRequired: e.target.checked })} /> Prescription Required</label>
-                <label className="marketplace-checkbox-row"><input type="checkbox" checked={productForm.requiresAgeVerification} onChange={(e) => setProductForm({ ...productForm, requiresAgeVerification: e.target.checked })} /> Age verification required</label>
-              </div>
-              <div className="marketplace-form-actions">
-                <button type="submit" className="add-btn">Save Product</button>
-                <button type="button" className="secondary-btn" onClick={resetProductForm}>Reset</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div className="dashboard-info" style={{ marginTop: '1rem' }}>
-          <div className="info-box marketplace-list-card">
-            <h3>Categories</h3>
-            {categories.map((category) => (
-              <div key={category._id} className="marketplace-list-item">
-                <div>
-                  <strong>{category.name}</strong>
-                  <div className="marketplace-pill">{category.categoryType}</div>
-                </div>
-                <div className="marketplace-form-actions">
-                  <button className="add-btn marketplace-inline-btn" onClick={() => { setCategoryForm(category); setEditingCategoryId(category._id); }}>Edit</button>
-                  <button className="secondary-btn marketplace-inline-btn" onClick={() => handleDeleteCategory(category._id)}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="info-box marketplace-list-card">
-            <h3>Products</h3>
-            {products.map((product) => (
-              <div key={product._id} className="marketplace-list-item">
-                <div>
-                  <strong>{product.name}</strong>
-                  <div className="marketplace-pill">stock {product.stock}</div>
-                </div>
-                <div className="marketplace-form-actions">
-                  <button className="add-btn marketplace-inline-btn" onClick={() => { setProductForm(product); setEditingProductId(product._id); }}>Edit</button>
-                  <button className="secondary-btn marketplace-inline-btn" onClick={() => handleDeleteProduct(product._id)}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
-    </AdminDashboardLayout>
+    </AdminMarketplaceLayout>
   );
-};
-
-export default AdminMarketplace;
+}

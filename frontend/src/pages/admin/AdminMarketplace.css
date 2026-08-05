@@ -1,0 +1,191 @@
+/* ================================================
+   ADMIN MARKETPLACE MANAGEMENT HUB
+   Compact Sizing — Matches Food Admin 100%
+   ================================================ */
+
+.admin-mkt-container {
+  padding: 0 0 32px;
+}
+
+.admin-mkt-tabs-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  scrollbar-width: none;
+}
+.admin-mkt-tabs-bar::-webkit-scrollbar { display: none; }
+
+.admin-mkt-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill, 9999px);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.admin-mkt-tab:hover {
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+.admin-mkt-tab.active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+}
+
+.admin-mkt-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  margin-bottom: 20px;
+}
+
+.admin-mkt-card-title {
+  font-family: var(--font-heading, inherit);
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-mkt-grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.admin-mkt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-mkt-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-mkt-field input,
+.admin-mkt-field select,
+.admin-mkt-field textarea {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  background: #ffffff;
+}
+
+.admin-mkt-field input:focus,
+.admin-mkt-field select:focus,
+.admin-mkt-field textarea:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.admin-mkt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.admin-mkt-table th,
+.admin-mkt-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-mkt-table th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.admin-mkt-status-badge {
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge-pending { background: #fef3c7; color: #d97706; }
+.badge-approved, .badge-active, .badge-paid { background: #f0fdf4; color: #16a34a; }
+.badge-rejected, .badge-inactive, .badge-cancelled { background: #fef2f2; color: #dc2626; }
+.badge-shipped { background: #e0f2fe; color: #0284c7; }
+
+.admin-mkt-btn-primary {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+  transition: all 0.2s ease;
+}
+
+.admin-mkt-btn-primary:hover {
+  background: #15803d;
+}
+
+.admin-mkt-btn-secondary {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-mkt-btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.admin-mkt-btn-danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}

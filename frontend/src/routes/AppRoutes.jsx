@@ -26,11 +26,24 @@ const MarketplaceProductDetail = lazy(() => import("../pages/marketplace/Marketp
 const MarketplaceCheckoutPage = lazy(() => import("../pages/marketplace/MarketplaceCheckoutPage"));
 const MarketplaceOrdersPage = lazy(() => import("../pages/marketplace/MarketplaceOrdersPage"));
 const MarketplaceWishlistPage = lazy(() => import("../pages/marketplace/MarketplaceWishlistPage"));
+const MarketplaceSecondHand = lazy(() => import("../pages/marketplace/MarketplaceSecondHand"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
 const AdminFoods = lazy(() => import("../pages/admin/AdminFoods"));
 const AdminMarketplace = lazy(() => import("../pages/admin/AdminMarketplace"));
+const AdminMarketplaceProducts = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceProducts"));
+const AdminMarketplaceCategories = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceCategories"));
+const AdminMarketplaceStores = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceStores"));
+const AdminMarketplaceOrders = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceOrders"));
+const AdminMarketplaceBanners = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceBanners"));
+const AdminMarketplaceFlashSales = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceFlashSales"));
+const AdminMarketplaceCoupons = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceCoupons"));
+const AdminMarketplaceReviews = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceReviews"));
+const AdminMarketplaceSecondHandPage = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceSecondHandPage"));
+const AdminMarketplaceCustomers = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceCustomers"));
+const AdminMarketplaceReports = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceReports"));
+const AdminMarketplaceSettings = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceSettings"));
 const AdminCategories = lazy(() => import("../pages/admin/AdminCategories"));
 const AdminCombinations = lazy(() => import("../pages/admin/AdminCombinations"));
 const AdminRestaurantFoods = lazy(() => import("../pages/admin/AdminRestaurantFoods"));
@@ -79,6 +92,7 @@ export default function AppRoutes() {
         <Route path="checkout" element={<MarketplaceCheckoutPage />} />
         <Route path="orders" element={<MarketplaceOrdersPage />} />
         <Route path="wishlist" element={<MarketplaceWishlistPage />} />
+        <Route path="second-hand" element={<MarketplaceSecondHand />} />
       </Route>
 
       <Route path="/stores/:typeId" element={<StoresByType />} />
@@ -121,14 +135,19 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/admin/marketplace"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminMarketplace />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/admin/marketplace" element={<ProtectedRoute requiredRole="admin"><AdminMarketplace /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/products" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceProducts /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/categories" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceCategories /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/stores" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceStores /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/banners" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceBanners /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/flash-sales" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceFlashSales /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/orders" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceOrders /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/customers" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceCustomers /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/coupons" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceCoupons /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/reviews" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceReviews /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/second-hand" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceSecondHandPage /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/reports" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceReports /></ProtectedRoute>} />
+      <Route path="/admin/marketplace/settings" element={<ProtectedRoute requiredRole="admin"><AdminMarketplaceSettings /></ProtectedRoute>} />
       <Route
         path="/admin/categories"
         element={

@@ -1,114 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Flame, Package } from 'lucide-react';
-import api from '../../services/api';
+import { getMarketplaceCategories, getMarketplaceProducts, getMarketplaceBanners } from '../../services/api';
 import MarketplaceProductCard from '../../components/marketplace/MarketplaceProductCard';
 import MarketplaceFooter from '../../components/marketplace/MarketplaceFooter';
-
-const MARKETPLACE_CATEGORIES = [
-  { id: 'supermarket', name: 'Supermarket' },
-  { id: 'groceries', name: 'Groceries' },
-  { id: 'pharmacy', name: 'Pharmacy' },
-  { id: 'beauty', name: 'Beauty' },
-  { id: 'electronics', name: 'Electronics' },
-  { id: 'fashion', name: 'Fashion' },
-];
 
 export default function MarketplaceHome() {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [products, setProducts] = useState([]);
   const [flashDeals, setFlashDeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMarketplaceProducts();
+    fetchHomeData();
   }, []);
 
-  const fetchMarketplaceProducts = async () => {
+  const fetchHomeData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/marketplace/products').then((r) => r.data.data || []).catch(() => []);
-      let items = res;
+      const [catsRes, productsRes, bannersRes] = await Promise.all([
+        getMarketplaceCategories().catch(() => []),
+        getMarketplaceProducts({ limit: 40 }).catch(() => ({ data: [] })),
+        getMarketplaceBanners().catch(() => []),
+      ]);
 
-      if (!items || items.length === 0) {
-        items = [
-          {
-            _id: 'mkt_1',
-            name: 'Organic Whole Milk 1L',
-            brand: 'Fresha Dairy',
-            category: 'supermarket',
-            price: 150,
-            originalPrice: 180,
-            discountPercent: 17,
-            image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=600&q=80',
-            rating: '4.9',
-            stock: 45,
-          },
-          {
-            _id: 'mkt_2',
-            name: 'Wireless Bluetooth Earbuds Pro',
-            brand: 'TechPulse Audio',
-            category: 'electronics',
-            price: 2499,
-            originalPrice: 3200,
-            discountPercent: 22,
-            image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80',
-            rating: '4.8',
-            stock: 12,
-          },
-          {
-            _id: 'mkt_3',
-            name: 'Hydrating Facial Serum 50ml',
-            brand: 'GlowSkin Organics',
-            category: 'beauty',
-            price: 1200,
-            originalPrice: 1500,
-            discountPercent: 20,
-            image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80',
-            rating: '4.7',
-            stock: 30,
-          },
-          {
-            _id: 'mkt_4',
-            name: 'Multivitamin Complex 60s',
-            brand: 'HealthPlus Pharmacy',
-            category: 'pharmacy',
-            price: 850,
-            image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
-            rating: '4.9',
-            stock: 60,
-          },
-          {
-            _id: 'mkt_5',
-            name: 'Fresh Crisp Apples (1kg)',
-            brand: 'Highland Farms',
-            category: 'groceries',
-            price: 320,
-            image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=600&q=80',
-            rating: '4.8',
-            stock: 50,
-          },
-          {
-            _id: 'mkt_6',
-            name: 'Classic Cotton Denim Jacket',
-            brand: 'UrbanWear Kenya',
-            category: 'fashion',
-            price: 2800,
-            originalPrice: 3500,
-            discountPercent: 20,
-            image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80',
-            rating: '4.6',
-            stock: 15,
-          },
-        ];
-      }
-
+      setCategories(catsRes || []);
+      setBanners(bannersRes || []);
+      const items = productsRes.data || [];
       setProducts(items);
-      setFlashDeals(items.filter((i) => i.discountPercent > 0 || i.originalPrice > i.price));
+      setFlashDeals(items.filter((i) => i.flashSale || i.discount > 0 || i.discountPrice > 0));
     } catch (err) {
-      console.error('Error fetching marketplace items:', err);
+      console.error('Error fetching marketplace home data:', err);
     } finally {
       setLoading(false);
     }
@@ -118,16 +44,17 @@ export default function MarketplaceHome() {
     e.preventDefault();
   };
 
-  const handleQuickSearch = (catName) => {
-    setSelectedCategory(selectedCategory === catName ? null : catName);
+  const handleQuickSearch = (catType) => {
+    setSelectedCategory(selectedCategory === catType ? null : catType);
   };
 
   const filteredProducts = products.filter((p) => {
-    const matchesCategory = !selectedCategory || p.category?.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesCategory = !selectedCategory || p.categoryType === selectedCategory || p.category?.categoryType === selectedCategory;
     const matchesSearch =
       !searchInput.trim() ||
       p.name?.toLowerCase().includes(searchInput.toLowerCase()) ||
-      p.brand?.toLowerCase().includes(searchInput.toLowerCase());
+      p.brand?.toLowerCase().includes(searchInput.toLowerCase()) ||
+      p.store?.toLowerCase().includes(searchInput.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -151,14 +78,20 @@ export default function MarketplaceHome() {
 
             <div className="hero-search-shortcuts">
               <span className="shortcut-label">Categories:</span>
-              {MARKETPLACE_CATEGORIES.map((cat) => (
+              {(categories.length > 0 ? categories : [
+                { categoryType: 'supermarket', name: 'Supermarket' },
+                { categoryType: 'groceries', name: 'Groceries' },
+                { categoryType: 'pharmacy', name: 'Pharmacy' },
+                { categoryType: 'electronics', name: 'Electronics' },
+                { categoryType: 'fashion', name: 'Fashion' },
+              ]).map((cat) => (
                 <button
-                  key={cat.id}
-                  className={`shortcut-pill ${selectedCategory === cat.id ? 'active' : ''}`}
-                  onClick={() => handleQuickSearch(cat.id)}
+                  key={cat._id || cat.categoryType}
+                  className={`shortcut-pill ${selectedCategory === cat.categoryType ? 'active' : ''}`}
+                  onClick={() => handleQuickSearch(cat.categoryType)}
                   type="button"
                 >
-                  {cat.name}
+                  {cat.icon ? `${cat.icon} ` : ''}{cat.name}
                 </button>
               ))}
             </div>
@@ -166,7 +99,25 @@ export default function MarketplaceHome() {
         </div>
       </section>
 
-      {/* ===== FLASH DEALS SECTION ===== */}
+      {/* ===== HERO BANNERS (IF AVAILABLE) ===== */}
+      {banners.length > 0 && !selectedCategory && !searchInput && (
+        <section style={{ maxWidth: 1240, margin: '0 auto 24px', padding: '0 16px' }}>
+          <div style={{ borderRadius: 20, overflow: 'hidden', background: '#0f172a', color: '#fff', padding: '32px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>{banners[0].title}</h2>
+              <p style={{ fontSize: 14, color: '#94a3b8', margin: '0 0 16px' }}>{banners[0].subtitle}</p>
+              <button className="hero-search-btn" onClick={() => navigate(banners[0].buttonLink || '/marketplace/categories')}>
+                {banners[0].buttonText || 'Shop Now'}
+              </button>
+            </div>
+            {banners[0].desktopBanner && (
+              <img src={banners[0].desktopBanner} alt="Banner" style={{ width: 260, height: 140, objectFit: 'cover', borderRadius: 14 }} />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ===== FLASH SALES SECTION ===== */}
       {flashDeals.length > 0 && !selectedCategory && !searchInput && (
         <section className="flash-deals-section">
           <div className="flash-header">
@@ -197,7 +148,7 @@ export default function MarketplaceHome() {
 
         {loading ? (
           <div className="foods-grid">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="food-menu-card" style={{ height: 260, opacity: 0.6 }} />
             ))}
           </div>

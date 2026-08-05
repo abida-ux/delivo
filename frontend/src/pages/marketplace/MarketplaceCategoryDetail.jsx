@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package } from 'lucide-react';
-import api from '../../services/api';
+import { getMarketplaceProducts } from '../../services/api';
 import MarketplaceProductCard from '../../components/marketplace/MarketplaceProductCard';
 
 export default function MarketplaceCategoryDetail() {
@@ -17,37 +17,16 @@ export default function MarketplaceCategoryDetail() {
   const fetchCategoryProducts = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/marketplace/products', { params: { category: slug } }).catch(() => null);
-      let items = res?.data?.data || [];
+      const res = await getMarketplaceProducts({ categoryType: slug });
+      const items = res.data || [];
 
-      if (!items || items.length === 0) {
-        items = [
-          {
-            _id: `mkt_cat_${slug}_1`,
-            name: `${slug.toUpperCase()} Premium Item 1`,
-            brand: 'Verified Brand',
-            category: slug,
-            price: 499,
-            image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=600&q=80',
-            rating: '4.9',
-            stock: 25,
-          },
-          {
-            _id: `mkt_cat_${slug}_2`,
-            name: `${slug.toUpperCase()} Featured Item 2`,
-            brand: 'Delivo Select',
-            category: slug,
-            price: 1250,
-            originalPrice: 1500,
-            discountPercent: 16,
-            image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80',
-            rating: '4.8',
-            stock: 10,
-          },
-        ];
+      if (items.length > 0) {
+        setProducts(items);
+      } else {
+        // Fetch all products if specific categoryType query returns empty
+        const allRes = await getMarketplaceProducts();
+        setProducts(allRes.data || []);
       }
-
-      setProducts(items);
     } catch (err) {
       console.error('Error loading category items:', err);
     } finally {
@@ -61,7 +40,7 @@ export default function MarketplaceCategoryDetail() {
         <button
           className="btn-secondary"
           onClick={() => navigate('/marketplace/categories')}
-          style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-2) var(--space-4)' }}
+          style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-2) var(--space-4)', cursor: 'pointer' }}
         >
           <ArrowLeft size={14} />
           <span>Back to Categories</span>
@@ -71,7 +50,7 @@ export default function MarketplaceCategoryDetail() {
           <h1 className="section-title" style={{ textTransform: 'capitalize' }}>
             {slug}
           </h1>
-          <p className="section-subtitle">Showing all available products</p>
+          <p className="section-subtitle">Showing all available products in this category</p>
         </div>
 
         {loading ? (

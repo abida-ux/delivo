@@ -1,4 +1,4 @@
-import {useContext} from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -19,12 +19,14 @@ import {
   ShoppingBasket,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import AdminSwitchModal from './admin/AdminSwitchModal';
 import './AdminSidebar.css';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, user } = useContext(AuthContext);
+  const [showSwitchModal, setShowSwitchModal] = useState(false);
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -114,10 +116,13 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             </button>
             <button
               className={`nav-item ${isActive('/admin/marketplace') ? 'active' : ''}`}
-              onClick={() => { navigate('/admin/marketplace'); setIsOpen(false); }}
+              onClick={() => {
+                setShowSwitchModal(true);
+                if (setIsOpen) setIsOpen(false);
+              }}
             >
               <ShoppingBasket size={20} />
-              <span>Marketplace</span>
+              <span>Marketplace Admin</span>
             </button>
             <button
               className={`nav-item ${isActive('/admin/orders') ? 'active' : ''}`}
@@ -199,6 +204,16 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
       <div
         className={`sidebar-overlay ${isOpen ? 'visible' : ''}`}
         onClick={() => setIsOpen(false)}
+      />
+
+      <AdminSwitchModal
+        isOpen={showSwitchModal}
+        targetMode="marketplace"
+        onClose={() => setShowSwitchModal(false)}
+        onConfirm={() => {
+          setShowSwitchModal(false);
+          navigate('/admin/marketplace');
+        }}
       />
     </>
   );

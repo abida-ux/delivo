@@ -18,6 +18,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import MarketplaceCartDrawer from './MarketplaceCartDrawer';
 import LogoutModal from '../LogoutModal';
+import ReturnToFoodModal from './ReturnToFoodModal';
 import './MarketplaceNavbar.css';
 
 export default function MarketplaceNavbar() {
@@ -29,6 +30,7 @@ export default function MarketplaceNavbar() {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -39,6 +41,7 @@ export default function MarketplaceNavbar() {
   const navItems = [
     { name: 'Marketplace', path: '/marketplace', icon: <ShoppingBag size={18} /> },
     { name: 'Categories', path: '/marketplace/categories', icon: <Grid size={18} /> },
+    { name: 'Second-Hand', path: '/marketplace/second-hand', icon: <Tag size={18} /> },
     { name: 'Wishlist', path: '/marketplace/wishlist', icon: <Heart size={18} /> },
     { name: 'Orders', path: '/marketplace/orders', icon: <PackageCheck size={18} /> },
   ];
@@ -61,7 +64,7 @@ export default function MarketplaceNavbar() {
             <button
               type="button"
               className="mkt-return-food-pill"
-              onClick={() => navigate('/')}
+              onClick={() => setShowReturnModal(true)}
               title="Return to Delivo Food Delivery"
             >
               <ArrowLeft size={14} />
@@ -120,7 +123,7 @@ export default function MarketplaceNavbar() {
 
         {/* MOBILE BOTTOM NAVBAR */}
         <div className="mkt-mobile-bottom-navbar">
-          <button className="mkt-mobile-bottom-icon" onClick={() => navigate('/')}>
+          <button className="mkt-mobile-bottom-icon" onClick={() => setShowReturnModal(true)}>
             <ArrowLeft size={20} />
             <span className="mkt-mobile-icon-label">Food</span>
           </button>
@@ -150,6 +153,15 @@ export default function MarketplaceNavbar() {
           navigate('/marketplace');
         }}
         onCancel={() => setShowLogoutModal(false)}
+      />
+
+      <ReturnToFoodModal
+        isOpen={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        onConfirm={() => {
+          setShowReturnModal(false);
+          navigate('/');
+        }}
       />
     </>
   );

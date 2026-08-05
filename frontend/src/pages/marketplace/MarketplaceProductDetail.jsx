@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Plus, Minus, Check } from 'lucide-react';
-import api from '../../services/api';
+import { ArrowLeft, Star, Plus, Minus, Check, ShieldCheck, Truck } from 'lucide-react';
+import { getMarketplaceProductById } from '../../services/api';
 import { useMarketplaceCart } from '../../contexts/marketplace/MarketplaceCartContext';
 import { resolveImageUrl, handleImageError } from '../../utils/placeholderImage';
 
@@ -21,22 +21,9 @@ export default function MarketplaceProductDetail() {
   const fetchProductDetails = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/marketplace/products/${id}`).catch(() => null);
-      if (res?.data?.data) {
-        setProduct(res.data.data);
-      } else {
-        setProduct({
-          _id: id,
-          name: 'Wireless Noise-Cancelling Earbuds Pro',
-          brand: 'TechPulse Audio',
-          category: 'electronics',
-          price: 2499,
-          originalPrice: 3200,
-          description: 'Experience crystal-clear acoustics, active noise cancellation, and up to 30 hours of continuous playback.',
-          image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80',
-          rating: '4.8',
-          stock: 12,
-        });
+      const data = await getMarketplaceProductById(id);
+      if (data) {
+        setProduct(data);
       }
     } catch (err) {
       console.error('Error loading product details:', err);
@@ -106,16 +93,27 @@ export default function MarketplaceProductDetail() {
             <h1 className="food-details-name">{product.name}</h1>
             <div className="food-details-restaurant">
               <span>Brand / Store:</span>
-              <span className="food-details-restaurant-link">{product.brand || 'Verified Merchant'}</span>
+              <span className="food-details-restaurant-link">{product.brand || product.store || 'Delivo Official Store'}</span>
             </div>
 
             <div className="food-details-price">
-              KES {price.toFixed(2)}
+              KES {price.toLocaleString('en-KE', { minimumFractionDigits: 2 })}
             </div>
 
             <p className="food-details-description">
-              {product.description}
+              {product.description || product.shortDescription || 'High quality curated marketplace product with official warranty and fast doorstep delivery.'}
             </p>
+
+            <div style={{ display: 'flex', gap: 16, margin: '16px 0', fontSize: 13, color: '#64748b' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ShieldCheck size={16} color="#16a34a" />
+                <span>{product.warranty || 'Official Warranty'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Truck size={16} color="#0284c7" />
+                <span>{product.estimatedDeliveryTime || '1–2 Days Delivery'}</span>
+              </div>
+            </div>
 
             <div className="food-details-divider" />
 

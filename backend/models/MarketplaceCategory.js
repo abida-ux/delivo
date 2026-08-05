@@ -25,10 +25,14 @@ const MarketplaceCategorySchema = new mongoose.Schema({
     type: String,
     default: '🛍️',
   },
+  banner: {
+    type: String,
+    default: '',
+  },
   categoryType: {
     type: String,
-    enum: ['supermarket', 'groceries', 'pharmacy', 'liquor'],
-    required: true,
+    enum: ['supermarket', 'groceries', 'pharmacy', 'liquor', 'electronics', 'fashion', 'home', 'beauty'],
+    default: 'supermarket',
   },
   isActive: {
     type: Boolean,
