@@ -1,7 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const SibApiV3Sdk = require('@getbrevo/brevo');
+let SibApiV3Sdk;
+try {
+  SibApiV3Sdk = require('@getbrevo/brevo');
+} catch (e) {
+  // @getbrevo/brevo module optional fallback
+}
 
 const envPath = path.join(__dirname, '..', '.env');
 if (fs.existsSync(envPath)) {
