@@ -101,41 +101,29 @@ const AdminSettings = () => {
   const fetchNotifications = async () => {
     try {
       const { data } = await api.get('/notifications');
-      setNotifications(data.notifications || []);
+      const rawNotifs = data.notifications || [];
+      const seen = new Set();
+      const uniqueNotifs = [];
+      rawNotifs.forEach((notif) => {
+        const key = `${notif.title}|${notif.message}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueNotifs.push(notif);
+        }
+      });
+      setNotifications(uniqueNotifs.slice(0, 5));
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
   };
 
-  const handleSendNotification = async (e) => {
-    e.preventDefault();
-    
-    if (!notificationForm.title.trim() || !notificationForm.message.trim()) {
-      setNotificationMessage('Title and message are required');
-      setTimeout(() => setNotificationMessage(''), 3000);
-      return;
-    }
-
-    setNotificationLoading(true);
+  const handleClearAllNotifications = async () => {
+    if (!window.confirm('Clear all notification history?')) return;
     try {
-      await api.post('/notifications/create', {
-        title: notificationForm.title,
-        message: notificationForm.message,
-        type: notificationForm.type,
-        userId: notificationForm.userId || null,
-      });
-
-      setNotificationMessage('Notification sent successfully!');
-      setNotificationForm({ title: '', message: '', type: 'system', userId: '' });
-      setTimeout(() => setNotificationMessage(''), 3000);
-      fetchNotifications();
+      await api.delete('/notifications/user/all');
+      setNotifications([]);
     } catch (error) {
-      console.error('Error sending notification:', error);
-      setNotificationMessage('Error sending notification');
-
-      setTimeout(() => setNotificationMessage(''), 3000);
-    } finally {
-      setNotificationLoading(false);
+      console.error('Error clearing notifications:', error);
     }
   };
 
@@ -149,6 +137,7 @@ const AdminSettings = () => {
       console.error('Error deleting notification:', error);
     }
   };
+
 
   // Save settings to backend
   const saveSettings = async () => {
@@ -318,7 +307,25 @@ const AdminSettings = () => {
             {/* Sent Notifications List */}
             {notifications.length > 0 && (
               <div className="notifications-history">
-                <h3>Recent Notifications ({notifications.length})</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <h3>Recent Notifications ({notifications.length})</h3>
+                  <button
+                    type="button"
+                    onClick={handleClearAllNotifications}
+                    style={{
+                      background: '#fef2f2',
+                      color: '#dc2626',
+                      border: '1px solid #fee2e2',
+                      padding: '5px 12px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Clear All History
+                  </button>
+                </div>
                 <div className="notifications-list">
                   {notifications.map((notif) => (
                     <div key={notif._id} className="notification-item">
@@ -341,6 +348,7 @@ const AdminSettings = () => {
                 </div>
               </div>
             )}
+
 
             {notifications.length === 0 && (
               <div className="empty-state">
