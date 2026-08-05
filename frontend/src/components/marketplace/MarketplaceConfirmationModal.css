@@ -1,0 +1,190 @@
+.mkt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: mktFadeIn 0.2s ease forwards;
+}
+
+.mkt-modal-container {
+  position: relative;
+  width: min(92vw, 460px);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 2rem 1.75rem 1.75rem;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: mktScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  font-family: inherit;
+}
+
+.mkt-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mkt-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.mkt-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.mkt-modal-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff6b00 0%, #ff8800 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 8px 18px rgba(255, 107, 0, 0.25);
+}
+
+.mkt-modal-title {
+  font-family: var(--font-heading, inherit);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.mkt-modal-body {
+  text-align: center;
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.mkt-modal-description {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+  color: #1e293b;
+}
+
+.mkt-modal-subtext {
+  margin: 0 0 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.mkt-modal-feature-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  color: #334155;
+  text-align: left;
+}
+
+.mkt-modal-feature-note svg {
+  color: #ff6b00;
+  flex-shrink: 0;
+}
+
+.mkt-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.mkt-btn-cancel,
+.mkt-btn-confirm {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.mkt-btn-confirm {
+  background: #ff6b00;
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 107, 0, 0.3);
+}
+
+.mkt-btn-confirm:hover {
+  background: #e66000;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 107, 0, 0.4);
+}
+
+.mkt-btn-cancel {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.mkt-btn-cancel:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+@keyframes mktFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mktScaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+  .mkt-modal-container {
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-radius: 20px;
+  }
+  .mkt-modal-title {
+    font-size: 1.2rem;
+  }
+  .mkt-modal-body {
+    font-size: 0.85rem;
+  }
+  .mkt-btn-confirm,
+  .mkt-btn-cancel {
+    height: 46px;
+    font-size: 0.88rem;
+  }
+}

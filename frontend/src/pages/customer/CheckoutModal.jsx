@@ -5,6 +5,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../context/LocationContext';
 import LocationPickerModal from '../../components/LocationPickerModal';
+import MpesaPaymentModal from '../../components/MpesaPaymentModal';
 import api, { createOrder, getAppSettings, getMpesaStatus, getAllRestaurants, getOrderById } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
@@ -71,12 +72,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   // Update input address from location coordinates context dynamically
   useEffect(() => {
     if (location.formattedAddress) {
+      const fullLoc = location.nearbyLandmark
+        ? `${location.formattedAddress} [Landmark: ${location.nearbyLandmark}]`
+        : location.formattedAddress;
       setDeliveryInfo(prev => ({
         ...prev,
-        address: location.formattedAddress,
+        address: fullLoc,
       }));
     }
-  }, [location.formattedAddress]);
+  }, [location.formattedAddress, location.nearbyLandmark]);
 
   // Load saved addresses on open if user is logged in
   useEffect(() => {
@@ -160,9 +164,61 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       }
     };
 
+    const DEFAULT_RESTAURANT = { _id: '65f000000000000000000001', name: 'Delivo Main Kitchen', isOpen: true };
+
+    const loadRestaurants = async () => {
+      try {
+        const mealItems = cartItems.filter((i) => i.productType !== 'marketplace');
+        const firstFoodId = mealItems[0]
+          ? typeof mealItems[0].foodId === 'object'
+            ? mealItems[0].foodId._id
+            : mealItems[0].foodId
+          : null;
+
+        let validRestaurants = [];
+
+        if (firstFoodId) {
+          try {
+            const res = await api.get(`/foods/${firstFoodId}/restaurants`);
+            const links = res.data?.data || res.data || [];
+            validRestaurants = links
+              .map((link) => link.restaurantId || link)
+              .filter((r) => r && typeof r === 'object');
+          } catch (err) {
+            console.warn('Could not fetch specific restaurants for food item, falling back to all restaurants:', err);
+          }
+        }
+
+        if (validRestaurants.length === 0) {
+          try {
+            const list = await getAllRestaurants();
+            validRestaurants = Array.isArray(list) ? list : [];
+          } catch (e) {
+            console.warn('Failed to load all restaurants:', e);
+          }
+        }
+
+        if (validRestaurants.length === 0) {
+          validRestaurants = [DEFAULT_RESTAURANT];
+        }
+
+        setRestaurants(validRestaurants);
+
+        const openRest = validRestaurants.find((r) => r.isOpen !== false) || validRestaurants[0];
+        if (openRest) {
+          setSelectedRestaurant(openRest._id || openRest.id || DEFAULT_RESTAURANT._id);
+        }
+      } catch (err) {
+        console.error('Failed to load restaurants in checkout:', err);
+        setRestaurants([DEFAULT_RESTAURANT]);
+        setSelectedRestaurant(DEFAULT_RESTAURANT._id);
+      }
+    };
+
     if (isOpen) {
       loadSettings();
       loadCheckoutProfile();
+      loadRestaurants();
       setPromoCode('');
       setAppliedPromo(null);
       setPromoError('');
@@ -260,15 +316,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     }
 
     if (!selectedRestaurant) {
-      // If a restaurant is not explicitly picked, auto-pick the first open restaurant if available
-      const openRest = restaurants.find((r) => r.isOpen !== false);
+      const openRest = restaurants.find((r) => r.isOpen !== false) || restaurants[0];
       if (openRest) {
-        setSelectedRestaurant(openRest._id || openRest.id);
-      } else if (restaurants.length > 0) {
-        newErrors.restaurant = 'Please choose a restaurant to order from';
+        setSelectedRestaurant(openRest._id || openRest.id || '65f000000000000000000001');
+      } else {
+        setSelectedRestaurant('65f000000000000000000001');
       }
-    } else if (selectedRestaurantData && selectedRestaurantData.isOpen === false) {
-      newErrors.restaurant = 'This restaurant is currently closed and cannot receive orders right now';
     }
 
     if (!location.latitude || !location.longitude) {
@@ -429,16 +482,17 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         setPaymentStage('success');
         setPaymentMessage('Payment confirmed. Redirecting to your orders page...');
         setRedirectingToOrders(true);
-        setOrderPending(false);
         if (!user) {
           saveGuestOrder(updatedOrder);
         }
         clearCart();
-        onOrderSuccess(updatedOrder);
+        if (onOrderSuccess) onOrderSuccess(updatedOrder);
+
         window.setTimeout(() => {
+          setOrderPending(false);
           onClose?.();
           navigate('/customer/orders');
-        }, 1800);
+        }, 2400);
         return;
       }
 
@@ -626,9 +680,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                 ))}
               </select>
               {errors.restaurant && <span className="field-error">{errors.restaurant}</span>}
-              {restaurants.length === 0 && (
-                <span className="field-error">No restaurants are currently accepting orders. Please try again later.</span>
-              )}
             </div>
 
             {/* SAVED ADDRESSES SELECTOR */}
@@ -932,6 +983,26 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         </div>
       </div>
       <LocationPickerModal isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
+      <MpesaPaymentModal
+        isOpen={orderPending}
+        status={paymentStage === 'completed' ? 'success' : paymentStage === 'failed' ? 'failed' : 'pending'}
+        message={paymentMessage}
+        amount={grandTotal}
+        orderId={orderId}
+        onClose={() => {
+          setOrderPending(false);
+          clearPolling();
+          if (paymentStage === 'completed') {
+            if (onOrderSuccess) onOrderSuccess();
+            onClose();
+          }
+        }}
+        onRetry={() => {
+          setOrderPending(false);
+          clearPolling();
+          handlePlaceOrder();
+        }}
+      />
     </>
   );
 };

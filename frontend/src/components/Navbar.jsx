@@ -20,6 +20,7 @@ import CheckoutModal from '../pages/customer/CheckoutModal';
 import CartDrawer from './CartDrawer';
 import NotificationModal from './NotificationModal';
 import LogoutModal from './LogoutModal';
+import MarketplaceConfirmationModal from './marketplace/MarketplaceConfirmationModal';
 import api, { getAppSettings } from '../services/api';
 import './Navbar.css';
 
@@ -37,6 +38,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeItem, setActiveItem] = useState('Home');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [promoNotificationsEnabled, setPromoNotificationsEnabled] = useState(true);
@@ -272,6 +274,11 @@ const Navbar = () => {
   };
 
   const handleNavigate = (link) => {
+    if (link === 'Marketplace') {
+      setShowMarketplaceModal(true);
+      return;
+    }
+
     setActiveItem(link);
     navigate(routeMap[link]);
 
@@ -372,12 +379,6 @@ const Navbar = () => {
             <button className="icon-btn" onClick={() => navigate('/settings')} title="Settings">
               <Settings size={20} />
             </button>
-
-            {/* OPTIONAL: avatar stays */}
-            <div className="avatar-wrapper">
-              <div className="avatar-placeholder">U</div>
-            </div>
-
           </div>
         </div>
 
@@ -424,6 +425,16 @@ const Navbar = () => {
         cartTotal={cartTotal}
         onOrderSuccess={() => {
           // Handle successful order
+        }}
+      />
+
+      {/* ✅ MARKETPLACE CONFIRMATION MODAL */}
+      <MarketplaceConfirmationModal
+        isOpen={showMarketplaceModal}
+        onClose={() => setShowMarketplaceModal(false)}
+        onConfirm={() => {
+          setShowMarketplaceModal(false);
+          navigate('/marketplace');
         }}
       />
     </>

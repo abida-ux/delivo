@@ -1,0 +1,16 @@
+/* ================================================
+   MARKETPLACE PRODUCT CARD — Matches Food Cards Exactly
+   ================================================ */
+
+.marketplace-food-card .marketplace-discount-pill {
+  position: absolute;
+  top: var(--space-2, 0.5rem);
+  right: var(--space-2, 0.5rem);
+  background: var(--color-orange, #ff6b00);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill, 9999px);
+  z-index: 2;
+}

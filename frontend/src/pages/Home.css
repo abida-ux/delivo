@@ -54,6 +54,8 @@
 }
 
 .hero-search-form .search-icon {
+  position: static;
+  transform: none;
   color: var(--text-muted);
   flex-shrink: 0;
   transition: color var(--transition-fast);

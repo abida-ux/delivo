@@ -189,11 +189,11 @@
   color: var(--color-white);
 }
 
-/* ── In-cart button (Success green circle) ── */
+/* ── In-cart button (Delivo Orange circle) ── */
 .go-to-cart-btn {
-  background: var(--color-success);
+  background: #ff6b00;
   color: #fff;
-  border: 1px solid var(--color-success);
+  border: 1px solid #ff6b00;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -202,7 +202,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);
   transition: all var(--transition-fast), transform var(--transition-bounce);
   flex-shrink: 0;
 }
@@ -214,8 +214,8 @@
 }
 
 .go-to-cart-btn:hover {
-  background: #15803d;
-  border-color: #15803d;
+  background: #e66000;
+  border-color: #e66000;
   transform: scale(1.08);
 }
 

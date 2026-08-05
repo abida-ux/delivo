@@ -1,12 +1,11 @@
 import { useState, useEffect, useContext } from 'react';
-import { Clock, MapPin, CreditCard } from 'lucide-react';
+import { Clock, MapPin, CreditCard, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight, RotateCcw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useCartUI } from '../../context/CartUIContext';
 import { getUserOrders } from '../../services/api';
 import { getGuestOrders } from '../../utils/orderStorage';
-import '../pages.css';
 import './Orders.css';
 
 const Orders = () => {
@@ -75,6 +74,7 @@ const Orders = () => {
 
     openCart();
   };
+
   useEffect(() => {
     const fetchUserOrders = async (isSilent = false) => {
       try {
@@ -121,23 +121,21 @@ const Orders = () => {
     };
   }, [user]);
 
-  const getStatusColor = (order) => {
-    if (order.paymentStatus === 'failed') return '#ef4444';
-
+  const getStatusBadgeClass = (order) => {
+    if (order.paymentStatus === 'failed') return 'status-failed';
     switch (order.status) {
-      case 'pending': return '#f59e0b';
-      case 'confirmed': return '#3b82f6';
-      case 'preparing': return '#8b5cf6';
-      case 'on-delivery': return '#06b6d4';
-      case 'delivered': return '#22c55e';
-      case 'cancelled': return '#ef4444';
-      default: return '#6b7280';
+      case 'pending': return 'status-pending';
+      case 'confirmed': return 'status-confirmed';
+      case 'preparing': return 'status-preparing';
+      case 'on-delivery': return 'status-on-delivery';
+      case 'delivered': return 'status-delivered';
+      case 'cancelled': return 'status-cancelled';
+      default: return 'status-default';
     }
   };
 
   const getStatusText = (order) => {
     if (order.paymentStatus === 'failed') return 'Failed';
-
     switch (order.status) {
       case 'pending': return 'Pending';
       case 'confirmed': return 'Confirmed';
@@ -145,7 +143,7 @@ const Orders = () => {
       case 'on-delivery': return 'On Delivery';
       case 'delivered': return 'Delivered';
       case 'cancelled': return 'Cancelled';
-      default: return 'Unknown';
+      default: return 'Processing';
     }
   };
 
@@ -157,10 +155,10 @@ const Orders = () => {
     const isDelivered = order.status === 'delivered';
 
     return [
-      { label: 'Payment received', completed: paymentCompleted },
-      { label: 'Order received', completed: hasOrderReceived },
+      { label: 'Payment', completed: paymentCompleted },
+      { label: 'Confirmed', completed: hasOrderReceived },
       { label: 'Preparing', completed: isPreparing },
-      { label: 'On the way', completed: isOnDelivery },
+      { label: 'On The Way', completed: isOnDelivery },
       { label: 'Delivered', completed: isDelivered },
     ];
   };
@@ -172,124 +170,153 @@ const Orders = () => {
   });
 
   return (
-    <div className="orders-container">
-      <div className="orders-header">
-        <h1>My Orders</h1>
-        <p>Track and manage all your food orders in one place</p>
-      </div>
-
-      <div className="orders-filters">
-        <button 
-          className={filterStatus === 'all' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setSearchParams({ filter: 'all' })}
-        >
-          All
-        </button>
-        <button 
-          className={filterStatus === 'pending' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setSearchParams({ filter: 'pending' })}
-        >
-          Pending
-        </button>
-        <button 
-          className={filterStatus === 'confirmed' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setSearchParams({ filter: 'confirmed' })}
-        >
-          Confirmed
-        </button>
-        <button 
-          className={filterStatus === 'on-delivery' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setSearchParams({ filter: 'on-delivery' })}
-        >
-          On Delivery
-        </button>
-        <button 
-          className={filterStatus === 'delivered' ? 'filter-btn active' : 'filter-btn'}
-          onClick={() => setSearchParams({ filter: 'delivered' })}
-        >
-          Delivered
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="loading-state">
-          <p>Loading your orders...</p>
+    <div className="orders-page-container">
+      <div className="orders-page-inner">
+        
+        {/* HEADER */}
+        <div className="orders-page-header">
+          <div>
+            <h1 className="orders-page-title">My Orders</h1>
+            <p className="orders-page-subtitle">Track and manage all your food & marketplace orders in real time</p>
+          </div>
         </div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="empty-state">
-          <p>No orders found</p>
+
+        {/* FILTERS */}
+        <div className="orders-filter-bar">
+          <button 
+            className={`orders-filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
+            onClick={() => setSearchParams({ filter: 'all' })}
+          >
+            All Orders
+          </button>
+          <button 
+            className={`orders-filter-tab ${filterStatus === 'pending' ? 'active' : ''}`}
+            onClick={() => setSearchParams({ filter: 'pending' })}
+          >
+            Pending
+          </button>
+          <button 
+            className={`orders-filter-tab ${filterStatus === 'confirmed' ? 'active' : ''}`}
+            onClick={() => setSearchParams({ filter: 'confirmed' })}
+          >
+            Confirmed
+          </button>
+          <button 
+            className={`orders-filter-tab ${filterStatus === 'on-delivery' ? 'active' : ''}`}
+            onClick={() => setSearchParams({ filter: 'on-delivery' })}
+          >
+            On Delivery
+          </button>
+          <button 
+            className={`orders-filter-tab ${filterStatus === 'delivered' ? 'active' : ''}`}
+            onClick={() => setSearchParams({ filter: 'delivered' })}
+          >
+            Delivered
+          </button>
         </div>
-      ) : (
-        <div className="orders-list">
-          {filteredOrders.map((order) => (
-            <div key={order._id} className="order-card">
-              <div className="order-header">
-                <div className="order-info">
-                  <h3 className="restaurant-name">Order #{order._id.slice(-6).toUpperCase()}</h3>
-                  <p className="order-id">{new Date(order.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div 
-                  className="status-badge"
-                  style={{ backgroundColor: getStatusColor(order) }}
-                >
-                  {getStatusText(order)}
-                </div>
-              </div>
 
-              <div className="order-details">
-                <div className="detail-item">
-                  <Clock size={16} />
-                  <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+        {/* CONTENT */}
+        {loading ? (
+          <div className="orders-loading-card">
+            <div className="orders-loading-spinner"></div>
+            <p>Loading your orders...</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="orders-empty-card">
+            <ShoppingBag size={54} className="orders-empty-icon" />
+            <h3>No orders found</h3>
+            <p>You haven't placed any orders yet. Explore our delicious menu and marketplace to get started!</p>
+            <button className="orders-browse-btn" onClick={() => navigate('/meals')}>
+              Browse Meals & Food
+            </button>
+          </div>
+        ) : (
+          <div className="orders-card-list">
+            {filteredOrders.map((order) => (
+              <div key={order._id} className="order-item-card">
+                
+                {/* CARD TOP HEADER */}
+                <div className="order-item-header">
+                  <div className="order-ref-group">
+                    <span className="order-ref-code">Order #{order._id.slice(-6).toUpperCase()}</span>
+                    <span className="order-ref-date">
+                      {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <span className={`order-status-badge ${getStatusBadgeClass(order)}`}>
+                    {getStatusText(order)}
+                  </span>
                 </div>
-                <div className="detail-item">
-                  <MapPin size={16} />
-                  <span>{order.deliveryAddress || 'Address not provided'}</span>
-                </div>
-                <div className="detail-item">
-                  <CreditCard size={16} />
-                  <span>{order.paymentMethod?.toUpperCase() || 'PAYMENT'} • {formatCurrency(getOrderTotal(order))}</span>
-                </div>
-              </div>
 
-              <p className="order-items-preview">{getOrderItemsPreview(order)}</p>
-              <p className="order-contact-preview">
-                Contact: {order.whatsappNumber || order.guestPhone || 'Not provided'} • {order.items?.length || 0} items
-              </p>
-
-              <div className="tracking-strip">
-                {getTrackingSteps(order).map((step, index) => {
-                  const isActive = !step.completed && index === 1 && order.paymentStatus === 'completed';
-                  return (
-                    <div
-                      key={step.label}
-                      className={`tracking-pill ${step.completed ? 'done' : isActive ? 'active' : ''}`}
-                    >
-                      {step.label}
+                {/* CARD BODY METADATA */}
+                <div className="order-item-body">
+                  <div className="order-meta-left">
+                    <div className="order-summary-preview">
+                      <ShoppingBag size={16} className="meta-icon" />
+                      <span className="items-text">{getOrderItemsPreview(order)}</span>
                     </div>
-                  );
-                })}
-              </div>
 
-              <div className="order-actions">
-                <button 
-                  className="detail-btn"
-                  onClick={() => navigate(`/customer/orders/${order._id}`)}
-                >
-                  View Full Details
-                </button>
-                {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
-                  <button
-                    className="reorder-btn"
-                    onClick={() => handleReorder(order)}
+                    <div className="order-meta-info-row">
+                      <div className="meta-pill">
+                        <MapPin size={14} />
+                        <span>{order.deliveryAddress || 'Coordinates specified'}</span>
+                      </div>
+                      <div className="meta-pill">
+                        <CreditCard size={14} />
+                        <span>{order.paymentMethod?.toUpperCase() || 'M-PESA'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="order-total-price">
+                    <span className="total-lbl">Total</span>
+                    <span className="total-val">{formatCurrency(getOrderTotal(order))}</span>
+                  </div>
+                </div>
+
+                {/* HORIZONTAL STEP TRACKER */}
+                <div className="order-tracker-container">
+                  <div className="tracker-steps-row">
+                    {getTrackingSteps(order).map((step, idx) => (
+                      <div key={step.label} className={`tracker-step ${step.completed ? 'completed' : ''}`}>
+                        <div className="step-circle">
+                          {step.completed ? <CheckCircle2 size={14} /> : <span>{idx + 1}</span>}
+                        </div>
+                        <span className="step-label">{step.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* FOOTER ACTIONS */}
+                <div className="order-item-footer">
+                  <button 
+                    type="button"
+                    className="order-btn-details"
+                    onClick={() => navigate(`/customer/orders/${order._id}`)}
                   >
-                    Reorder
+                    <span>View Full Details</span>
+                    <ChevronRight size={16} />
                   </button>
-                )}
+
+                  {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
+                    <button
+                      type="button"
+                      className="order-btn-reorder"
+                      onClick={() => handleReorder(order)}
+                    >
+                      <RotateCcw size={15} />
+                      <span>Reorder</span>
+                    </button>
+                  )}
+                </div>
+
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };

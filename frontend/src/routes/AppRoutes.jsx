@@ -10,13 +10,22 @@ const PushDiagnostics = lazy(() => import("../pages/PushDiagnostics"));
 const AllRestaurants = lazy(() => import("../pages/customer/AllRestaurants"));
 const Restaurants = lazy(() => import("../pages/customer/Restaurants"));
 const FoodDetailsPage = lazy(() => import("../pages/customer/FoodDetailsPage"));
-const Marketplace = lazy(() => import("../pages/customer/Marketplace"));
 const StoresByType = lazy(() => import("../pages/customer/StoresByType"));
 const StoreProducts = lazy(() => import("../pages/customer/StoreProducts"));
 const Orders = lazy(() => import("../pages/customer/Orders"));
 const OrderDetails = lazy(() => import("../pages/customer/OrderDetails"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Offers = lazy(() => import("../pages/Offers"));
+
+// Marketplace Sub-App Layout & Pages
+const MarketplaceLayout = lazy(() => import("../layouts/MarketplaceLayout"));
+const MarketplaceHome = lazy(() => import("../pages/marketplace/MarketplaceHome"));
+const MarketplaceCategories = lazy(() => import("../pages/marketplace/MarketplaceCategories"));
+const MarketplaceCategoryDetail = lazy(() => import("../pages/marketplace/MarketplaceCategoryDetail"));
+const MarketplaceProductDetail = lazy(() => import("../pages/marketplace/MarketplaceProductDetail"));
+const MarketplaceCheckoutPage = lazy(() => import("../pages/marketplace/MarketplaceCheckoutPage"));
+const MarketplaceOrdersPage = lazy(() => import("../pages/marketplace/MarketplaceOrdersPage"));
+const MarketplaceWishlistPage = lazy(() => import("../pages/marketplace/MarketplaceWishlistPage"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
@@ -60,7 +69,18 @@ export default function AppRoutes() {
       <Route path="/restaurants" element={<AllRestaurants />} />
       <Route path="/restaurants/:id" element={<Restaurants />} />
       <Route path="/food/:foodId" element={<FoodDetailsPage />} />
-      <Route path="/marketplace" element={<Marketplace />} />
+      
+      {/* Marketplace Independent Experience */}
+      <Route path="/marketplace" element={<MarketplaceLayout />}>
+        <Route index element={<MarketplaceHome />} />
+        <Route path="categories" element={<MarketplaceCategories />} />
+        <Route path="category/:slug" element={<MarketplaceCategoryDetail />} />
+        <Route path="product/:id" element={<MarketplaceProductDetail />} />
+        <Route path="checkout" element={<MarketplaceCheckoutPage />} />
+        <Route path="orders" element={<MarketplaceOrdersPage />} />
+        <Route path="wishlist" element={<MarketplaceWishlistPage />} />
+      </Route>
+
       <Route path="/stores/:typeId" element={<StoresByType />} />
       <Route path="/store/:storeId" element={<StoreProducts />} />
       <Route path="/customer/orders" element={<Orders />} />

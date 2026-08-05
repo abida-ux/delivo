@@ -12,56 +12,64 @@
 .menu-header {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-gray-150);
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-6) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
-  .menu-header { padding: var(--space-4) var(--space-4); }
+  .menu-header { padding: var(--space-5) var(--space-4); }
 }
 
 .menu-header h1 {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-primary);
   margin-bottom: var(--space-1);
+  text-align: center;
 }
 
 .menu-header p {
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin-bottom: var(--space-4);
+  text-align: center;
 }
 
 /* ── Search box wrapper ── */
 .search-box-wrapper {
   position: relative;
-  max-width: 560px;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
 }
 
 .search-box {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-gray-100);
-  border: 1.5px solid transparent;
+  padding: 10px 18px;
+  background: #f1f5f9;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .search-box:focus-within {
-  background: var(--color-surface);
-  border-color: var(--color-orange);
-  box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .search-box svg {
-  color: var(--text-muted);
+  color: #94a3b8;
   flex-shrink: 0;
   transition: color var(--transition-fast);
 }
-.search-box:focus-within svg { color: var(--color-orange); }
+.search-box:focus-within svg { color: #475569; }
 
 .search-box input {
   flex: 1;
@@ -72,7 +80,7 @@
   color: var(--text-primary);
   min-width: 0;
 }
-.search-box input::placeholder { color: var(--text-muted); }
+.search-box input::placeholder { color: #94a3b8; }
 
 /* ── Suggestions Dropdown ── */
 .suggestions-dropdown {
@@ -118,23 +126,26 @@
 }
 .suggestion-price {
   font-size: var(--text-xs);
-  color: var(--color-orange);
+  color: #64748b;
   font-weight: 600;
 }
 
 /* ── Category filters ── */
 .category-filters {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
   overflow-x: auto;
+  white-space: nowrap;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: var(--space-3) var(--space-6);
+  padding: 12px 24px;
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-gray-150);
+  border-bottom: 1px solid #f1f5f9;
   position: sticky;
   top: 56px;
   z-index: 10;
+  width: 100%;
 }
 .category-filters::-webkit-scrollbar { display: none; }
 
@@ -160,21 +171,29 @@
 .category-pill:hover { border-color: var(--color-orange); color: var(--color-orange); }
 .category-pill.active { background: var(--color-orange); border-color: var(--color-orange); color: #fff; }
 
-/* ── Foods grid ── */
+/* ── Foods grid (5 Columns to match Production) ── */
 .foods-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-6);
-  max-width: var(--content-max);
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  padding: 24px;
+  max-width: 1280px;
   margin-inline: auto;
+}
+
+@media (max-width: 1100px) {
+  .foods-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 840px) {
+  .foods-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 640px) {
   .foods-grid {
     grid-template-columns: repeat(2, 1fr);
-    padding: var(--space-4) var(--space-4);
-    gap: var(--space-3);
+    padding: 12px;
+    gap: 12px;
   }
 }
 
@@ -304,9 +323,9 @@
 }
 
 .food-price {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 800;
+  color: #101828;
 }
 
 /* ── Absolute positioning for circular add buttons ── */
@@ -363,9 +382,9 @@
 }
 
 .go-to-cart-ui {
-  background: var(--color-success);
+  background: #ff6b00;
   color: #fff;
-  border: 1px solid var(--color-success);
+  border: 1px solid #ff6b00;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -374,7 +393,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);
   transition: all var(--transition-fast), transform var(--transition-bounce);
   flex-shrink: 0;
 }
@@ -390,8 +409,8 @@
 }
 
 .go-to-cart-ui:hover {
-  background: #15803d;
-  border-color: #15803d;
+  background: #e66000;
+  border-color: #e66000;
   transform: scale(1.08);
 }
 

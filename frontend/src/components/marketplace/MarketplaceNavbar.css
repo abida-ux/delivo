@@ -1,0 +1,278 @@
+/* ================================================
+   DELIVO MARKETPLACE NAVBAR — Matches Food Delivery Navbar Exactly
+   ================================================ */
+
+.mkt-navbar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: var(--z-sticky, 1000);
+  background: var(--color-surface, #ffffff);
+  box-shadow: var(--shadow-navbar, 0 1px 3px rgba(0,0,0,0.06));
+  transition: box-shadow var(--transition, 0.2s ease);
+  border-bottom: 1px solid var(--color-gray-150, #eaecf0);
+}
+
+.mkt-navbar-container.scrolled {
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+}
+
+.mkt-navbar-glass {
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6, 1.5rem);
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 768px) {
+  .mkt-navbar-glass { padding: 0 var(--space-4, 1rem); }
+}
+
+/* ── Logo & Return Button ── */
+.mkt-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-shrink: 0;
+}
+
+.mkt-brand-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mkt-logo-image {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition, 0.2s ease);
+}
+
+.mkt-brand-link:hover .mkt-logo-image {
+  transform: scale(1.06);
+}
+
+.mkt-logo-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mkt-brand-name {
+  font-family: var(--font-heading, inherit);
+  font-weight: 800;
+  font-size: var(--text-xl, 1.25rem);
+  color: var(--text-primary, #101828);
+  letter-spacing: -0.03em;
+}
+
+.mkt-brand-subtag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-orange, #ff6b00);
+  background: var(--color-orange-faint, rgba(255, 107, 0, 0.1));
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 4px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 2px;
+}
+
+.mkt-return-food-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-gray-100, #f2f4f7);
+  border: 1px solid var(--color-gray-200, #e4e7ec);
+  color: var(--text-secondary, #475467);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 9999px);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s ease);
+  margin-left: var(--space-2, 0.5rem);
+}
+
+.mkt-return-food-pill:hover {
+  background: var(--color-orange, #ff6b00);
+  border-color: var(--color-orange, #ff6b00);
+  color: #ffffff;
+}
+
+/* ── Center Nav (desktop tab links) ── */
+.mkt-navbar-center {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 100%;
+  flex: 1;
+  justify-content: center;
+}
+
+.mkt-nav-link {
+  background: transparent;
+  border: none;
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 500;
+  color: var(--text-secondary, #475467);
+  padding: 0 var(--space-4, 1rem);
+  height: 56px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  white-space: nowrap;
+  transition: color var(--transition-fast, 0.15s ease);
+  border-bottom: 2px solid transparent;
+}
+
+.mkt-nav-link:hover {
+  color: var(--text-primary, #101828);
+}
+
+.mkt-nav-link.active {
+  color: var(--color-orange, #ff6b00);
+  font-weight: 600;
+  border-bottom-color: var(--color-orange, #ff6b00);
+}
+
+/* ── Right Actions ── */
+.mkt-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+  flex-shrink: 0;
+}
+
+.mkt-icon-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #475467);
+  border-radius: var(--radius-sm, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition-fast, 0.15s ease), color var(--transition-fast, 0.15s ease);
+}
+
+.mkt-icon-btn:hover {
+  background: var(--color-gray-100, #f2f4f7);
+  color: var(--text-primary, #101828);
+}
+
+.mkt-cart-icon-btn { position: relative; }
+
+.mkt-cart-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--color-orange, #ff6b00);
+  color: #fff;
+  border-radius: var(--radius-pill, 9999px);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border: 1.5px solid var(--color-surface, #ffffff);
+}
+
+.mkt-avatar-wrapper {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--color-orange-faint, rgba(255, 107, 0, 0.1));
+  border: 1.5px solid var(--color-gray-200, #e4e7ec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  margin-left: 4px;
+  transition: border-color var(--transition-fast, 0.15s ease);
+}
+
+.mkt-avatar-wrapper:hover {
+  border-color: var(--color-orange, #ff6b00);
+}
+
+.mkt-avatar-placeholder {
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 700;
+  color: var(--color-orange, #ff6b00);
+  text-transform: uppercase;
+}
+
+/* ── Mobile Bottom Nav ── */
+.mkt-mobile-bottom-navbar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--color-surface, #ffffff);
+  border-top: 1px solid var(--color-gray-150, #eaecf0);
+  justify-content: space-around;
+  align-items: center;
+  z-index: var(--z-sticky, 1000);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mkt-mobile-bottom-icon {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-muted, #667085);
+  cursor: pointer;
+  transition: color var(--transition-fast, 0.15s ease);
+  outline: none;
+}
+
+.mkt-mobile-bottom-icon.active {
+  color: var(--color-orange, #ff6b00);
+}
+
+.mkt-mobile-icon-label {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .mkt-navbar-center { display: none; }
+  .mkt-mobile-bottom-navbar { display: flex; }
+}
+
+@media (max-width: 640px) {
+  .mkt-navbar-glass { height: 52px; }
+  .mkt-return-food-pill span { display: none; }
+}

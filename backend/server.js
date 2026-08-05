@@ -195,33 +195,31 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const LISTEN_HOST = '0.0.0.0';
 
 if (process.env.PORT && !process.env.BACKEND_PORT) {
-  console.warn('⚠️ Using BACKEND_PORT is recommended to avoid conflicts with other local services.');
+  console.warn('Using BACKEND_PORT is recommended to avoid conflicts with other local services.');
 }
 const server = app.listen(PORT, LISTEN_HOST, () => {
   console.log(`
-  ╔═══════════════════════════════════════════════╗
-  ║                                               ║
-  ║   🍕 DELIVO BACKEND SERVER                   ║
-  ║   ✅ Server running on port ${PORT}               ║
-  ║   🗄️  Environment: ${NODE_ENV}                    ║
-  ║   🌐 Listening on ${LISTEN_HOST}                   ║
-  ║   🔐 CORS enabled for: localhost & delivo.co.ke
-  ║                                               ║
-  ╚═══════════════════════════════════════════════╝
+  =================================================
+     DELIVO BACKEND SERVER
+     Server running on port ${PORT}
+     Environment: ${NODE_ENV}
+     Listening on ${LISTEN_HOST}
+     CORS enabled for: localhost & delivo.co.ke
+  =================================================
   `);
-  console.log('🚀 Render startup complete');
+  console.log('Server startup complete');
 });
 
 server.on('error', (error) => {
   if (error.syscall !== 'listen') {
-    console.error('❌ Server error:', error);
+    console.error('Server error:', error);
     process.exit(1);
   }
 
   const bind = typeof PORT === 'string' ? `Pipe ${PORT}` : `Port ${PORT}`;
   switch (error.code) {
     case 'EACCES':
-      console.error(`❌ ${bind} requires elevated privileges.`);
+      console.error(`${bind} requires elevated privileges.`);
       break;
     case 'EADDRINUSE':
       console.error(`❌ ${bind} is already in use.`);

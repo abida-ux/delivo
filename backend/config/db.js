@@ -12,17 +12,17 @@ const connectDB = async (retryCount = 0) => {
       connectTimeoutMS: 30000,
     });
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
     return conn;
   } catch (error) {
-    console.error(`❌ MongoDB Connection Error (attempt ${retryCount + 1}): ${error.message}`);
+    console.error(`MongoDB Connection Error (attempt ${retryCount + 1}): ${error.message}`);
 
     if (retryCount < 5) {
-      console.log('🔄 Retrying MongoDB connection in 3 seconds...');
+      console.log('Retrying MongoDB connection in 3 seconds...');
       await new Promise((resolve) => setTimeout(resolve, 3000));
       return connectDB(retryCount + 1);
     } else {
-      console.error('⚠️ Could not establish connection to MongoDB after 5 retries. Background reconnects will continue.');
+      console.error('Could not establish connection to MongoDB after 5 retries. Background reconnects will continue.');
     }
   }
 };

@@ -33,7 +33,7 @@ const RestaurantCard = () => {
       setError(null);
       const data = await getAllRestaurants();
       const shuffled = [...data].sort(() => Math.random() - 0.5);
-      setRestaurants(shuffled);
+      setRestaurants(shuffled.slice(0, 6));
     } catch (err) {
       setError('Failed to load restaurants');
       console.error(err);

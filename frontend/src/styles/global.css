@@ -259,6 +259,40 @@ html {
   margin: 0 auto 16px;
 }
 
+.error-alert {
+  width: 100% !important;
+  flex-basis: 100% !important;
+  box-sizing: border-box !important;
+  background: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #991b1b !important;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.info-alert {
+  width: 100% !important;
+  flex-basis: 100% !important;
+  box-sizing: border-box !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  color: #1d4ed8 !important;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
 .logout-confirm-dialog h3 {
   font-family: var(--font-heading);
   font-size: var(--text-md);
@@ -316,3 +350,11 @@ html {
   transform: translateY(0);
 }
 
+.field-error, .field-hint, .field-reminder {
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+.field-error { color: #dc2626 !important; font-weight: 600 !important; }
+.field-hint { color: #64748b !important; font-weight: 500 !important; }
+.field-reminder { color: #d97706 !important; font-weight: 600 !important; }

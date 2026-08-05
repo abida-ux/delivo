@@ -3,18 +3,19 @@ const FoodCombination = require('../models/FoodCombination');
 const MarketplaceProduct = require('../models/MarketplaceProduct');
 
 async function buildPopulatedOrderItems(items = [], deps = {}, restaurantId = null) {
-  const marketplaceLookup = deps.getMarketplaceProductById || ((id) => MarketplaceProduct.findById(id));
-  const foodLookup = deps.getFoodById || ((id) => Food.findById(id));
+  const mongoose = require('mongoose');
+  const marketplaceLookup = deps.getMarketplaceProductById || ((id) => (mongoose.Types.ObjectId.isValid(id) ? MarketplaceProduct.findById(id) : null));
+  const foodLookup = deps.getFoodById || ((id) => (mongoose.Types.ObjectId.isValid(id) ? Food.findById(id) : null));
   const restaurantFoodLookup = deps.getRestaurantFoodById || (async (foodId) => {
-    if (!restaurantId) {
+    if (!restaurantId || !mongoose.Types.ObjectId.isValid(restaurantId) || !mongoose.Types.ObjectId.isValid(foodId)) {
       return null;
     }
     const RestaurantFood = require('../models/RestaurantFood');
     return RestaurantFood.findOne({ restaurantId, foodId });
   });
-  const comboLookup = deps.getCombinationById || ((id) => FoodCombination.findById(id));
+  const comboLookup = deps.getCombinationById || ((id) => (mongoose.Types.ObjectId.isValid(id) ? FoodCombination.findById(id) : null));
   const restaurantCombinationLookup = deps.getRestaurantCombinationById || (async (combinationId) => {
-    if (!restaurantId) {
+    if (!restaurantId || !mongoose.Types.ObjectId.isValid(restaurantId) || !mongoose.Types.ObjectId.isValid(combinationId)) {
       return null;
     }
     const RestaurantCombination = require('../models/RestaurantCombination');

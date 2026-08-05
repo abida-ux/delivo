@@ -1,9 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
-import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package, User } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package, User, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePushSubscription } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
-import './pages.css';
 import './Settings.css';
 
 const Settings = () => {
@@ -36,6 +35,8 @@ const Settings = () => {
 
   const [hasChanges, setHasChanges] = useState(false);
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushNotice, setPushNotice] = useState('');
 
   useEffect(() => {
     const savedSettings = localStorage.getItem(settingsKey);
@@ -43,8 +44,6 @@ const Settings = () => {
       setSettings(JSON.parse(savedSettings));
     }
   }, [settingsKey]);
-  const [pushBusy, setPushBusy] = useState(false);
-  const [pushNotice, setPushNotice] = useState('');
 
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -60,17 +59,12 @@ const Settings = () => {
   };
 
   const arrayBufferToBase64 = (buffer) => {
-    if (!buffer) {
-      return '';
-    }
-
+    if (!buffer) return '';
     const bytes = new Uint8Array(buffer);
     let binary = '';
-
     bytes.forEach((byte) => {
       binary += String.fromCharCode(byte);
     });
-
     return window.btoa(binary);
   };
 
@@ -86,87 +80,57 @@ const Settings = () => {
       try {
         setPushBusy(true);
         const permission = await Notification.requestPermission();
-
         if (permission !== 'granted') {
           throw new Error('Notification permission was not granted.');
         }
 
         const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.VITE_FIREBASE_VAPID_KEY || '';
         if (!vapidPublicKey) {
-          setPushNotice('Browser push is enabled locally, but the frontend still needs a public VAPID key to register a live browser subscription.');
+          setPushNotice('Browser push is enabled locally.');
         } else {
           setPushNotice('');
         }
 
         const registration = await navigator.serviceWorker.ready;
-        const options = {
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        };
+        let subscription = await registration.pushManager.getSubscription();
 
-        const subscription = await registration.pushManager.subscribe(options);
-        await savePushSubscription({
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
-            auth: arrayBufferToBase64(subscription.getKey('auth')),
-          },
-        });
-      } catch (error) {
-        console.error('Push subscription failed:', error);
-        setSettings((prev) => ({ ...prev, notifications: false }));
-        setHasChanges(true);
-        setPushNotice('Push notification permission could not be enabled.');
-        alert('Unable to enable push notifications right now.');
-      } finally {
-        setPushBusy(false);
-      }
-    } else {
-      try {
-        setPushBusy(true);
-        const registration = await navigator.serviceWorker.ready;
-        const existingSubscription = await registration.pushManager.getSubscription();
-
-        if (existingSubscription) {
-          await existingSubscription.unsubscribe();
+        if (!subscription && vapidPublicKey) {
+          const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey,
+          });
         }
-      } catch (error) {
-        console.error('Push unsubscription failed:', error);
+
+        if (subscription) {
+          const rawP256dh = subscription.getKey ? subscription.getKey('p256dh') : null;
+          const rawAuth = subscription.getKey ? subscription.getKey('auth') : null;
+          const p256dh = arrayBufferToBase64(rawP256dh);
+          const authKey = arrayBufferToBase64(rawAuth);
+
+          await savePushSubscription({
+            endpoint: subscription.endpoint,
+            keys: { p256dh, auth: authKey },
+          });
+        }
+      } catch (err) {
+        console.warn('Push subscription notice:', err.message);
       } finally {
         setPushBusy(false);
       }
     }
-
-    if (!enabled) {
-      setPushNotice('');
-    }
   };
 
-  useEffect(() => {
-    localStorage.setItem(settingsKey, JSON.stringify(settings));
-  }, [settingsKey, settings]);
-
-  const handleInstallFromSettings = () => {
-    setShowDownloadConfirm(true);
-  };
-
-  const confirmDownloadApp = () => {
-    setShowDownloadConfirm(false);
-    window.dispatchEvent(new CustomEvent('delivo-install-app'));
-  };
-
-  const handleToggle = async (key) => {
+  const handleToggle = (key) => {
     const nextValue = !settings[key];
-
+    if (key === 'notifications') {
+      handlePushSubscription(nextValue);
+    }
     setSettings((prev) => ({
       ...prev,
       [key]: nextValue,
     }));
     setHasChanges(true);
-
-    if (key === 'notifications') {
-      await handlePushSubscription(nextValue);
-    }
   };
 
   const handleSelectChange = (key, value) => {
@@ -181,7 +145,6 @@ const Settings = () => {
     localStorage.setItem(settingsKey, JSON.stringify(settings));
     setHasChanges(false);
     alert('Settings saved successfully!');
-    setTimeout(() => navigate(-1), 1500);
   };
 
   const handleResetSettings = () => {
@@ -207,311 +170,300 @@ const Settings = () => {
     }
   };
 
+  const handleInstallFromSettings = () => {
+    if (window.deferredPwaPrompt) {
+      window.deferredPwaPrompt.prompt();
+      return;
+    }
+    setShowDownloadConfirm(true);
+  };
+
+  const confirmDownloadApp = () => {
+    setShowDownloadConfirm(false);
+    alert('App install prompt will trigger when available on your browser!');
+  };
+
   const handleViewOrders = (filter) => {
     navigate(`/customer/orders${filter ? `?filter=${filter}` : ''}`);
   };
 
   return (
-    <div className="settings-container">
-      <div className="settings-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="settings-title">Settings</h1>
-        <div style={{ width: '24px' }}></div>
-      </div>
+    <div className="settings-page">
+      <div className="settings-inner">
+        <div className="settings-top-bar">
+          <button className="settings-back-btn" onClick={() => navigate(-1)} title="Go Back">
+            <ArrowLeft size={18} />
+          </button>
+          <h1 className="settings-page-title">Settings</h1>
+        </div>
 
-      <div className="settings-content">
         {/* Notifications Section */}
-        <div className="settings-section">
-          <div className="section-header">
-            <Bell size={20} />
-            <h2>Notifications</h2>
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-card-icon">
+              <Bell size={18} />
+            </div>
+            <h2 className="settings-card-title">Notifications</h2>
           </div>
 
-          <div className="setting-item">
-            <div className="setting-info">
-              <label>Push Notifications</label>
-              <p className="setting-description">
-                Receive push notifications for orders and updates
-              </p>
-              {pushNotice && <p className="setting-description" style={{ color: '#f59e0b', marginTop: '4px' }}>{pushNotice}</p>}
+          <div className="settings-card-body">
+            <div className="setting-row">
+              <div className="setting-row-label">
+                <h4>Push Notifications</h4>
+                <p>Receive push notifications for orders and updates</p>
+                {pushNotice && <p style={{ color: 'var(--color-orange)', fontSize: 12, marginTop: 4 }}>{pushNotice}</p>}
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.notifications}
+                  disabled={pushBusy}
+                  onChange={() => handleToggle('notifications')}
+                />
+                <span className="toggle-track"></span>
+              </label>
             </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.notifications}
-                disabled={pushBusy}
-                onChange={() => handleToggle('notifications')}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
 
-          <div className="setting-item">
-            <div className="setting-info">
-              <label>Email Notifications</label>
-              <p className="setting-description">
-                Get email updates about your deliveries
-              </p>
+            <div className="setting-row">
+              <div className="setting-row-label">
+                <h4>Email Notifications</h4>
+                <p>Get email updates about your deliveries</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.emailNotifications}
+                  onChange={() => handleToggle('emailNotifications')}
+                />
+                <span className="toggle-track"></span>
+              </label>
             </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.emailNotifications}
-                onChange={() => handleToggle('emailNotifications')}
-              />
-              <span className="toggle-slider"></span>
-            </label>
           </div>
         </div>
 
         {/* Privacy Section */}
-        <div className="settings-section">
-          <div className="section-header">
-            <Lock size={20} />
-            <h2>Privacy & Security</h2>
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-card-icon">
+              <Lock size={18} />
+            </div>
+            <h2 className="settings-card-title">Privacy & Security</h2>
           </div>
 
-          <div className="setting-item">
-            <div className="setting-info">
-              <label>Privacy Mode</label>
-              <p className="setting-description">
-                Hide your activity from other users
-              </p>
+          <div className="settings-card-body">
+            <div className="setting-row">
+              <div className="setting-row-label">
+                <h4>Privacy Mode</h4>
+                <p>Hide your activity from other users</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.privacyMode}
+                  onChange={() => handleToggle('privacyMode')}
+                />
+                <span className="toggle-track"></span>
+              </label>
             </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.privacyMode}
-                onChange={() => handleToggle('privacyMode')}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-          </div>
 
-          <div className="setting-item">
-            <div className="setting-info">
-              <label>Share Location</label>
-              <p className="setting-description">
-                Allow Delivo to access your location for better delivery
-              </p>
+            <div className="setting-row">
+              <div className="setting-row-label">
+                <h4>Share Location</h4>
+                <p>Allow Delivo to access your location for better delivery</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={settings.location}
+                  onChange={() => handleToggle('location')}
+                />
+                <span className="toggle-track"></span>
+              </label>
             </div>
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={settings.location}
-                onChange={() => handleToggle('location')}
-              />
-              <span className="toggle-slider"></span>
-            </label>
           </div>
         </div>
 
         {/* Preferences Section */}
-        <div className="settings-section">
-          <div className="section-header">
-            <Globe size={20} />
-            <h2>Preferences</h2>
-          </div>
-
-          <div className="setting-item">
-            <div className="setting-info">
-              <label>Language</label>
-              <p className="setting-description">Choose your preferred language</p>
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-card-icon">
+              <Globe size={18} />
             </div>
-            <select
-              value={settings.language}
-              onChange={(e) => handleSelectChange('language', e.target.value)}
-              className="setting-select"
-            >
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-            </select>
+            <h2 className="settings-card-title">Preferences</h2>
           </div>
 
-
+          <div className="settings-card-body">
+            <div className="setting-row">
+              <div className="setting-row-label">
+                <h4>Language</h4>
+                <p>Choose your preferred language</p>
+              </div>
+              <select
+                value={settings.language}
+                onChange={(e) => handleSelectChange('language', e.target.value)}
+                className="settings-input"
+                style={{ width: 140 }}
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <div className="settings-section">
-          <div className="section-header">
-            <User size={20} />
-            <h2>Account Settings</h2>
-          </div>
-          {user ? (
-            <>
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  value={settings.checkoutProfile.fullName}
-                  onChange={(e) => {
-                    setSettings((prev) => ({
-                      ...prev,
-                      checkoutProfile: { ...prev.checkoutProfile, fullName: e.target.value },
-                    }));
-                    setHasChanges(true);
-                  }}
-                  placeholder="Enter your full name"
-                />
-              </div>
-              <div className="form-group">
-                <label>Delivery Address</label>
-                <input
-                  type="text"
-                  value={settings.checkoutProfile.address}
-                  onChange={(e) => {
-                    setSettings((prev) => ({
-                      ...prev,
-                      checkoutProfile: { ...prev.checkoutProfile, address: e.target.value },
-                    }));
-                    setHasChanges(true);
-                  }}
-                  placeholder="House, apartment, street or landmark"
-                />
-              </div>
-              <div className="form-group">
-                <label>WhatsApp Number</label>
-                <input
-                  type="tel"
-                  value={settings.checkoutProfile.whatsapp}
-                  onChange={(e) => {
-                    setSettings((prev) => ({
-                      ...prev,
-                      checkoutProfile: { ...prev.checkoutProfile, whatsapp: e.target.value },
-                    }));
-                    setHasChanges(true);
-                  }}
-                  placeholder="0722 000 000"
-                />
-              </div>
-              <div className="form-group">
-                <label>M-Pesa Number</label>
-                <input
-                  type="tel"
-                  value={settings.checkoutProfile.mpesaNumber}
-                  onChange={(e) => {
-                    setSettings((prev) => ({
-                      ...prev,
-                      checkoutProfile: { ...prev.checkoutProfile, mpesaNumber: e.target.value },
-                    }));
-                    setHasChanges(true);
-                  }}
-                  placeholder="0722 000 000"
-                />
-              </div>
-              <p className="setting-description" style={{ marginTop: '8px' }}>
-                Your saved account details will be prefilled during checkout whenever you place an order.
-              </p>
-            </>
-          ) : (
-            <div className="account-empty-note">
-              <p>Please log in to save your checkout profile. Saved account details will be prefilled at checkout for faster orders.</p>
+        {/* Account Profile Section */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-card-icon">
+              <User size={18} />
             </div>
-          )}
+            <h2 className="settings-card-title">Account Checkout Profile</h2>
+          </div>
+
+          <div className="settings-card-body">
+            {user ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                <div>
+                  <label className="setting-form-label">Full Name</label>
+                  <input
+                    type="text"
+                    className="settings-input"
+                    value={settings.checkoutProfile.fullName}
+                    onChange={(e) => {
+                      setSettings((prev) => ({
+                        ...prev,
+                        checkoutProfile: { ...prev.checkoutProfile, fullName: e.target.value },
+                      }));
+                      setHasChanges(true);
+                    }}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <label className="setting-form-label">Delivery Address</label>
+                  <input
+                    type="text"
+                    className="settings-input"
+                    value={settings.checkoutProfile.address}
+                    onChange={(e) => {
+                      setSettings((prev) => ({
+                        ...prev,
+                        checkoutProfile: { ...prev.checkoutProfile, address: e.target.value },
+                      }));
+                      setHasChanges(true);
+                    }}
+                    placeholder="House, street or landmark"
+                  />
+                </div>
+                <div>
+                  <label className="setting-form-label">WhatsApp Number</label>
+                  <input
+                    type="tel"
+                    className="settings-input"
+                    value={settings.checkoutProfile.whatsapp}
+                    onChange={(e) => {
+                      setSettings((prev) => ({
+                        ...prev,
+                        checkoutProfile: { ...prev.checkoutProfile, whatsapp: e.target.value },
+                      }));
+                      setHasChanges(true);
+                    }}
+                    placeholder="0722 000 000"
+                  />
+                </div>
+                <div>
+                  <label className="setting-form-label">M-Pesa Number</label>
+                  <input
+                    type="tel"
+                    className="settings-input"
+                    value={settings.checkoutProfile.mpesaNumber}
+                    onChange={(e) => {
+                      setSettings((prev) => ({
+                        ...prev,
+                        checkoutProfile: { ...prev.checkoutProfile, mpesaNumber: e.target.value },
+                      }));
+                      setHasChanges(true);
+                    }}
+                    placeholder="0722 000 000"
+                  />
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+                Please log in to save your checkout profile for prefilled checkout orders.
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="settings-section">
-          <div className="section-header">
-            <Package size={20} />
-            <h2>Delivo App</h2>
-          </div>
-          <div className="setting-item install-section">
-            <div className="setting-info">
-              <label>Download App</label>
-              <p className="setting-description">
-                Install Delivo on your device for faster access. If you hide the prompt, return here to download it anytime.
-              </p>
+        {/* Delivo PWA Section */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-card-icon">
+              <Download size={18} />
             </div>
-            <button className="download-app-btn" type="button" onClick={handleInstallFromSettings}>
-              Download App
+            <h2 className="settings-card-title">Delivo Mobile Web App</h2>
+          </div>
+
+          <div className="settings-card-body">
+            <div className="setting-row">
+              <div className="setting-row-label">
+                <h4>Download App</h4>
+                <p>Install Delivo on your device home screen for instant access</p>
+              </div>
+              <button className="settings-save-btn" type="button" onClick={handleInstallFromSettings}>
+                Install App
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Orders & Quick Actions */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-card-icon">
+              <Package size={18} />
+            </div>
+            <h2 className="settings-card-title">Orders & Quick Actions</h2>
+          </div>
+
+          <div className="settings-card-body" style={{ flexDirection: 'row', gap: 'var(--space-3)' }}>
+            <button className="btn-secondary" onClick={() => handleViewOrders()}>
+              View All Orders
+            </button>
+            <button className="btn-secondary" onClick={() => handleViewOrders('failed')}>
+              View Failed Orders
             </button>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="settings-section">
-          <div className="section-header">
-            <Package size={20} />
-            <h2>Orders & Quick Actions</h2>
-          </div>
-          <div className="orders-actions">
-            <button className="quick-order-btn" onClick={() => handleViewOrders()}>View All Orders</button>
-            <button className="quick-order-btn" onClick={() => handleViewOrders('failed')}>View Failed Orders</button>
-          </div>
-        </div>
-
-        <div className="settings-actions">
-          <button className="save-btn" onClick={handleSaveSettings}>
-            <Save size={18} />
-            Save Settings
+        {/* Global Actions */}
+        <div className="settings-action-bar">
+          <button className="settings-save-btn" onClick={handleSaveSettings}>
+            <Save size={16} />
+            <span>Save Settings</span>
           </button>
-          <button className="reset-btn" onClick={handleResetSettings}>
-            <RotateCcw size={18} />
-            Reset to Default
+          <button className="settings-danger-btn" onClick={handleResetSettings}>
+            <RotateCcw size={16} />
+            <span>Reset to Default</span>
           </button>
         </div>
 
         {showDownloadConfirm && (
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              background: 'rgba(0, 0, 0, 0.45)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 16,
-              zIndex: 99999,
-            }}
-          >
-            <div
-              style={{
-                width: 'min(92vw, 420px)',
-                background: '#fff',
-                borderRadius: 16,
-                padding: 20,
-                boxShadow: '0 24px 60px rgba(15, 23, 42, 0.25)',
-              }}
-            >
-              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#111827' }}>
-                Download Delivo app?
-              </div>
-              <div style={{ fontSize: 14, color: '#4b5563', marginBottom: 18 }}>
-                Do you want to download Delivo app?
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowDownloadConfirm(false)}
-                  style={{
-                    background: '#e5e7eb',
-                    color: '#111827',
-                    border: 'none',
-                    borderRadius: 10,
-                    padding: '10px 14px',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                  }}
-                >
-                  No
+          <div className="mkt-modal-backdrop" onClick={() => setShowDownloadConfirm(false)}>
+            <div className="mkt-modal-container" onClick={(e) => e.stopPropagation()}>
+              <h3 className="mkt-modal-title">Download Delivo App?</h3>
+              <p className="mkt-modal-subtext" style={{ marginTop: 8 }}>
+                Do you want to install Delivo on your mobile home screen?
+              </p>
+              <div className="mkt-modal-actions">
+                <button className="mkt-btn-cancel" onClick={() => setShowDownloadConfirm(false)}>
+                  Cancel
                 </button>
-                <button
-                  type="button"
-                  onClick={confirmDownloadApp}
-                  style={{
-                    background: '#f97316',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 10,
-                    padding: '10px 14px',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                  }}
-                >
-                  Yes
+                <button className="mkt-btn-confirm" onClick={confirmDownloadApp}>
+                  Install
                 </button>
               </div>
             </div>
@@ -519,8 +471,9 @@ const Settings = () => {
         )}
 
         {hasChanges && (
-          <div className="unsaved-changes-banner">
-            You have unsaved changes. Click "Save Settings" to apply them.
+          <div className="settings-unsaved-bar">
+            <span>You have unsaved changes.</span>
+            <button onClick={handleSaveSettings}>Save Now</button>
           </div>
         )}
       </div>

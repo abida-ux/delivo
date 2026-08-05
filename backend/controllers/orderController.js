@@ -81,17 +81,31 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
+    const mongoose = require('mongoose');
     let finalRestaurantId = restaurantId;
-    if (!finalRestaurantId && items.length > 0) {
-      const firstItem = items[0];
-      if (firstItem.isCombination) {
-        const RestaurantCombination = require('../models/RestaurantCombination');
-        const link = await RestaurantCombination.findOne({ combinationId: firstItem.foodId });
-        finalRestaurantId = link?.restaurantId;
-      } else {
-        const RestaurantFood = require('../models/RestaurantFood');
-        const link = await RestaurantFood.findOne({ foodId: firstItem.foodId });
-        finalRestaurantId = link?.restaurantId;
+    const firstMeal = items.find((i) => i.productType !== 'marketplace');
+
+    if (firstMeal) {
+      const RestaurantFood = require('../models/RestaurantFood');
+      const RestaurantCombination = require('../models/RestaurantCombination');
+
+      let isValidSellingRest = false;
+      if (finalRestaurantId && mongoose.Types.ObjectId.isValid(finalRestaurantId) && mongoose.Types.ObjectId.isValid(firstMeal.foodId)) {
+        const link = firstMeal.isCombination
+          ? await RestaurantCombination.findOne({ restaurantId: finalRestaurantId, combinationId: firstMeal.foodId })
+          : await RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId: firstMeal.foodId });
+        if (link) isValidSellingRest = true;
+      }
+
+      if (!isValidSellingRest && firstMeal.foodId && mongoose.Types.ObjectId.isValid(firstMeal.foodId)) {
+        const autoLink = firstMeal.isCombination
+          ? await RestaurantCombination.findOne({ combinationId: firstMeal.foodId })
+          : await RestaurantFood.findOne({ foodId: firstMeal.foodId });
+        if (autoLink?.restaurantId) {
+          finalRestaurantId = autoLink.restaurantId;
+        } else {
+          finalRestaurantId = null;
+        }
       }
     }
 

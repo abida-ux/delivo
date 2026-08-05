@@ -1,0 +1,9 @@
+/* ================================================
+   MARKETPLACE HOME PAGE — Matches Food Home Page
+   ================================================ */
+
+.shortcut-pill.active {
+  background: var(--color-orange, #ff6b00);
+  border-color: var(--color-orange, #ff6b00);
+  color: #ffffff;
+}
