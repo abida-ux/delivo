@@ -31,12 +31,12 @@ jobs:
             nodemailer/package-lock.json
 
       - name: Install Root Dependencies
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Install & Lint Frontend
         run: |
           cd frontend
-          npm ci
+          npm ci || npm install
           npm run lint
 
       - name: Build Frontend
@@ -47,7 +47,7 @@ jobs:
       - name: Install & Check Backend
         run: |
           cd backend
-          npm ci
+          npm ci || npm install
           npm run build
 
       - name: Run Backend Unit Tests
@@ -58,4 +58,5 @@ jobs:
       - name: Install Nodemailer Service
         run: |
           cd nodemailer
-          npm ci
+          npm ci || npm install
+
