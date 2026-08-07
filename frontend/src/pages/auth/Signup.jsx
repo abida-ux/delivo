@@ -5,6 +5,7 @@ import { requestNotificationPermissionAndRegister } from '../../services/firebas
 import { useNavigate } from 'react-router-dom';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import './Auth.css';
+import SEO from '../../components/SEO';
 
 const Signup = ({ isModal = false }) => {
   const navigate = useNavigate();
@@ -175,6 +176,12 @@ const Signup = ({ isModal = false }) => {
 
   return (
     <div className={`auth-container ${isModal ? 'modal-mode' : ''}`}>
+      {!isModal && (
+        <SEO
+          title="Signup"
+          description="Create your free Delivo account today. Enjoy the best gourmet food ordering experience, fast delivery service, and reliable courier support."
+        />
+      )}
       {!isModal && <h1 className="auth-page-title">Create Account</h1>}
 
       {error && (

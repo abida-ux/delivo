@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { resolveImageUrl, handleImageError } from '../utils/placeholderImage';
 import './Menu.css';
+import SEO from '../components/SEO';
 
 const iconMap = {
   Coffee,
@@ -225,8 +226,32 @@ const Menu = () => {
     );
   }
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://delivo.co.ke"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": selectedCategory !== 'All' ? `Menu - ${selectedCategory}` : "Menu",
+        "item": `https://delivo.co.ke/menu${selectedCategory !== 'All' ? `?category=${encodeURIComponent(selectedCategory)}` : ''}`
+      }
+    ]
+  };
+
   return (
     <div className="menu-container">
+      <SEO
+        title={selectedCategory !== 'All' ? `Explore ${selectedCategory}` : "Our Menu"}
+        description={selectedCategory !== 'All' ? `Browse and order delicious ${selectedCategory} dishes online on Delivo. Lightning-fast delivery to your doorstep.` : "Explore the complete menu of delicious meals and fresh culinary selections on Delivo. Fast, on-demand local delivery."}
+        schema={breadcrumbSchema}
+      />
       <div className="menu-header">
         <h1>Our Menu</h1>
         <p>Explore our delicious selection of dishes</p>

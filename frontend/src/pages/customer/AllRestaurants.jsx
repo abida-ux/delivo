@@ -4,6 +4,7 @@ import { Star, MapPin, Clock, Search } from 'lucide-react';
 import { getAllRestaurants } from '../../services/api';
 import { resolveRestaurantImageUrl, handleImageError } from '../../utils/placeholderImage';
 import './AllRestaurants.css';
+import SEO from '../../components/SEO';
 
 const AllRestaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -99,8 +100,32 @@ const AllRestaurants = () => {
     );
   }
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://delivo.co.ke"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": getFilterTitle(),
+        "item": `https://delivo.co.ke/restaurants${filterParam ? `?filter=${filterParam}` : ''}`
+      }
+    ]
+  };
+
   return (
     <div className="all-restaurants-container">
+      <SEO
+        title={getFilterTitle()}
+        description={`Order gourmet food and special cuisines from local kitchens and top-rated restaurants on Delivo. Lightning-fast delivery.`}
+        schema={breadcrumbSchema}
+      />
       <div className="restaurants-header">
         <h1>{getFilterTitle()}</h1>
         <p>Explore and order from amazing restaurants</p>

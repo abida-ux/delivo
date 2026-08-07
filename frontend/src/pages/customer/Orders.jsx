@@ -7,6 +7,7 @@ import { useCartUI } from '../../context/CartUIContext';
 import { getUserOrders } from '../../services/api';
 import { getGuestOrders } from '../../utils/orderStorage';
 import './Orders.css';
+import SEO from '../../components/SEO';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -171,6 +172,10 @@ const Orders = () => {
 
   return (
     <div className="orders-page-container">
+      <SEO
+        title="My Orders"
+        description="View and track your active, pending, or past orders on Delivo. Follow real-time updates from kitchen preparation to courier delivery."
+      />
       <div className="orders-page-inner">
         
         {/* HEADER */}

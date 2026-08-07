@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { savePushSubscription } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import './Settings.css';
+import SEO from '../components/SEO';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -189,6 +190,10 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
+      <SEO
+        title="My Profile"
+        description="Manage your account profile, delivery addresses, preferences, and security settings on Delivo."
+      />
       <div className="settings-inner">
         <div className="settings-top-bar">
           <button className="settings-back-btn" onClick={() => navigate(-1)} title="Go Back">

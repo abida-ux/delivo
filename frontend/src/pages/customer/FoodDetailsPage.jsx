@@ -23,6 +23,7 @@ import { AuthModalContext } from '../../context/AuthModalContext';
 import FoodCard from '../../components/FoodCard';
 import { resolveImageUrl } from '../../utils/placeholderImage';
 import './FoodDetailsPage.css';
+import SEO from '../../components/SEO';
 
 const FoodDetailsPage = () => {
   const { foodId } = useParams();
@@ -172,8 +173,32 @@ const FoodDetailsPage = () => {
     openCart();
   };
 
+  const productSchema = food ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": food.name,
+    "image": food.image || "https://delivo.co.ke/delivo.jpg",
+    "description": food.description || `Order delicious ${food.name} online on Delivo.`,
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "KES",
+      "price": unitPrice,
+      "availability": food.defaultAvailability !== false ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "seller": {
+        "@type": "Organization",
+        "name": primaryVendor.name || "Delivo Vendor"
+      }
+    }
+  } : null;
+
   return (
     <div className="food-details-page-wrap">
+      <SEO
+        title={food.name}
+        description={food.description ? (food.description.length > 150 ? food.description.substring(0, 150) + '...' : food.description) : `Order delicious ${food.name} online on Delivo. Lightning-fast on-demand delivery to your door.`}
+        image={food.image}
+        schema={productSchema}
+      />
       <div className="food-details-container">
         {/* Breadcrumb */}
         <nav className="food-breadcrumb">

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCartUI } from '../context/CartUIContext';
 import './Home.css';
+import SEO from '../components/SEO';
 
 import FeaturedRestaurants from "../components/RestaurantCard";
 import Categories from "../components/Categories";
@@ -14,16 +15,31 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [popularCategories, setPopularCategories] = useState(['Pizza', 'Drinks', 'Healthy', 'Desserts']);
-
+  
+  // Autocomplete search states
+  const [allFoods, setAllFoods] = useState([]);
+  const [allRestaurants, setAllRestaurants] = useState([]);
+  const [filteredFoods, setFilteredFoods] = useState([]);
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  const searchContainerRef = useRef(null);
   const navigate = useNavigate();
   const { openCart } = useCartUI();
 
-  // Fetch real categories dynamically from foods in the database
+  // Load search datasets (foods and restaurants) on mount
   useEffect(() => {
-    const fetchRealCategories = async () => {
+    const loadSearchData = async () => {
       try {
-        const { getAllFoods } = await import('../services/api');
-        const foodsList = await getAllFoods();
+        const { getAllFoods, getAllRestaurants } = await import('../services/api');
+        const [foodsList, restaurantsList] = await Promise.all([
+          getAllFoods(),
+          getAllRestaurants()
+        ]);
+        setAllFoods(foodsList);
+        setAllRestaurants(restaurantsList);
+
+        // Fetch real categories dynamically from foods in the database
         const counts = {};
         foodsList.forEach(food => {
           if (food.category) {
@@ -35,21 +51,61 @@ export default function Home() {
           setPopularCategories(sorted.slice(0, 4));
         }
       } catch (error) {
-        console.error('Failed to load foods for popular search shortcuts:', error);
+        console.error('Failed to load data for search autocomplete:', error);
       }
     };
-    fetchRealCategories();
+    loadSearchData();
+  }, []);
+
+  // Click outside listener to dismiss the search suggestions dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchInput.trim()) {
+      setShowDropdown(false);
       navigate(`/menu?search=${encodeURIComponent(searchInput.trim())}`);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchInput(val);
+
+    if (val.trim().length > 1) {
+      const query = val.toLowerCase();
+      
+      const matchedFoods = allFoods.filter(food =>
+        food.name.toLowerCase().includes(query) ||
+        (food.category && food.category.toLowerCase().includes(query))
+      ).slice(0, 5);
+
+      const matchedRestaurants = allRestaurants.filter(rest =>
+        rest.name.toLowerCase().includes(query) ||
+        (rest.cuisine && rest.cuisine.toLowerCase().includes(query))
+      ).slice(0, 3);
+
+      setFilteredFoods(matchedFoods);
+      setFilteredRestaurants(matchedRestaurants);
+      setShowDropdown(true);
+    } else {
+      setFilteredFoods([]);
+      setFilteredRestaurants([]);
+      setShowDropdown(false);
     }
   };
 
   const handleQuickSearch = (term) => {
     setSearchInput(term);
+    setShowDropdown(false);
     navigate(`/menu?search=${encodeURIComponent(term)}`);
   };
 
@@ -63,24 +119,122 @@ export default function Home() {
     setSearchInput("");
   };
 
+  const schemas = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Delivo",
+      "url": "https://delivo.co.ke",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://delivo.co.ke/menu?search={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Delivo",
+      "url": "https://delivo.co.ke",
+      "logo": "https://delivo.co.ke/delivo.jpg"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Delivo",
+      "url": "https://delivo.co.ke",
+      "applicationCategory": "ShoppingApplication",
+      "operatingSystem": "All"
+    }
+  ];
+
   return (
     <div className="home-wrapper">
-
-      {/* ===== SEARCH HERO (compact, Munchify-style) ===== */}
+      <SEO
+        title="Order Food Online"
+        description="Order from your favorite restaurants and local shops with Delivo. Enjoy premium, lightning-fast delivery of gourmet meals and everyday essentials."
+        schema={schemas}
+      />
       <section className="hero-search-section">
         <div className="hero-search-inner">
-          <div className="hero-search-wrapper">
+          <div className="hero-search-wrapper" ref={searchContainerRef}>
             <form onSubmit={handleSearchSubmit} className="hero-search-form">
               <Search className="search-icon" size={18} />
               <input
                 type="text"
                 placeholder="Search for meals, cuisines, or local kitchens..."
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={handleSearchChange}
+                onFocus={() => {
+                  if (searchInput.trim().length > 1) setShowDropdown(true);
+                }}
                 aria-label="Search for food"
               />
               <button type="submit" className="hero-search-btn">Search</button>
             </form>
+
+            {showDropdown && (filteredFoods.length > 0 || filteredRestaurants.length > 0) && (
+              <div className="search-autocomplete-dropdown">
+                {filteredFoods.length > 0 && (
+                  <div className="autocomplete-section">
+                    <h4 className="autocomplete-section-title">Meals</h4>
+                    <div className="autocomplete-items">
+                      {filteredFoods.map((food) => (
+                        <div
+                          key={food._id}
+                          className="autocomplete-item"
+                          onClick={() => {
+                            setShowDropdown(false);
+                            navigate(`/food/${food._id}`);
+                          }}
+                        >
+                          <img
+                            src={food.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60'}
+                            alt={food.name}
+                            className="autocomplete-item-img"
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';
+                            }}
+                          />
+                          <div className="autocomplete-item-details">
+                            <span className="autocomplete-item-name">{food.name}</span>
+                            <span className="autocomplete-item-category">{food.category}</span>
+                          </div>
+                          <span className="autocomplete-item-price">KSh {food.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {filteredRestaurants.length > 0 && (
+                  <div className="autocomplete-section">
+                    <h4 className="autocomplete-section-title">Restaurants</h4>
+                    <div className="autocomplete-items">
+                      {filteredRestaurants.map((restaurant) => (
+                        <div
+                          key={restaurant._id}
+                          className="autocomplete-item"
+                          onClick={() => {
+                            setShowDropdown(false);
+                            navigate(`/restaurants/${restaurant._id}`);
+                          }}
+                        >
+                          <div className="autocomplete-item-details">
+                            <span className="autocomplete-item-name">{restaurant.name}</span>
+                            <span className="autocomplete-item-category">{restaurant.cuisine || 'Kitchen'}</span>
+                          </div>
+                          <span className="autocomplete-go-text">View →</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="hero-search-shortcuts">
               <span className="shortcut-label">Try:</span>

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { AuthModalContext } from '../../context/AuthModalContext';
 import './Auth.css';
+import SEO from '../../components/SEO';
 
 const Login = ({ isModal = false }) => {
   const navigate = useNavigate();
@@ -97,6 +98,12 @@ const Login = ({ isModal = false }) => {
 
   return (
     <div className={`auth-container ${isModal ? 'modal-mode' : ''}`}>
+      {!isModal && (
+        <SEO
+          title="Login"
+          description="Log in to your Delivo account to manage your orders, edit profile preferences, and track your gourmet food deliveries."
+        />
+      )}
       {!isModal && <h1 className="auth-page-title">Welcome Back</h1>}
 
       <form onSubmit={handleSubmit} className="auth-form">

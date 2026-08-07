@@ -5,6 +5,7 @@ import api, { getRestaurantById, getFoodsByRestaurant, createOrder } from '../..
 import { useCart } from '../../context/CartContext';
 import { resolveImageUrl, handleImageError } from '../../utils/placeholderImage';
 import './Restaurants.css';
+import SEO from '../../components/SEO';
 
 
 const Restaurants = () => {
@@ -259,8 +260,34 @@ const Restaurants = () => {
     );
   }
 
+  const restaurantSchema = restaurant ? {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    "name": restaurant.name,
+    "image": restaurant.logo || restaurant.bannerImage || "https://delivo.co.ke/delivo.jpg",
+    "priceRange": "$$",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Delivo Service Area",
+      "addressCountry": "KE"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": restaurant.lat || -1.2921,
+      "longitude": restaurant.lng || 36.8219
+    },
+    "telephone": restaurant.phone || "",
+    "servesCuisine": restaurant.cuisine || "Gourmet"
+  } : null;
+
   return (
     <div className="res-page-shell">
+      <SEO
+        title={restaurant.name}
+        description={`Order online from ${restaurant.name} on Delivo. Enjoy hot, fresh meals and gourmet treats delivered directly to you with fast courier service.`}
+        image={restaurant.logo || restaurant.bannerImage}
+        schema={restaurantSchema}
+      />
       {/* HEADER */}
       <div
         className="res-hero-wrapper"

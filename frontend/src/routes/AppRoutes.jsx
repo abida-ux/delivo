@@ -16,6 +16,8 @@ const Orders = lazy(() => import("../pages/customer/Orders"));
 const OrderDetails = lazy(() => import("../pages/customer/OrderDetails"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Offers = lazy(() => import("../pages/Offers"));
+const Login = lazy(() => import("../pages/auth/Login"));
+const Signup = lazy(() => import("../pages/auth/Signup"));
 
 // Marketplace Sub-App Layout & Pages
 const MarketplaceLayout = lazy(() => import("../layouts/MarketplaceLayout"));
@@ -82,6 +84,8 @@ export default function AppRoutes() {
       <Route path="/restaurants" element={<AllRestaurants />} />
       <Route path="/restaurants/:id" element={<Restaurants />} />
       <Route path="/food/:foodId" element={<FoodDetailsPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       
       {/* Marketplace Independent Experience */}
       <Route path="/marketplace" element={<MarketplaceLayout />}>

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Exclude private app views
+Disallow: /admin/
+Disallow: /restaurant/
+Disallow: /rider/
+Disallow: /rider-dashboard/
+
+# Specify Sitemap Location
+Sitemap: https://www.delivo.co.ke/sitemap.xml
