@@ -20,14 +20,18 @@ const iconMap = {
 const Categories = ({ onSelectCategory, selectedCategory }) => {
   const scrollContainerRef = useRef(null);
   const [categoriesList, setCategoriesList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        setLoading(true);
         const res = await api.get('/categories');
         setCategoriesList(res.data.data || []);
       } catch (error) {
         console.error('Error fetching categories in slider:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchCategories();
@@ -67,23 +71,30 @@ const Categories = ({ onSelectCategory, selectedCategory }) => {
       </div>
 
       <div className="categories-slider-container" ref={scrollContainerRef}>
-        {categoriesList.map((category) => {
-          const IconComponent = iconMap[category.icon] || Utensils;
-          const isSelected = selectedCategory === category.name;
-          return (
-            <div 
-              key={category._id} 
-              className={`category-pill-card ${isSelected ? 'selected' : ''}`}
-              onClick={() => handleCategoryClick(category.name)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="category-icon-wrapper">
-                <IconComponent size={28} className="category-icon" />
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="category-pill-card skeleton-card">
+                <div className="category-icon-wrapper skeleton-icon-wrapper skeleton-pulse" />
+                <span className="category-name skeleton-name-text skeleton-pulse" />
               </div>
-              <span className="category-name">{category.name}</span>
-            </div>
-          );
-        })}
+            ))
+          : categoriesList.map((category) => {
+              const IconComponent = iconMap[category.icon] || Utensils;
+              const isSelected = selectedCategory === category.name;
+              return (
+                <div 
+                  key={category._id} 
+                  className={`category-pill-card ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleCategoryClick(category.name)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="category-icon-wrapper">
+                    <IconComponent size={28} className="category-icon" />
+                  </div>
+                  <span className="category-name">{category.name}</span>
+                </div>
+              );
+            })}
       </div>
     </section>
   );

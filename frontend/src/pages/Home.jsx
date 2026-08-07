@@ -1,5 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Flame } from 'lucide-react';
+import { 
+  Search, 
+  Flame, 
+  ShieldCheck, 
+  Clock, 
+  CreditCard, 
+  Star, 
+  UtensilsCrossed, 
+  Store, 
+  ArrowRight,
+  Sparkles 
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCartUI } from '../context/CartUIContext';
 import './Home.css';
@@ -15,6 +26,41 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [popularCategories, setPopularCategories] = useState(['Pizza', 'Drinks', 'Healthy', 'Desserts']);
+  
+  // Typewriter effect states
+  const [typedText, setTypedText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const phrases = ["Delivered in Minutes", "More Than Just Food"];
+
+  useEffect(() => {
+    let timer;
+    const currentPhrase = phrases[phraseIndex];
+
+    if (!isDeleting) {
+      // Typing character-by-character
+      timer = setTimeout(() => {
+        setTypedText(currentPhrase.substring(0, typedText.length + 1));
+      }, 80);
+
+      if (typedText === currentPhrase) {
+        // Pause at full word before deleting
+        timer = setTimeout(() => setIsDeleting(true), 2500);
+      }
+    } else {
+      // Deleting character-by-character
+      timer = setTimeout(() => {
+        setTypedText(currentPhrase.substring(0, typedText.length - 1));
+      }, 40);
+
+      if (typedText === "") {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, phraseIndex]);
   
   // Autocomplete search states
   const [allFoods, setAllFoods] = useState([]);
@@ -160,12 +206,54 @@ export default function Home() {
       />
       <section className="hero-search-section">
         <div className="hero-search-inner">
+          
+          {/* Centered App Container Card */}
+          <div className="hero-app-card">
+            
+            {/* Delivo Logo brand tag matching the reference */}
+            <div className="app-logo-wrap">
+              <img src="/delivo.jpg" alt="Delivo Logo" className="app-logo-image" />
+              <span className="app-logo-brand">Delivo</span>
+            </div>
+
+            {/* Badge below logo */}
+            <div className="app-fast-delivery-badge">
+              <span>FASTEST DELIVERY</span>
+            </div>
+
+            {/* Headline and subtitle matching the reference with typewriter effect */}
+            <h1 className="app-headline">
+              {phraseIndex === 0 ? 'Your Cravings,' : 'Delivo,'}<br />
+              <span className="highlight-app">
+                {typedText}
+                <span className="typewriter-cursor">|</span>
+              </span>
+            </h1>
+            <p className="app-subparagraph">
+              {phraseIndex === 0 
+                ? "Order from top local restaurants and discover new flavors with lightning-fast delivery. Seamless dining from your home."
+                : "Shop from local pharmacies, supermarkets, and local shops. Get everyday essentials delivered right to your doorstep."}
+            </p>
+
+            {/* Dynamic Single Button changing based on typewriter text */}
+            <div className="app-button-group">
+              <button 
+                className="btn-app-primary dynamic-view-btn" 
+                onClick={() => navigate(phraseIndex === 0 ? '/menu' : '/marketplace')}
+              >
+                {phraseIndex === 0 ? 'View Menu' : 'View Marketplace'}
+              </button>
+            </div>
+
+          </div>
+
+          {/* SEARCH BAR (Directly below the container card, styled to match the warm app-like theme) */}
           <div className="hero-search-wrapper" ref={searchContainerRef}>
-            <form onSubmit={handleSearchSubmit} className="hero-search-form">
+            <form onSubmit={handleSearchSubmit} className="hero-search-form app-themed-search">
               <Search className="search-icon" size={18} />
               <input
                 type="text"
-                placeholder="Search for meals, cuisines, or local kitchens..."
+                placeholder="Search for your favorite dish..."
                 value={searchInput}
                 onChange={handleSearchChange}
                 onFocus={() => {
@@ -235,20 +323,6 @@ export default function Home() {
                 )}
               </div>
             )}
-
-            <div className="hero-search-shortcuts">
-              <span className="shortcut-label">Try:</span>
-              {popularCategories.map((cat) => (
-                <button
-                  key={cat}
-                  className="shortcut-pill"
-                  onClick={() => handleQuickSearch(cat)}
-                  type="button"
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </section>

@@ -115,3 +115,46 @@
     height: 36px;
   }
 }
+
+/* ── Pulse Animation & Skeletons ── */
+.skeleton-pulse {
+  animation: skeleton-pulse-animation 1.5s ease-in-out infinite;
+  background-color: var(--color-gray-150, #e2e8f0);
+}
+
+@keyframes skeleton-pulse-animation {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.category-pill-card.skeleton-card {
+  pointer-events: none;
+  border-color: var(--color-gray-100);
+}
+
+.skeleton-icon-wrapper {
+  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+}
+
+.skeleton-name-text {
+  width: 50px;
+  height: 12px;
+  border-radius: 4px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .skeleton-icon-wrapper {
+    width: 36px;
+    height: 36px;
+  }
+}

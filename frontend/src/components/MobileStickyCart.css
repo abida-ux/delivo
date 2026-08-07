@@ -1,0 +1,101 @@
+.mobile-sticky-cart-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-sticky-cart-bar {
+    display: block;
+    position: fixed;
+    bottom: var(--space-4, 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: 480px;
+    background: rgba(255, 107, 74, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius-pill, 9999px);
+    box-shadow: 0 10px 30px rgba(255, 107, 74, 0.3), 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    cursor: pointer;
+    animation: slideUpMobileCart 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.25rem;
+    transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .mobile-sticky-cart-bar:hover {
+    background: var(--color-orange, #ff6b4a);
+    box-shadow: 0 12px 35px rgba(255, 107, 74, 0.4), 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  .mobile-sticky-cart-bar:active {
+    transform: translateX(-50%) scale(0.98);
+  }
+
+  .mobile-sticky-cart-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    font-family: inherit;
+  }
+
+  .cart-badge-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .cart-icon-circle {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #fff;
+    color: var(--color-orange, #ff6b4a);
+    font-size: 10px;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .cart-total-price {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .view-cart-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+@keyframes slideUpMobileCart {
+  from {
+    transform: translate(-50%, 100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
