@@ -28,9 +28,17 @@ try {
 function handleBackgroundMessage(payload) {
   console.log('[firebase-messaging-sw] Received background message:', payload);
 
-  const notificationTitle = payload.notification?.title || 'Delivo Update';
+  const title = payload.notification?.title || payload.data?.title;
+  const body = payload.notification?.body || payload.data?.message || payload.data?.body;
+
+  if (!title && !body) {
+    console.log('[firebase-messaging-sw] Ignoring empty background push.');
+    return;
+  }
+
+  const notificationTitle = title || 'Delivo Notification';
   const notificationOptions = {
-    body: payload.notification?.body || 'You have a new update',
+    body: body || 'New notification.',
     icon: '/delivo.jpg',
     badge: '/delivo.jpg',
     data: payload.data || {},
@@ -96,6 +104,10 @@ self.addEventListener('message', (event) => {
       });
     }
   }
+});
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
 self.addEventListener('notificationclick', (event) => {

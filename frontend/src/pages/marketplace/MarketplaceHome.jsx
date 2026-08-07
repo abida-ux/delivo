@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Flame, Package } from 'lucide-react';
 import { getMarketplaceCategories, getMarketplaceProducts, getMarketplaceBanners } from '../../services/api';
 import MarketplaceProductCard from '../../components/marketplace/MarketplaceProductCard';
 import MarketplaceFooter from '../../components/marketplace/MarketplaceFooter';
+import { LoaderContext } from '../../context/LoaderContext';
+import ReturnToFoodModal from '../../components/marketplace/ReturnToFoodModal';
 
 export default function MarketplaceHome() {
   const navigate = useNavigate();
@@ -14,6 +16,43 @@ export default function MarketplaceHome() {
   const [products, setProducts] = useState([]);
   const [flashDeals, setFlashDeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const { showLoader, hideLoader } = useContext(LoaderContext);
+
+  // Typewriter effect states (Marketplace first / vice versa)
+  const [typedText, setTypedText] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const phrases = ["More Than Just Food", "Delivered in Minutes"];
+
+  useEffect(() => {
+    let timer;
+    const currentPhrase = phrases[phraseIndex];
+
+    if (!isDeleting) {
+      // Typing character-by-character
+      timer = setTimeout(() => {
+        setTypedText(currentPhrase.substring(0, typedText.length + 1));
+      }, 80);
+
+      if (typedText === currentPhrase) {
+        // Pause at full word before deleting
+        timer = setTimeout(() => setIsDeleting(true), 2500);
+      }
+    } else {
+      // Deleting character-by-character
+      timer = setTimeout(() => {
+        setTypedText(currentPhrase.substring(0, typedText.length - 1));
+      }, 40);
+
+      if (typedText === "") {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [typedText, isDeleting, phraseIndex]);
 
   useEffect(() => {
     fetchHomeData();
@@ -63,8 +102,57 @@ export default function MarketplaceHome() {
       {/* ===== SEARCH HERO ===== */}
       <section className="hero-search-section">
         <div className="hero-search-inner">
+          
+          {/* Centered App Container Card */}
+          <div className="hero-app-card">
+            
+            {/* Delivo Logo brand tag matching the reference */}
+            <div className="app-logo-wrap">
+              <img src="/delivo.jpg" alt="Delivo Logo" className="app-logo-image" />
+              <span className="app-logo-brand">Delivo</span>
+            </div>
+
+            {/* Badge below logo */}
+            <div className="app-fast-delivery-badge">
+              <span>FASTEST DELIVERY</span>
+            </div>
+
+            {/* Headline and subtitle matching the reference with typewriter effect (vice versa) */}
+            <h1 className="app-headline">
+              {phraseIndex === 0 ? 'Delivo,' : 'Your Cravings,'}<br />
+              <span className="highlight-app">
+                {typedText}
+                <span className="typewriter-cursor">|</span>
+              </span>
+            </h1>
+            <p className="app-subparagraph">
+              {phraseIndex === 0 
+                ? "Shop from local pharmacies, supermarkets, and local shops. Get everyday essentials delivered right to your doorstep."
+                : "Order from top local restaurants and discover new flavors with lightning-fast delivery. Seamless dining from your home."}
+            </p>
+
+            {/* Dynamic Single Button changing based on typewriter text */}
+            <div className="app-button-group">
+              <button 
+                className="btn-app-primary dynamic-view-btn" 
+                onClick={() => {
+                  if (phraseIndex === 1) {
+                    setShowReturnModal(true);
+                  } else {
+                    const element = document.querySelector('.hero-search-shortcuts');
+                    if (element) element.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              >
+                {phraseIndex === 0 ? 'View Marketplace' : 'View Menu'}
+              </button>
+            </div>
+
+          </div>
+
+          {/* SEARCH BAR (Directly below the container card, styled to match the warm app-like theme) */}
           <div className="hero-search-wrapper">
-            <form onSubmit={handleSearchSubmit} className="hero-search-form">
+            <form onSubmit={handleSearchSubmit} className="hero-search-form app-themed-search">
               <Search className="search-icon" size={18} />
               <input
                 type="text"
@@ -169,6 +257,18 @@ export default function MarketplaceHome() {
 
       {/* ===== FOOTER ===== */}
       <MarketplaceFooter />
+      <ReturnToFoodModal
+        isOpen={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        onConfirm={() => {
+          setShowReturnModal(false);
+          showLoader();
+          navigate('/');
+          setTimeout(() => {
+            hideLoader();
+          }, 1500);
+        }}
+      />
     </div>
   );
 }

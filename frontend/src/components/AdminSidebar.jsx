@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -19,6 +19,7 @@ import {
   ShoppingBasket,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { getAllOrders } from '../services/api';
 import AdminSwitchModal from './admin/AdminSwitchModal';
 import './AdminSidebar.css';
 
@@ -27,6 +28,26 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { logout, user } = useContext(AuthContext);
   const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNewOrdersCount = async () => {
+      try {
+        const orders = await getAllOrders();
+        // Count orders that are 'placed', 'pending' or 'confirmed'
+        const count = orders.filter(
+          (o) => o.status === 'placed' || o.status === 'pending' || o.status === 'confirmed'
+        ).length;
+        setNewOrdersCount(count);
+      } catch (err) {
+        console.warn('Error fetching admin new orders count:', err);
+      }
+    };
+
+    fetchNewOrdersCount();
+    const interval = setInterval(fetchNewOrdersCount, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -127,9 +148,25 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             <button
               className={`nav-item ${isActive('/admin/orders') ? 'active' : ''}`}
               onClick={() => { navigate('/admin/orders'); setIsOpen(false); }}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}
             >
               <ShoppingCart size={20} />
               <span>Orders</span>
+              {newOrdersCount > 0 && (
+                <span className="sidebar-badge" style={{
+                  marginLeft: 'auto',
+                  background: 'var(--color-orange)',
+                  color: '#fff',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  textAlign: 'center',
+                  lineHeight: '1.2'
+                }}>
+                  {newOrdersCount}
+                </span>
+              )}
             </button>
             <button
               className={`nav-item ${isActive('/admin/categories') ? 'active' : ''}`}

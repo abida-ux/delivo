@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from 'react';
-import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package, User, Download } from 'lucide-react';
+import { ArrowLeft, Save, RotateCcw, Bell, Lock, Globe, Package, User, Download, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { savePushSubscription } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { useLocation } from '../context/LocationContext';
+import LocationPickerModal from '../components/LocationPickerModal';
 import './Settings.css';
 import SEO from '../components/SEO';
 
@@ -38,6 +40,30 @@ const Settings = () => {
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushNotice, setPushNotice] = useState('');
+
+  const { location } = useLocation();
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (location?.formattedAddress) {
+      setSettings((prev) => {
+        const finalAddressStr = location.nearbyLandmark 
+          ? `${location.formattedAddress} (${location.nearbyLandmark})`
+          : location.formattedAddress;
+
+        if (prev.checkoutProfile.address === finalAddressStr) return prev;
+
+        return {
+          ...prev,
+          checkoutProfile: {
+            ...prev.checkoutProfile,
+            address: finalAddressStr
+          }
+        };
+      });
+      setHasChanges(true);
+    }
+  }, [location?.formattedAddress, location?.nearbyLandmark]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem(settingsKey);
@@ -258,21 +284,6 @@ const Settings = () => {
           <div className="settings-card-body">
             <div className="setting-row">
               <div className="setting-row-label">
-                <h4>Privacy Mode</h4>
-                <p>Hide your activity from other users</p>
-              </div>
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={settings.privacyMode}
-                  onChange={() => handleToggle('privacyMode')}
-                />
-                <span className="toggle-track"></span>
-              </label>
-            </div>
-
-            <div className="setting-row">
-              <div className="setting-row-label">
                 <h4>Share Location</h4>
                 <p>Allow Delivo to access your location for better delivery</p>
               </div>
@@ -346,21 +357,43 @@ const Settings = () => {
                     placeholder="Enter your full name"
                   />
                 </div>
-                <div>
+                <div style={{ position: 'relative' }}>
                   <label className="setting-form-label">Delivery Address</label>
-                  <input
-                    type="text"
-                    className="settings-input"
-                    value={settings.checkoutProfile.address}
-                    onChange={(e) => {
-                      setSettings((prev) => ({
-                        ...prev,
-                        checkoutProfile: { ...prev.checkoutProfile, address: e.target.value },
-                      }));
-                      setHasChanges(true);
-                    }}
-                    placeholder="House, street or landmark"
-                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      className="settings-input"
+                      value={settings.checkoutProfile.address}
+                      onChange={(e) => {
+                        setSettings((prev) => ({
+                          ...prev,
+                          checkoutProfile: { ...prev.checkoutProfile, address: e.target.value },
+                        }));
+                        setHasChanges(true);
+                      }}
+                      placeholder="House, street or landmark"
+                      style={{ flex: 1 }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setIsLocationPickerOpen(true)}
+                      className="settings-input-map-btn"
+                      style={{
+                        padding: '10px 14px',
+                        background: 'var(--color-orange-light)',
+                        border: '1px solid rgba(255, 107, 74, 0.15)',
+                        color: 'var(--color-orange)',
+                        borderRadius: 'var(--radius)',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <MapPin size={16} />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="setting-form-label">WhatsApp Number</label>
@@ -482,6 +515,10 @@ const Settings = () => {
           </div>
         )}
       </div>
+      <LocationPickerModal 
+        isOpen={isLocationPickerOpen} 
+        onClose={() => setIsLocationPickerOpen(false)} 
+      />
     </div>
   );
 };

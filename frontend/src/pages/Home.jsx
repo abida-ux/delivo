@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { 
   Search, 
   Flame, 
@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCartUI } from '../context/CartUIContext';
+import { LoaderContext } from '../context/LoaderContext';
+import MarketplaceConfirmationModal from '../components/marketplace/MarketplaceConfirmationModal';
 import './Home.css';
 import SEO from '../components/SEO';
 
@@ -68,6 +70,8 @@ export default function Home() {
   const [filteredFoods, setFilteredFoods] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
+  const { showLoader, hideLoader } = useContext(LoaderContext);
   
   const searchContainerRef = useRef(null);
   const navigate = useNavigate();
@@ -239,7 +243,13 @@ export default function Home() {
             <div className="app-button-group">
               <button 
                 className="btn-app-primary dynamic-view-btn" 
-                onClick={() => navigate(phraseIndex === 0 ? '/menu' : '/marketplace')}
+                onClick={() => {
+                  if (phraseIndex === 1) {
+                    setShowMarketplaceModal(true);
+                  } else {
+                    navigate('/menu');
+                  }
+                }}
               >
                 {phraseIndex === 0 ? 'View Menu' : 'View Marketplace'}
               </button>
@@ -400,6 +410,18 @@ export default function Home() {
           <p>&copy; 2026 Delivo. All rights reserved.</p>
         </div>
       </footer>
+      <MarketplaceConfirmationModal
+        isOpen={showMarketplaceModal}
+        onClose={() => setShowMarketplaceModal(false)}
+        onConfirm={() => {
+          setShowMarketplaceModal(false);
+          showLoader();
+          navigate('/marketplace');
+          setTimeout(() => {
+            hideLoader();
+          }, 1500);
+        }}
+      />
     </div>
   );
 }

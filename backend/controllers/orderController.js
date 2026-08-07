@@ -329,6 +329,25 @@ exports.createOrder = async (req, res, next) => {
         );
       }
 
+      // 3. Send Customer Order Confirmation (Push & In-App) - Only for non-Mpesa (Cash on Delivery) orders, since M-Pesa flow sends its own status confirmations.
+      if (customerUser?._id && paymentMethod !== 'mpesa') {
+        const customerPayload = {
+          title: 'Order Placed successfully',
+          message: `Your order #${orderIdShort} has been placed successfully. We are preparing it now!`,
+          url: '/customer/orders',
+          tag: `delivo-customer-order-${order._id}`,
+        };
+        notificationPromises.push(
+          createInAppNotification({
+            userId: customerUser._id,
+            title: customerPayload.title,
+            message: customerPayload.message,
+            type: 'order',
+          }).catch(err => console.error(`Customer in-app notification error:`, err.message)),
+          sendPushToUser({ userId: customerUser._id, payload: customerPayload }).catch(err => console.error(`Customer push notification error:`, err.message))
+        );
+      }
+
       // Run all notification dispatches concurrently in background without blocking response
       if (notificationPromises.length > 0) {
         Promise.all(notificationPromises).catch(err => console.error('Notification dispatch batch failed:', err));
@@ -614,6 +633,33 @@ exports.updateOrderStatus = async (req, res, next) => {
           notificationPromises.push(
             createInAppNotification({ userId: riderUser._id, title: riderPayload.title, message: riderPayload.message, type: 'order' }).catch(err => console.error(`Rider in-app status notification error:`, err.message)),
             sendPushToUser({ userId: riderUser._id, payload: riderPayload }).catch(err => console.error(`Rider push status notification error:`, err.message))
+          );
+        }
+
+        // Notify the Customer about the rider assignment or out-for-delivery update
+        if (customerUser?._id) {
+          const customerStatusPayload = {
+            title: status === 'assigned' ? 'Rider Assigned' : 'Order Out for Delivery',
+            message: status === 'assigned' 
+              ? `Rider ${riderName} (${riderPhone}) has been assigned to deliver your order #${orderIdShort}.`
+              : `Your order #${orderIdShort} is on the way! Rider ${riderName} is delivering it to ${deliveryAddress}.`,
+            icon: '/favicon.ico',
+            url: '/orders',
+            data: {
+              eventType: status === 'assigned' ? 'order_assigned_rider' : 'order_on_delivery',
+              recipientRole: 'customer',
+              orderId: order._id.toString(),
+              customerName,
+              restaurantName,
+              deliveryAddress,
+              riderName,
+              riderPhone,
+              orderStatus: status,
+            },
+          };
+          notificationPromises.push(
+            createInAppNotification({ userId: customerUser._id, title: customerStatusPayload.title, message: customerStatusPayload.message, type: 'order' }).catch(err => console.error(`Customer status in-app notification error:`, err.message)),
+            sendPushToUser({ userId: customerUser._id, payload: customerStatusPayload }).catch(err => console.error(`Customer status push notification error:`, err.message))
           );
         }
       } else {

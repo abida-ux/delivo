@@ -11,8 +11,8 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
     lng: location.longitude || 36.8219,
   });
 
-  const [addressVal, setAddressVal] = useState(location.address || '');
-  const [landmarkVal, setLandmarkVal] = useState(location.landmark || '');
+  const [addressVal, setAddressVal] = useState(location.formattedAddress || '');
+  const [landmarkVal, setLandmarkVal] = useState(location.nearbyLandmark || '');
 
   // Geolocation detection state
   const [geoLoading, setGeoLoading] = useState(false);
@@ -30,8 +30,8 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
         lat: location.latitude || -1.2921,
         lng: location.longitude || 36.8219,
       });
-      setAddressVal(location.address || '');
-      setLandmarkVal(location.landmark || '');
+      setAddressVal(location.formattedAddress || '');
+      setLandmarkVal(location.nearbyLandmark || '');
       setSearchQuery('');
       setSuggestions([]);
       setGeoError(null);
@@ -116,8 +116,20 @@ const LocationPickerModal = ({ isOpen, onClose }) => {
 
   // Confirm Location Handler
   const handleConfirmLocation = () => {
-    const finalAddress = addressVal || 'Specified Coordinates';
-    updateLocation(coords.lat, coords.lng, finalAddress, landmarkVal.trim());
+    const finalAddress = addressVal || '';
+    const landmark = landmarkVal.trim();
+
+    if (!landmark) {
+      alert('Please specify your hostel, room, house number, or apartment details in the "Nearby Landmark / Notes" field so the rider can find you.');
+      return;
+    }
+
+    if (landmark.length < 3) {
+      alert('Please provide a slightly more descriptive delivery detail (at least 3 characters) in the landmark field.');
+      return;
+    }
+
+    updateLocation(coords.lat, coords.lng, finalAddress, landmark);
     if (onClose) {
       onClose();
     }

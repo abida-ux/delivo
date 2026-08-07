@@ -79,6 +79,7 @@ try {
 
 // ==================== Service Worker Lifecycle ====================
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
   );
@@ -139,10 +140,18 @@ self.addEventListener('push', (event) => {
     payload = {};
   }
 
-  const title = payload.title || 'Delivo Notification';
+  // Extract title and message (supporting standard web-push and firebase structure fallbacks)
+  const title = payload.title || payload.notification?.title;
+  const message = payload.message || payload.notification?.body || payload.body;
+
+  // Ignore empty keep-alive or background sync push events
+  if (!title && !message) {
+    console.log('[sw] Ignoring empty or keep-alive push event.');
+    return;
+  }
 
   const options = {
-    body: payload.message || 'You have a new update from Delivo.',
+    body: message || 'New notification.',
     icon: '/delivo.jpg',
     badge: '/delivo.jpg',
     tag: payload.tag || 'delivo-push-alert',
@@ -150,9 +159,8 @@ self.addEventListener('push', (event) => {
     data: payload,
   };
 
-
   event.waitUntil(
-    self.registration.showNotification(title, options).then(() => {
+    self.registration.showNotification(title || 'Delivo Notification', options).then(() => {
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
         clients.forEach((client) => {
           client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
@@ -160,7 +168,6 @@ self.addEventListener('push', (event) => {
       });
     })
   );
-
 });
 
 // ==================== Notification Click ====================

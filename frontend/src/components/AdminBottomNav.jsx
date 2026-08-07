@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,12 +12,32 @@ import {
   LogOut,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { getAllOrders } from '../services/api';
 import './AdminBottomNav.css';
 
 const AdminBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useContext(AuthContext);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNewOrdersCount = async () => {
+      try {
+        const orders = await getAllOrders();
+        const count = orders.filter(
+          (o) => o.status === 'placed' || o.status === 'pending' || o.status === 'confirmed'
+        ).length;
+        setNewOrdersCount(count);
+      } catch (err) {
+        console.warn('Error fetching admin new orders count:', err);
+      }
+    };
+
+    fetchNewOrdersCount();
+    const interval = setInterval(fetchNewOrdersCount, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -52,8 +72,29 @@ const AdminBottomNav = () => {
             className={`bottom-nav-item ${isActive(item.path) ? 'active' : ''}`}
             onClick={() => handleItemClick(item.path)}
             title={item.label}
+            style={{ position: 'relative' }}
           >
-            <Icon size={24} />
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <Icon size={24} />
+              {item.path === '/admin/orders' && newOrdersCount > 0 && (
+                <span className="bottom-nav-badge" style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  right: '-10px',
+                  background: 'var(--color-orange)',
+                  color: '#fff',
+                  fontSize: '9px',
+                  fontWeight: '700',
+                  padding: '1px 5px',
+                  borderRadius: '10px',
+                  minWidth: '12px',
+                  textAlign: 'center',
+                  lineHeight: '1.2'
+                }}>
+                  {newOrdersCount}
+                </span>
+              )}
+            </div>
             <span>{item.label}</span>
           </button>
         );

@@ -500,7 +500,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         clearPolling();
         setPaymentStage('failed');
         setPaymentMessage('Payment failed or cancelled. Please retry the M-Pesa prompt.');
-        setOrderPending(false);
         return;
       }
 
@@ -951,26 +950,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         </div>
 
 
-        {paymentStage === 'success' ? (
-          <div className="payment-success-state">
-            <div className="payment-success-ring">
-              <Check size={28} />
-            </div>
-            <h3>Payment Completed</h3>
-            <p>{paymentMessage}</p>
-            <p className="payment-success-subtext">
-              {redirectingToOrders ? 'Please wait while we open your orders page.' : 'You will be taken to your orders page shortly.'}
-            </p>
-          </div>
-        ) : paymentMessage ? (
-          <div className="payment-status-box">
-            <div className="payment-status-title">Payment Status</div>
-            <p>{paymentMessage}</p>
-            {checkoutRequestId && (
-              <p className="payment-subtext">Checkout Request ID: {checkoutRequestId}</p>
-            )}
-          </div>
-        ) : null}
+        {/* Redundant status box removed as status is managed inside MpesaPaymentModal overlay */}
       </div>
     </>
   );
@@ -985,14 +965,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       <LocationPickerModal isOpen={isLocationPickerOpen} onClose={() => setIsLocationPickerOpen(false)} />
       <MpesaPaymentModal
         isOpen={orderPending}
-        status={paymentStage === 'completed' ? 'success' : paymentStage === 'failed' ? 'failed' : 'pending'}
+        status={(paymentStage === 'completed' || paymentStage === 'success') ? 'success' : paymentStage === 'failed' ? 'failed' : 'pending'}
         message={paymentMessage}
         amount={grandTotal}
         orderId={orderId}
         onClose={() => {
           setOrderPending(false);
           clearPolling();
-          if (paymentStage === 'completed') {
+          if (paymentStage === 'completed' || paymentStage === 'success') {
             if (onOrderSuccess) onOrderSuccess();
             onClose();
           }
