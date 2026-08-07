@@ -25,8 +25,10 @@ const AdminBottomNav = () => {
     const fetchNewOrdersCount = async () => {
       try {
         const orders = await getAllOrders();
+        const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
+        const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
         const count = orders.filter(
-          (o) => o.status === 'placed' || o.status === 'pending' || o.status === 'confirmed'
+          (o) => (o.status === 'placed' || o.status === 'pending' || o.status === 'confirmed') && !viewedIds.includes(o._id)
         ).length;
         setNewOrdersCount(count);
       } catch (err) {
@@ -36,7 +38,12 @@ const AdminBottomNav = () => {
 
     fetchNewOrdersCount();
     const interval = setInterval(fetchNewOrdersCount, 10000);
-    return () => clearInterval(interval);
+    window.addEventListener('storage', fetchNewOrdersCount);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', fetchNewOrdersCount);
+    };
   }, []);
 
   const menuItems = [

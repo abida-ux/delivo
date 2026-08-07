@@ -158,6 +158,18 @@ export default function AdminOrders() {
   const handleEdit = (order) => {
     setEditingOrder(order);
     setIsEditModalOpen(true);
+
+    try {
+      const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
+      const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
+      if (order?._id && !viewedIds.includes(order._id)) {
+        viewedIds.push(order._id);
+        localStorage.setItem('delivo_admin_viewed_orders', JSON.stringify(viewedIds));
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch (err) {
+      console.warn('Failed to save viewed order status:', err);
+    }
   };
 
   const handleSaveEdit = async (updatedData) => {
