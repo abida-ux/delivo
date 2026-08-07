@@ -1,9 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
 import { useMarketplaceCart } from '../../contexts/marketplace/MarketplaceCartContext';
+import { LoaderContext } from '../../context/LoaderContext';
 import './MarketplaceFooter.css';
 
 export default function MarketplaceFooter() {
   const navigate = useNavigate();
+  const { showLoader, hideLoader } = useContext(LoaderContext);
   const { openMarketplaceCart } = useMarketplaceCart();
 
   return (
@@ -33,7 +36,17 @@ export default function MarketplaceFooter() {
               </button>
             </li>
             <li>
-              <button className="footer-link-button" type="button" onClick={() => navigate('/')}>
+              <button
+                className="footer-link-button"
+                type="button"
+                onClick={() => {
+                  showLoader();
+                  navigate('/');
+                  setTimeout(() => {
+                    hideLoader();
+                  }, 1500);
+                }}
+              >
                 ← Switch to Food Delivery
               </button>
             </li>

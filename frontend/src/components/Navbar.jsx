@@ -21,6 +21,7 @@ import CartDrawer from './CartDrawer';
 import NotificationModal from './NotificationModal';
 import LogoutModal from './LogoutModal';
 import MarketplaceConfirmationModal from './marketplace/MarketplaceConfirmationModal';
+import { LoaderContext } from '../context/LoaderContext';
 import api, { getAppSettings } from '../services/api';
 import './Navbar.css';
 
@@ -28,6 +29,7 @@ const Navbar = () => {
   // ✅ GET CONTEXT VALUES FIRST (before using them)
   const { user, token, logout } = useContext(AuthContext);
   const { openLoginModal } = useContext(AuthModalContext);
+  const { showLoader, hideLoader } = useContext(LoaderContext);
   const { getCartItems } = useCart();
   const { isCheckoutOpen, openCart, openCheckout, closeCheckout } = useCartUI();
 
@@ -434,7 +436,11 @@ const Navbar = () => {
         onClose={() => setShowMarketplaceModal(false)}
         onConfirm={() => {
           setShowMarketplaceModal(false);
+          showLoader();
           navigate('/marketplace');
+          setTimeout(() => {
+            hideLoader();
+          }, 1500);
         }}
       />
     </>

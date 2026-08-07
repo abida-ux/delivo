@@ -19,6 +19,7 @@ import { AuthModalContext } from '../../context/AuthModalContext';
 import MarketplaceCartDrawer from './MarketplaceCartDrawer';
 import LogoutModal from '../LogoutModal';
 import ReturnToFoodModal from './ReturnToFoodModal';
+import { LoaderContext } from '../../context/LoaderContext';
 import './MarketplaceNavbar.css';
 
 export default function MarketplaceNavbar() {
@@ -26,6 +27,7 @@ export default function MarketplaceNavbar() {
   const location = useLocation();
   const { user, logout } = useContext(AuthContext);
   const { openLoginModal } = useContext(AuthModalContext);
+  const { showLoader, hideLoader } = useContext(LoaderContext);
   const { totalItemCount, openMarketplaceCart } = useMarketplaceCart();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -160,7 +162,11 @@ export default function MarketplaceNavbar() {
         onClose={() => setShowReturnModal(false)}
         onConfirm={() => {
           setShowReturnModal(false);
+          showLoader();
           navigate('/');
+          setTimeout(() => {
+            hideLoader();
+          }, 1500);
         }}
       />
     </>
