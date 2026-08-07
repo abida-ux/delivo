@@ -11,6 +11,8 @@ const allowedOrigins = new Set([
   'https://delivo-nu.vercel.app',
   'https://delivo.buzz',
   'https://www.delivo.buzz',
+  'https://delivo.co.ke',
+  'https://www.delivo.co.ke',
 
   // Backend
   'https://delivo-d5r8.onrender.com',
@@ -41,6 +43,8 @@ const isAllowedOrigin = (origin) => {
   if (/^https:\/\/.*\.netlify\.app$/i.test(origin)) return true;
 
   if (/^https:\/\/(www\.)?delivo\.buzz$/i.test(origin)) return true;
+
+  if (/^https:\/\/(www\.)?delivo\.co\.ke$/i.test(origin)) return true;
 
   return false;
 };
