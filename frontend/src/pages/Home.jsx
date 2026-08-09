@@ -411,6 +411,7 @@ export default function Home() {
               onClearFilter={handleClearFilter}
               isFlashDeal={true}
               flashItems={flashState.activeDeals}
+              onExpired={fetchFlashSales}
             />
           ) : (
             <div className="upcoming-flash-banner">

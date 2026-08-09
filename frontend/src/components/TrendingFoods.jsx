@@ -15,7 +15,7 @@ const SkeletonFoodCard = () => (
   </div>
 );
 
-const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false, flashItems = null }) => {
+const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false, flashItems = null, onExpired }) => {
   const scrollContainerRef = useRef(null);
   const autoScrollRef = useRef(null);
 
@@ -189,7 +189,7 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
               {selectedCategory || searchTerm ? 'No foods match your search' : 'No foods available'}
             </p>
           : filteredItems.map((item) => (
-              <FoodCard key={item._id} food={item} />
+              <FoodCard key={item._id} food={item} onExpired={onExpired} />
             ))
         }
       </div>

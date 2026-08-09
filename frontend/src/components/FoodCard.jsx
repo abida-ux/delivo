@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { resolveImageUrl } from '../utils/placeholderImage';
 import './FoodCard.css';
 
-const FoodCard = ({ food }) => {
+const FoodCard = ({ food, onExpired }) => {
   const navigate = useNavigate();
   const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
@@ -22,10 +22,9 @@ const FoodCard = ({ food }) => {
       if (difference <= 0) {
         setIsExpired(true);
         setTimeLeft('Expired');
-        // Refresh page or trigger re-fetch to load normal prices
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        if (onExpired) {
+          onExpired();
+        }
         return;
       }
 
@@ -45,7 +44,7 @@ const FoodCard = ({ food }) => {
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [food.flashSaleEnd]);
+  }, [food.flashSaleEnd, onExpired]);
 
   const fallbackImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
 
