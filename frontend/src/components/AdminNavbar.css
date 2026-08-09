@@ -235,3 +235,34 @@
   font-size: 10px;
   color: var(--text-muted);
 }
+
+@media (max-width: 768px) {
+  .breadcrumbs {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .exp-switcher-btn span {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header-nav {
+    padding: 0 8px;
+    gap: 8px;
+  }
+  .admin-experience-switcher {
+    padding: 2px;
+    gap: 1px;
+  }
+  .exp-switcher-btn {
+    padding: 6px;
+    font-size: 10px;
+    gap: 0;
+  }
+  .header-right {
+    gap: 8px;
+  }
+}

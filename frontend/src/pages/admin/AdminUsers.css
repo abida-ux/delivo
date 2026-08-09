@@ -275,6 +275,10 @@
     border-bottom: 1px dashed #f1f5f9;
     font-size: var(--text-xs);
     color: #0f172a;
+    gap: 12px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    text-align: right;
   }
 
   .users-table td:last-child {

@@ -17,6 +17,7 @@ import {
   ListFilter,
   DollarSign,
   ShoppingBasket,
+  Flame,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { getAllOrders } from '../services/api';
@@ -61,6 +62,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
     { label: 'Users', path: '/admin/users', icon: Users },
     { label: 'Restaurants', path: '/admin/restaurants', icon: Store },
     { label: 'Foods Template', path: '/admin/foods', icon: UtensilsCrossed },
+    { label: 'Flash Sales', path: '/admin/flash-sales', icon: Flame },
     { label: 'Marketplace', path: '/admin/marketplace', icon: ShoppingBasket },
     { label: 'Categories', path: '/admin/categories', icon: ListFilter },
     { label: 'Combinations', path: '/admin/combinations', icon: Layers },
@@ -188,6 +190,13 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             >
               <UtensilsCrossed size={20} />
               <span>Foods</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/flash-sales') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/flash-sales'); setIsOpen(false); }}
+            >
+              <Flame size={20} />
+              <span>Flash Sales</span>
             </button>
             <button
               className={`nav-item ${isActive('/admin/restaurant-foods') ? 'active' : ''}`}

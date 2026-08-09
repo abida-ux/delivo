@@ -492,6 +492,32 @@ export const deleteMarketplaceFlashSale = async (id) => {
   return res.data;
 };
 
+// ================= FOOD FLASH SALES =================
+export const getFoodFlashSales = async (status) => {
+  const res = await api.get('/foods/flash-sales', { params: { status } });
+  return res.data.data || [];
+};
+
+export const createFoodFlashSale = async (data) => {
+  const res = await api.post('/foods/flash-sales', data);
+  return res.data.data;
+};
+
+export const updateFoodFlashSale = async (id, data) => {
+  const res = await api.put(`/foods/flash-sales/${id}`, data);
+  return res.data.data;
+};
+
+export const deleteFoodFlashSale = async (id) => {
+  const res = await api.delete(`/foods/flash-sales/${id}`);
+  return res.data;
+};
+
+export const getActiveFoodFlashSales = async () => {
+  const res = await api.get('/foods/flash-sales/active');
+  return res.data;
+};
+
 export const getMarketplaceCoupons = async () => {
   const res = await api.get('/marketplace/coupons');
   return res.data.data || [];

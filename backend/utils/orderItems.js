@@ -89,11 +89,28 @@ async function buildPopulatedOrderItems(items = [], deps = {}, restaurantId = nu
       throw new Error(`Food item '${food.name}' is currently sold out.`);
     }
 
+    // Resolve flash sale price if active
+    const FoodFlashSale = require('../models/FoodFlashSale');
+    const now = new Date();
+    const activeFlashSale = await FoodFlashSale.findOne({
+      startAt: { $lte: now },
+      endAt: { $gt: now },
+      'items.foodId': item.foodId
+    });
+
+    let finalPrice = restaurantFood.price || item.price || 0;
+    if (activeFlashSale) {
+      const flashItem = activeFlashSale.items.find(i => i.foodId.toString() === item.foodId.toString());
+      if (flashItem) {
+        finalPrice = flashItem.salePrice;
+      }
+    }
+
     populatedItems.push({
       productType: 'meal',
       foodId: item.foodId,
       quantity: item.quantity || 1,
-      price: restaurantFood.price || item.price || 0,
+      price: finalPrice,
       name: food.name,
       isCombination: false,
       combinationId: undefined,

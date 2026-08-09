@@ -66,6 +66,25 @@ export default function AdminOrders() {
       setOrders(ordersList);
       applyFilter(ordersList, searchTerm, activeFilter);
 
+      // Clear unseen order badge count
+      try {
+        const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
+        const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
+        let updated = false;
+        ordersList.forEach((o) => {
+          if (o._id && !viewedIds.includes(o._id)) {
+            viewedIds.push(o._id);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem('delivo_admin_viewed_orders', JSON.stringify(viewedIds));
+          window.dispatchEvent(new Event('storage'));
+        }
+      } catch (err) {
+        console.warn('Failed to clear unseen orders:', err);
+      }
+
       if (ridersRes?.success) {
         setAvailableRiders(ridersRes.data || []);
       }

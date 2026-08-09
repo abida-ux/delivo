@@ -23,11 +23,47 @@ import Categories from "../components/Categories";
 import TrendingFoods from "../components/TrendingFoods";
 import HowItWorks from "../components/HowItWorks";
 import ComboMealsSection from "../components/ComboMealsSection";
+import { getActiveFoodFlashSales } from '../services/api';
+
+const UpcomingFlashCountdown = ({ startAt, onFinish }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = new Date(startAt) - new Date();
+      if (difference <= 0) {
+        setTimeLeft('Starting...');
+        if (onFinish) {
+          setTimeout(() => onFinish(), 1000);
+        }
+        return;
+      }
+
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+
+      const formatted = `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+      setTimeLeft(formatted);
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [startAt, onFinish]);
+
+  return (
+    <div className="upcoming-countdown-timer">
+      {timeLeft}
+    </div>
+  );
+};
 
 export default function Home() {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [popularCategories, setPopularCategories] = useState(['Pizza', 'Drinks', 'Healthy', 'Desserts']);
+  const [flashState, setFlashState] = useState({ hasActive: false, activeDeals: [], upcoming: null });
   
   // Typewriter effect states
   const [typedText, setTypedText] = useState("");
@@ -63,6 +99,25 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, [typedText, isDeleting, phraseIndex]);
+
+  const fetchFlashSales = async () => {
+    try {
+      const res = await getActiveFoodFlashSales();
+      setFlashState({
+        hasActive: res.data && res.data.length > 0,
+        activeDeals: res.data || [],
+        upcoming: res.upcoming || null
+      });
+    } catch (err) {
+      console.error('Error fetching flash sales on home:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchFlashSales();
+    const interval = setInterval(fetchFlashSales, 15000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Autocomplete search states
   const [allFoods, setAllFoods] = useState([]);
@@ -341,20 +396,32 @@ export default function Home() {
       <Categories onSelectCategory={handleCategorySelect} selectedCategory={selectedCategory} />
 
       {/* ===== FLASH DEALS ===== */}
-      <section className="flash-deals-section">
-        <div className="flash-header">
-          <div className="flash-title">
-            <Flame size={20} className="flame-icon" />
-            <h2>Flash Deals</h2>
+      {(flashState.hasActive || flashState.upcoming) && (
+        <section className="flash-deals-section">
+          <div className="flash-header">
+            <div className="flash-title">
+              <Flame size={20} className="flame-icon" />
+              <h2>Flash Deals</h2>
+            </div>
           </div>
-        </div>
-        <TrendingFoods
-          searchTerm=""
-          selectedCategory={selectedCategory}
-          onClearFilter={handleClearFilter}
-          isFlashDeal={true}
-        />
-      </section>
+          {flashState.hasActive ? (
+            <TrendingFoods
+              searchTerm=""
+              selectedCategory={selectedCategory}
+              onClearFilter={handleClearFilter}
+              isFlashDeal={true}
+              flashItems={flashState.activeDeals}
+            />
+          ) : (
+            <div className="upcoming-flash-banner">
+              <h3>Next Flash Sale</h3>
+              <p className="upcoming-sub">Starts in</p>
+              <UpcomingFlashCountdown startAt={flashState.upcoming.startAt} onFinish={fetchFlashSales} />
+              <p className="upcoming-promo">Get ready for limited-time deals.</p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ===== FEATURED RESTAURANTS ===== */}
       <FeaturedRestaurants />

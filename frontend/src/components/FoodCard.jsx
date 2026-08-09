@@ -1,8 +1,8 @@
-import { Plus, Check, Star } from 'lucide-react';
+import { Plus, Check, Star, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { resolveImageUrl } from '../utils/placeholderImage';
 import './FoodCard.css';
 
@@ -11,6 +11,41 @@ const FoodCard = ({ food }) => {
   const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
   const [imageError, setImageError] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    if (!food.flashSaleEnd) return;
+
+    const calculateTimeLeft = () => {
+      const difference = new Date(food.flashSaleEnd) - new Date();
+      if (difference <= 0) {
+        setIsExpired(true);
+        setTimeLeft('Expired');
+        // Refresh page or trigger re-fetch to load normal prices
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
+      }
+
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+
+      const formatted = [
+        String(hours).padStart(2, '0'),
+        String(minutes).padStart(2, '0'),
+        String(seconds).padStart(2, '0')
+      ].join(':');
+
+      setTimeLeft(formatted);
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [food.flashSaleEnd]);
 
   const fallbackImage = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
 
@@ -94,6 +129,13 @@ const FoodCard = ({ food }) => {
             <span className="food-old-price">KES {food.originalPrice.toLocaleString('en-KE')}</span>
           )}
         </div>
+
+        {food.flashSaleEnd && (
+          <div className="food-card-countdown" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '700', color: '#ef4444', marginTop: '4px' }}>
+            <Clock size={12} />
+            <span>Ends in {timeLeft}</span>
+          </div>
+        )}
       </div>
     </div>
   );

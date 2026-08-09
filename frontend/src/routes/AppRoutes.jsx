@@ -33,6 +33,7 @@ const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("../pages/admin/AdminUsers"));
 const AdminRestaurants = lazy(() => import("../pages/admin/Restaurants"));
 const AdminFoods = lazy(() => import("../pages/admin/AdminFoods"));
+const AdminFlashSales = lazy(() => import("../pages/admin/AdminFlashSales"));
 const AdminMarketplace = lazy(() => import("../pages/admin/AdminMarketplace"));
 const AdminMarketplaceProducts = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceProducts"));
 const AdminMarketplaceCategories = lazy(() => import("../pages/admin/marketplace/AdminMarketplaceCategories"));
@@ -136,6 +137,14 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminFoods />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/flash-sales"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminFlashSales />
           </ProtectedRoute>
         }
       />

@@ -16,6 +16,21 @@ const {
   rateFood,
 } = require('../controllers/foodController');
 
+const {
+  createFlashSale,
+  getFlashSales,
+  updateFlashSale,
+  deleteFlashSale,
+  getActiveFlashSales,
+} = require('../controllers/foodFlashSaleController');
+
+// Flash sale routes
+router.get('/flash-sales/active', getActiveFlashSales);
+router.get('/flash-sales', authenticate, authorizeRoles('admin'), getFlashSales);
+router.post('/flash-sales', authenticate, authorizeRoles('admin'), createFlashSale);
+router.put('/flash-sales/:id', authenticate, authorizeRoles('admin'), updateFlashSale);
+router.delete('/flash-sales/:id', authenticate, authorizeRoles('admin'), deleteFlashSale);
+
 // Global Catalogue routes
 router.get('/', getAllFoods);
 router.get('/:id', optionalAuthenticate, getFoodById);

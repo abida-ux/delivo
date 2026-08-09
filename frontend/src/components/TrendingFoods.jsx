@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState, useMemo} from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { getAllFoods } from '../services/api';
+import { getAllFoods, getActiveFoodFlashSales } from '../services/api';
 import FoodCard from './FoodCard';
 import './TrendingFoods.css';
 
@@ -15,7 +15,7 @@ const SkeletonFoodCard = () => (
   </div>
 );
 
-const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false }) => {
+const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false, flashItems = null }) => {
   const scrollContainerRef = useRef(null);
   const autoScrollRef = useRef(null);
 
@@ -24,22 +24,41 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchFoods = async () => {
+    if (isFlashDeal && flashItems) {
+      setTrendingItems(flashItems);
+      setLoading(false);
+      return;
+    }
+
+    const fetchFoods = async (showLoading = true) => {
       try {
-        setLoading(true);
-        const foods = await getAllFoods();
-        const randomized = [...foods].sort(() => Math.random() - 0.5);
-        setTrendingItems(randomized);
+        if (showLoading) setLoading(true);
+        let foods = [];
+        if (isFlashDeal) {
+          const res = await getActiveFoodFlashSales();
+          foods = res.data || [];
+        } else {
+          foods = await getAllFoods();
+        }
+        const itemsToSet = isFlashDeal ? foods : [...foods].sort(() => Math.random() - 0.5);
+        setTrendingItems(itemsToSet);
       } catch (err) {
         console.error('Error fetching foods:', err);
         setError('Failed to load foods');
       } finally {
-        setLoading(false);
+        if (showLoading) setLoading(false);
       }
     };
 
-    fetchFoods();
-  }, []);
+    fetchFoods(true);
+
+    if (isFlashDeal) {
+      const intervalId = setInterval(() => {
+        fetchFoods(false);
+      }, 15000);
+      return () => clearInterval(intervalId);
+    }
+  }, [isFlashDeal, flashItems]);
 
   // Auto-scroll every 8 seconds — pauses on hover
   useEffect(() => {

@@ -224,3 +224,33 @@
   background: var(--color-orange-faint);
   color: var(--color-orange);
 }
+
+/* ==================== GLOBAL RESPONSIVE FIXES ==================== */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.flash-sales-table-wrapper,
+.table-container,
+.table-wrapper,
+.table-responsive {
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 480px) {
+  .modal-content,
+  .admin-modal,
+  .flash-modal-content {
+    width: calc(100vw - 20px) !important;
+    margin: 10px !important;
+    max-height: 95vh !important;
+  }
+  
+  .form-row, .datetime-row, .pricing-grid {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}
