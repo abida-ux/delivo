@@ -18,6 +18,7 @@ import {
   DollarSign,
   ShoppingBasket,
   Flame,
+  Terminal,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { getAllOrders } from '../services/api';
@@ -242,6 +243,13 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             >
               <Settings size={20} />
               <span>Settings</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/logs') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/logs'); setIsOpen(false); }}
+            >
+              <Terminal size={20} />
+              <span>Audit Logs</span>
             </button>
           </div>
         </nav>

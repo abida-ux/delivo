@@ -23,9 +23,36 @@ const RestaurantCard = () => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+
+  const updateScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowControls(scrollWidth > clientWidth + 5);
+      setCanScrollLeft(scrollLeft > 2);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
+
   useEffect(() => {
     fetchRestaurants();
   }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.addEventListener('scroll', updateScrollButtons);
+      window.addEventListener('resize', updateScrollButtons);
+      const timer = setTimeout(updateScrollButtons, 300);
+      return () => {
+        el.removeEventListener('scroll', updateScrollButtons);
+        window.removeEventListener('resize', updateScrollButtons);
+        clearTimeout(timer);
+      };
+    }
+  }, [restaurants, loading]);
 
   const fetchRestaurants = async () => {
     try {
@@ -65,13 +92,32 @@ const RestaurantCard = () => {
           <h2 className="section-main-title">Popular Restaurants</h2>
           <p className="section-subtitle">Discover top-rated places delivering to your area</p>
         </div>
+
+        {showControls && (
+          <div className="restaurant-scroll-controls">
+            <button 
+              className="restaurant-arrow-btn" 
+              onClick={scrollLeft} 
+              disabled={!canScrollLeft}
+              style={{ opacity: canScrollLeft ? 1 : 0.4, cursor: canScrollLeft ? 'pointer' : 'default' }}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button 
+              className="restaurant-arrow-btn" 
+              onClick={scrollRight} 
+              disabled={!canScrollRight}
+              style={{ opacity: canScrollRight ? 1 : 0.4, cursor: canScrollRight ? 'pointer' : 'default' }}
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="carousel-wrapper">
-        <button className="scroll-btn scroll-btn-left" onClick={scrollLeft} aria-label="Scroll left">
-          <ChevronLeft size={20} />
-        </button>
-
         <div className="restaurants-grid" ref={scrollContainerRef}>
           {loading
             ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
@@ -126,10 +172,6 @@ const RestaurantCard = () => {
             ))
           }
         </div>
-
-        <button className="scroll-btn scroll-btn-right" onClick={scrollRight} aria-label="Scroll right">
-          <ChevronRight size={20} />
-        </button>
       </div>
     </section>
   );

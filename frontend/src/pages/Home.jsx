@@ -397,15 +397,11 @@ export default function Home() {
 
       {/* ===== FLASH DEALS ===== */}
       {(flashState.hasActive || flashState.upcoming) && (
-        <section className="flash-deals-section">
-          <div className="flash-header">
-            <div className="flash-title">
-              <Flame size={20} className="flame-icon" />
-              <h2>Flash Deals</h2>
-            </div>
-          </div>
+        <section className="flash-deals-section" style={{ background: 'transparent', padding: '12px 0' }}>
           {flashState.hasActive ? (
             <TrendingFoods
+              title="Flash Deals"
+              icon={<Flame size={20} className="flame-icon" />}
               searchTerm=""
               selectedCategory={selectedCategory}
               onClearFilter={handleClearFilter}
@@ -414,12 +410,20 @@ export default function Home() {
               onExpired={fetchFlashSales}
             />
           ) : (
-            <div className="upcoming-flash-banner">
-              <h3>Next Flash Sale</h3>
-              <p className="upcoming-sub">Starts in</p>
-              <UpcomingFlashCountdown startAt={flashState.upcoming.startAt} onFinish={fetchFlashSales} />
-              <p className="upcoming-promo">Get ready for limited-time deals.</p>
-            </div>
+            <>
+              <div className="flash-header" style={{ padding: '0 var(--space-2)' }}>
+                <div className="flash-title">
+                  <Flame size={20} className="flame-icon" />
+                  <h2>Flash Deals</h2>
+                </div>
+              </div>
+              <div className="upcoming-flash-banner">
+                <h3>Next Flash Sale</h3>
+                <p className="upcoming-sub">Starts in</p>
+                <UpcomingFlashCountdown startAt={flashState.upcoming.startAt} onFinish={fetchFlashSales} />
+                <p className="upcoming-promo">Get ready for limited-time deals.</p>
+              </div>
+            </>
           )}
         </section>
       )}
@@ -431,13 +435,9 @@ export default function Home() {
       <ComboMealsSection />
 
       {/* ===== POPULAR PICKS ===== */}
-      <section className="popular-meals-section">
-        <div className="flash-header">
-          <div className="flash-title">
-            <h2>Fresh Picks for Tonight</h2>
-          </div>
-        </div>
+      <section className="popular-meals-section" style={{ background: 'transparent', padding: '12px 0' }}>
         <TrendingFoods
+          title="Fresh Picks for Tonight"
           searchTerm=""
           selectedCategory={selectedCategory}
           onClearFilter={handleClearFilter}

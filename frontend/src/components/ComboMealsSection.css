@@ -11,16 +11,15 @@
 }
 
 .combo-section-inner {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 16px;
+  width: min(var(--content-max), 100% - 2rem);
+  margin-inline: auto;
+  padding: 0 var(--space-2);
 }
 
 /* Header */
 .combo-section-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }

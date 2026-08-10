@@ -609,6 +609,14 @@ export const rateFood = async (foodId, rating) => {
   return res.data;
 };
 
+// ================= ADMIN AUDIT LOGS =================
+export const getAdminLogs = async (page = 1, limit = 50, search = '') => {
+  const res = await api.get('/admin-logs', {
+    params: { page, limit, search }
+  });
+  return res.data;
+};
+
 // ================= EXPORT UTILITIES =================
 export { getAPIUrl };
 

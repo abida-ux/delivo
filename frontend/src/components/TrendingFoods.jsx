@@ -15,13 +15,26 @@ const SkeletonFoodCard = () => (
   </div>
 );
 
-const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false, flashItems = null, onExpired }) => {
+const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter, isFlashDeal = false, flashItems = null, onExpired, title = '', subtitle = '', icon = null }) => {
   const scrollContainerRef = useRef(null);
   const autoScrollRef = useRef(null);
 
   const [trendingItems, setTrendingItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+
+  const updateScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowControls(scrollWidth > clientWidth + 5);
+      setCanScrollLeft(scrollLeft > 2);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
 
   useEffect(() => {
     if (isFlashDeal && flashItems) {
@@ -59,6 +72,20 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
       return () => clearInterval(intervalId);
     }
   }, [isFlashDeal, flashItems]);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.addEventListener('scroll', updateScrollButtons);
+      window.addEventListener('resize', updateScrollButtons);
+      const timer = setTimeout(updateScrollButtons, 300);
+      return () => {
+        el.removeEventListener('scroll', updateScrollButtons);
+        window.removeEventListener('resize', updateScrollButtons);
+        clearTimeout(timer);
+      };
+    }
+  }, [trendingItems, loading]);
 
   // Auto-scroll every 8 seconds — pauses on hover
   useEffect(() => {
@@ -129,32 +156,47 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
 
   return (
     <section className="trending-section">
-      <div className="trending-header">
-        <div className="header-left">
-          {(selectedCategory || searchTerm) && (
-            <p className="trending-subtitle">
-              {selectedCategory ? `Showing: ${selectedCategory}` : `Results for "${searchTerm}"`}
-            </p>
+      {(title || selectedCategory || searchTerm) && (
+        <div className="trending-header">
+          <div className="header-left">
+            {title && (
+              <div className="trending-title-row" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {icon}
+                <h2 className="trending-title">{title}</h2>
+              </div>
+            )}
+            {subtitle && <p className="trending-subtitle">{subtitle}</p>}
+            {(selectedCategory || searchTerm) && !title && (
+              <p className="trending-subtitle">
+                {selectedCategory ? `Showing: ${selectedCategory}` : `Results for "${searchTerm}"`}
+              </p>
+            )}
+          </div>
+
+          {showControls && (
+            <div className="trending-slider-controls">
+              <button
+                className="arrow-btn"
+                onClick={() => handleScroll('left')}
+                disabled={!canScrollLeft}
+                style={{ opacity: canScrollLeft ? 1 : 0.4, cursor: canScrollLeft ? 'pointer' : 'default' }}
+                aria-label="Previous items"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                className="arrow-btn"
+                onClick={() => handleScroll('right')}
+                disabled={!canScrollRight}
+                style={{ opacity: canScrollRight ? 1 : 0.4, cursor: canScrollRight ? 'pointer' : 'default' }}
+                aria-label="Next items"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           )}
         </div>
-
-        <div className="trending-slider-controls">
-          <button
-            className="arrow-btn"
-            onClick={() => handleScroll('left')}
-            aria-label="Previous items"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            className="arrow-btn"
-            onClick={() => handleScroll('right')}
-            aria-label="Next items"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* FILTER INDICATOR */}
       {(selectedCategory || searchTerm) && (

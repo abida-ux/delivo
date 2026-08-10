@@ -33,6 +33,8 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const combinationRoutes = require('./routes/combinationRoutes');
 const addressRoutes = require('./routes/addressRoutes');
+const adminLogRoutes = require('./routes/adminLogRoutes');
+const adminAuditLogger = require('./middleware/adminAuditLogger');
 
 
 // Initialize Express app
@@ -139,6 +141,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Admin activity audit logger
+app.use(adminAuditLogger);
+
 
 
 // ==================== ROUTES ====================
@@ -158,6 +163,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/combinations', combinationRoutes);
 app.use('/api/addresses', addressRoutes);
+app.use('/api/admin-logs', adminLogRoutes);
 
 
 // Health check route

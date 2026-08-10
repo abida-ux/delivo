@@ -10,6 +10,18 @@ const ComboMealsSection = () => {
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+
+  const updateScrollButtons = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowControls(scrollWidth > clientWidth + 5);
+      setCanScrollLeft(scrollLeft > 2);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+    }
+  };
 
   useEffect(() => {
     const fetchCombos = async () => {
@@ -36,6 +48,21 @@ const ComboMealsSection = () => {
     fetchCombos();
   }, []);
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      el.addEventListener('scroll', updateScrollButtons);
+      window.addEventListener('resize', updateScrollButtons);
+      // Run initial check after rendering
+      const timer = setTimeout(updateScrollButtons, 300);
+      return () => {
+        el.removeEventListener('scroll', updateScrollButtons);
+        window.removeEventListener('resize', updateScrollButtons);
+        clearTimeout(timer);
+      };
+    }
+  }, [combos, loading]);
+
   const scroll = (dir) => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: dir === 'left' ? -320 : 320, behavior: 'smooth' });
@@ -54,14 +81,28 @@ const ComboMealsSection = () => {
             <p className="combo-section-sub">Perfectly paired meals crafted for maximum flavor</p>
           </div>
 
-          <div className="combo-scroll-controls">
-            <button className="combo-arrow-btn" onClick={() => scroll('left')} aria-label="Previous">
-              <ChevronLeft size={18} />
-            </button>
-            <button className="combo-arrow-btn" onClick={() => scroll('right')} aria-label="Next">
-              <ChevronRight size={18} />
-            </button>
-          </div>
+          {showControls && (
+            <div className="combo-scroll-controls">
+              <button 
+                className="combo-arrow-btn" 
+                onClick={() => scroll('left')} 
+                disabled={!canScrollLeft}
+                style={{ opacity: canScrollLeft ? 1 : 0.4, cursor: canScrollLeft ? 'pointer' : 'default' }}
+                aria-label="Previous"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button 
+                className="combo-arrow-btn" 
+                onClick={() => scroll('right')} 
+                disabled={!canScrollRight}
+                style={{ opacity: canScrollRight ? 1 : 0.4, cursor: canScrollRight ? 'pointer' : 'default' }}
+                aria-label="Next"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
