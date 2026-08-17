@@ -1,16 +1,25 @@
-/* ================================================
-   FOOD DELIVERY ADMIN ORDERS PAGE — Enterprise CSS
-   ================================================ */
+/* ==========================================================
+   DELIVO ADMIN ORDERS — Enterprise Responsive CSS
+   Desktop Table View (>= 768px) & Mobile Card View (< 768px)
+   ========================================================== */
 
 .admin-orders-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 0 0 32px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
+/* ==================== 1. TOP CONTROLS & FILTER PILLS ==================== */
 .orders-top-controls {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .orders-search-input-wrap {
@@ -20,14 +29,16 @@
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 12px;
-  padding: 10px 16px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  padding: 8px 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .orders-search-input-wrap:focus-within {
   border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
 .orders-search-input-wrap .search-icon {
@@ -40,32 +51,40 @@
   background: transparent;
   outline: none;
   width: 100%;
-  font-size: 14px;
+  font-size: 13px;
   font-family: inherit;
   color: #0f172a;
 }
 
+.orders-search-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+
 .orders-filter-pills {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
 }
 .orders-filter-pills::-webkit-scrollbar { display: none; }
 
 .order-filter-pill {
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 9999px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #475569;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: inherit;
+  flex-shrink: 0;
 }
 
 .order-filter-pill:hover {
@@ -80,12 +99,21 @@
   box-shadow: 0 2px 6px rgba(22, 163, 74, 0.2);
 }
 
-.orders-table-card {
+/* ==================== 2. DESKTOP TABLE VIEW (>= 768px) ==================== */
+.orders-table-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.orders-desktop-table-wrap {
+  display: block;
   background: #ffffff;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
-  overflow: hidden;
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-orders-table {
@@ -104,6 +132,7 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
 }
 
 .admin-orders-table td {
@@ -141,13 +170,15 @@
 .admin-order-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
+  gap: 4px;
+  padding: 2.5px 8px;
   border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
@@ -200,6 +231,22 @@
 
 .order-btn-assign:hover {
   background: #15803d;
+}
+
+/* ==================== 3. MOBILE CARDS VIEW (< 768px) ==================== */
+.orders-mobile-cards-wrap {
+  display: none; /* Hidden on desktop */
+}
+
+/* ==================== 4. EMPTY & LOADING STATES ==================== */
+.empty-state {
+  padding: 48px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
 }
 
 .orders-loading-state {
@@ -482,67 +529,231 @@
 }
 
 /* ================================================
-   MOBILE RESPONSIVE TABLE → CARD LAYOUT
+   5. RESPONSIVE BREAKPOINTS (< 768px) — FITS PERFECTLY INSIDE SCREEN
    ================================================ */
 
-@media (max-width: 640px) {
-  .orders-table-card {
-    background: transparent;
-    border: none;
-    box-shadow: none;
+@media (max-width: 767px) {
+  .admin-orders-page {
+    padding: 0 0 24px;
   }
 
-  .admin-orders-table {
-    display: block;
-  }
-
-  .admin-orders-table thead {
-    display: none;
-  }
-
-  .admin-orders-table tbody {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .admin-orders-table tbody tr {
-    display: flex;
-    flex-direction: column;
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-    padding: 16px;
+  .orders-top-controls {
     gap: 8px;
+    margin-bottom: 12px;
   }
 
-  .admin-orders-table tbody tr:hover {
+  .orders-search-input-wrap {
+    padding: 7px 12px;
+    border-radius: 10px;
+  }
+
+  /* Hide table view on mobile */
+  .orders-desktop-table-wrap {
+    display: none !important;
+  }
+
+  /* Show mobile card list */
+  .orders-mobile-cards-wrap {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-order-card {
     background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
   }
 
-  .admin-orders-table td {
-    padding: 0;
-    border: none;
+  .order-card-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
   }
 
-  .admin-orders-table td::before {
-    content: attr(data-label);
+  .order-card-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .order-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .order-card-name-block {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .order-card-name-block h4 {
+    font-family: var(--font-heading, 'Poppins', sans-serif);
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .order-card-email-sub {
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 1px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  .admin-order-badge {
+    font-size: 9px;
+    padding: 2px 7px;
+    flex-shrink: 0;
+  }
+
+  .order-card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 8px;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    width: 100%;
+    border: 1px solid #f1f5f9;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .order-card-field {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .field-label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 1px;
+    letter-spacing: 0.02em;
+  }
+
+  .field-value {
     font-size: 11px;
     font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-    margin-right: 10px;
+    color: #0f172a;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .order-id-cell { font-size: 14px; font-weight: 800; }
-  .date-cell { font-size: 12px; }
-  .actions-cell { justify-content: flex-end; }
-  .actions-cell::before { display: none; }
+  .amount-highlight {
+    color: #16a34a;
+    font-weight: 800;
+  }
+
+  .order-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .order-card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 32px;
+    border-radius: 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #e2e8f0;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .order-card-btn.view {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+  }
+
+  .order-card-btn.view:hover {
+    background: #dbeafe;
+  }
+
+  .order-card-btn.assign {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #bbf7d0;
+  }
+
+  .order-card-btn.assign:hover {
+    background: #dcfce7;
+  }
+
+  .order-card-status-closed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #94a3af;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    font-size: 10.5px;
+    font-weight: 600;
+    height: 32px;
+    width: 100%;
+    box-sizing: border-box;
+  }
 }

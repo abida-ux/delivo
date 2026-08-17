@@ -7,6 +7,7 @@
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 /* ==================== 1. TOP HEADER & CONTROLS ==================== */
@@ -17,6 +18,7 @@
   gap: 12px;
   margin-bottom: 14px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .search-box {
@@ -31,6 +33,7 @@
   border-radius: 12px;
   transition: all 0.15s ease;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-sizing: border-box;
 }
 
 .search-box:focus-within {
@@ -51,7 +54,7 @@
   color: #0f172a;
   background: transparent;
   width: 100%;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
 }
 
 .search-box input::placeholder {
@@ -76,7 +79,7 @@
   transition: all 0.15s ease;
   flex-shrink: 0;
   white-space: nowrap;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
 }
 
 .add-btn:hover {
@@ -113,9 +116,10 @@
 /* ==================== 2. RESTAURANTS GRID & CARDS ==================== */
 .restaurants-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .restaurant-card {
@@ -123,10 +127,12 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .restaurant-card:hover {
@@ -137,25 +143,26 @@
 
 .restaurant-image {
   width: 100%;
-  height: 160px;
+  aspect-ratio: 4 / 3;
   background-size: cover;
   background-position: center;
   background-color: #f8fafc;
   position: relative;
+  flex-shrink: 0;
 }
 
 .restaurant-status {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border-radius: 9999px;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -163,60 +170,71 @@
 }
 
 .status-badge.open {
-  background: rgba(16, 185, 129, 0.9);
+  background: rgba(16, 185, 129, 0.92);
   color: #ffffff;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .status-badge.closed {
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.92);
   color: #ffffff;
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
 
 .restaurant-info {
-  padding: 14px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .restaurant-header-block {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  min-width: 0;
 }
 
 .restaurant-info h3 {
   font-family: var(--font-heading, 'Poppins', sans-serif);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   color: #0f172a;
   margin: 0 0 2px 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
 .cuisine {
-  font-size: 12px;
+  font-size: 11.5px;
   color: #64748b;
   margin: 0;
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .restaurant-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 8px 10px;
+  margin-bottom: 10px;
+  padding: 5px 8px;
   background: #f8fafc;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #f1f5f9;
+  box-sizing: border-box;
 }
 
 .rating {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: 3px;
+  font-size: 11.5px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -224,8 +242,8 @@
 .delivery-time {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 3px;
+  font-size: 10.5px;
   color: #64748b;
   font-weight: 600;
 }
@@ -237,23 +255,29 @@
 .card-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
   margin-top: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 36px;
+  gap: 5px;
+  height: 32px;
+  padding: 0 8px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
-  border: 1px solid #e2e8f0;
+  border: 1px solid transparent;
   transition: all 0.15s ease;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .edit-btn {
@@ -265,6 +289,7 @@
 .edit-btn:hover {
   background: #dbeafe;
   border-color: #93c5fd;
+  color: #1d4ed8;
 }
 
 .delete-btn {
@@ -276,6 +301,7 @@
 .delete-btn:hover {
   background: #fee2e2;
   border-color: #fca5a5;
+  color: #dc2626;
 }
 
 /* ==================== 3. LOADING & EMPTY STATES ==================== */
@@ -313,31 +339,88 @@
   to { transform: rotate(360deg); }
 }
 
-/* ==================== 4. RESPONSIVE BREAKPOINTS ==================== */
+/* ==================== 4. RESPONSIVE BREAKPOINTS (Fluid 2-Col Grid on Mobile) ==================== */
 @media (max-width: 767px) {
   .restaurants-header {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
+    margin-bottom: 10px;
   }
 
   .search-box {
     max-width: 100%;
     width: 100%;
-    padding: 9px 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
   }
 
   .add-btn {
     width: 100%;
-    height: 40px;
+    height: 38px;
+    font-size: 12.5px;
+    border-radius: 10px;
   }
 
   .restaurants-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .restaurant-card {
+    border-radius: 14px;
   }
 
   .restaurant-image {
-    height: 150px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .status-badge {
+    top: 6px;
+    right: 6px;
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .restaurant-info {
+    padding: 8px 10px 10px;
+  }
+
+  .restaurant-info h3 {
+    font-size: 12.5px;
+  }
+
+  .cuisine {
+    font-size: 10.5px;
+  }
+
+  .restaurant-meta {
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+  }
+
+  .rating {
+    font-size: 10.5px;
+    gap: 2px;
+  }
+
+  .delivery-time {
+    font-size: 9.5px;
+    gap: 2px;
+  }
+
+  .card-actions {
+    gap: 5px;
+  }
+
+  .action-btn {
+    height: 28px;
+    font-size: 10.5px;
+    padding: 0 4px;
+    border-radius: 6px;
+    gap: 3px;
   }
 }

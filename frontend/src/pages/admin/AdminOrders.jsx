@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Eye, Search, UserCheck, CheckCircle2, Clock, Truck, AlertCircle, XCircle } from 'lucide-react';
+import { Eye, Search, UserCheck, CheckCircle2, Clock, Truck, AlertCircle, XCircle, Store, Calendar, DollarSign, Package } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllOrders, updateOrder, getAllStores, getAllRestaurants } from '../../services/api';
 import AdminEditOrderModal from './AdminEditOrderModal';
@@ -292,9 +292,14 @@ export default function AdminOrders() {
             <div className="spinner" />
             <p>Loading orders...</p>
           </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="empty-state">
+            <p>No orders match your search criteria.</p>
+          </div>
         ) : (
-          <div className="orders-table-card">
-            <div className="table-responsive">
+          <div className="orders-table-container">
+            {/* Desktop Table View (>= 768px) */}
+            <div className="orders-desktop-table-wrap">
               <table className="admin-orders-table">
                 <thead>
                   <tr>
@@ -308,45 +313,124 @@ export default function AdminOrders() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.length > 0 ? (
-                    filteredOrders.map((order) => (
-                      <tr key={order._id}>
-                        <td className="order-id-cell">#{order._id?.slice(-6).toUpperCase()}</td>
-                        <td className="customer-cell">{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer'}</td>
-                        <td>{resolveRestaurantName(order)}</td>
-                        <td className="amount-cell">{formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}</td>
-                        <td>{renderStatusBadge(order.status)}</td>
-                        <td className="date-cell">{order?.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</td>
-                        <td className="actions-cell">
+                  {filteredOrders.map((order) => (
+                    <tr key={order._id}>
+                      <td className="order-id-cell">#{order._id?.slice(-6).toUpperCase()}</td>
+                      <td className="customer-cell">{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer'}</td>
+                      <td>{resolveRestaurantName(order)}</td>
+                      <td className="amount-cell">{formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}</td>
+                      <td>{renderStatusBadge(order.status)}</td>
+                      <td className="date-cell">{order?.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</td>
+                      <td className="actions-cell">
+                        <button
+                          type="button"
+                          className="order-btn-view"
+                          title="View / Edit Details"
+                          onClick={() => handleEdit(order)}
+                        >
+                          <Eye size={16} />
+                        </button>
+                        {order.status !== 'delivered' && order.status !== 'cancelled' && (
                           <button
-                            className="order-btn-view"
-                            title="View / Edit Details"
-                            onClick={() => handleEdit(order)}
+                            type="button"
+                            className="order-btn-assign"
+                            onClick={() => openAssignModal(order)}
+                            disabled={assigningOrderId === order._id}
                           >
-                            <Eye size={16} />
+                            <UserCheck size={15} />
+                            <span>Assign</span>
                           </button>
-                          {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                            <button
-                              className="order-btn-assign"
-                              onClick={() => openAssignModal(order)}
-                              disabled={assigningOrderId === order._id}
-                            >
-                              <UserCheck size={15} />
-                              <span>Assign</span>
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} style={{ textAlign: 'center', padding: '48px 0', color: '#64748b' }}>
-                        No orders match your search criteria.
+                        )}
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View (< 768px) Matching Admin Users & Foods Design System */}
+            <div className="orders-mobile-cards-wrap">
+              {filteredOrders.map((order) => {
+                const customerName = (order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer';
+                const customerInitial = customerName.charAt(0).toUpperCase() || 'O';
+                const restaurantName = resolveRestaurantName(order);
+                const orderDate = order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A';
+                const itemCount = (order.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+                return (
+                  <div key={order._id} className="admin-order-card">
+                    {/* Card Header: Initial, Order ID, Customer, and Status Badge */}
+                    <div className="order-card-top">
+                      <div className="order-card-identity">
+                        <div className="order-avatar">
+                          {customerInitial}
+                        </div>
+                        <div className="order-card-name-block">
+                          <h4>#{order._id?.slice(-6).toUpperCase()} • {customerName}</h4>
+                          <span className="order-card-email-sub">{order.customer?.email || order.guestEmail || order.customerPhone || 'Customer Order'}</span>
+                        </div>
+                      </div>
+                      {renderStatusBadge(order.status)}
+                    </div>
+
+                    {/* Card Details: Restaurant, Amount, Date, Items */}
+                    <div className="order-card-body">
+                      <div className="order-card-field">
+                        <span className="field-label">
+                          <Store size={12} /> Restaurant
+                        </span>
+                        <span className="field-value" title={restaurantName}>{restaurantName}</span>
+                      </div>
+
+                      <div className="order-card-field">
+                        <span className="field-label">
+                          <DollarSign size={12} /> Amount
+                        </span>
+                        <span className="field-value amount-highlight">{formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}</span>
+                      </div>
+
+                      <div className="order-card-field">
+                        <span className="field-label">
+                          <Calendar size={12} /> Date
+                        </span>
+                        <span className="field-value">{orderDate}</span>
+                      </div>
+
+                      <div className="order-card-field">
+                        <span className="field-label">
+                          <Package size={12} /> Items
+                        </span>
+                        <span className="field-value">{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
+                      </div>
+                    </div>
+
+                    {/* Card Actions: View/Edit, Assign Rider */}
+                    <div className="order-card-actions">
+                      <button
+                        type="button"
+                        className="order-card-btn view"
+                        onClick={() => handleEdit(order)}
+                      >
+                        <Eye size={14} /> View Details
+                      </button>
+                      {order.status !== 'delivered' && order.status !== 'cancelled' ? (
+                        <button
+                          type="button"
+                          className="order-card-btn assign"
+                          onClick={() => openAssignModal(order)}
+                          disabled={assigningOrderId === order._id}
+                        >
+                          <UserCheck size={14} /> Assign Rider
+                        </button>
+                      ) : (
+                        <div className="order-card-status-closed">
+                          <span>Complete</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
