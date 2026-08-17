@@ -202,38 +202,38 @@
   color: #ffffff;
 }
 
-/* ── Foods Grid (Canonical 195px Desktop & 2-Column Mobile) ── */
+/* ── Foods Grid (Fluid Responsive Grid — Adapts to Screen Space & Zoom/Font Scale) ── */
 .foods-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 195px);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 185px));
   justify-content: flex-start;
-  gap: 24px 18px;
-  padding: 20px 0 48px;
+  gap: 20px 14px;
+  padding: 16px 0 48px;
   width: min(var(--content-max, 1280px), 100% - 2rem);
   margin-inline: auto;
   align-items: start;
 }
 
 .foods-grid .food-card {
-  width: 195px;
-  min-width: 195px;
-  max-width: 195px;
+  width: 100%;
+  min-width: 0;
+  max-width: 185px;
   height: auto;
 }
 
 @media (max-width: 640px) {
   .foods-grid {
-    grid-template-columns: repeat(2, minmax(0, 155px)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     justify-content: center;
-    gap: 16px 12px;
-    padding: 14px 16px 36px;
+    gap: 14px 10px;
+    padding: 12px 14px 36px;
     width: 100%;
   }
 
   .foods-grid .food-card {
-    width: 100% !important;
-    max-width: 155px !important;
-    min-width: 0 !important;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 }
 
