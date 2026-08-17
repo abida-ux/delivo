@@ -223,16 +223,17 @@
 
 @media (max-width: 640px) {
   .foods-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px 10px;
-    padding: 12px 0 32px;
-    justify-content: stretch;
+    grid-template-columns: repeat(2, minmax(0, 155px)) !important;
+    justify-content: center;
+    gap: 16px 12px;
+    padding: 14px 16px 36px;
+    width: 100%;
   }
 
   .foods-grid .food-card {
     width: 100% !important;
+    max-width: 155px !important;
     min-width: 0 !important;
-    max-width: none !important;
   }
 }
 
