@@ -687,7 +687,7 @@
   }
 
   .amount-highlight {
-    color: #16a34a;
+    color: #0f172a;
     font-weight: 800;
   }
 
@@ -723,23 +723,26 @@
   }
 
   .order-card-btn.view {
-    background: #eff6ff;
-    color: #2563eb;
-    border-color: #bfdbfe;
+    background: #f8fafc;
+    color: #334155;
+    border-color: #e2e8f0;
   }
 
   .order-card-btn.view:hover {
-    background: #dbeafe;
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
   }
 
   .order-card-btn.assign {
-    background: #f0fdf4;
-    color: #16a34a;
-    border-color: #bbf7d0;
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
   }
 
   .order-card-btn.assign:hover {
-    background: #dcfce7;
+    background: #15803d;
+    border-color: #15803d;
   }
 
   .order-card-status-closed {

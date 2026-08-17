@@ -152,25 +152,27 @@
 }
 
 .edit-btn {
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
 }
 
 .edit-btn:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
 }
 
 .delete-btn {
-  background: #fef2f2;
-  color: #ef4444;
-  border: 1px solid #fecaca;
+  background: #ffffff;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
 }
 
 .delete-btn:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 
 /* Category Modal */

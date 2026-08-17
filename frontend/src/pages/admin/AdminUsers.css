@@ -223,7 +223,8 @@
 
 /* ==================== 3. MOBILE CARDS VIEW (< 768px) ==================== */
 .users-mobile-cards-wrap {
-  display: none; /* Hidden on desktop */
+  display: none;
+  /* Hidden on desktop */
 }
 
 /* ==================== 4. EMPTY & LOADING STATES ==================== */
@@ -257,7 +258,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==================== 5. RESPONSIVE BREAKPOINTS ==================== */
