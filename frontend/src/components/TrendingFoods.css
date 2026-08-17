@@ -64,7 +64,7 @@
 /* ── Carousel track ── */
 .trending-carousel-track {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-3, 14px);
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -75,6 +75,26 @@
 }
 
 .trending-carousel-track::-webkit-scrollbar { display: none; }
+
+.trending-carousel-track .food-card {
+  width: 195px;
+  min-width: 195px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .trending-carousel-track {
+    gap: 12px;
+    padding: 4px 12px 14px;
+    width: 100%;
+  }
+
+  .trending-carousel-track .food-card {
+    width: 155px !important;
+    min-width: 155px !important;
+    flex-shrink: 0 !important;
+  }
+}
 
 /* ── Loading text ── */
 .loading-text {
