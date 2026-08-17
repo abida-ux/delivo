@@ -57,12 +57,18 @@ const sendFcmMessage = async ({ fcmToken, payload = {} }) => {
     ensureFirebaseInitialized();
     const messaging = admin.messaging();
 
+    const title = payload.title || 'Delivo';
+    const body = payload.message || payload.body || 'New notification';
+
     const message = {
       notification: {
-        title: payload.title || 'Delivo Update',
-        body: payload.message || 'You have a new update from Delivo.',
+        title,
+        body,
       },
       data: {
+        title,
+        message: body,
+        body,
         eventType: payload.data?.eventType || 'notification',
         orderId: payload.data?.orderId || '',
         recipientRole: payload.data?.recipientRole || '',
@@ -94,12 +100,18 @@ const sendMulticastFcmMessages = async ({ fcmTokens = [], payload = {} }) => {
     ensureFirebaseInitialized();
     const messaging = admin.messaging();
 
+    const title = payload.title || 'Delivo';
+    const body = payload.message || payload.body || 'New notification';
+
     const message = {
       notification: {
-        title: payload.title || 'Delivo Update',
-        body: payload.message || 'You have a new update from Delivo.',
+        title,
+        body,
       },
       data: {
+        title,
+        message: body,
+        body,
         eventType: payload.data?.eventType || 'notification',
         orderId: payload.data?.orderId || '',
         recipientRole: payload.data?.recipientRole || '',

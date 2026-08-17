@@ -1,7 +1,8 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import { Star, Users, TrendingUp, Award, Heart, CheckCircle, Zap, Users2, Globe, Lightbulb, Rocket, Handshake, Leaf } from 'lucide-react';
 import './About.css';
 import MainLayout from '../layouts/MainLayout';
+import SEO from '../components/SEO';
 
 const About = () => {
   const [activeTab, setActiveTab] = useState('about');
@@ -54,6 +55,7 @@ const About = () => {
 
   return (
     <MainLayout>
+      <SEO title="About Us" description="Learn about Delivo, our mission, values, and how we deliver excellence across your city." />
       <div className="about-container">
         {/* Hero Section */}
         <div className="about-hero">

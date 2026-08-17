@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { Sparkles, AlertCircle, Copy, Check, Lock } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { AuthModalContext } from '../context/AuthModalContext';
+import SEO from '../components/SEO';
 import api from '../services/api';
 import './Offers.css';
 
@@ -63,6 +64,7 @@ const Offers = () => {
   if (!user) {
     return (
       <div className="offers-page anonymous">
+        <SEO title="Exclusive Offers" description="Unlock exclusive promo codes and discounts on Delivo." />
         <div className="auth-pitch-card">
           <div className="lock-icon-wrapper">
             <Lock size={20} />
@@ -85,6 +87,7 @@ const Offers = () => {
 
   return (
     <div className="offers-page">
+      <SEO title="Exclusive Offers" description="Unlock the best deals, discounts, and culinary promotions near you on Delivo." />
       <div className="offers-header-section">
         <Sparkles className="sparkles-icon" size={20} />
         <h1>Exclusive Offers</h1>

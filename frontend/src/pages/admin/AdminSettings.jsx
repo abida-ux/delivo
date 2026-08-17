@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
-import api, { getAppSettings, updateAppSettings } from '../../services/api';
+import api, { getAppSettings, updateAppSettings, sendAdminNotification } from '../../services/api';
 import './AdminSettings.css';
 
 const AdminSettings = () => {
@@ -135,6 +135,46 @@ const AdminSettings = () => {
       fetchNotifications();
     } catch (error) {
       console.error('Error deleting notification:', error);
+    }
+  };
+
+  const handleSendNotification = async (e) => {
+    e.preventDefault();
+    if (!notificationForm.title?.trim() || !notificationForm.message?.trim()) {
+      alert('Please fill in both title and message');
+      return;
+    }
+
+    setNotificationLoading(true);
+    setNotificationMessage('');
+
+    try {
+      const payload = {
+        title: notificationForm.title.trim(),
+        message: notificationForm.message.trim(),
+        targetType: notificationForm.userId ? 'specific' : 'all',
+        targetUserIds: notificationForm.userId ? [notificationForm.userId] : [],
+      };
+
+      const result = await sendAdminNotification(payload);
+      if (result.success) {
+        setNotificationMessage('Notification broadcasted successfully!');
+        setNotificationForm({
+          title: '',
+          message: '',
+          type: 'system',
+          userId: '',
+        });
+        fetchNotifications();
+        setTimeout(() => setNotificationMessage(''), 4000);
+      } else {
+        alert(result.message || 'Failed to broadcast notification');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      alert(error.response?.data?.message || error.message || 'Failed to send notification');
+    } finally {
+      setNotificationLoading(false);
     }
   };
 

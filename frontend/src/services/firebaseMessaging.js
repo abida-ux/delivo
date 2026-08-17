@@ -119,22 +119,13 @@ export const listenForFcmMessages = (callback) => {
       console.log('[FCM] Foreground message received:', payload);
 
       const notificationData = {
-        title: payload.notification?.title || 'Delivo',
-        message: payload.notification?.body || 'New update',
+        title: payload.notification?.title || payload.data?.title || 'Delivo',
+        message: payload.notification?.body || payload.data?.message || payload.data?.body || '',
         data: payload.data || {},
       };
 
       if (callback) {
         callback(notificationData);
-      }
-
-      // Also show a native notification for foreground messages
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(notificationData.title, {
-          body: notificationData.message,
-          icon: '/delivo.jpg',
-          data: notificationData.data,
-        });
       }
     });
   } catch (error) {

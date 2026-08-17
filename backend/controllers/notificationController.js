@@ -612,6 +612,8 @@ exports.sendAdminNotification = async (req, res) => {
     const notificationPayload = {
       title,
       message,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
       data: {
         eventType: 'admin_broadcast',
         sentBy: adminId.toString(),
@@ -625,29 +627,27 @@ exports.sendAdminNotification = async (req, res) => {
     let failedCount = 0;
     const errors = [];
 
-    // Send to each user
+    // If broadcasting to all users, dispatch to all active push subscriptions (both WebPush & FCM)
+    if (targetType === 'all') {
+      try {
+        const broadcastPushResult = await sendPushToAllActiveSubscriptions(notificationPayload);
+        sentCount = broadcastPushResult.sent || 0;
+      } catch (pushErr) {
+        console.error('⚠️ Broadcast push error:', pushErr.message);
+        errors.push(`Broadcast push error: ${pushErr.message}`);
+      }
+    }
+
+    // Create in-app notification records and dispatch user-specific push if targeted
     for (const user of targetUsers) {
       try {
-        // Get user's FCM tokens
-        const subscriptions = await PushSubscription.find({
-          userId: user._id,
-          isActive: true,
-          fcmToken: { $exists: true, $ne: null },
-        }).select('fcmToken');
-
-        if (subscriptions.length > 0) {
-          const fcmTokens = subscriptions.map((s) => s.fcmToken);
-          const result = await sendMulticastFcmMessages({
-            fcmTokens,
+        // If not a global broadcast, dispatch targeted push to this user
+        if (targetType !== 'all') {
+          const userPushResult = await sendPushToUser({
+            userId: user._id,
             payload: notificationPayload,
           });
-
-          if (result.sent > 0) {
-            sentCount += result.sent;
-          }
-          if (result.failed > 0) {
-            failedCount += result.failed;
-          }
+          sentCount += userPushResult.sent || 0;
         }
 
         // Create in-app notification record
@@ -660,7 +660,7 @@ exports.sendAdminNotification = async (req, res) => {
         });
       } catch (userError) {
         failedCount++;
-        errors.push(`Error sending to user ${user._id}: ${userError.message}`);
+        errors.push(`Error processing user ${user._id}: ${userError.message}`);
       }
     }
 

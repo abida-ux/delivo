@@ -31,28 +31,27 @@ function handleBackgroundMessage(payload) {
   const title = payload.notification?.title || payload.data?.title;
   const body = payload.notification?.body || payload.data?.message || payload.data?.body;
 
-  if (!title && !body) {
-    console.log('[firebase-messaging-sw] Ignoring empty background push.');
-    return;
+  // Only manually display notification if payload is data-only (otherwise Firebase SDK / browser displays it natively)
+  if (!payload.notification && (title || body)) {
+    const notificationTitle = title || 'Delivo';
+    const notificationOptions = {
+      body: body || 'New update from Delivo',
+      icon: '/delivo.jpg',
+      badge: '/delivo.jpg',
+      tag: payload.data?.notificationId || 'delivo-push-alert',
+      data: payload.data || {},
+      actions: [
+        { action: 'open', title: 'Open' },
+        { action: 'close', title: 'Close' },
+      ],
+    };
+
+    self.registration.showNotification(notificationTitle, notificationOptions);
   }
 
-  const notificationTitle = title || 'Delivo Notification';
-  const notificationOptions = {
-    body: body || 'New notification.',
-    icon: '/delivo.jpg',
-    badge: '/delivo.jpg',
-    data: payload.data || {},
-    actions: [
-      { action: 'open', title: 'Open' },
-      { action: 'close', title: 'Close' },
-    ],
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions).then(() => {
-    return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      clients.forEach((client) => {
-        client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
-      });
+  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
     });
   });
 }

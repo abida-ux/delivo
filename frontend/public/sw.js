@@ -42,23 +42,28 @@ function initFirebase(config) {
     fcmMessaging.onBackgroundMessage((payload) => {
       console.log('[sw] FCM background message received:', payload);
 
-      const title = payload.notification?.title || 'Delivo Update';
-      const options = {
-        body: payload.notification?.body || 'You have a new update',
-        icon: '/delivo.jpg',
-        badge: '/delivo.jpg',
-        data: payload.data || {},
-        actions: [
-          { action: 'open', title: 'Open' },
-          { action: 'close', title: 'Close' },
-        ],
-      };
+      const title = payload.notification?.title || payload.data?.title;
+      const body = payload.notification?.body || payload.data?.message || payload.data?.body;
 
-      self.registration.showNotification(title, options).then(() => {
-        return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-          clients.forEach((client) => {
-            client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
-          });
+      // Only manually display notification if payload is data-only (otherwise Firebase SDK / browser displays it natively)
+      if (!payload.notification && (title || body)) {
+        const options = {
+          body: body || 'New update from Delivo',
+          icon: '/delivo.jpg',
+          badge: '/delivo.jpg',
+          tag: payload.data?.notificationId || 'delivo-push-alert',
+          data: payload.data || {},
+          actions: [
+            { action: 'open', title: 'Open' },
+            { action: 'close', title: 'Close' },
+          ],
+        };
+        self.registration.showNotification(title || 'Delivo', options);
+      }
+
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'DELIVO_PUSH_RECEIVED', payload });
         });
       });
     });
