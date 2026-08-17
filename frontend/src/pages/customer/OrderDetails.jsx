@@ -1,12 +1,13 @@
-import {useState, useEffect, useContext} from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, CheckCircle, XCircle, AlertTriangle, Phone, Mail, CreditCard } from 'lucide-react';
+import { ArrowLeft, MapPin, CheckCircle, XCircle, AlertTriangle, Phone, Mail, CreditCard, Store, RotateCcw } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useCartUI } from '../../context/CartUIContext';
 import { getOrderById } from '../../services/api';
 import { getGuestOrderById } from '../../utils/orderStorage';
 import './OrderDetails.css';
+import SEO from '../../components/SEO';
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -38,7 +39,7 @@ const OrderDetails = () => {
 
   const formatCurrency = (value) => {
     const amount = Number(value ?? 0);
-    return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `KES ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const getOrderSubtotal = () => {
@@ -51,6 +52,10 @@ const OrderDetails = () => {
   };
 
   const getOrderTotal = () => {
+    if (order?.expectedTotal) return Number(order.expectedTotal);
+    if (order?.totalPrice) return Number(order.totalPrice);
+    if (order?.amount) return Number(order.amount);
+
     const subtotal = getOrderSubtotal();
     const deliveryFee = Number(order?.deliveryFee ?? 0);
     const tax = Number(order?.tax ?? 0);
@@ -107,27 +112,56 @@ const OrderDetails = () => {
     };
   }, [orderId, user]);
 
-  const getStatusLabel = () => {
-    if (!order) return 'Unknown';
-    if (order.paymentStatus === 'failed') return 'Failed';
-    return order.status?.replace('-', ' ') || 'Unknown';
+  const getStatusBadgeClass = () => {
+    if (!order) return 'is-pending';
+    if (order.paymentStatus === 'failed') return 'is-failed';
+    switch (order.status) {
+      case 'pending': return 'is-pending';
+      case 'confirmed': return 'is-confirmed';
+      case 'preparing': return 'is-active';
+      case 'on-delivery': return 'is-active';
+      case 'delivered': return 'is-delivered';
+      case 'cancelled': return 'is-failed';
+      default: return 'is-pending';
+    }
   };
 
-  const getTrackingSteps = () => {
+  const getStatusLabel = () => {
+    if (!order) return 'Unknown';
+    if (order.paymentStatus === 'failed') return 'Payment Failed';
+    switch (order.status) {
+      case 'pending': return 'Pending';
+      case 'confirmed': return 'Confirmed';
+      case 'preparing': return 'Preparing';
+      case 'on-delivery': return 'On delivery';
+      case 'delivered': return 'Delivered';
+      case 'cancelled': return 'Cancelled';
+      default: return 'Processing';
+    }
+  };
+
+  const getTrackingStages = () => {
     if (!order) return [];
 
-    const paymentCompleted = order.paymentStatus === 'completed';
-    const hasOrderReceived = paymentCompleted || ['confirmed', 'preparing', 'on-delivery', 'delivered'].includes(order.status);
+    const isPaymentDone = order.paymentStatus === 'completed';
+    const isConfirmed = isPaymentDone || ['confirmed', 'preparing', 'on-delivery', 'delivered'].includes(order.status);
     const isPreparing = ['preparing', 'on-delivery', 'delivered'].includes(order.status);
     const isOnDelivery = ['on-delivery', 'delivered'].includes(order.status);
     const isDelivered = order.status === 'delivered';
 
+    let activeIndex = 0;
+    if (isDelivered) activeIndex = 4;
+    else if (isOnDelivery) activeIndex = 3;
+    else if (isPreparing) activeIndex = 2;
+    else if (isConfirmed) activeIndex = 1;
+    else if (isPaymentDone) activeIndex = 0;
+
     return [
-      { label: 'Payment received', completed: paymentCompleted },
-      { label: 'Order received', completed: hasOrderReceived },
-      { label: 'Preparing', completed: isPreparing },
-      { label: 'On the way', completed: isOnDelivery },
-      { label: 'Delivered', completed: isDelivered },
+      { key: 'payment', label: 'Payment', isCompleted: isPaymentDone, isActive: activeIndex === 0 && !isConfirmed },
+      { key: 'confirmed', label: 'Confirmed', isCompleted: isConfirmed && activeIndex > 1, isActive: activeIndex === 1 },
+      { key: 'preparing', label: 'Preparing', isCompleted: activeIndex > 2, isActive: activeIndex === 2 },
+      { key: 'on-delivery', label: 'On the way', isCompleted: activeIndex > 3, isActive: activeIndex === 3 },
+      { key: 'delivered', label: 'Delivered', isCompleted: isDelivered, isActive: activeIndex === 4 },
     ];
   };
 
@@ -157,13 +191,18 @@ const OrderDetails = () => {
   if (loading) {
     return (
       <div className="order-details-page">
-        <div className="order-details-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft size={24} />
-          </button>
-          <h1>Order Details</h1>
+        <div className="order-details-inner">
+          <div className="order-details-header">
+            <button className="details-back-btn" onClick={() => navigate(-1)} title="Go back">
+              <ArrowLeft size={18} />
+            </button>
+            <h1 className="details-title">Order Details</h1>
+          </div>
+          <div className="order-details-loading-card">
+            <div className="details-spinner"></div>
+            <p>Loading order details...</p>
+          </div>
         </div>
-        <div className="order-details-loading">Loading order...</div>
       </div>
     );
   }
@@ -171,146 +210,208 @@ const OrderDetails = () => {
   if (error || !order) {
     return (
       <div className="order-details-page">
-        <div className="order-details-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft size={24} />
-          </button>
-          <h1>Order Details</h1>
-        </div>
-        <div className="order-details-empty">
-          <h2>{error || 'Order not found.'}</h2>
-          <button className="primary-btn" onClick={() => navigate('/customer/orders')}>
-            Back to Orders
-          </button>
+        <div className="order-details-inner">
+          <div className="order-details-header">
+            <button className="details-back-btn" onClick={() => navigate(-1)} title="Go back">
+              <ArrowLeft size={18} />
+            </button>
+            <h1 className="details-title">Order Details</h1>
+          </div>
+          <div className="order-details-empty-card">
+            <h2>{error || 'Order not found.'}</h2>
+            <button className="details-pri-btn" onClick={() => navigate('/customer/orders')}>
+              Back to Orders
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  const stages = getTrackingStages();
+
   return (
     <div className="order-details-page">
-      <div className="order-details-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          <ArrowLeft size={24} />
-        </button>
-        <h1>Order #{order._id.slice(-6).toUpperCase()}</h1>
-      </div>
-
-      <div className="order-details-card">
-        <div className="order-status-row">
-          <div className="order-status-badge">
-            {order.paymentStatus === 'failed' ? (
-              <XCircle size={18} />
-            ) : (
-              <CheckCircle size={18} />
-            )}
-            <span>{getStatusLabel()}</span>
-          </div>
-          <div className="order-meta">
-            <span>{new Date(order.createdAt).toLocaleDateString()}</span>
-            <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+      <SEO
+        title={`Order #${order._id.slice(-6).toUpperCase()} Details`}
+        description="View complete breakdown, live delivery tracking, and receipt for your Delivo order."
+      />
+      <div className="order-details-inner">
+        
+        {/* HEADER */}
+        <div className="order-details-header">
+          <button className="details-back-btn" onClick={() => navigate(-1)} title="Go back">
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="details-title">Order #{order._id.slice(-6).toUpperCase()}</h1>
+            <p className="details-time">
+              Placed on {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
           </div>
         </div>
 
-        <div className="order-summary-grid">
-          <div className="order-summary-item">
-            <h3>Delivery</h3>
-            <p><MapPin size={16} /> {order.deliveryAddress || 'Address not provided'}</p>
-            {order.specialInstructions ? <p>Note: {order.specialInstructions}</p> : null}
-          </div>
-          <div className="order-summary-item">
-            <h3>Customer</h3>
-            <p>{order.customerName || order.guestEmail || 'Guest'}</p>
-            {order.guestPhone ? <p><Phone size={14} /> {order.guestPhone}</p> : null}
-            {order.whatsappNumber ? <p><Phone size={14} /> WhatsApp: {order.whatsappNumber}</p> : null}
-            {order.guestEmail ? <p><Mail size={14} /> {order.guestEmail}</p> : null}
-          </div>
-          <div className="order-summary-item">
-            <h3>Payment</h3>
-            <p><CreditCard size={16} /> {order.paymentMethod?.toUpperCase() || 'MPESA'}</p>
-            <p>Status: {order.paymentStatus === 'failed' ? 'Failed' : order.paymentStatus}</p>
-            {order.mpesaReceiptNumber ? <p>Receipt: {order.mpesaReceiptNumber}</p> : null}
-          </div>
-          <div className="order-summary-item">
-            <h3>Totals</h3>
-            <p>Items: {order.items?.length || 0}</p>
-            <p>Subtotal: {formatCurrency(getOrderSubtotal())}</p>
-            <p>Delivery: {formatCurrency(order.deliveryFee ?? 0)}</p>
-            <p>Tax: {formatCurrency(order.tax ?? 0)}</p>
-            <p><strong>Total: {formatCurrency(getOrderTotal())}</strong></p>
-          </div>
-        </div>
+        <div className="order-details-main-card">
+          
+          {/* STATUS ROW */}
+          <div className="details-status-row">
+            <div className={`details-status-badge ${getStatusBadgeClass()}`}>
+              <span className="status-dot"></span>
+              <span>{getStatusLabel()}</span>
+            </div>
 
-        <div className="tracking-card">
-          <h3>Order Tracking</h3>
-          <div className="tracking-steps">
-            {getTrackingSteps().map((step, index) => (
-              <div key={step.label} className={`tracking-step ${step.completed ? 'done' : ''}`}>
-                <div className="tracking-dot" />
-                <div>
-                  <strong>{step.label}</strong>
-                  <p>{step.completed ? 'Completed' : index === 0 ? 'In progress' : 'Pending'}</p>
-                </div>
+            <div className="details-meta-pill">
+              <span>{order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}</span>
+              <span>•</span>
+              <strong className="details-grand-total">{formatCurrency(getOrderTotal())}</strong>
+            </div>
+          </div>
+
+          {/* MINIMAL PROGRESS TRACKER */}
+          {order.status !== 'cancelled' && order.paymentStatus !== 'failed' && (
+            <div className="details-tracker-block">
+              <h3 className="details-section-label">Order Progress</h3>
+              <div className="order-progress-track">
+                {stages.map((stage, idx) => (
+                  <div
+                    key={stage.key}
+                    className={`progress-node ${stage.isCompleted ? 'is-completed' : ''} ${stage.isActive ? 'is-active' : ''}`}
+                  >
+                    <div className="node-indicator">
+                      {stage.isCompleted ? (
+                        <span className="node-check">✓</span>
+                      ) : (
+                        <span className="node-dot"></span>
+                      )}
+                    </div>
+                    <span className="node-label">{stage.label}</span>
+                    {idx < stages.length - 1 && <div className="node-connector"></div>}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
 
-        {order.failureReason && (
-          <div className="order-failure-note">
-            <AlertTriangle size={18} />
-            <span>{order.failureReason}</span>
-          </div>
-        )}
+          {order.failureReason && (
+            <div className="details-error-banner">
+              <AlertTriangle size={16} />
+              <span>{order.failureReason}</span>
+            </div>
+          )}
 
-        <div className="order-items-list">
-          <h2>Items</h2>
-          {order.items.map((item) => {
-            const food = resolveOrderFood(item);
-            const key = food?._id || item.foodId || item.food || item._id || `${item.quantity}-${Math.random()}`;
-            const unitPrice = Number(item.price ?? item.unitPrice ?? food?.price ?? 0);
-            const lineTotal = unitPrice * Number(item.quantity ?? 1);
-            return (
-              <div key={key} className="order-item-row" style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'stretch' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <p className="item-name" style={{ margin: 0, fontWeight: '700' }}>{getOrderItemName(item)}</p>
-                    <p className="item-qty" style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-                      Qty: {item.quantity} • Unit price: {formatCurrency(unitPrice)}
-                    </p>
-                    {(item.restaurantName || item.foodId?.restaurant?.name) && (
-                      <span style={{ fontSize: '11.5px', color: '#0284c7', fontWeight: '600', display: 'block', marginTop: '2px' }}>
-                        From: {item.restaurantName || item.foodId?.restaurant?.name}
-                      </span>
-                    )}
-                  </div>
-                  <p className="item-total" style={{ margin: 0, fontWeight: '700' }}>{formatCurrency(lineTotal)}</p>
+          {/* DETAILS GRID */}
+          <div className="details-info-grid">
+            <div className="details-info-card">
+              <h3 className="details-card-label">Delivery destination</h3>
+              <div className="details-card-item">
+                <MapPin size={14} className="details-icon" />
+                <p className="details-text">{order.deliveryAddress || 'Address not specified'}</p>
+              </div>
+              {order.specialInstructions && (
+                <p className="details-subtext">Note: {order.specialInstructions}</p>
+              )}
+            </div>
+
+            <div className="details-info-card">
+              <h3 className="details-card-label">Payment & Contact</h3>
+              <div className="details-card-item">
+                <CreditCard size={14} className="details-icon" />
+                <p className="details-text">
+                  {order.paymentMethod?.toUpperCase() || 'M-PESA'} ({order.paymentStatus === 'completed' ? 'Paid' : order.paymentStatus || 'Pending'})
+                </p>
+              </div>
+              {order.whatsappNumber && (
+                <div className="details-card-item" style={{ marginTop: '4px' }}>
+                  <Phone size={14} className="details-icon" />
+                  <p className="details-text">{order.whatsappNumber}</p>
                 </div>
-                {item.isCombination && item.components && item.components.length > 0 && (
-                  <div className="order-item-components" style={{ paddingLeft: '16px', fontSize: '12px', color: '#4b5563', borderLeft: '2px solid #e5e7eb', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    {item.components.map((comp, compIdx) => (
-                      <span key={compIdx}>
-                        • {comp.name} ×{comp.quantity}
-                      </span>
-                    ))}
+              )}
+            </div>
+          </div>
+
+          {/* ITEM BREAKDOWN */}
+          <div className="details-items-section">
+            <h3 className="details-section-label">Order Items</h3>
+            <div className="details-items-list">
+              {order.items.map((item, index) => {
+                const food = resolveOrderFood(item);
+                const key = food?._id || item.foodId || item.food || item._id || index;
+                const unitPrice = Number(item.price ?? item.unitPrice ?? food?.price ?? 0);
+                const lineTotal = unitPrice * Number(item.quantity ?? 1);
+
+                return (
+                  <div key={key} className="details-item-row">
+                    <div className="details-item-info">
+                      <p className="details-item-name">{getOrderItemName(item)}</p>
+                      <p className="details-item-sub">
+                        Qty: {item.quantity} • {formatCurrency(unitPrice)} each
+                      </p>
+                      {(item.restaurantName || item.foodId?.restaurant?.name) && (
+                        <span className="details-item-kitchen">
+                          <Store size={12} />
+                          <span>{item.restaurantName || item.foodId?.restaurant?.name}</span>
+                        </span>
+                      )}
+                      {item.isCombination && item.components && item.components.length > 0 && (
+                        <div className="details-combo-box">
+                          {item.components.map((comp, compIdx) => (
+                            <span key={compIdx}>• {comp.name} ×{comp.quantity}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className="details-item-total">{formatCurrency(lineTotal)}</span>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* TOTALS SUMMARY */}
+          <div className="details-totals-section">
+            <div className="details-total-row">
+              <span>Subtotal</span>
+              <span>{formatCurrency(getOrderSubtotal())}</span>
+            </div>
+            <div className="details-total-row">
+              <span>Delivery fee</span>
+              <span>
+                {Number(order.deliveryFee) === 0 ? (
+                  <span className="details-free-tag">FREE</span>
+                ) : (
+                  formatCurrency(order.deliveryFee ?? 0)
                 )}
+              </span>
+            </div>
+            {order.tax > 0 && (
+              <div className="details-total-row">
+                <span>Tax</span>
+                <span>{formatCurrency(order.tax)}</span>
               </div>
-            );
-          })}
-        </div>
+            )}
+            <div className="details-total-divider"></div>
+            <div className="details-total-row grand-total">
+              <span>Total</span>
+              <strong className="details-final-price">{formatCurrency(getOrderTotal())}</strong>
+            </div>
+          </div>
 
-        <div className="order-actions-row">
-          <button className="back-btn secondary" onClick={() => navigate('/customer/orders')}>
-            Back to Orders
-          </button>
-          <button
-            className="primary-btn"
-            onClick={handleReorder}
-            disabled={isReordering}
-          >
-            {isReordering ? 'Reordering...' : 'Reorder from this Order'}
-          </button>
+          {/* ACTIONS */}
+          <div className="details-actions-footer">
+            <button type="button" className="details-sec-btn" onClick={() => navigate('/customer/orders')}>
+              ← Back to Orders
+            </button>
+            <button
+              type="button"
+              className="details-pri-btn"
+              onClick={handleReorder}
+              disabled={isReordering}
+            >
+              <RotateCcw size={14} />
+              <span>{isReordering ? 'Reordering...' : 'Reorder Items'}</span>
+            </button>
+          </div>
+
         </div>
       </div>
     </div>

@@ -3,10 +3,10 @@
    ================================================ */
 
 .cart-container {
-  min-height: 100vh;
-  background: #f8fafc;
-  padding: 24px 16px 80px;
-  max-width: 1120px;
+  min-height: calc(100vh - 72px);
+  background: var(--delivo-bg-page, #f7f8fa);
+  padding: 28px 16px 80px;
+  width: min(var(--content-max, 1280px), 100% - 2rem);
   margin: 0 auto;
 }
 

@@ -52,10 +52,48 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
-  /* ── Text Colors ── */
+  /* ── Canonical Delivo Design Tokens ── */
+  --delivo-orange: #FF6B4A;
+  --delivo-orange-hover: #e85938;
+  --delivo-orange-light: #fff4f1;
+  --delivo-orange-faint: rgba(255, 107, 74, 0.08);
+
+  --delivo-text-primary: #111827;
+  --delivo-text-secondary: #4b5563;
+  --delivo-text-muted: #6b7280;
+
+  --delivo-bg-page: #f7f8fa;
+  --delivo-bg-surface: #ffffff;
+  --delivo-bg-subtle: #f9fafb;
+
+  --delivo-border: #e2e8f0;
+  --delivo-border-subtle: #f1f5f9;
+
+  --delivo-success: #15803d;
+  --delivo-success-bg: #f0fdf4;
+  --delivo-success-border: #bbf7d0;
+
+  --delivo-error: #dc2626;
+  --delivo-error-bg: #fef2f2;
+  --delivo-error-border: #fecaca;
+
+  --delivo-warning: #b45309;
+  --delivo-warning-bg: #fffbeb;
+  --delivo-warning-border: #fde68a;
+
+  --delivo-radius-sm: 8px;
+  --delivo-radius-md: 12px;
+  --delivo-radius-lg: 16px;
+  --delivo-radius-pill: 9999px;
+
+  --delivo-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --delivo-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --delivo-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* ── Legacy Aliases ── */
   --text-primary:   #111827;
   --text-secondary: #4b5563;
-  --text-muted:     #9ca3af;
+  --text-muted:     #6b7280;
   --text-disabled:  #d1d5db;
 
   /* ── Semantic Colors ── */

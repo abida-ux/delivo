@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Clock, MapPin, CreditCard, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight, RotateCcw } from 'lucide-react';
+import { Clock, MapPin, CreditCard, ShoppingBag, ArrowRight, Check, ChevronRight, RotateCcw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -38,10 +38,14 @@ const Orders = () => {
 
   const formatCurrency = (value) => {
     const amount = Number(value ?? 0);
-    return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `KES ${amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const getOrderTotal = (order) => {
+    if (order?.expectedTotal) return Number(order.expectedTotal);
+    if (order?.totalPrice) return Number(order.totalPrice);
+    if (order?.amount) return Number(order.amount);
+
     const subtotal = (order?.items || []).reduce((sum, item) => {
       const unitPrice = Number(item?.price ?? item?.unitPrice ?? 0);
       const quantity = Number(item?.quantity ?? 1);
@@ -51,11 +55,6 @@ const Orders = () => {
     const deliveryFee = Number(order?.deliveryFee ?? 0);
     const tax = Number(order?.tax ?? 0);
     return subtotal + deliveryFee + tax;
-  };
-
-  const getOrderItemsPreview = (order) => {
-    const names = (order.items || []).map(getOrderItemName);
-    return names.length === 0 ? 'No items' : names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2} more` : '');
   };
 
   const handleReorder = async (order) => {
@@ -123,44 +122,51 @@ const Orders = () => {
   }, [user]);
 
   const getStatusBadgeClass = (order) => {
-    if (order.paymentStatus === 'failed') return 'status-failed';
+    if (order.paymentStatus === 'failed') return 'is-failed';
     switch (order.status) {
-      case 'pending': return 'status-pending';
-      case 'confirmed': return 'status-confirmed';
-      case 'preparing': return 'status-preparing';
-      case 'on-delivery': return 'status-on-delivery';
-      case 'delivered': return 'status-delivered';
-      case 'cancelled': return 'status-cancelled';
-      default: return 'status-default';
+      case 'pending': return 'is-pending';
+      case 'confirmed': return 'is-confirmed';
+      case 'preparing': return 'is-active';
+      case 'on-delivery': return 'is-active';
+      case 'delivered': return 'is-delivered';
+      case 'cancelled': return 'is-failed';
+      default: return 'is-pending';
     }
   };
 
   const getStatusText = (order) => {
-    if (order.paymentStatus === 'failed') return 'Failed';
+    if (order.paymentStatus === 'failed') return 'Payment Failed';
     switch (order.status) {
       case 'pending': return 'Pending';
       case 'confirmed': return 'Confirmed';
       case 'preparing': return 'Preparing';
-      case 'on-delivery': return 'On Delivery';
+      case 'on-delivery': return 'On delivery';
       case 'delivered': return 'Delivered';
       case 'cancelled': return 'Cancelled';
       default: return 'Processing';
     }
   };
 
-  const getTrackingSteps = (order) => {
-    const paymentCompleted = order.paymentStatus === 'completed';
-    const hasOrderReceived = paymentCompleted || ['confirmed', 'preparing', 'on-delivery', 'delivered'].includes(order.status);
+  const getTrackingStages = (order) => {
+    const isPaymentDone = order.paymentStatus === 'completed';
+    const isConfirmed = isPaymentDone || ['confirmed', 'preparing', 'on-delivery', 'delivered'].includes(order.status);
     const isPreparing = ['preparing', 'on-delivery', 'delivered'].includes(order.status);
     const isOnDelivery = ['on-delivery', 'delivered'].includes(order.status);
     const isDelivered = order.status === 'delivered';
 
+    let activeIndex = 0;
+    if (isDelivered) activeIndex = 4;
+    else if (isOnDelivery) activeIndex = 3;
+    else if (isPreparing) activeIndex = 2;
+    else if (isConfirmed) activeIndex = 1;
+    else if (isPaymentDone) activeIndex = 0;
+
     return [
-      { label: 'Payment', completed: paymentCompleted },
-      { label: 'Confirmed', completed: hasOrderReceived },
-      { label: 'Preparing', completed: isPreparing },
-      { label: 'On The Way', completed: isOnDelivery },
-      { label: 'Delivered', completed: isDelivered },
+      { key: 'payment', label: 'Payment', isCompleted: isPaymentDone, isActive: activeIndex === 0 && !isConfirmed },
+      { key: 'confirmed', label: 'Confirmed', isCompleted: isConfirmed && activeIndex > 1, isActive: activeIndex === 1 },
+      { key: 'preparing', label: 'Preparing', isCompleted: activeIndex > 2, isActive: activeIndex === 2 },
+      { key: 'on-delivery', label: 'On the way', isCompleted: activeIndex > 3, isActive: activeIndex === 3 },
+      { key: 'delivered', label: 'Delivered', isCompleted: isDelivered, isActive: activeIndex === 4 },
     ];
   };
 
@@ -178,41 +184,44 @@ const Orders = () => {
       />
       <div className="orders-page-inner">
         
-        {/* HEADER */}
+        {/* PAGE HEADER */}
         <div className="orders-page-header">
-          <div>
-            <h1 className="orders-page-title">My Orders</h1>
-            <p className="orders-page-subtitle">Track and manage all your food & marketplace orders in real time</p>
-          </div>
+          <h1 className="orders-page-title">My Orders</h1>
+          <p className="orders-page-subtitle">Track your food orders and see what's happening in real time.</p>
         </div>
 
-        {/* FILTERS */}
+        {/* STATUS FILTER TABS */}
         <div className="orders-filter-bar">
           <button 
+            type="button"
             className={`orders-filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
             onClick={() => setSearchParams({ filter: 'all' })}
           >
-            All Orders
+            All
           </button>
           <button 
+            type="button"
             className={`orders-filter-tab ${filterStatus === 'pending' ? 'active' : ''}`}
             onClick={() => setSearchParams({ filter: 'pending' })}
           >
             Pending
           </button>
           <button 
+            type="button"
             className={`orders-filter-tab ${filterStatus === 'confirmed' ? 'active' : ''}`}
             onClick={() => setSearchParams({ filter: 'confirmed' })}
           >
             Confirmed
           </button>
           <button 
+            type="button"
             className={`orders-filter-tab ${filterStatus === 'on-delivery' ? 'active' : ''}`}
             onClick={() => setSearchParams({ filter: 'on-delivery' })}
           >
-            On Delivery
+            On delivery
           </button>
           <button 
+            type="button"
             className={`orders-filter-tab ${filterStatus === 'delivered' ? 'active' : ''}`}
             onClick={() => setSearchParams({ filter: 'delivered' })}
           >
@@ -220,104 +229,132 @@ const Orders = () => {
           </button>
         </div>
 
-        {/* CONTENT */}
+        {/* CONTENT LIST */}
         {loading ? (
           <div className="orders-loading-card">
             <div className="orders-loading-spinner"></div>
-            <p>Loading your orders...</p>
+            <p>Loading orders...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="orders-empty-card">
-            <ShoppingBag size={54} className="orders-empty-icon" />
+            <ShoppingBag size={42} className="orders-empty-icon" />
             <h3>No orders found</h3>
-            <p>You haven't placed any orders yet. Explore our delicious menu and marketplace to get started!</p>
-            <button className="orders-browse-btn" onClick={() => navigate('/meals')}>
-              Browse Meals & Food
+            <p>Your next meal is waiting. Explore our restaurants and foods to get started!</p>
+            <button type="button" className="orders-browse-btn" onClick={() => navigate('/menu')}>
+              Browse Menu <ArrowRight size={15} />
             </button>
           </div>
         ) : (
           <div className="orders-card-list">
-            {filteredOrders.map((order) => (
-              <div key={order._id} className="order-item-card">
-                
-                {/* CARD TOP HEADER */}
-                <div className="order-item-header">
-                  <div className="order-ref-group">
-                    <span className="order-ref-code">Order #{order._id.slice(-6).toUpperCase()}</span>
-                    <span className="order-ref-date">
-                      {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {filteredOrders.map((order) => {
+              const stages = getTrackingStages(order);
+              const totalAmount = getOrderTotal(order);
+
+              return (
+                <div key={order._id} className="order-item-card">
+                  
+                  {/* CARD HEADER */}
+                  <div className="order-card-header">
+                    <div className="order-ref-block">
+                      <span className="order-ref-id">Order #{order._id.slice(-6).toUpperCase()}</span>
+                      <span className="order-ref-time">
+                        {new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <span className={`order-status-tag ${getStatusBadgeClass(order)}`}>
+                      <span className="status-dot"></span>
+                      {getStatusText(order)}
                     </span>
                   </div>
-                  <span className={`order-status-badge ${getStatusBadgeClass(order)}`}>
-                    {getStatusText(order)}
-                  </span>
-                </div>
 
-                {/* CARD BODY METADATA */}
-                <div className="order-item-body">
-                  <div className="order-meta-left">
-                    <div className="order-summary-preview">
-                      <ShoppingBag size={16} className="meta-icon" />
-                      <span className="items-text">{getOrderItemsPreview(order)}</span>
-                    </div>
-
-                    <div className="order-meta-info-row">
-                      <div className="meta-pill">
-                        <MapPin size={14} />
-                        <span>{order.deliveryAddress || 'Coordinates specified'}</span>
+                  {/* CARD DETAILS */}
+                  <div className="order-card-content">
+                    <div className="order-info-col">
+                      {/* Items list */}
+                      <div className="order-items-summary">
+                        {order.items && order.items.length > 0 ? (
+                          order.items.map((item, idx) => (
+                            <span key={idx} className="order-item-chip">
+                              <strong>{getOrderItemName(item)}</strong> <span className="item-qty">×{item.quantity}</span>
+                              {idx < order.items.length - 1 ? ', ' : ''}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="order-item-chip">Meal items</span>
+                        )}
                       </div>
-                      <div className="meta-pill">
-                        <CreditCard size={14} />
-                        <span>{order.paymentMethod?.toUpperCase() || 'M-PESA'}</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="order-total-price">
-                    <span className="total-lbl">Total</span>
-                    <span className="total-val">{formatCurrency(getOrderTotal(order))}</span>
-                  </div>
-                </div>
-
-                {/* HORIZONTAL STEP TRACKER */}
-                <div className="order-tracker-container">
-                  <div className="tracker-steps-row">
-                    {getTrackingSteps(order).map((step, idx) => (
-                      <div key={step.label} className={`tracker-step ${step.completed ? 'completed' : ''}`}>
-                        <div className="step-circle">
-                          {step.completed ? <CheckCircle2 size={14} /> : <span>{idx + 1}</span>}
+                      {/* Location & Payment info */}
+                      <div className="order-meta-details">
+                        {order.deliveryAddress && (
+                          <div className="order-meta-item">
+                            <MapPin size={13} />
+                            <span>{order.deliveryAddress}</span>
+                          </div>
+                        )}
+                        <div className="order-meta-item">
+                          <CreditCard size={13} />
+                          <span>{order.paymentMethod ? order.paymentMethod.toUpperCase() : 'M-PESA'}</span>
                         </div>
-                        <span className="step-label">{step.label}</span>
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Total Price */}
+                    <div className="order-total-block">
+                      <span className="order-total-label">Total</span>
+                      <strong className="order-total-amount">{formatCurrency(totalAmount)}</strong>
+                    </div>
                   </div>
-                </div>
 
-                {/* FOOTER ACTIONS */}
-                <div className="order-item-footer">
-                  <button 
-                    type="button"
-                    className="order-btn-details"
-                    onClick={() => navigate(`/customer/orders/${order._id}`)}
-                  >
-                    <span>View Full Details</span>
-                    <ChevronRight size={16} />
-                  </button>
-
-                  {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
-                    <button
-                      type="button"
-                      className="order-btn-reorder"
-                      onClick={() => handleReorder(order)}
-                    >
-                      <RotateCcw size={15} />
-                      <span>Reorder</span>
-                    </button>
+                  {/* MINIMAL PROGRESS TRACKER */}
+                  {order.status !== 'cancelled' && order.paymentStatus !== 'failed' && (
+                    <div className="order-progress-track">
+                      {stages.map((stage, idx) => (
+                        <div
+                          key={stage.key}
+                          className={`progress-node ${stage.isCompleted ? 'is-completed' : ''} ${stage.isActive ? 'is-active' : ''}`}
+                        >
+                          <div className="node-indicator">
+                            {stage.isCompleted ? (
+                              <Check size={11} className="node-check" />
+                            ) : (
+                              <span className="node-dot"></span>
+                            )}
+                          </div>
+                          <span className="node-label">{stage.label}</span>
+                          {idx < stages.length - 1 && <div className="node-connector"></div>}
+                        </div>
+                      ))}
+                    </div>
                   )}
-                </div>
 
-              </div>
-            ))}
+                  {/* CARD ACTIONS */}
+                  <div className="order-card-footer">
+                    <button 
+                      type="button"
+                      className="order-action-details-btn"
+                      onClick={() => navigate(`/customer/orders/${order._id}`)}
+                    >
+                      <span>View details</span>
+                      <ChevronRight size={15} />
+                    </button>
+
+                    {(order.paymentStatus === 'failed' || order.status === 'delivered') && (
+                      <button
+                        type="button"
+                        className="order-action-reorder-btn"
+                        onClick={() => handleReorder(order)}
+                      >
+                        <RotateCcw size={13} />
+                        <span>Reorder</span>
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+              );
+            })}
           </div>
         )}
 

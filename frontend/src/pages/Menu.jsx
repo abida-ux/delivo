@@ -6,6 +6,7 @@ import { readSessionStorageJson, writeSessionStorageJson } from '../services/men
 import { useCart } from '../context/CartContext';
 import { useCartUI } from '../context/CartUIContext';
 import { resolveImageUrl, handleImageError } from '../utils/placeholderImage';
+import FoodCard from '../components/FoodCard';
 import './Menu.css';
 import SEO from '../components/SEO';
 
@@ -320,62 +321,7 @@ const Menu = () => {
       ) : (
         <div className="foods-grid">
           {filteredFoods.map((food) => (
-            <div 
-              key={food._id} 
-              className="food-menu-card" 
-              onClick={() => handleFoodClick(food)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="food-image-wrapper">
-                <img
-                  src={resolveImageUrl(food.image)}
-                  alt={food.name}
-                  onError={handleImageError}
-                />
-                {food.rating > 0 && (
-                  <div className="food-badge">
-                    <Star size={14} fill="currentColor" />
-                    <span>{food.rating}</span>
-                  </div>
-                )}
-              </div>
-
-
-              <div className="food-details">
-                <h3 className="food-name">
-                  {food.name}
-                  {food.isCombination && <span className="menu-combo-badge">🍱 Combo</span>}
-                </h3>
-                <p className="food-description">{food.description}</p>
-
-                <div className="food-footer">
-                  <span className="food-price">KES {food.price ?? 0}</span>
-                  {cartItemIds.includes(food._id) ? (
-                    <button
-                      className="go-to-cart-ui"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGoToCart();
-                      }}
-                    >
-                      <Check size={18} />
-                      <span>Go to Cart</span>
-                    </button>
-                  ) : (
-                    <button
-                      className="add-to-cart-ui"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(food);
-                      }}
-                    >
-                      <Plus size={18} />
-                      <span>Add</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <FoodCard key={food._id} food={food} showVendor={false} />
           ))}
         </div>
       )}

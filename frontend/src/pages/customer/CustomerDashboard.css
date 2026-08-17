@@ -1,36 +1,40 @@
 /* Customer Dashboard Styles */
 .customer-dashboard {
-  max-width: 1200px;
+  width: min(var(--content-max, 1280px), 100% - 2rem);
   margin: 0 auto;
-  padding: 20px;
+  padding: 28px 0 64px;
 }
 
 .dashboard-header {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .dashboard-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #000;
-  margin-bottom: 5px;
+  font-family: var(--font-heading, inherit);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--delivo-text-primary, #111827);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .profile-section {
   background: white;
-  border-radius: 12px;
-  padding: 30px;
-  margin-bottom: 30px;
+  border-radius: var(--delivo-radius-md, 12px);
+  border: 1px solid var(--delivo-border, #e2e8f0);
+  box-shadow: var(--delivo-shadow-sm, 0 1px 3px rgba(0,0,0,0.04));
+  padding: 24px;
+  margin-bottom: 24px;
   display: flex;
-  gap: 24px;
+  gap: 20px;
   align-items: flex-start;
 }
 
 .profile-avatar {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff6b35 0%, #f25417 100%);
+  background: var(--delivo-orange, #FF6B4A);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { resolveImageUrl } from '../utils/placeholderImage';
 import './FoodCard.css';
 
-const FoodCard = ({ food, onExpired }) => {
+const FoodCard = ({ food, onExpired, showVendor = true }) => {
   const navigate = useNavigate();
   const { addItem, getCartItems } = useCart();
   const { openCart } = useCartUI();
@@ -85,15 +85,22 @@ const FoodCard = ({ food, onExpired }) => {
           loading="lazy"
         />
 
-        {/* Floating Discount Tag */}
-        {food.originalPrice && food.originalPrice > food.price && (
-          <span className="food-discount-badge">
-            {Math.round(((food.originalPrice - food.price) / food.originalPrice) * 100)}% OFF
-          </span>
-        )}
+        {/* Floating Badges (Top-Left) */}
+        <div className="food-card-badges">
+          {food.originalPrice && food.originalPrice > food.price && (
+            <span className="food-discount-badge">
+              {Math.round(((food.originalPrice - food.price) / food.originalPrice) * 100)}% OFF
+            </span>
+          )}
+
+          {food.isCombination && (
+            <span className="food-combo-overlay-badge">Combo</span>
+          )}
+        </div>
 
         {/* Floating Plus Button on bottom-right of image frame */}
         <button
+          type="button"
           className={`floating-plus-btn ${isInCart ? 'in-cart' : ''}`}
           onClick={isInCart ? handleOpenCart : handleAddToCart}
           title={isInCart ? 'In Cart - View Order' : 'Add to Order'}
@@ -104,13 +111,25 @@ const FoodCard = ({ food, onExpired }) => {
 
       {/* Card Details Below Image Card */}
       <div className="food-card-details">
-        <div className="vendor-rating-row">
-          <div className="vendor-info">
-            <span className="vendor-dot"></span>
-            <span className="vendor-name" title={restaurantName}>{restaurantName}</span>
-          </div>
+        {showVendor && (
+          <div className="vendor-rating-row">
+            <div className="vendor-info">
+              <span className="vendor-dot"></span>
+              <span className="vendor-name" title={restaurantName}>{restaurantName}</span>
+            </div>
 
-          {ratingScore > 0 && (
+            {ratingScore > 0 && (
+              <div className="rating-tag">
+                <Star size={11} fill="#f5b301" color="#f5b301" />
+                <span>{ratingScore}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="food-name-row">
+          <h3 className="food-name" title={food.name}>{food.name}</h3>
+          {!showVendor && ratingScore > 0 && (
             <div className="rating-tag">
               <Star size={11} fill="#f5b301" color="#f5b301" />
               <span>{ratingScore}</span>
@@ -118,14 +137,17 @@ const FoodCard = ({ food, onExpired }) => {
           )}
         </div>
 
-
-
-        <h3 className="food-name" title={food.name}>{food.name}</h3>
+        {food.description && (
+          <p className="food-card-desc">{food.description}</p>
+        )}
 
         <div className="food-price-row">
-          <span className="food-price">KES {food.price?.toLocaleString('en-KE')}</span>
+          <span className="food-price">
+            <span className="food-currency">KES</span>
+            <span className="food-amount">{Number(food.price ?? 0).toLocaleString('en-KE')}</span>
+          </span>
           {food.originalPrice && food.originalPrice > food.price && (
-            <span className="food-old-price">KES {food.originalPrice.toLocaleString('en-KE')}</span>
+            <span className="food-old-price">KES {Number(food.originalPrice).toLocaleString('en-KE')}</span>
           )}
         </div>
 
