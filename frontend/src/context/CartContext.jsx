@@ -1,4 +1,4 @@
-import {createContext, useContext, useState, useEffect} from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { AuthContext } from './AuthContext';
 import api from '../services/api';
 
@@ -10,7 +10,7 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Helper helper to reliably extract food ID string across guest and backend objects
+  // Helper to reliably extract food ID string across guest and backend objects
   const getNormalizedFoodId = (item) => {
     if (!item) return null;
     if (item.productType === 'marketplace') {
@@ -19,7 +19,13 @@ export const CartProvider = ({ children }) => {
     return typeof item.foodId === 'object' && item.foodId !== null ? item.foodId._id : item.foodId;
   };
 
-  // ✅ Load guest cart from localStorage only when the user is not signed in
+  // Helper to get item restaurant ID string
+  const getNormalizedRestaurantId = (item) => {
+    if (!item || !item.restaurantId) return null;
+    return typeof item.restaurantId === 'object' ? item.restaurantId._id : item.restaurantId;
+  };
+
+  // Load guest cart from localStorage only when the user is not signed in
   useEffect(() => {
     if (authLoading) return;
     if (user && token) return;
@@ -38,7 +44,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [user, token, authLoading]);
 
-  // ✅ Persist the current cart locally when the user is signed out
+  // Persist the current cart locally when the user is signed out
   useEffect(() => {
     if (authLoading) return;
     if (user && token) return;
@@ -50,7 +56,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems, user, token, authLoading]);
 
-  // ✅ Fetch cart from database when user logs in, and clear cart when user logs out
+  // Fetch cart from database when user logs in, and clear cart when user logs out
   useEffect(() => {
     if (authLoading) return;
     
@@ -64,7 +70,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [user?._id, token, authLoading]);
 
-  // ✅ Fetch cart from backend database and merge with guest cart if exists
+  // Fetch cart from backend database and merge with guest cart if exists
   const fetchCartFromDatabase = async () => {
     if (!token) return;
 
@@ -73,7 +79,7 @@ export const CartProvider = ({ children }) => {
       const { data } = await api.get('/cart');
       let dbCartItems = data.cart?.items || [];
 
-      // ✅ Check if there's a guest cart to merge
+      // Check if there's a guest cart to merge
       const guestCart = localStorage.getItem(GUEST_CART_KEY);
       if (guestCart) {
         try {
@@ -100,33 +106,63 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ Add item to cart (works for both authenticated and guest users)
-  const addItem = async (food, quantity = 1) => {
-    const productType = food?.productType === 'marketplace' || food?.categoryType || food?.marketplaceProductId ? 'marketplace' : 'meal';
+  // Add item to cart (works for both authenticated and guest users)
+  const addItem = async (food, quantity = 1, explicitRestaurant = null) => {
+    const productType = food?.productType === 'marketplace' || food?.categoryType === 'marketplace' || food?.marketplaceProductId ? 'marketplace' : 'meal';
     const itemId = food?._id || food?.marketplaceProductId || food?.foodId || food?.id;
 
     if (!itemId) {
       throw new Error('This item is missing an identifier and could not be added to the cart.');
     }
 
-    const normalizedPrice = Number(food?.finalPrice ?? food?.price ?? 0);
+    let initialRestaurantId = null;
+    let initialRestaurantName = null;
+    let initialPrice = null;
+
+    if (productType === 'marketplace') {
+      initialPrice = Number(food?.finalPrice ?? food?.price ?? 0);
+    } else if (explicitRestaurant) {
+      initialRestaurantId = explicitRestaurant._id || explicitRestaurant.restaurantId || explicitRestaurant.id;
+      initialRestaurantName = explicitRestaurant.name || explicitRestaurant.restaurantName;
+      initialPrice = explicitRestaurant.price !== undefined ? Number(explicitRestaurant.price) : Number(food.price || 0);
+    } else if (food.restaurantId || (food.restaurant && typeof food.restaurant === 'object' && food.restaurant._id)) {
+      initialRestaurantId = food.restaurantId || food.restaurant._id;
+      initialRestaurantName = food.restaurantName || food.restaurant.name;
+      initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : null;
+    } else {
+      // Added from global catalogue without a pre-selected restaurant
+      initialRestaurantId = null;
+      initialRestaurantName = null;
+      initialPrice = null;
+    }
+
     const optimisticCart = [...cartItems];
-    const existingItem = optimisticCart.find(
-      (item) => getNormalizedFoodId(item) === itemId && (item.productType || 'meal') === productType
-    );
+    const existingItem = optimisticCart.find((item) => {
+      if (getNormalizedFoodId(item) !== itemId) return false;
+      if ((item.productType || 'meal') !== productType) return false;
+      const existingRestId = getNormalizedRestaurantId(item);
+      const targetRestId = initialRestaurantId ? initialRestaurantId.toString() : null;
+      return existingRestId === targetRestId;
+    });
 
     if (existingItem) {
       existingItem.quantity += quantity;
+      if (initialPrice !== null && initialPrice !== undefined) existingItem.price = initialPrice;
     } else {
       optimisticCart.push({
         productType,
         foodId: productType === 'marketplace' ? undefined : itemId,
         marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
+        restaurantId: initialRestaurantId || null,
+        restaurantName: initialRestaurantName || null,
         name: food.name,
-        price: normalizedPrice,
+        price: initialPrice,
         image: food.image || food.images?.[0],
         quantity,
         categoryType: food.categoryType || (productType === 'marketplace' ? 'marketplace' : 'meal'),
+        isCombination: !!food.isCombination,
+        combinationId: food.isCombination ? itemId : undefined,
+        components: food.components || undefined,
       });
     }
 
@@ -138,10 +174,14 @@ export const CartProvider = ({ children }) => {
         const { data } = await api.post('/cart/add', {
           foodId: productType === 'meal' ? itemId : undefined,
           marketplaceProductId: productType === 'marketplace' ? itemId : undefined,
+          restaurantId: initialRestaurantId || undefined,
+          restaurantName: initialRestaurantName || undefined,
           quantity,
           productType,
-          price: normalizedPrice,
+          price: initialPrice !== null ? initialPrice : undefined,
           categoryType: food.categoryType || (productType === 'marketplace' ? 'marketplace' : 'meal'),
+          isCombination: !!food.isCombination,
+          components: food.components || undefined,
         });
 
         setCartItems(data.cart?.items || optimisticCart);
@@ -156,19 +196,49 @@ export const CartProvider = ({ children }) => {
     console.log('✅ Item added to guest cart:', food.name);
   };
 
-  // ✅ Remove item from cart (works for both authenticated and guest users)
+  // Update item's chosen restaurant and price
+  const updateItemRestaurant = async (foodId, restaurantId, restaurantName, price) => {
+    const updated = cartItems.map((item) => {
+      if (getNormalizedFoodId(item) === foodId) {
+        return {
+          ...item,
+          restaurantId: restaurantId || null,
+          restaurantName: restaurantName || null,
+          price: price !== undefined && price !== null ? Number(price) : item.price,
+        };
+      }
+      return item;
+    });
+
+    setCartItems(updated);
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updated));
+
+    if (user && token) {
+      try {
+        const { data } = await api.put('/cart/item-restaurant', {
+          foodId,
+          restaurantId,
+          restaurantName,
+          price,
+        });
+        if (data?.cart?.items) {
+          setCartItems(data.cart.items);
+        }
+      } catch (error) {
+        console.error('❌ Error updating cart item restaurant:', error);
+      }
+    }
+  };
+
+  // Remove item from cart (works for both authenticated and guest users)
   const removeItem = async (foodId) => {
     try {
       if (user && token) {
-        // Optimistic local state UI update
         setCartItems((prevItems) => prevItems.filter((item) => getNormalizedFoodId(item) !== foodId));
-
-        // ✅ Remove from database for authenticated users
         const { data } = await api.delete(`/cart/remove/${foodId}`);
         setCartItems(data.cart?.items || []);
         console.log('🗑️ Item removed from cart');
       } else {
-        // ✅ Remove from localStorage for guest users
         const updatedCart = cartItems.filter((item) => getNormalizedFoodId(item) !== foodId);
         setCartItems(updatedCart);
         localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updatedCart));
@@ -179,7 +249,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ Update item quantity (works for both authenticated and guest users)
+  // Update item quantity (works for both authenticated and guest users)
   const updateQuantity = async (foodId, quantity) => {
     if (quantity <= 0) {
       removeItem(foodId);
@@ -188,19 +258,16 @@ export const CartProvider = ({ children }) => {
 
     try {
       if (user && token) {
-        // ✅ Optimistic UI update: makes interface snap instantly
         setCartItems((prevItems) =>
           prevItems.map((item) =>
             getNormalizedFoodId(item) === foodId ? { ...item, quantity } : item
           )
         );
 
-        // ✅ Update in database for authenticated users
         const { data } = await api.put(`/cart/update/${foodId}`, { quantity });
         setCartItems(data.cart?.items || []);
         console.log('📝 Cart updated in database');
       } else {
-        // ✅ Update in localStorage for guest users
         const updatedCart = cartItems.map((item) =>
           getNormalizedFoodId(item) === foodId ? { ...item, quantity } : item
         );
@@ -213,16 +280,14 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // ✅ Clear entire cart (works for both authenticated and guest users)
+  // Clear entire cart (works for both authenticated and guest users)
   const clearCart = async () => {
     try {
       if (user && token) {
-        // ✅ Clear database for authenticated users
         await api.delete('/cart/clear');
         setCartItems([]);
         console.log('🧹 Cart cleared in database');
       } else {
-        // ✅ Clear localStorage for guest users
         setCartItems([]);
         localStorage.removeItem(GUEST_CART_KEY);
         console.log('🧹 Cart cleared (guest)');
@@ -238,7 +303,8 @@ export const CartProvider = ({ children }) => {
 
   const getCartTotal = () => {
     return cartItems.reduce((total, item) => {
-      return total + (item.price || 0) * (item.quantity || 0);
+      const p = item.price !== null && item.price !== undefined ? Number(item.price) : 0;
+      return total + p * (item.quantity || 0);
     }, 0);
   };
 
@@ -248,16 +314,34 @@ export const CartProvider = ({ children }) => {
     }, 0);
   };
 
+  const hasUnassignedItems = () => {
+    return cartItems.some((item) => item.productType !== 'marketplace' && !item.restaurantId);
+  };
+
+  const getUniqueRestaurantCount = () => {
+    const ids = new Set();
+    cartItems.forEach((item) => {
+      if (item.restaurantId) {
+        const rId = typeof item.restaurantId === 'object' ? item.restaurantId._id : item.restaurantId;
+        if (rId) ids.add(rId.toString());
+      }
+    });
+    return ids.size;
+  };
+
   const value = {
     cartItems,
     loading,
     addItem,
+    updateItemRestaurant,
     removeItem,
     updateQuantity,
     clearCart,
     getCartItems,
     getCartTotal,
     getCartItemCount,
+    hasUnassignedItems,
+    getUniqueRestaurantCount,
     fetchCart: fetchCartFromDatabase,
   };
 

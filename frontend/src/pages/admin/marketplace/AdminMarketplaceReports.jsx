@@ -41,7 +41,7 @@ export default function AdminMarketplaceReports() {
           </div>
           <div className="admin-mkt-card" style={{ marginBottom: 0, padding: '16px' }}>
             <span style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>AVERAGE BASKET VALUE</span>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#ff6b00', margin: '4px 0 0' }}>KES {avgOrderValue.toLocaleString('en-KE', { maximumFractionDigits: 2 })}</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#059669', margin: '4px 0 0' }}>KES {avgOrderValue.toLocaleString('en-KE', { maximumFractionDigits: 2 })}</h2>
           </div>
         </div>
 

@@ -580,7 +580,11 @@ const RiderDashboard = () => {
                         </div>
                         <div className="point-info">
                           <span className="point-label">PICKUP</span>
-                          <h4 className="point-title">{order.restaurantName || 'Delivo Restaurant'}</h4>
+                          <h4 className="point-title">
+                            {order.restaurants && order.restaurants.length > 1
+                              ? `${order.restaurants.map((r) => r.name).filter(Boolean).join(' & ')} (${order.restaurants.length} Stops)`
+                              : order.restaurantName || 'Delivo Restaurant'}
+                          </h4>
                         </div>
                       </div>
 

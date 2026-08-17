@@ -1,5 +1,5 @@
-import {useState, useEffect} from 'react';
-import { Trash2, Edit, Search, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Trash2, Edit, Search, Plus, Mail, Phone, Calendar, Shield } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllUsers, deleteUser, updateUser, createUser } from '../../services/api';
 import AdminEditUserModal from './AdminEditUserModal';
@@ -80,14 +80,13 @@ const AdminUsers = () => {
 
   const handleCreateUser = async (newUserData) => {
     try {
-      console.log('👤 Creating user with data:', newUserData);
       await createUser(newUserData);
       setIsCreateModalOpen(false);
       await fetchUsers();
       alert('User created successfully');
       return true;
     } catch (error) {
-      console.error('❌ Error creating user:', error);
+      console.error('Error creating user:', error);
       const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
       alert(`Failed to create user: ${errorMsg}`);
       return false;
@@ -96,20 +95,21 @@ const AdminUsers = () => {
 
   const getRoleColor = (role) => {
     const colors = {
-      admin: '#ff6b35',
-      restaurant: '#22c55e',
-      rider: '#3b82f6',
+      admin: '#0f172a',
+      restaurant: '#16a34a',
+      rider: '#2563eb',
       customer: '#8b5cf6',
     };
-    return colors[role] || '#666';
+    return colors[role] || '#64748b';
   };
 
   return (
     <AdminDashboardLayout pageTitle="Users Management">
       <div className="admin-users">
+        {/* Top Controls: Search + Add User */}
         <div className="users-header">
           <div className="search-box">
-            <Search size={20} />
+            <Search size={18} />
             <input
               type="text"
               placeholder="Search users by name, email or role..."
@@ -118,8 +118,8 @@ const AdminUsers = () => {
             />
           </div>
           <button className="add-btn" onClick={() => setIsCreateModalOpen(true)}>
-            <Plus size={20} />
-            Add User
+            <Plus size={18} />
+            <span>Add User</span>
           </button>
         </div>
 
@@ -128,65 +128,145 @@ const AdminUsers = () => {
             <div className="spinner"></div>
             <p>Loading users...</p>
           </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="empty-state">
+            <p>No users found</p>
+          </div>
         ) : (
           <div className="users-table-container">
-            {filteredUsers.length > 0 ? (
+            {/* Desktop Table View (visible >= 768px) */}
+            <div className="users-desktop-table-wrap">
               <table className="users-table">
                 <thead>
                   <tr>
-                    <th>Name</th>
+                    <th>User</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Phone</th>
-                    <th>Joined Date</th>
-                    <th>Actions</th>
+                    <th>Joined</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
                     <tr key={user._id}>
-                      <td className="user-name" data-label="Name">
-                        <div className="user-avatar">
-                          {user.name?.charAt(0).toUpperCase()}
+                      <td className="user-name-cell">
+                        <div
+                          className="user-avatar"
+                          style={{
+                            backgroundColor: `${getRoleColor(user.role)}18`,
+                            color: getRoleColor(user.role),
+                          }}
+                        >
+                          {user.name?.charAt(0).toUpperCase() || 'U'}
                         </div>
-                        {user.name}
+                        <span className="user-name-text">{user.name || 'Unnamed User'}</span>
                       </td>
-                      <td data-label="Email">{user.email}</td>
-                      <td data-label="Role">
+                      <td className="user-email-cell">{user.email}</td>
+                      <td>
                         <span
                           className="role-badge"
-                          style={{ backgroundColor: `${getRoleColor(user.role)}20`, color: getRoleColor(user.role) }}
+                          style={{
+                            backgroundColor: `${getRoleColor(user.role)}18`,
+                            color: getRoleColor(user.role),
+                          }}
                         >
                           {user.role}
                         </span>
                       </td>
-                      <td data-label="Phone">{user.phone || '-'}</td>
-                      <td data-label="Joined">{new Date(user.createdAt).toLocaleDateString()}</td>
-                      <td className="actions-cell" data-label="Actions">
+                      <td>{user.phone || '-'}</td>
+                      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                      <td className="actions-cell">
                         <button
                           className="action-btn edit-btn"
-                          title="Edit"
+                          title="Edit User"
                           onClick={() => handleEdit(user)}
                         >
-                          <Edit size={18} />
+                          <Edit size={16} />
                         </button>
                         <button
                           className="action-btn delete-btn"
-                          title="Delete"
+                          title="Delete User"
                           onClick={() => handleDelete(user._id)}
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            ) : (
-              <div className="empty-state">
-                <p>No users found</p>
-              </div>
-            )}
+            </div>
+
+            {/* Mobile Cards View (visible < 768px) */}
+            <div className="users-mobile-cards-wrap">
+              {filteredUsers.map((user) => (
+                <div key={user._id} className="admin-user-card glass-card">
+                  {/* Card Header: Avatar, Name, Email, and Role Badge */}
+                  <div className="user-card-top">
+                    <div className="user-card-identity">
+                      <div
+                        className="user-avatar"
+                        style={{
+                          backgroundColor: `${getRoleColor(user.role)}18`,
+                          color: getRoleColor(user.role),
+                        }}
+                      >
+                        {user.name?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="user-card-name-block">
+                        <h4>{user.name || 'Unnamed User'}</h4>
+                        <span className="user-card-email-sub">{user.email}</span>
+                      </div>
+                    </div>
+                    <span
+                      className="role-badge"
+                      style={{
+                        backgroundColor: `${getRoleColor(user.role)}18`,
+                        color: getRoleColor(user.role),
+                      }}
+                    >
+                      {user.role}
+                    </span>
+                  </div>
+
+                  {/* Card Details: Phone, Joined */}
+                  <div className="user-card-body">
+                    <div className="user-card-field">
+                      <span className="field-label">
+                        <Phone size={12} /> Phone
+                      </span>
+                      <span className="field-value">{user.phone || 'Not provided'}</span>
+                    </div>
+
+                    <div className="user-card-field">
+                      <span className="field-label">
+                        <Calendar size={12} /> Joined
+                      </span>
+                      <span className="field-value">{new Date(user.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Card Actions: Edit, Delete */}
+                  <div className="user-card-actions">
+                    <button
+                      className="user-card-btn edit"
+                      onClick={() => handleEdit(user)}
+                    >
+                      <Edit size={14} />
+                      <span>Edit User</span>
+                    </button>
+                    <button
+                      className="user-card-btn delete"
+                      onClick={() => handleDelete(user._id)}
+                    >
+                      <Trash2 size={14} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

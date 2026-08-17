@@ -278,6 +278,11 @@ const OrderDetails = () => {
                     <p className="item-qty" style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
                       Qty: {item.quantity} • Unit price: {formatCurrency(unitPrice)}
                     </p>
+                    {(item.restaurantName || item.foodId?.restaurant?.name) && (
+                      <span style={{ fontSize: '11.5px', color: '#0284c7', fontWeight: '600', display: 'block', marginTop: '2px' }}>
+                        From: {item.restaurantName || item.foodId?.restaurant?.name}
+                      </span>
+                    )}
                   </div>
                   <p className="item-total" style={{ margin: 0, fontWeight: '700' }}>{formatCurrency(lineTotal)}</p>
                 </div>

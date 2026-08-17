@@ -45,7 +45,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #ff6b35, #ff8555);
+  background: linear-gradient(135deg, #16a34a, #15803d);
   color: white;
   border: none;
   border-radius: 8px;
@@ -58,7 +58,7 @@
 
 .add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .riders-table-container {
@@ -110,7 +110,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff6b35, #ff8555);
+  background: linear-gradient(135deg, #0f172a, #334155);
   color: white;
   display: flex;
   align-items: center;
@@ -157,8 +157,8 @@
 }
 
 .action-btn.edit-btn:hover {
-  border-color: #ff6b35;
-  color: #ff6b35;
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 .action-btn.delete-btn:hover {

@@ -27,7 +27,7 @@
 }
 
 .restaurant-selector-row select:focus {
-  border-color: #f97316;
+  border-color: #16a34a;
 }
 
 .menu-sections-wrapper {
@@ -69,7 +69,7 @@
 }
 
 .add-catalogue-btn {
-  background: #f97316;
+  background: #16a34a;
   color: white;
   border: none;
   padding: 10px 18px;
@@ -83,7 +83,7 @@
 }
 
 .add-catalogue-btn:hover {
-  background: #ea580c;
+  background: #15803d;
 }
 
 .menu-table {
@@ -121,7 +121,7 @@
 }
 
 .menu-table input[type="number"]:focus {
-  border-color: #f97316;
+  border-color: #16a34a;
 }
 
 .menu-save-row {

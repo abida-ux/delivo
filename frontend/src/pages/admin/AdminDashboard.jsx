@@ -84,7 +84,7 @@ const AdminDashboard = () => {
       label: 'Users',
       value: stats.users,
       icon: Users,
-      color: '#ff6b00',
+      color: '#16a34a',
       change: '+12%',
       isPositive: true,
       desc: 'Active customer registry'
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
       label: 'Restaurants',
       value: stats.restaurants,
       icon: Store,
-      color: '#ff6b00',
+      color: '#16a34a',
       change: '+5%',
       isPositive: true,
       desc: 'Onboarded merchants'
@@ -102,7 +102,7 @@ const AdminDashboard = () => {
       label: 'Orders',
       value: stats.orders,
       icon: ShoppingCart,
-      color: '#ff6b00',
+      color: '#16a34a',
       change: '+23%',
       isPositive: true,
       desc: 'Total lifetime deliveries'
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
       label: 'Marketplace',
       value: marketplaceOverview.products || 0,
       icon: ShoppingBasket,
-      color: '#f59e0b',
+      color: '#16a34a',
       change: '+14%',
       isPositive: true,
       desc: 'Total active products'
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
       label: 'Menu Items',
       value: stats.foods,
       icon: UtensilsCrossed,
-      color: '#ff6b00',
+      color: '#16a34a',
       change: '+8%',
       isPositive: true,
       desc: 'Available dishes listed'

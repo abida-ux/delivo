@@ -109,10 +109,18 @@ export default function AdminOrders() {
   };
 
   const resolveRestaurantName = (order) => {
+    if (order?.restaurants && order.restaurants.length > 0) {
+      const names = order.restaurants.map((r) => r.name).filter(Boolean);
+      if (names.length > 0) return names.join(', ');
+    }
+
+    const itemRestNames = [...new Set((order?.items || []).map((i) => i.restaurantName || i.foodId?.restaurant?.name).filter(Boolean))];
+    if (itemRestNames.length > 0) return itemRestNames.join(', ');
+
     const explicit = ((order && order.restaurant && order.restaurant.name) || order.restaurantName || '');
     if (explicit) return explicit;
 
-    const firstItem = (order.items && order.items[0]) || null;
+    const firstItem = (order?.items && order.items[0]) || null;
     const food = firstItem?.foodId || null;
     if (!food) return 'N/A';
 

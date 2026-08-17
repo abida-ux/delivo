@@ -81,34 +81,6 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    const mongoose = require('mongoose');
-    let finalRestaurantId = restaurantId;
-    const firstMeal = items.find((i) => i.productType !== 'marketplace');
-
-    if (firstMeal) {
-      const RestaurantFood = require('../models/RestaurantFood');
-      const RestaurantCombination = require('../models/RestaurantCombination');
-
-      let isValidSellingRest = false;
-      if (finalRestaurantId && mongoose.Types.ObjectId.isValid(finalRestaurantId) && mongoose.Types.ObjectId.isValid(firstMeal.foodId)) {
-        const link = firstMeal.isCombination
-          ? await RestaurantCombination.findOne({ restaurantId: finalRestaurantId, combinationId: firstMeal.foodId })
-          : await RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId: firstMeal.foodId });
-        if (link) isValidSellingRest = true;
-      }
-
-      if (!isValidSellingRest && firstMeal.foodId && mongoose.Types.ObjectId.isValid(firstMeal.foodId)) {
-        const autoLink = firstMeal.isCombination
-          ? await RestaurantCombination.findOne({ combinationId: firstMeal.foodId })
-          : await RestaurantFood.findOne({ foodId: firstMeal.foodId });
-        if (autoLink?.restaurantId) {
-          finalRestaurantId = autoLink.restaurantId;
-        } else {
-          finalRestaurantId = null;
-        }
-      }
-    }
-
     let subtotal = 0;
     const populatedItems = await buildPopulatedOrderItems(items, {
       getMarketplaceProductById: async (id) => {
@@ -119,50 +91,52 @@ exports.createOrder = async (req, res, next) => {
         const Food = require('../models/Food');
         return Food.findById(id);
       },
-      getRestaurantFoodById: async (foodId) => {
-        const RestaurantFood = require('../models/RestaurantFood');
-        return RestaurantFood.findOne({ restaurantId: finalRestaurantId, foodId });
-      },
       getCombinationById: async (id) => {
         const FoodCombination = require('../models/FoodCombination');
         return FoodCombination.findById(id);
       },
-      getRestaurantCombinationById: async (combinationId) => {
-        const RestaurantCombination = require('../models/RestaurantCombination');
-        return RestaurantCombination.findOne({ restaurantId: finalRestaurantId, combinationId });
-      },
-    }, finalRestaurantId);
+    }, restaurantId);
 
+    // Group items by restaurant
+    const restaurantGroups = {};
     for (const item of populatedItems) {
       subtotal += (item.price || 0) * (item.quantity || 1);
-    }
-
-    const finalRestaurantIdObj = finalRestaurantId;
-    let restaurant = null;
-    if (finalRestaurantId && mongoose.Types.ObjectId.isValid(finalRestaurantId)) {
-      restaurant = await Restaurant.findById(finalRestaurantId);
-      if (restaurant && restaurant.isOpen === false) {
-        return res.status(400).json({
-          success: false,
-          message: 'This restaurant is currently closed and cannot receive orders right now',
-        });
+      if (item.restaurantId) {
+        const rIdStr = item.restaurantId.toString();
+        if (!restaurantGroups[rIdStr]) {
+          restaurantGroups[rIdStr] = {
+            restaurantId: item.restaurantId,
+            name: item.restaurantName || 'Restaurant',
+            status: 'pending',
+            subtotal: 0,
+            deliveryFee: 0,
+          };
+        }
+        restaurantGroups[rIdStr].subtotal += (item.price || 0) * (item.quantity || 1);
       }
     }
 
+    const uniqueRestaurantIds = Object.keys(restaurantGroups);
+    const uniqueRestaurantCount = Math.max(1, uniqueRestaurantIds.length);
+    const finalRestaurantId = uniqueRestaurantIds[0] || restaurantId || null;
 
     const appSettings = (await AppSettings.findOne()) || {};
 
+    const baseDeliveryFee = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 20 : 0;
+    let expectedDeliveryFee = uniqueRestaurantCount * baseDeliveryFee;
+
     let parsedDeliveryFee = Number(deliveryFee);
-    if (Number.isNaN(parsedDeliveryFee) || parsedDeliveryFee < 0) {
-      parsedDeliveryFee = 0;
+    let finalDeliveryFee = !Number.isNaN(parsedDeliveryFee) && parsedDeliveryFee >= 0 ? parsedDeliveryFee : expectedDeliveryFee;
+
+    // Check free delivery threshold from settings
+    if (appSettings.freeDeliveryEnabled && appSettings.freeDeliveryMinimum && subtotal >= Number(appSettings.freeDeliveryMinimum)) {
+      finalDeliveryFee = 0;
     }
-    const deliveryFeeFromSettings = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 0 : 0;
-    let finalDeliveryFee = deliveryFee !== undefined && deliveryFee !== null ? parsedDeliveryFee : deliveryFeeFromSettings;
-    
+
     // Apply promo code discount securely on the server
     let discountAmount = 0;
     const { promoCode } = req.body;
-    
+
     if (promoCode) {
       const Offer = require('../models/Offer');
       const matchingOffer = await Offer.findOne({ code: promoCode.trim().toUpperCase() });
@@ -185,7 +159,13 @@ exports.createOrder = async (req, res, next) => {
         }
       }
     }
-    
+
+    // Distribute delivery fee equally among restaurant groups for accounting
+    const feePerRest = uniqueRestaurantCount > 0 ? Math.round(finalDeliveryFee / uniqueRestaurantCount) : 0;
+    Object.values(restaurantGroups).forEach((rg) => {
+      rg.deliveryFee = feePerRest;
+    });
+
     const totalPrice = Math.max(0, subtotal + finalDeliveryFee - discountAmount);
     const isFreeDelivery = finalDeliveryFee === 0;
 
@@ -193,7 +173,8 @@ exports.createOrder = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: `Prices or delivery fee have changed since you opened checkout. Expected KES ${expectedTotal}, but current total is KES ${totalPrice.toFixed(2)}. Please review and try again.`,
-        priceChange: true
+        priceChange: true,
+        currentTotal: totalPrice,
       });
     }
 
@@ -216,12 +197,13 @@ exports.createOrder = async (req, res, next) => {
       }
     }
 
-    // ✅ Create order with userId (if authenticated) or guest info (if guest)
+    // Create order with multi-restaurant fields
     const order = await Order.create({
       userId: userId || undefined,
       guestEmail: guestEmail || undefined,
       guestPhone: guestPhone || undefined,
       restaurantId: finalRestaurantId || undefined,
+      restaurants: Object.values(restaurantGroups),
       deliveryLatitude: deliveryLatitude ? parseFloat(deliveryLatitude) : 0,
       deliveryLongitude: deliveryLongitude ? parseFloat(deliveryLongitude) : 0,
       items: populatedItems,
@@ -275,12 +257,7 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-
     await order.populate('items.foodId');
-
-    const restaurantOwner = restaurant?.ownerId
-      ? await User.findOne({ _id: restaurant.ownerId, role: 'restaurant' })
-      : null;
 
     try {
       const orderIdShort = order._id.toString().slice(-6).toUpperCase();
@@ -310,52 +287,37 @@ exports.createOrder = async (req, res, next) => {
         }
       }
 
-      // 2. Send Restaurant Owner Notification strictly to restaurant owner
-      if (restaurantOwner?._id) {
-        const restaurantPayload = {
-          title: 'New Order Received',
-          message: `Your store received new order #${orderIdShort} for KES ${totalPrice}.`,
-          url: '/restaurant/orders',
-          tag: 'delivo-restaurant-order',
-        };
-        notificationPromises.push(
-          createInAppNotification({
-            userId: restaurantOwner._id,
-            title: restaurantPayload.title,
-            message: restaurantPayload.message,
-            type: 'order',
-          }).catch(err => console.error(`Restaurant in-app notification error for user ${restaurantOwner._id}:`, err.message)),
-          sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload }).catch(err => console.error(`Restaurant push notification error for user ${restaurantOwner._id}:`, err.message))
-        );
+      // 2. Send notification to all involved restaurant owners
+      for (const restGroup of Object.values(restaurantGroups)) {
+        const rDoc = await Restaurant.findById(restGroup.restaurantId);
+        if (rDoc?.ownerId) {
+          const restaurantOwner = await User.findOne({ _id: rDoc.ownerId, role: 'restaurant' });
+          if (restaurantOwner?._id) {
+            const restaurantPayload = {
+              title: 'New Order Received',
+              message: `Your kitchen received new order #${orderIdShort} for KES ${restGroup.subtotal}.`,
+              url: '/restaurant/orders',
+              tag: 'delivo-restaurant-order',
+            };
+            notificationPromises.push(
+              createInAppNotification({
+                userId: restaurantOwner._id,
+                title: restaurantPayload.title,
+                message: restaurantPayload.message,
+                type: 'order',
+              }).catch(err => console.error(`Restaurant in-app notification error for user ${restaurantOwner._id}:`, err.message)),
+              sendPushToUser({ userId: restaurantOwner._id, payload: restaurantPayload }).catch(err => console.error(`Restaurant push notification error for user ${restaurantOwner._id}:`, err.message))
+            );
+          }
+        }
       }
 
-      // 3. Send Customer Order Confirmation (Push & In-App) - Only for non-Mpesa (Cash on Delivery) orders, since M-Pesa flow sends its own status confirmations.
-      if (customerUser?._id && paymentMethod !== 'mpesa') {
-        const customerPayload = {
-          title: 'Order Placed successfully',
-          message: `Your order #${orderIdShort} has been placed successfully. We are preparing it now!`,
-          url: '/customer/orders',
-          tag: `delivo-customer-order-${order._id}`,
-        };
-        notificationPromises.push(
-          createInAppNotification({
-            userId: customerUser._id,
-            title: customerPayload.title,
-            message: customerPayload.message,
-            type: 'order',
-          }).catch(err => console.error(`Customer in-app notification error:`, err.message)),
-          sendPushToUser({ userId: customerUser._id, payload: customerPayload }).catch(err => console.error(`Customer push notification error:`, err.message))
-        );
-      }
-
-      // Run all notification dispatches concurrently in background without blocking response
       if (notificationPromises.length > 0) {
         Promise.all(notificationPromises).catch(err => console.error('Notification dispatch batch failed:', err));
       }
     } catch (notificationError) {
       console.error('⚠️ Order notifications failed:', notificationError.message || notificationError);
     }
-
 
     console.log('✅ Order created successfully:', order._id);
 

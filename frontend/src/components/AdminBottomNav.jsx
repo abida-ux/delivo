@@ -88,7 +88,7 @@ const AdminBottomNav = () => {
                   position: 'absolute',
                   top: '-6px',
                   right: '-10px',
-                  background: 'var(--color-orange)',
+                  background: '#16a34a',
                   color: '#fff',
                   fontSize: '9px',
                   fontWeight: '700',

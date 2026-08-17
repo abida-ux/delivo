@@ -23,13 +23,22 @@ const CartSchema = new mongoose.Schema({
       ref: 'MarketplaceProduct',
       required: false,
     },
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      default: null,
+    },
+    restaurantName: {
+      type: String,
+      default: null,
+    },
     name: {
       type: String,
       required: true,
     },
     price: {
       type: Number,
-      required: true,
+      default: null,
     },
     image: {
       type: String,

@@ -222,8 +222,8 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
                     fontSize: '13px',
                     fontWeight: '600',
                     cursor: 'pointer',
-                    border: selectedCategories.includes(cat._id) ? '1.5px solid #f97316' : '1.5px solid #d1d5db',
-                    background: selectedCategories.includes(cat._id) ? '#f97316' : 'white',
+                    border: selectedCategories.includes(cat._id) ? '1.5px solid #16a34a' : '1.5px solid #d1d5db',
+                    background: selectedCategories.includes(cat._id) ? '#16a34a' : 'white',
                     color: selectedCategories.includes(cat._id) ? 'white' : '#4b5563',
                     transition: 'all 0.2s'
                   }}
@@ -239,7 +239,7 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#f97316',
+                color: '#16a34a',
                 fontWeight: '700',
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -253,8 +253,8 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
             </button>
 
             {createNewCategory && (
-              <div style={{ border: '1px dashed #f97316', padding: '16px', borderRadius: '12px', background: 'rgba(249, 115, 22, 0.02)', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#ea580c' }}>New Category Details</h4>
+              <div style={{ border: '1px dashed #16a34a', padding: '16px', borderRadius: '12px', background: 'rgba(22, 163, 74, 0.04)', marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#15803d' }}>New Category Details</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group" style={{ margin: 0 }}>
                     <label>Category Name *</label>

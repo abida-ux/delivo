@@ -179,7 +179,12 @@ const RiderOrderDetails = () => {
           <div className="available-orders-grid">
             {(order.items || []).map((item, idx) => (
               <div key={item.foodId?._id || idx} className="summary-card">
-                <strong style={{ fontSize: '15px' }}>{item.foodId?.name || 'Item'}</strong>
+                <strong style={{ fontSize: '15px' }}>{item.name || item.foodId?.name || 'Item'}</strong>
+                {(item.restaurantName || item.foodId?.restaurant?.name) && (
+                  <span style={{ fontSize: '11.5px', color: '#0284c7', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                    Pickup from: {item.restaurantName || item.foodId?.restaurant?.name}
+                  </span>
+                )}
                 <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '13px' }}>
                   Qty: {item.quantity} × KES {item.price} = <strong>KES {item.quantity * item.price}</strong>
                 </p>

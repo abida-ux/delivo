@@ -254,7 +254,7 @@ const AdminCombinations = () => {
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0' }}>
-            <Loader className="animate-spin" size={48} style={{ color: '#f97316' }} />
+            <Loader className="animate-spin" size={48} style={{ color: '#16a34a' }} />
           </div>
         ) : combinations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0', color: '#9ca3af' }}>
@@ -275,7 +275,7 @@ const AdminCombinations = () => {
                   />
                   <div className="combo-card-content">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Layers size={18} style={{ color: '#f97316' }} />
+                      <Layers size={18} style={{ color: '#16a34a' }} />
                       <span className="combo-badge">Combo Meal</span>
                     </div>
                     <div className="combo-card-title" style={{ marginTop: '4px' }}>
@@ -303,7 +303,7 @@ const AdminCombinations = () => {
                         return (
                           <div key={idx} className="combo-component-item">
                             <span>• {comp.foodId?.name || 'Unknown Food'} ×{comp.defaultQuantity}</span>
-                            <span style={{ color: '#f97316', fontWeight: '600' }}>
+                            <span style={{ color: '#16a34a', fontWeight: '600' }}>
                               KES {(compPrice * (comp.defaultQuantity || 1)).toLocaleString()}
                             </span>
                           </div>
@@ -443,7 +443,7 @@ const AdminCombinations = () => {
                       <label>
                         Meal Combination Name *
                         {!isNameManuallyEdited && formData.name && (
-                          <span style={{ marginLeft: '8px', fontSize: '11px', color: '#f97316', fontWeight: '600' }}>
+                          <span style={{ marginLeft: '8px', fontSize: '11px', color: '#16a34a', fontWeight: '600' }}>
                             ✨ Auto-generated
                           </span>
                         )}

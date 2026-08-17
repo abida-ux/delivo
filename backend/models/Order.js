@@ -25,6 +25,29 @@ const OrderSchema = new mongoose.Schema({
     required: false,
     index: true,
   },
+  restaurants: [{
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true,
+    },
+    name: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'],
+      default: 'pending',
+    },
+    subtotal: {
+      type: Number,
+      default: 0,
+    },
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+  }],
   riderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -46,6 +69,21 @@ const OrderSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'MarketplaceProduct',
       required: false,
+    },
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: false,
+      index: true,
+    },
+    restaurantName: {
+      type: String,
+      default: '',
+    },
+    restaurantStatus: {
+      type: String,
+      enum: ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'],
+      default: 'pending',
     },
     quantity: {
       type: Number,

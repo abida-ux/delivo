@@ -209,7 +209,7 @@ const AdminRestaurantFoods = () => {
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-            <Loader className="animate-spin" size={48} style={{ color: '#f97316' }} />
+            <Loader className="animate-spin" size={48} style={{ color: '#16a34a' }} />
           </div>
         ) : !selectedRestaurantId ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b7280' }}>

@@ -32,7 +32,7 @@ exports.getCart = async (req, res) => {
 exports.addToCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { foodId, marketplaceProductId, quantity = 1, isCombination = false, components = [], price, productType = 'meal' } = req.body;
+    const { foodId, marketplaceProductId, quantity = 1, isCombination = false, components = [], price, productType = 'meal', restaurantId = null, restaurantName = null } = req.body;
 
     if (!foodId && !marketplaceProductId) {
       return res.status(400).json({
@@ -50,7 +50,7 @@ exports.addToCart = async (req, res) => {
       }
       name = product.name;
       image = product.image || product.images?.[0] || '';
-      itemPrice = price || product.price - (product.discount || 0);
+      itemPrice = price !== undefined && price !== null ? price : product.price - (product.discount || 0);
     } else if (isCombination) {
       const FoodCombination = require('../models/FoodCombination');
       const combo = await FoodCombination.findById(foodId);
@@ -59,7 +59,7 @@ exports.addToCart = async (req, res) => {
       }
       name = combo.name;
       image = combo.image;
-      itemPrice = price;
+      itemPrice = price !== undefined ? price : null;
     } else {
       const food = await Food.findById(foodId);
       if (!food) {
@@ -67,7 +67,7 @@ exports.addToCart = async (req, res) => {
       }
       name = food.name;
       image = food.image;
-      itemPrice = price || food.price;
+      itemPrice = price !== undefined ? price : (restaurantId ? food.price : null);
     }
 
     let cart = await Cart.findOne({ userId });
@@ -79,23 +79,34 @@ exports.addToCart = async (req, res) => {
       if (productType === 'marketplace') {
         return item.marketplaceProductId?.toString() === marketplaceProductId && item.productType === 'marketplace';
       }
-      if (item.foodId.toString() !== foodId) return false;
+      const itemFoodId = item.foodId?._id ? item.foodId._id.toString() : item.foodId?.toString();
+      if (itemFoodId !== foodId) return false;
       if (isCombination) {
-        if (item.components.length !== components.length) return false;
+        if (item.components?.length !== components.length) return false;
         return item.components.every(c1 => 
-          components.some(c2 => c2.foodId.toString() === c1.foodId.toString() && c2.quantity === c1.quantity)
+          components.some(c2 => c2.foodId?.toString() === c1.foodId?.toString() && c2.quantity === c1.quantity)
         );
       }
-      return true;
+      // If restaurantId matches or both null
+      const itemRest = item.restaurantId?.toString() || null;
+      const targetRest = restaurantId ? restaurantId.toString() : null;
+      return itemRest === targetRest;
     });
 
     if (existingItem) {
       existingItem.quantity += parseInt(quantity);
+      if (price !== undefined && price !== null) existingItem.price = price;
+      if (restaurantId) {
+        existingItem.restaurantId = restaurantId;
+        existingItem.restaurantName = restaurantName;
+      }
     } else {
       cart.items.push({
         productType,
         foodId: productType === 'marketplace' ? undefined : foodId,
         marketplaceProductId: productType === 'marketplace' ? marketplaceProductId : undefined,
+        restaurantId: restaurantId || null,
+        restaurantName: restaurantName || null,
         name,
         price: itemPrice,
         image,
@@ -123,6 +134,54 @@ exports.addToCart = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error adding to cart',
+      error: error.message,
+    });
+  }
+};
+
+// Update item restaurant and price in cart
+exports.updateCartItemRestaurant = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { foodId, restaurantId, restaurantName, price } = req.body;
+
+    if (!foodId) {
+      return res.status(400).json({ success: false, message: 'foodId is required' });
+    }
+
+    let cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ success: false, message: 'Cart not found' });
+    }
+
+    const item = cart.items.find((i) => {
+      const iFoodId = i.foodId?._id ? i.foodId._id.toString() : i.foodId?.toString();
+      return iFoodId === foodId.toString();
+    });
+
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Item not found in cart' });
+    }
+
+    item.restaurantId = restaurantId || null;
+    item.restaurantName = restaurantName || null;
+    if (price !== undefined && price !== null) {
+      item.price = Number(price);
+    }
+
+    await cart.save();
+    await cart.populate('items.foodId');
+    await cart.populate('items.marketplaceProductId');
+
+    res.status(200).json({
+      success: true,
+      message: 'Cart item restaurant updated',
+      cart,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating cart item restaurant',
       error: error.message,
     });
   }
@@ -291,7 +350,7 @@ exports.mergeCart = async (req, res) => {
       // Check if identical item already exists in user cart
       const existingItem = cart.items.find((userItem) => {
         const userFoodId = typeof userItem.foodId === 'object' ? userItem.foodId._id : userItem.foodId;
-        if (userFoodId.toString() !== foodId.toString()) return false;
+        if (userFoodId?.toString() !== foodId.toString()) return false;
         
         if (isCombination) {
           if (!userItem.isCombination) return false;
@@ -304,7 +363,10 @@ exports.mergeCart = async (req, res) => {
             })
           );
         }
-        return !userItem.isCombination;
+
+        const userRest = userItem.restaurantId?.toString() || null;
+        const guestRest = guestItem.restaurantId?.toString() || null;
+        return userRest === guestRest && !userItem.isCombination;
       });
 
       if (existingItem) {
@@ -312,8 +374,10 @@ exports.mergeCart = async (req, res) => {
       } else {
         cart.items.push({
           foodId,
+          restaurantId: guestItem.restaurantId || null,
+          restaurantName: guestItem.restaurantName || null,
           name: guestItem.name,
-          price: parseFloat(guestItem.price) || 0,
+          price: guestItem.price !== undefined && guestItem.price !== null ? parseFloat(guestItem.price) : null,
           image: guestItem.image,
           quantity: parseInt(guestItem.quantity || 1, 10),
           isCombination,

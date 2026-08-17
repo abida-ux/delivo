@@ -123,7 +123,7 @@ const AdminCategories = () => {
 
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0' }}>
-            <Loader className="animate-spin" size={48} style={{ color: '#f97316' }} />
+            <Loader className="animate-spin" size={48} style={{ color: '#16a34a' }} />
           </div>
         ) : (
           <div className="categories-grid">

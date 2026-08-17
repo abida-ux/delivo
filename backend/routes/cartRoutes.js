@@ -5,6 +5,7 @@ const {
   addToCart,
   removeFromCart,
   updateCartItem,
+  updateCartItemRestaurant,
   clearCart,
   mergeCart,
 } = require('../controllers/cartController');
@@ -21,6 +22,9 @@ router.post('/add', addToCart);
 
 // Update item quantity
 router.put('/update/:foodId', updateCartItem);
+
+// Update item restaurant and price
+router.put('/item-restaurant', updateCartItemRestaurant);
 
 // Remove item from cart
 router.delete('/remove/:foodId', removeFromCart);

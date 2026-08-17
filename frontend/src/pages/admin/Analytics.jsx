@@ -198,7 +198,7 @@ const Analytics = () => {
                     className="bar"
                     style={{
                       height: `${(data.orders / 220) * 100}%`,
-                      backgroundColor: '#ff6b35',
+                      backgroundColor: '#16a34a',
                     }}
                   ></div>
                   <span className="label">{data.label}</span>

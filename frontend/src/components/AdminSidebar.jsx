@@ -166,7 +166,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
               {newOrdersCount > 0 && (
                 <span className="sidebar-badge" style={{
                   marginLeft: 'auto',
-                  background: 'var(--color-orange)',
+                  background: '#16a34a',
                   color: '#fff',
                   fontSize: '11px',
                   fontWeight: '700',

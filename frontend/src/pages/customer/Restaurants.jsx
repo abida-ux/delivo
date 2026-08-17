@@ -102,7 +102,11 @@ const Restaurants = () => {
       setComboComponents(mapped);
       setCustomizingCombo(food);
     } else {
-      addItem(food, 1);
+      addItem(food, 1, {
+        restaurantId: restaurant?._id || restaurantId,
+        name: restaurant?.name || 'Restaurant',
+        price: food.price,
+      });
     }
   };
 
@@ -139,7 +143,11 @@ const Restaurants = () => {
       })),
     };
 
-    addItem(customizedItem, 1);
+    addItem(customizedItem, 1, {
+      restaurantId: restaurant?._id || restaurantId,
+      name: restaurant?.name || 'Restaurant',
+      price: comboPrice,
+    });
     setCustomizingCombo(null);
   };
 

@@ -88,9 +88,9 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #ff6b35;
+  border-color: #16a34a;
   background: white;
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
 .form-group input:disabled,
@@ -118,7 +118,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: linear-gradient(135deg, #ff6b35 0%, #ff5722 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   color: white;
   border: none;
   padding: 14px 20px;
@@ -132,7 +132,7 @@
 
 .admin-notifications-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3);
 }
 
 .admin-notifications-submit:active:not(:disabled) {

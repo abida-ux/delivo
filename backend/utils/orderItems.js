@@ -1,26 +1,16 @@
 const Food = require('../models/Food');
 const FoodCombination = require('../models/FoodCombination');
 const MarketplaceProduct = require('../models/MarketplaceProduct');
+const Restaurant = require('../models/Restaurant');
+const RestaurantFood = require('../models/RestaurantFood');
+const RestaurantCombination = require('../models/RestaurantCombination');
+const FoodFlashSale = require('../models/FoodFlashSale');
 
-async function buildPopulatedOrderItems(items = [], deps = {}, restaurantId = null) {
+async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestaurantId = null) {
   const mongoose = require('mongoose');
   const marketplaceLookup = deps.getMarketplaceProductById || ((id) => (mongoose.Types.ObjectId.isValid(id) ? MarketplaceProduct.findById(id) : null));
   const foodLookup = deps.getFoodById || ((id) => (mongoose.Types.ObjectId.isValid(id) ? Food.findById(id) : null));
-  const restaurantFoodLookup = deps.getRestaurantFoodById || (async (foodId) => {
-    if (!restaurantId || !mongoose.Types.ObjectId.isValid(restaurantId) || !mongoose.Types.ObjectId.isValid(foodId)) {
-      return null;
-    }
-    const RestaurantFood = require('../models/RestaurantFood');
-    return RestaurantFood.findOne({ restaurantId, foodId });
-  });
   const comboLookup = deps.getCombinationById || ((id) => (mongoose.Types.ObjectId.isValid(id) ? FoodCombination.findById(id) : null));
-  const restaurantCombinationLookup = deps.getRestaurantCombinationById || (async (combinationId) => {
-    if (!restaurantId || !mongoose.Types.ObjectId.isValid(restaurantId) || !mongoose.Types.ObjectId.isValid(combinationId)) {
-      return null;
-    }
-    const RestaurantCombination = require('../models/RestaurantCombination');
-    return RestaurantCombination.findOne({ restaurantId, combinationId });
-  });
 
   const populatedItems = [];
 
@@ -44,32 +34,55 @@ async function buildPopulatedOrderItems(items = [], deps = {}, restaurantId = nu
       continue;
     }
 
+    const targetRestaurantId = item.restaurantId || fallbackRestaurantId;
+    if (!targetRestaurantId || !mongoose.Types.ObjectId.isValid(targetRestaurantId)) {
+      const foodName = item.name || 'food item';
+      throw new Error(`Please select a restaurant for '${foodName}' in your cart.`);
+    }
+
+    // Lookup restaurant
+    const restaurant = await Restaurant.findById(targetRestaurantId);
+    if (!restaurant) {
+      throw new Error(`Restaurant for item '${item.name || 'food'}' was not found.`);
+    }
+    if (restaurant.isOpen === false) {
+      throw new Error(`Restaurant '${restaurant.name}' is currently closed and cannot receive orders.`);
+    }
+
     if (item.isCombination) {
-      const combo = await comboLookup(item.foodId);
+      const combo = await comboLookup(item.foodId || item.combinationId);
       if (!combo) {
-        throw new Error(`Combination meal with ID ${item.foodId} not found`);
+        throw new Error(`Combination meal with ID ${item.foodId || item.combinationId} not found`);
       }
 
       let comboPrice = 0;
       for (const component of item.components || []) {
-        const restaurantFood = await restaurantFoodLookup(component.foodId);
-        const componentPrice = restaurantFood?.price || 0;
+        const restFood = await RestaurantFood.findOne({
+          restaurantId: targetRestaurantId,
+          foodId: component.foodId,
+        });
+        const componentPrice = restFood?.price || 0;
         comboPrice += componentPrice * (component.quantity || 1);
       }
 
       if (comboPrice === 0) {
-        const restaurantCombination = await restaurantCombinationLookup(item.foodId);
-        comboPrice = restaurantCombination?.price || 0;
+        const restCombo = await RestaurantCombination.findOne({
+          restaurantId: targetRestaurantId,
+          combinationId: item.foodId || item.combinationId,
+        });
+        comboPrice = restCombo?.price || 0;
       }
 
       populatedItems.push({
         productType: 'meal',
-        foodId: item.foodId,
+        foodId: item.foodId || item.combinationId,
+        restaurantId: restaurant._id,
+        restaurantName: restaurant.name,
         quantity: item.quantity || 1,
         price: comboPrice || item.price || 0,
         name: combo.name,
         isCombination: true,
-        combinationId: item.foodId,
+        combinationId: item.foodId || item.combinationId,
         components: item.components || undefined,
         categoryType: item.categoryType || 'meal',
       });
@@ -81,26 +94,29 @@ async function buildPopulatedOrderItems(items = [], deps = {}, restaurantId = nu
       throw new Error(`Food item with ID ${item.foodId} not found`);
     }
 
-    const restaurantFood = await restaurantFoodLookup(item.foodId);
+    const restaurantFood = await RestaurantFood.findOne({
+      restaurantId: targetRestaurantId,
+      foodId: item.foodId,
+    });
+
     if (!restaurantFood) {
-      throw new Error(`Food item '${food.name}' is not sold by this restaurant.`);
+      throw new Error(`Food item '${food.name}' is not sold by ${restaurant.name}.`);
     }
     if (restaurantFood.availability === false) {
-      throw new Error(`Food item '${food.name}' is currently sold out.`);
+      throw new Error(`Food item '${food.name}' is currently sold out at ${restaurant.name}.`);
     }
 
     // Resolve flash sale price if active
-    const FoodFlashSale = require('../models/FoodFlashSale');
     const now = new Date();
     const activeFlashSale = await FoodFlashSale.findOne({
       startAt: { $lte: now },
       endAt: { $gt: now },
-      'items.foodId': item.foodId
+      'items.foodId': item.foodId,
     });
 
-    let finalPrice = restaurantFood.price || item.price || 0;
+    let finalPrice = restaurantFood.price;
     if (activeFlashSale) {
-      const flashItem = activeFlashSale.items.find(i => i.foodId.toString() === item.foodId.toString());
+      const flashItem = activeFlashSale.items.find((i) => i.foodId.toString() === item.foodId.toString());
       if (flashItem) {
         finalPrice = flashItem.salePrice;
       }
@@ -109,6 +125,8 @@ async function buildPopulatedOrderItems(items = [], deps = {}, restaurantId = nu
     populatedItems.push({
       productType: 'meal',
       foodId: item.foodId,
+      restaurantId: restaurant._id,
+      restaurantName: restaurant.name,
       quantity: item.quantity || 1,
       price: finalPrice,
       name: food.name,

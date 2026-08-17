@@ -1,25 +1,23 @@
-import {useState, useEffect} from 'react';
-import { Trash2, Edit, Search, Plus, Star, Store, Layers } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Trash2, Edit, Search, Plus, Star, Store, Layers, Utensils } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
+import api, { getAllFoods, deleteFood, updateFood, createFood, getAllRestaurants } from '../../services/api';
 import AdminEditFoodModal from './AdminEditFoodModal';
 import AdminCreateFoodModal from './AdminCreateFoodModal';
-import { getAllFoods, deleteFood, updateFood, createFood, getAllRestaurants } from '../../services/api';
-import api from '../../services/api';
 import { resolveImageUrl } from '../../utils/placeholderImage';
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminFoods.css';
 
-
 const AdminFoods = () => {
   const [foods, setFoods] = useState([]);
   const [filteredFoods, setFilteredFoods] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingFood, setEditingFood] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [restaurants, setRestaurants] = useState([]);
 
   useEffect(() => {
     fetchFoods();
@@ -29,24 +27,17 @@ const AdminFoods = () => {
   const fetchFoods = async () => {
     try {
       setLoading(true);
-      // Fetch both regular foods AND combinations and merge
-      const [foodsRes, combosRes] = await Promise.allSettled([
+      const [foodsData, combosRes] = await Promise.all([
         getAllFoods(),
-        api.get('/combinations'),
+        api.get('/combinations').then((r) => r.data).catch(() => ({ combinations: [] })),
       ]);
 
-      const regularFoods = foodsRes.status === 'fulfilled'
-        ? (Array.isArray(foodsRes.value) ? foodsRes.value : foodsRes.value?.data || [])
-        : [];
+      const regularFoods = Array.isArray(foodsData) ? foodsData : foodsData?.data || [];
+      const rawCombos = combosRes?.combinations || (Array.isArray(combosRes) ? combosRes : []);
 
-      const rawCombos = combosRes.status === 'fulfilled'
-        ? (combosRes.value?.data?.data || [])
-        : [];
-
-      // Compute price for each combo (sum of components)
-      const combosAsFood = rawCombos.map(combo => {
-        let comboPrice = combo.price;
-        if (comboPrice == null) {
+      const combosAsFood = rawCombos.map((combo) => {
+        let comboPrice = combo.pricing?.finalPrice ?? combo.finalPrice ?? combo.price ?? 0;
+        if (!comboPrice) {
           comboPrice = (combo.components || []).reduce((sum, comp) => {
             const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || 0);
             return sum + unitPrice * (comp.defaultQuantity || 1);
@@ -88,16 +79,24 @@ const AdminFoods = () => {
         if (value.name) names.push(value.name);
         return;
       }
-      names.push(String(value));
+      const matched = restaurants.find((r) => String(r._id) === String(value));
+      if (matched?.name) {
+        names.push(matched.name);
+      } else if (typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
+        names.push('Delivo Partner');
+      } else {
+        names.push(String(value));
+      }
     };
 
-    if (Array.isArray(food.restaurants)) {
+    if (Array.isArray(food.restaurants) && food.restaurants.length > 0) {
       food.restaurants.forEach(addName);
     } else if (food.restaurant) {
       addName(food.restaurant);
     }
 
-    return names.filter(Boolean);
+    const filtered = names.filter(Boolean);
+    return filtered.length > 0 ? filtered : ['Delivo Partner'];
   };
 
   const handleSearch = (value) => {
@@ -121,14 +120,9 @@ const AdminFoods = () => {
   const handleSaveEdit = async (updatedData) => {
     try {
       await updateFood(editingFood._id, updatedData);
-      
-      // Close modal and reset state first
       setIsEditModalOpen(false);
       setEditingFood(null);
-      
-      // Refetch foods to ensure data consistency
       await fetchFoods();
-      
       alert('Food item updated successfully!');
       return true;
     } catch (error) {
@@ -140,7 +134,6 @@ const AdminFoods = () => {
 
   const handleCreateFood = async (newFoodData) => {
     try {
-      console.log('🍔 Creating food with data:', newFoodData);
       await createFood(newFoodData);
       setIsCreateModalOpen(false);
       await fetchFoods();
@@ -171,9 +164,10 @@ const AdminFoods = () => {
   return (
     <AdminDashboardLayout pageTitle="Foods Management">
       <div className="admin-foods">
+        {/* Top Header & Search Controls */}
         <div className="foods-header">
           <div className="search-box">
-            <Search size={20} />
+            <Search size={18} />
             <input
               type="text"
               placeholder="Search foods by name, category or restaurant..."
@@ -182,8 +176,8 @@ const AdminFoods = () => {
             />
           </div>
           <button className="add-btn" onClick={() => setIsCreateModalOpen(true)}>
-            <Plus size={20} />
-            Add Food
+            <Plus size={18} />
+            <span>Add Food</span>
           </button>
         </div>
 
@@ -193,74 +187,89 @@ const AdminFoods = () => {
             <p>Loading foods...</p>
           </div>
         ) : (
-          <div className="foods-grid">
-            {filteredFoods.length > 0 ? (
-              filteredFoods.map((food) => (
-                <div key={food._id} className={`food-item-card${food.isCombination ? ' food-item-card--combo' : ''}`}>
-                  <div
-                    className="food-image"
-                    style={{
-                      backgroundImage: `url(${resolveImageUrl(food.image)})`,
-                    }}
-                  >
-                    {food.isCombination ? (
-                      <span className="food-combo-badge">
-                        <Layers size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '3px' }} />
-                        Combo
-                      </span>
-                    ) : (
-                      <span className="food-rating">
-                        <Star size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px', fill: '#f59e0b', color: '#f59e0b' }} />
-                        {food.rating > 0 ? food.rating : 'Unrated'}
-                      </span>
+          <>
+            <div className="results-count-bar">
+              <span className="results-count-pill">
+                <Utensils size={13} />
+                <strong>{filteredFoods.length}</strong> {filteredFoods.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
 
-                    )}
-                  </div>
-
-                  <div className="food-details">
-                    <h3>{food.name}</h3>
-                    <p className="category">{food.category}</p>
-                    {!food.isCombination && (
-                      <p className="restaurant">
-                        <Store size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
-                        {getRestaurantNames(food).join(', ')}
-                      </p>
-                    )}
-                    {food.isCombination && food.components?.length > 0 && (
-                      <p className="restaurant" style={{ color: '#6b7280', fontSize: '12px' }}>
-                        {food.components.map(c => c.foodId?.name || 'Item').join(' + ')}
-                      </p>
-                    )}
-
-                    <div className="food-price">{formatCurrency(food.price || 0)}</div>
-
-                    <div className="food-actions">
-                      {!food.isCombination && (
-                        <button
-                          className="action-btn edit-btn"
-                          onClick={() => handleEdit(food)}
-                          title="Edit food"
-                        >
-                          <Edit size={16} />
-                        </button>
+            <div className="foods-grid">
+              {filteredFoods.length > 0 ? (
+                filteredFoods.map((food) => (
+                  <div key={food._id} className={`food-item-card${food.isCombination ? ' food-item-card--combo' : ''}`}>
+                    <div
+                      className="food-image"
+                      style={{
+                        backgroundImage: `url(${resolveImageUrl(food.image)})`,
+                      }}
+                    >
+                      {food.isCombination ? (
+                        <span className="food-combo-badge">
+                          <Layers size={11} /> Combo
+                        </span>
+                      ) : (
+                        <span className="food-rating">
+                          <Star size={12} fill="#f59e0b" color="#f59e0b" />
+                          {food.rating > 0 ? food.rating : 'Unrated'}
+                        </span>
                       )}
-                      <button
-                        className="action-btn delete-btn"
-                        onClick={() => handleDelete(food._id)}
-                        title="Delete food"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                    </div>
+
+                    <div className="food-details">
+                      <div className="food-header-block">
+                        <h3>{food.name}</h3>
+                        <p className="category">{food.category || 'General'}</p>
+                      </div>
+
+                      {!food.isCombination && (
+                        <div className="restaurant-meta-chip">
+                          <Store size={12} />
+                          <span>{getRestaurantNames(food).join(', ')}</span>
+                        </div>
+                      )}
+
+                      {food.isCombination && food.components?.length > 0 && (
+                        <div className="restaurant-meta-chip combo-components">
+                          <span>{food.components.map((c) => c.foodId?.name || 'Item').join(' + ')}</span>
+                        </div>
+                      )}
+
+                      <div className="food-price-tag">
+                        {formatCurrency(food.price || 0)}
+                      </div>
+
+                      <div className="food-actions">
+                        {!food.isCombination && (
+                          <button
+                            className="action-btn edit-btn"
+                            onClick={() => handleEdit(food)}
+                            title="Edit food"
+                          >
+                            <Edit size={14} />
+                            <span>Edit</span>
+                          </button>
+                        )}
+                        <button
+                          className="action-btn delete-btn"
+                          onClick={() => handleDelete(food._id)}
+                          title="Delete food"
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <p>No foods found</p>
                 </div>
-              ))
-            ) : (
-              <div className="empty-state">
-                <p>No foods found</p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </>
         )}
 
         <AdminEditFoodModal

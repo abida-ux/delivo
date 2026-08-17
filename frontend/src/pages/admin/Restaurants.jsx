@@ -1,6 +1,5 @@
-import {useState, useEffect} from 'react';
-import { Trash2, Edit, Search, Plus, Star, MapPin } from 'lucide-react';
-
+import { useState, useEffect } from 'react';
+import { Trash2, Edit, Search, Plus, Star, Clock, Store } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { getAllRestaurants, deleteRestaurant, updateRestaurant, createRestaurant } from '../../services/api';
 import AdminEditRestaurantModal from './AdminEditRestaurantModal';
@@ -26,9 +25,7 @@ const Restaurants = () => {
     try {
       setLoading(true);
       const res = await getAllRestaurants();
-      console.log('🍽️ Restaurants Response:', res);
       const data = Array.isArray(res) ? res : res.data || [];
-      console.log('🍽️ Parsed Restaurants Data:', data);
       setRestaurants(data);
       setFilteredRestaurants(data);
     } catch (error) {
@@ -84,7 +81,6 @@ const Restaurants = () => {
 
   const handleCreateRestaurant = async (newRestaurantData) => {
     try {
-      console.log('🏪 Creating restaurant with data:', newRestaurantData);
       await createRestaurant(newRestaurantData);
       setIsCreateModalOpen(false);
       await fetchRestaurants();
@@ -98,12 +94,19 @@ const Restaurants = () => {
     }
   };
 
+  const formatDeliveryTime = (time) => {
+    if (!time) return '30 mins';
+    const clean = String(time).replace(/\s*mins?/gi, '').trim();
+    return `${clean || '30'} mins`;
+  };
+
   return (
     <AdminDashboardLayout pageTitle="Restaurants Management">
       <div className="admin-restaurants">
+        {/* Top Header & Search */}
         <div className="restaurants-header">
           <div className="search-box">
-            <Search size={20} />
+            <Search size={18} />
             <input
               type="text"
               placeholder="Search restaurants by name or cuisine..."
@@ -112,8 +115,8 @@ const Restaurants = () => {
             />
           </div>
           <button className="add-btn" onClick={() => setIsCreateModalOpen(true)}>
-            <Plus size={20} />
-            Add Restaurant
+            <Plus size={18} />
+            <span>Add Restaurant</span>
           </button>
         </div>
 
@@ -124,9 +127,13 @@ const Restaurants = () => {
           </div>
         ) : (
           <>
-            <div style={{ marginBottom: '10px', fontSize: '14px', color: '#666' }}>
-              Total: {restaurants.length} restaurants found
+            <div className="results-count-bar">
+              <span className="results-count-pill">
+                <Store size={13} />
+                <strong>{filteredRestaurants.length}</strong> {filteredRestaurants.length === 1 ? 'restaurant' : 'restaurants'}
+              </span>
             </div>
+
             <div className="restaurants-grid">
               {filteredRestaurants.length > 0 ? (
                 filteredRestaurants.map((restaurant) => (
@@ -147,19 +154,20 @@ const Restaurants = () => {
                     </div>
 
                     <div className="restaurant-info">
-                      <h3>{restaurant.name}</h3>
-                      <p className="cuisine">{restaurant.cuisine}</p>
+                      <div className="restaurant-header-block">
+                        <h3>{restaurant.name}</h3>
+                        <p className="cuisine">{restaurant.cuisine || 'Fast Food'}</p>
+                      </div>
 
                       <div className="restaurant-meta">
                         <div className="rating">
-                          <Star size={16} />
+                          <Star size={13} fill="#f59e0b" color="#f59e0b" />
                           <span>{restaurant.rating || 4.5}</span>
                         </div>
                         <div className="delivery-time">
-                          <MapPin size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }} />
-                          {restaurant.deliveryTime || 30} mins
+                          <Clock size={13} />
+                          <span>{formatDeliveryTime(restaurant.deliveryTime)}</span>
                         </div>
-
                       </div>
 
                       <div className="card-actions">
@@ -167,13 +175,15 @@ const Restaurants = () => {
                           className="action-btn edit-btn"
                           onClick={() => handleEdit(restaurant)}
                         >
-                          <Edit size={16} />
+                          <Edit size={14} />
+                          <span>Edit</span>
                         </button>
                         <button
                           className="action-btn delete-btn"
                           onClick={() => handleDelete(restaurant._id)}
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
+                          <span>Delete</span>
                         </button>
                       </div>
                     </div>

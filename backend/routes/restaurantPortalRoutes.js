@@ -36,6 +36,14 @@ const ensureRestaurantOwner = async (req, res, next) => {
   }
 };
 
+const isItemForRestaurant = (item, restaurantId) => {
+  if (!item) return false;
+  const restIdStr = restaurantId.toString();
+  if (item.restaurantId?.toString() === restIdStr) return true;
+  if (item.foodId?.restaurant?.toString() === restIdStr) return true;
+  return false;
+};
+
 router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
     const restaurant = req.restaurant;
@@ -52,7 +60,7 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
       .lean();
 
     const restaurantOrders = orders.filter((order) =>
-      order.items.some((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString())
+      order.items.some((item) => isItemForRestaurant(item, restaurant._id))
     );
 
     const todayOrders = restaurantOrders.filter((order) => order.createdAt >= today && order.createdAt < tomorrow);
@@ -60,19 +68,19 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
     const pendingOrders = restaurantOrders.filter((order) => ['pending', 'confirmed', 'preparing', 'on-delivery'].includes(order.status));
 
     const revenue = completedOrders.reduce((sum, order) => {
-      const items = order.items.filter((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString());
+      const items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
       const subtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);
 
     const todayRevenue = todayOrders.reduce((sum, order) => {
-      const items = order.items.filter((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString());
+      const items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
       const subtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);
 
     const totalFoodsSold = restaurantOrders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => {
-      return item.foodId?.restaurant?.toString() === restaurant._id.toString() ? itemSum + Number(item.quantity || 0) : itemSum;
+      return isItemForRestaurant(item, restaurant._id) ? itemSum + Number(item.quantity || 0) : itemSum;
     }, 0), 0);
 
     const restaurantProfile = restaurant.toObject ? restaurant.toObject() : { ...restaurant };
@@ -115,9 +123,18 @@ router.get('/orders', authenticate, ensureRestaurantOwner, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const restaurantOrders = orders.filter((order) =>
-      order.items.some((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString())
-    );
+    const restaurantOrders = orders
+      .filter((order) => order.items.some((item) => isItemForRestaurant(item, restaurant._id)))
+      .map((order) => {
+        const myItems = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+        const mySubtotal = myItems.reduce((sum, item) => sum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
+        return {
+          ...order,
+          items: myItems,
+          restaurantSubtotal: mySubtotal,
+          totalPrice: mySubtotal,
+        };
+      });
 
     const filteredOrders = restaurantOrders.filter((order) => {
       if (status && order.status !== status) return false;
@@ -144,9 +161,18 @@ router.get('/completed', authenticate, ensureRestaurantOwner, async (req, res) =
       .sort({ updatedAt: -1 })
       .lean();
 
-    const completed = orders.filter((order) =>
-      order.items.some((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString())
-    );
+    const completed = orders
+      .filter((order) => order.items.some((item) => isItemForRestaurant(item, restaurant._id)))
+      .map((order) => {
+        const myItems = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+        const mySubtotal = myItems.reduce((sum, item) => sum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
+        return {
+          ...order,
+          items: myItems,
+          restaurantSubtotal: mySubtotal,
+          totalPrice: mySubtotal,
+        };
+      });
 
     res.status(200).json({ success: true, data: completed });
   } catch (error) {
@@ -228,11 +254,11 @@ router.get('/revenue', authenticate, ensureRestaurantOwner, async (req, res) => 
     const restaurant = req.restaurant;
     const orders = await Order.find({ status: 'delivered' }).populate('items.foodId').lean();
     const restaurantOrders = orders.filter((order) =>
-      order.items.some((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString())
+      order.items.some((item) => isItemForRestaurant(item, restaurant._id))
     );
 
     const totalRevenue = restaurantOrders.reduce((sum, order) => {
-      const items = order.items.filter((item) => item.foodId?.restaurant?.toString() === restaurant._id.toString());
+      const items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
       const subtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);

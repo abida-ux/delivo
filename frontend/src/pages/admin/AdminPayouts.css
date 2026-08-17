@@ -183,8 +183,8 @@
 }
 
 .admin-stat-card .icon-box.orange {
-  background: #fff7ed;
-  color: #ea580c;
+  background: #fffbeb;
+  color: #d97706;
 }
 
 .admin-stat-card .icon-box.blue {
@@ -250,8 +250,8 @@
 }
 
 .filter-tab.active {
-  background: var(--delivo-orange, #ff6b35);
-  border-color: var(--delivo-orange, #ff6b35);
+  background: #16a34a;
+  border-color: #16a34a;
   color: white;
 }
 
@@ -279,7 +279,7 @@
 }
 
 .search-form input:focus {
-  border-color: #ff6b35;
+  border-color: #16a34a;
 }
 
 .clear-search-btn {
@@ -432,9 +432,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #c2410c;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
   padding: 5px 11px;
   border-radius: 8px;
   font-size: 12px;
@@ -444,7 +444,7 @@
 }
 
 .retry-btn:hover:not(:disabled) {
-  background: #ffedd5;
+  background: #dbeafe;
 }
 
 .retry-btn:disabled {

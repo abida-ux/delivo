@@ -1,0 +1,295 @@
+/* ================================================
+   RESTAURANT PICKER MODAL & BOTTOM SHEET
+   ================================================ */
+
+.rest-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: restPickerFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes restPickerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rest-picker-sheet {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: restPickerScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes restPickerScaleUp {
+  from {
+    transform: scale(0.94) translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile Bottom Sheet Appearance */
+@media (max-width: 600px) {
+  .rest-picker-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .rest-picker-sheet {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 24px 24px 0 0;
+    animation: restPickerSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes restPickerSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.rest-picker-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.rest-picker-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rest-picker-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  color: #FF6B4A;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rest-picker-dish-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.rest-picker-close-btn {
+  background: #f1f5f9;
+  border: none;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rest-picker-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.rest-picker-instruction {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  padding: 12px 20px 0;
+}
+
+/* Options list */
+.rest-picker-options {
+  padding: 14px 20px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rest-picker-loading {
+  text-align: center;
+  padding: 36px 0;
+  color: #64748b;
+  font-size: 13.5px;
+}
+
+.rest-picker-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #FF6B4A;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  animation: restPickerSpin 0.8s linear infinite;
+}
+
+@keyframes restPickerSpin {
+  to { transform: rotate(360deg); }
+}
+
+.rest-picker-error, .rest-picker-empty {
+  text-align: center;
+  padding: 36px 16px;
+  color: #64748b;
+}
+
+.rest-picker-error {
+  color: #ef4444;
+}
+
+.rest-picker-empty h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 10px 0 4px;
+}
+
+.rest-picker-empty p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Option Item */
+.rest-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.rest-option-item:hover {
+  border-color: #FF6B4A;
+  background: #fff8f6;
+  transform: translateY(-1px);
+}
+
+.rest-option-item.is-selected {
+  border-color: #FF6B4A;
+  background: #fff4f1;
+}
+
+.rest-option-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.rest-option-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rest-option-kitchen {
+  font-size: 14.5px;
+  font-weight: 750;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rest-selected-badge {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.rest-option-dish-price {
+  font-size: 13px;
+  color: #475569;
+}
+
+.rest-option-dish-price strong {
+  color: #FF6B4A;
+  font-weight: 800;
+}
+
+.rest-option-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.rest-tag {
+  font-size: 11.5px;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.rest-tag.rating {
+  font-weight: 700;
+  color: #b45309;
+}
+
+.rest-select-action-btn {
+  background: #f1f5f9;
+  color: #1e293b;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.rest-option-item:hover .rest-select-action-btn {
+  background: #FF6B4A;
+  color: #ffffff;
+}
+
+.rest-select-action-btn.selected {
+  background: #FF6B4A;
+  color: #ffffff;
+}
