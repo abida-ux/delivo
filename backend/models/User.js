@@ -68,6 +68,21 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  availableBalance: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  pendingPayoutBalance: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  totalWithdrawn: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   lastSeenAt: {
     type: Date,
     default: Date.now,

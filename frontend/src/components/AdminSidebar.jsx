@@ -19,6 +19,7 @@ import {
   ShoppingBasket,
   Flame,
   Terminal,
+  Wallet,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { getAllOrders } from '../services/api';
@@ -224,6 +225,13 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             >
               <Truck size={20} />
               <span>Riders</span>
+            </button>
+            <button
+              className={`nav-item ${isActive('/admin/payouts') ? 'active' : ''}`}
+              onClick={() => { navigate('/admin/payouts'); setIsOpen(false); }}
+            >
+              <Wallet size={20} />
+              <span>Rider Payouts</span>
             </button>
             <button
               className={`nav-item ${isActive('/admin/notifications') ? 'active' : ''}`}

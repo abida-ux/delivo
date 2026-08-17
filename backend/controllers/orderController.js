@@ -3,7 +3,7 @@ const Order = require('../models/Order');
 const Food = require('../models/Food');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
-
+const RiderLedger = require('../models/RiderLedger');
 const AppSettings = require('../models/AppSettings');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
@@ -496,8 +496,28 @@ exports.updateOrderStatus = async (req, res, next) => {
           message: 'Access denied. Riders cannot reassign orders.',
         });
       }
+
+      // Delivery State Machine checks for Rider
+      const validRiderTransitions = {
+        assigned: ['out-for-delivery', 'on-delivery'],
+        preparing: ['out-for-delivery', 'on-delivery'],
+        confirmed: ['out-for-delivery', 'on-delivery'],
+        'out-for-delivery': ['delivered'],
+        'on-delivery': ['delivered'],
+        delivered: [], // Cannot transition out of delivered
+      };
+
+      const currentStatus = order.status;
+      const allowedNext = validRiderTransitions[currentStatus] || [];
+      if (status && status !== currentStatus && !allowedNext.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot transition order status from '${currentStatus}' to '${status}'.`,
+        });
+      }
     }
 
+    const wasAlreadyDelivered = order.status === 'delivered';
     const nextStatus = status || order.status;
     const nextPaymentStatus = paymentStatus || order.paymentStatus;
     const nextRiderId = riderId || order.riderId;
@@ -536,9 +556,31 @@ exports.updateOrderStatus = async (req, res, next) => {
         riderUser.riderStatus = 'available';
         riderUser.isOnline = true;
         riderUser.currentOrderId = null;
-        if (nextStatus === 'delivered') {
+        if (nextStatus === 'delivered' && !wasAlreadyDelivered) {
+          const earnedFee = Number(order.deliveryFee) || 20;
           riderUser.totalDeliveries = (riderUser.totalDeliveries || 0) + 1;
-          riderUser.totalEarnings = Number(riderUser.totalEarnings || 0) + Number(order.totalPrice || 0) * 0.1;
+          riderUser.totalEarnings = Number(riderUser.totalEarnings || 0) + earnedFee;
+          riderUser.availableBalance = Number(riderUser.availableBalance || 0) + earnedFee;
+
+          // Record in RiderLedger
+          try {
+            await RiderLedger.create({
+              riderId: riderUser._id,
+              type: 'delivery_earning',
+              amount: earnedFee,
+              balanceAfter: riderUser.availableBalance,
+              referenceId: order._id,
+              referenceType: 'Order',
+              description: `Earnings for delivering Order #${order._id.toString().slice(-6).toUpperCase()}`,
+              metadata: {
+                orderId: order._id,
+                deliveryFee: order.deliveryFee,
+                totalPrice: order.totalPrice,
+              },
+            });
+          } catch (ledgerErr) {
+            console.error('⚠️ Rider ledger creation error on delivery:', ledgerErr);
+          }
         }
         riderUser.lastSeenAt = new Date();
         await riderUser.save();
@@ -768,6 +810,25 @@ exports.claimOrder = async (req, res, next) => {
     const riderUser = await User.findById(riderId);
     if (!riderUser || riderUser.role !== 'rider') {
       return res.status(403).json({ success: false, message: 'Riders only' });
+    }
+
+    if (riderUser.riderStatus === 'offline' || !riderUser.isOnline) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are currently offline. Please switch to Online before claiming orders.',
+      });
+    }
+
+    const hasActiveDelivery = await Order.exists({
+      riderId: riderUser._id,
+      status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] },
+    });
+
+    if (hasActiveDelivery || riderUser.currentOrderId || riderUser.riderStatus === 'on-delivery') {
+      return res.status(400).json({
+        success: false,
+        message: 'You already have an active delivery in progress. Please complete it before claiming another.',
+      });
     }
 
     const orderId = req.params.id;

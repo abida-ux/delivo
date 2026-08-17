@@ -617,10 +617,53 @@ export const getAdminLogs = async (page = 1, limit = 50, search = '') => {
   return res.data;
 };
 
+// ================= RIDER & ADMIN PAYOUTS (B2C) =================
+export const requestRiderWithdrawal = async (data) => {
+  const res = await api.post('/payouts/withdraw', data);
+  return res.data;
+};
+
+export const getRiderEarningsSummary = async () => {
+  const res = await api.get('/payouts/my-summary');
+  return res.data?.data || {};
+};
+
+export const getRiderPayouts = async (page = 1, limit = 20) => {
+  const res = await api.get('/payouts/my-payouts', {
+    params: { page, limit },
+  });
+  return res.data;
+};
+
+export const getRiderLedger = async (page = 1, limit = 30) => {
+  const res = await api.get('/payouts/my-ledger', {
+    params: { page, limit },
+  });
+  return res.data;
+};
+
+export const getAdminPayouts = async (params = {}) => {
+  const res = await api.get('/payouts/admin/all', { params });
+  return res.data;
+};
+
+export const adminRetryPayout = async (id) => {
+  const res = await api.post(`/payouts/admin/${id}/retry`);
+  return res.data;
+};
+
+export const getAdminMpesaBalance = async (refresh = false) => {
+  const res = await api.get('/payouts/admin/mpesa-balance', {
+    params: { refresh },
+  });
+  return res.data;
+};
+
 // ================= EXPORT UTILITIES =================
 export { getAPIUrl };
 
 export default api;
+
 
 
 

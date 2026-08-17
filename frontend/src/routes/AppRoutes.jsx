@@ -58,6 +58,7 @@ const AdminNotificationsPage = lazy(() => import("../pages/admin/AdminNotificati
 const Analytics = lazy(() => import("../pages/admin/Analytics"));
 const AdminSettings = lazy(() => import("../pages/admin/AdminSettings"));
 const AdminLogs = lazy(() => import("../pages/admin/AdminLogs"));
+const AdminPayouts = lazy(() => import("../pages/admin/AdminPayouts"));
 const RiderDashboard = lazy(() => import("../pages/rider/RiderDashboard"));
 const RiderOrderDetails = lazy(() => import("../pages/rider/RiderOrderDetails"));
 const RiderStores = lazy(() => import("../pages/rider/RiderStores"));
@@ -247,6 +248,14 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminLogs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/payouts"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminPayouts />
           </ProtectedRoute>
         }
       />

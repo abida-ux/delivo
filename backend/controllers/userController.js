@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Order = require('../models/Order');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const generateOTP = require('../utils/generateOTP');
@@ -727,10 +728,31 @@ exports.updateRiderStatus = async (req, res, next) => {
     }
 
     const previousStatus = user.riderStatus;
+
+    // Check if rider currently has an active delivery
+    const hasActiveDelivery = await Order.exists({
+      riderId: user._id,
+      status: { $in: ['assigned', 'out-for-delivery', 'on-delivery'] },
+    });
+
+    if (hasActiveDelivery && nextStatus === 'offline') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot go offline while you have an active delivery in progress.',
+      });
+    }
+
+    if (hasActiveDelivery && nextStatus === 'available') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot mark as available while on an active delivery. Please complete your current order first.',
+      });
+    }
+
     user.riderStatus = nextStatus;
     user.isOnline = nextStatus !== 'offline';
     user.lastSeenAt = new Date();
-    if (nextStatus === 'offline') {
+    if (nextStatus === 'offline' && !hasActiveDelivery) {
       user.currentOrderId = null;
     }
     await user.save();

@@ -34,6 +34,7 @@ const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const combinationRoutes = require('./routes/combinationRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const adminLogRoutes = require('./routes/adminLogRoutes');
+const payoutRoutes = require('./routes/payoutRoutes');
 const adminAuditLogger = require('./middleware/adminAuditLogger');
 
 
@@ -67,9 +68,10 @@ console.log(`  ✓ MPESA_KEY: ${process.env.MPESA_KEY || process.env.KEY ? '✓ 
 console.log(`  ✓ MPESA_SECRET: ${process.env.MPESA_SECRET || process.env.SECRET ? '✓ Set' : '❌ MISSING'}`);
 console.log(`  ✓ MPESA_BUSINESS_SHORTCODE: ${process.env.MPESA_BUSINESS_SHORTCODE || process.env.SHORTCODE ? '✓ Set' : '❌ MISSING'}`);
 console.log(`  ✓ MPESA_CALLBACK_URL: ${process.env.MPESA_CALLBACK_URL || process.env.CALLBACK_URL ? '✓ Set' : '❌ MISSING'}`);
-console.log(`  ✓ MPESA_BASE_URL: ${process.env.MPESA_BASE_URL ? process.env.MPESA_BASE_URL : 'NOT SET'}`);
-console.log(`  MPESA_KEY loaded: ${process.env.MPESA_KEY || process.env.KEY}`);
-console.log(`  MPESA_SECRET loaded: ${process.env.MPESA_SECRET || process.env.SECRET}`);
+console.log(`  ✓ MPESA_BASE_URL: ${process.env.MPESA_BASE_URL ? process.env.MPESA_BASE_URL : 'NOT SET (defaults to sandbox/production)'}`);
+console.log(`  ✓ MPESA_B2C_SHORTCODE: ${process.env.MPESA_B2C_SHORTCODE ? '✓ Set' : '⚠️ Fallback to Business Shortcode'}`);
+console.log(`  ✓ MPESA_B2C_INITIATOR_NAME: ${process.env.MPESA_B2C_INITIATOR_NAME ? '✓ Set' : '⚠️ Not configured (defaults to testapi)'}`);
+console.log(`  ✓ MPESA_B2C_SECURITY_CREDENTIAL: ${process.env.MPESA_B2C_SECURITY_CREDENTIAL || process.env.MPESA_B2C_INITIATOR_PASSWORD ? '✓ Configured' : '⚠️ Missing (required for live disbursements)'}`);
 
 // Connect to MongoDB
 connectDB();
@@ -164,6 +166,8 @@ app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/combinations', combinationRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/admin-logs', adminLogRoutes);
+app.use('/api/payouts', payoutRoutes);
+
 
 
 // Health check route

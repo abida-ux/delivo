@@ -34,7 +34,11 @@ const AdminLogSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now,
+    index: true,
   },
 });
 
+AdminLogSchema.index({ admin: 1, timestamp: -1 });
+
 module.exports = mongoose.model('AdminLog', AdminLogSchema);
+
