@@ -1,6 +1,7 @@
-import {useEffect, useRef, useState, useMemo} from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { getAllFoods, getActiveFoodFlashSales } from '../services/api';
+import { selectFreshPicksRecommendations } from '../utils/recommendations';
 import FoodCard from './FoodCard';
 import './TrendingFoods.css';
 
@@ -46,18 +47,23 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
     const fetchFoods = async (showLoading = true) => {
       try {
         if (showLoading) setLoading(true);
-        let foods = [];
         if (isFlashDeal) {
           const res = await getActiveFoodFlashSales();
-          foods = res.data || [];
+          const flashFoods = res.data || [];
+          setTrendingItems(flashFoods);
         } else {
-          foods = await getAllFoods();
+          const allFoods = await getAllFoods();
+          // Curate dynamic recommendation selection (6-10 items) instead of full catalog
+          const recommended = selectFreshPicksRecommendations(allFoods, {
+            targetCount: 8,
+            maxPerCategory: 2,
+            maxPerRestaurant: 2,
+          });
+          setTrendingItems(recommended);
         }
-        const itemsToSet = isFlashDeal ? foods : [...foods].sort(() => Math.random() - 0.5);
-        setTrendingItems(itemsToSet);
       } catch (err) {
-        console.error('Error fetching foods:', err);
-        setError('Failed to load foods');
+        console.error('Error fetching recommendations:', err);
+        setError('Failed to load recommendations');
       } finally {
         if (showLoading) setLoading(false);
       }
@@ -227,10 +233,10 @@ const TrendingFoods = ({ searchTerm = '', selectedCategory = null, onClearFilter
         {loading
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonFoodCard key={i} />)
           : filteredItems.length === 0
-          ? <p className="loading-text">
+            ? <p className="loading-text">
               {selectedCategory || searchTerm ? 'No foods match your search' : 'No foods available'}
             </p>
-          : filteredItems.map((item) => (
+            : filteredItems.map((item) => (
               <FoodCard key={item._id} food={item} onExpired={onExpired} />
             ))
         }

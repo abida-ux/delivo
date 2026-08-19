@@ -100,6 +100,24 @@ export const getRestaurantById = async (id) => {
 
 
 // ================= FOODS =================
+export const getFoodsCatalog = async (params = {}) => {
+  const res = await api.get('/foods', { params });
+  return res.data;
+};
+
+export const getPopularFoods = async (params = {}) => {
+  try {
+    const res = await api.get('/foods/popular', { params });
+    return res.data;
+  } catch (err) {
+    if (err.response && (err.response.status === 404 || err.response.status === 500)) {
+      const fallback = await api.get('/foods', { params: { limit: 6, sortBy: 'popular', ...params } });
+      return fallback.data;
+    }
+    throw err;
+  }
+};
+
 export const getAllFoods = async () => {
   if (foodsCache) {
     return foodsCache;
@@ -109,7 +127,7 @@ export const getAllFoods = async () => {
     return foodsPromise;
   }
 
-  foodsPromise = api.get('/foods')
+  foodsPromise = api.get('/foods', { params: { limit: 100 } })
     .then((res) => {
       const data = res.data.data || [];
       foodsCache = Array.isArray(data) ? data : [];

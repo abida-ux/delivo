@@ -495,7 +495,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
           {/* Header */}
           <div className="chk-header">
             <div className="chk-header-left">
-              <div className="chk-brand-badge">DELIVO</div>
+              <div className="chk-brand-logo">
+                <img src="/delivo.jpg" alt="Delivo" className="chk-logo-img" />
+              </div>
               <div>
                 <h2 className="chk-title">Complete your order</h2>
                 <p className="chk-subtitle">Almost there — confirm your details and pay securely.</p>

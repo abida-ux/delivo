@@ -37,10 +37,17 @@ setInterval(() => {
  * @param {Object} options - config options
  * @param {number} options.windowMs - time window in ms (default 60s)
  * @param {number} options.limit - normal limit threshold (default 60 hits)
+ * @param {boolean} options.strict - if true, strictly rejects any requests exceeding limit with 429
+ * @param {boolean} options.skipSuccessfulRequests - if true, successful responses (2xx/3xx) do not count toward failure limits
+ * @param {string} options.message - custom error message when rate limit is reached
+ * @param {function} options.keyGenerator - optional custom key generator function (req) => string
  */
 exports.smartRateLimiter = (options = {}) => {
   const windowMs = options.windowMs || 60000;
   const limit = options.limit || 60;
+  const isStrict = options.strict === true;
+  const skipSuccessfulRequests = options.skipSuccessfulRequests === true;
+  const customMessage = options.message;
 
   return async (req, res, next) => {
     // Generate intelligent key
@@ -48,8 +55,10 @@ exports.smartRateLimiter = (options = {}) => {
     const userAgent = req.headers['user-agent'] || 'no-agent';
     const userId = req.user ? req.user._id.toString() : 'guest';
     
-    // Key combines IP, user agent, user status, and request path
-    const key = `rl_${userId}_${clientIp}_${userAgent}_${req.baseUrl}${req.path}`;
+    // Key combines IP, user agent, user status, and request path (or custom generator)
+    const key = options.keyGenerator
+      ? options.keyGenerator(req)
+      : `rl_${userId}_${clientIp}_${userAgent}_${req.baseUrl}${req.path}`;
     
     const now = Date.now();
     let record = rateLimitStore.get(key);
@@ -59,6 +68,52 @@ exports.smartRateLimiter = (options = {}) => {
         hits: 0,
         resetTime: now + windowMs,
       };
+    }
+
+    if (isStrict) {
+      if (record.hits >= limit) {
+        const retryAfter = Math.max(1, Math.ceil((record.resetTime - now) / 1000));
+        const retryMins = Math.ceil(retryAfter / 60);
+        res.setHeader('Retry-After', retryAfter);
+        res.setHeader('X-RateLimit-Limit', limit);
+        res.setHeader('X-RateLimit-Remaining', 0);
+        res.setHeader('X-RateLimit-Reset', Math.ceil(record.resetTime / 1000));
+        
+        console.warn(`⚠️ Strict Rate Limiter blocked request from IP: ${clientIp}, Route: ${req.originalUrl} (${record.hits} attempts)`);
+        
+        const message = customMessage || `Too many attempts. Please wait ${retryMins} minute${retryMins > 1 ? 's' : ''} before trying again.`;
+        return res.status(429).json({
+          success: false,
+          message,
+          retryAfter,
+        });
+      }
+
+      record.hits += 1;
+      rateLimitStore.set(key, record);
+
+      const remaining = Math.max(0, limit - record.hits);
+      res.setHeader('X-RateLimit-Limit', limit);
+      res.setHeader('X-RateLimit-Remaining', remaining);
+      res.setHeader('X-RateLimit-Reset', Math.ceil(record.resetTime / 1000));
+
+      if (skipSuccessfulRequests) {
+        res.on('finish', () => {
+          if (res.statusCode >= 200 && res.statusCode < 400) {
+            const current = rateLimitStore.get(key);
+            if (current && current.hits > 0) {
+              current.hits -= 1;
+              if (current.hits === 0) {
+                rateLimitStore.delete(key);
+              } else {
+                rateLimitStore.set(key, current);
+              }
+            }
+          }
+        });
+      }
+
+      return next();
     }
 
     record.hits += 1;
@@ -85,14 +140,16 @@ exports.smartRateLimiter = (options = {}) => {
       return next();
     } else {
       // Stage 4: Temporary Block
-      const retryAfter = Math.ceil((record.resetTime - now) / 1000);
+      const retryAfter = Math.max(1, Math.ceil((record.resetTime - now) / 1000));
+      const retryMins = Math.ceil(retryAfter / 60);
       res.setHeader('Retry-After', retryAfter);
       
       console.warn(`⚠️ Rate Limiter blocked request from IP: ${clientIp}, User: ${userId}, Route: ${req.originalUrl}`);
       
+      const message = customMessage || `You're making requests a little too quickly. Please wait ${retryMins} minute${retryMins > 1 ? 's' : ''} and try again.`;
       return res.status(429).json({
         success: false,
-        message: "You're making requests a little too quickly. Please wait a few seconds and try again.",
+        message,
         retryAfter,
       });
     }

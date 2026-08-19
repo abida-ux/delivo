@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticate, optionalAuthenticate, authorizeRoles } = require('../middleware/authMiddleware');
 const {
   getAllFoods,
+  getPopularFoods,
   getFoodById,
   createFood,
   updateFood,
@@ -33,6 +34,7 @@ router.delete('/flash-sales/:id', authenticate, authorizeRoles('admin'), deleteF
 
 // Global Catalogue routes
 router.get('/', getAllFoods);
+router.get('/popular', getPopularFoods);
 router.get('/:id', optionalAuthenticate, getFoodById);
 
 router.get('/:foodId/restaurants', getFoodRestaurants);

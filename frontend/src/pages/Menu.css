@@ -1,216 +1,425 @@
 /* ================================================
-   MENU PAGE — Delivo Canonical Layout & Tight Grid
+   DELIVO MEALS / MENU PAGE — PREMIUM MARKETPLACE LAYOUT
    ================================================ */
 
 .menu-container {
   min-height: 100vh;
-  background: var(--color-page-bg, #f7f8fa);
-  padding-bottom: 48px;
+  background: var(--color-page-bg, #f8fafc);
+  padding-bottom: 64px;
 }
 
-/* ── Header ── */
-.menu-header {
-  background: var(--color-surface, #ffffff);
+/* ── Hero Header ── */
+.menu-hero-header {
+  background: #ffffff;
   border-bottom: 1px solid var(--delivo-border, #e2e8f0);
-  padding: 22px 20px 14px;
+  padding: 28px 20px 20px;
+}
+
+.menu-hero-content {
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .menu-header {
-    padding: 16px 14px 12px;
-  }
-}
-
-.menu-header h1 {
+.menu-title {
   font-family: var(--font-heading, inherit);
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 800;
-  color: var(--delivo-text-primary, #111827);
-  margin: 0 0 2px;
-  text-align: center;
-  letter-spacing: -0.01em;
+  color: var(--delivo-text-primary, #0f172a);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
 }
 
-.menu-header p {
-  font-size: 13px;
+.menu-subtitle {
+  font-size: 14px;
   color: var(--delivo-text-muted, #64748b);
-  margin: 0 0 12px;
-  text-align: center;
+  margin: 0 0 16px;
+  max-width: 500px;
 }
 
-/* ── Search box wrapper ── */
-.search-box-wrapper {
-  position: relative;
+/* ── Search Bar ── */
+.menu-search-wrapper {
   width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
+  max-width: 520px;
+  position: relative;
 }
 
-.search-box {
+.menu-search-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 10px;
+  padding: 10px 18px;
   background: #f1f5f9;
-  border: 1px solid transparent;
+  border: 1.5px solid transparent;
   border-radius: 9999px;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
-.search-box:focus-within {
+.menu-search-bar:focus-within {
   background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  border-color: var(--delivo-orange, #ff6b4a);
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.12);
 }
 
-.search-box svg {
+.menu-search-bar .search-icon {
   color: #94a3b8;
   flex-shrink: 0;
   transition: color 0.15s ease;
 }
 
-.search-box:focus-within svg {
-  color: #475569;
+.menu-search-bar:focus-within .search-icon {
+  color: var(--delivo-orange, #ff6b4a);
 }
 
-.search-box input {
+.menu-search-bar input {
   flex: 1;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 13px;
-  color: var(--delivo-text-primary, #111827);
+  font-size: 13.5px;
+  color: var(--delivo-text-primary, #0f172a);
   min-width: 0;
 }
 
-.search-box input::placeholder {
+.menu-search-bar input::placeholder {
   color: #94a3b8;
 }
 
-/* ── Suggestions Dropdown ── */
-.suggestions-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  z-index: 100;
-  overflow: hidden;
-}
-
-.suggestion-item {
+.search-clear-btn {
+  background: #e2e8f0;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  justify-content: center;
+  color: #64748b;
   cursor: pointer;
-  transition: background 0.15s ease;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.suggestion-item:last-child {
-  border-bottom: none;
-}
-
-.suggestion-item:hover {
-  background: #f8fafc;
-}
-
-.suggestion-image {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  object-fit: cover;
-  background: #f1f5f9;
+  transition: all 0.15s ease;
+  padding: 0;
   flex-shrink: 0;
 }
 
-.suggestion-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--delivo-text-primary, #111827);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.search-clear-btn:hover {
+  background: #cbd5e1;
+  color: #1e293b;
 }
 
-.suggestion-price {
-  font-size: 11.5px;
-  color: #64748b;
-  font-weight: 600;
+/* ── Sticky Compact Category Navigation Bar ── */
+.menu-category-sticky-bar {
+  position: sticky;
+  top: 56px;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--delivo-border, #e2e8f0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-/* ── Category filters ── */
-.category-filters {
+.menu-category-scroll-container {
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 10px 16px;
   overflow-x: auto;
   white-space: nowrap;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding: 10px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--delivo-border-subtle, #f1f5f9);
-  position: sticky;
-  top: 56px;
-  z-index: 10;
-  width: 100%;
 }
 
-.category-filters::-webkit-scrollbar {
+.menu-category-scroll-container::-webkit-scrollbar {
   display: none;
 }
 
 .category-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 13px;
+  gap: 6px;
+  padding: 7px 14px;
   border: 1px solid #e2e8f0;
   border-radius: 9999px;
   background: #ffffff;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--delivo-text-secondary, #4b5563);
+  color: var(--delivo-text-secondary, #475569);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s ease;
+  user-select: none;
 }
 
-.category-pill svg {
-  width: 13px;
-  height: 13px;
+.category-pill .pill-icon {
+  flex-shrink: 0;
 }
 
 .category-pill:hover {
-  border-color: var(--delivo-orange, #FF6B4A);
-  color: var(--delivo-orange, #FF6B4A);
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: var(--delivo-text-primary, #0f172a);
 }
 
 .category-pill.active {
-  background: var(--delivo-orange, #FF6B4A);
-  border-color: var(--delivo-orange, #FF6B4A);
+  background: var(--delivo-orange, #ff6b4a);
+  border-color: var(--delivo-orange, #ff6b4a);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 107, 74, 0.25);
+}
+
+.category-pill.active .pill-icon {
   color: #ffffff;
 }
 
-/* ── Foods Grid (Fluid Responsive Grid — Adapts to Screen Space & Zoom/Font Scale) ── */
+/* ── "More" Category Pill & Popover ── */
+.more-category-wrapper {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.more-pill {
+  padding-right: 12px;
+}
+
+.chevron-icon {
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+
+.chevron-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.secondary-categories-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid var(--delivo-border, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+  min-width: 210px;
+  max-width: 280px;
+  max-height: 340px;
+  overflow-y: auto;
+  z-index: 50;
+  padding: 6px;
+  animation: popoverFadeIn 0.15s ease;
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.popover-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 10px 4px;
+}
+
+.popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.popover-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popover-icon {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.popover-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.popover-item.selected {
+  background: #fff7ed;
+  color: var(--delivo-orange, #ff6b4a);
+  font-weight: 600;
+}
+
+.popover-item.selected .popover-icon,
+.popover-item.selected .check-icon {
+  color: var(--delivo-orange, #ff6b4a);
+}
+
+/* ── Main Content Area ── */
+.menu-main-content {
+  max-width: var(--content-max, 1280px);
+  margin: 0 auto;
+  padding: 24px 16px 0;
+}
+
+/* ── Popular on Delivo Section ── */
+.menu-popular-section {
+  margin-bottom: 32px;
+  background: #ffffff;
+  border: 1px solid var(--delivo-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sparkle-icon {
+  color: #f59e0b;
+}
+
+.section-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--delivo-text-primary, #0f172a);
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--delivo-text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popular-foods-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 185px));
+  gap: 16px 14px;
+}
+
+@media (max-width: 640px) {
+  .menu-popular-section {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .popular-foods-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+
+  .popular-foods-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .popular-foods-row .food-card {
+    flex: 0 0 150px;
+  }
+}
+
+/* ── Catalog Section Header ── */
+.catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--delivo-border, #e2e8f0);
+}
+
+.catalog-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catalog-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--delivo-text-primary, #0f172a);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.catalog-count-badge {
+  font-size: 12px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 3px 9px;
+  border-radius: 9999px;
+}
+
+.search-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.search-active-pill button {
+  background: transparent;
+  border: none;
+  color: #c2410c;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Foods Grid (Strictly surrounding layout, FoodCard is untouched) ── */
 .foods-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 185px));
   justify-content: flex-start;
   gap: 20px 14px;
-  padding: 16px 0 48px;
-  width: min(var(--content-max, 1280px), 100% - 2rem);
-  margin-inline: auto;
+  padding: 8px 0 32px;
   align-items: start;
 }
 
@@ -218,50 +427,158 @@
   width: 100%;
   min-width: 0;
   max-width: 185px;
-  height: auto;
 }
 
 @media (max-width: 640px) {
   .foods-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    justify-content: center;
     gap: 14px 10px;
-    padding: 12px 14px 36px;
-    width: 100%;
+    padding: 6px 0 24px;
   }
 
   .foods-grid .food-card {
     width: 100%;
-    min-width: 0;
     max-width: none;
   }
 }
 
-/* ── Loading/Error states ── */
-.loading {
-  padding: 48px 16px;
-  text-align: center;
+/* ── Infinite Scroll Sentinel & Indicators ── */
+.infinite-scroll-sentinel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0 16px;
+  min-height: 50px;
+}
+
+.loading-more-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid var(--delivo-border, #e2e8f0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 8px 18px;
+  border-radius: 9999px;
   font-size: 13px;
+  font-weight: 600;
+  color: var(--delivo-text-secondary, #475569);
+  animation: pulsePill 1.5s infinite ease-in-out;
+}
+
+.loading-more-pill .spinner-icon,
+.menu-loader-box .spinner-icon {
+  animation: spin 0.8s linear infinite;
+  color: var(--delivo-orange, #ff6b4a);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulsePill {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+}
+
+.end-of-catalog-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+/* ── Loading Skeleton / State ── */
+.menu-loading-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+}
+
+.menu-loader-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--delivo-text-muted, #64748b);
 }
 
-.error-message {
+/* ── Empty State ── */
+.menu-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 64px 20px;
+  background: #ffffff;
+  border: 1px solid var(--delivo-border, #e2e8f0);
+  border-radius: 16px;
+  margin: 16px 0;
+}
+
+.empty-icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.menu-empty-state h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--delivo-text-primary, #0f172a);
+  margin: 0 0 6px;
+}
+
+.menu-empty-state p {
+  font-size: 13.5px;
+  color: var(--delivo-text-muted, #64748b);
+  max-width: 440px;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.reset-filters-btn {
+  padding: 10px 20px;
+  background: var(--delivo-orange, #ff6b4a);
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 74, 0.25);
+}
+
+.reset-filters-btn:hover {
+  background: #f25417;
+  transform: translateY(-1px);
+}
+
+/* ── Error Banner ── */
+.menu-error-banner {
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 13px;
-  color: #dc2626;
-  margin: 16px auto;
-  width: min(var(--content-max, 1280px), 100% - 2rem);
-}
-
-.no-foods {
-  padding: 48px 16px;
-  text-align: center;
-}
-
-.no-foods p {
-  font-size: 14px;
-  color: var(--delivo-text-muted, #64748b);
+  color: #b91c1c;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 20px;
 }

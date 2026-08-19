@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from 'react';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Clock } from 'lucide-react';
 import { loginUser } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
@@ -18,6 +18,8 @@ const Login = ({ isModal = false }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showVerifySection, setShowVerifySection] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
 
   const emptyForm = {
     email: '',
@@ -31,11 +33,44 @@ const Login = ({ isModal = false }) => {
     if (isModal) {
       setFormData(emptyForm);
       setShowPassword(false);
+      setErrorMessage('');
+      setLockoutSeconds(0);
     }
   }, [isModal]);
 
+  // Lockout countdown timer
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+
+    const timer = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setErrorMessage('');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
+
+  const formatCountdown = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    if (m > 0) {
+      return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+    }
+    return `${s}s`;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (errorMessage && lockoutSeconds <= 0) {
+      setErrorMessage('');
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -45,10 +80,11 @@ const Login = ({ isModal = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
+    if (loading || lockoutSeconds > 0) return;
 
     try {
       setLoading(true);
+      setErrorMessage('');
 
       // Call API login endpoint
       const res = await loginUser(formData);
@@ -82,11 +118,17 @@ const Login = ({ isModal = false }) => {
     } catch (err) {
       console.error('LOGIN ERROR:', err);
       const remote = err.response?.data;
-      // If backend requires verification, show an alert and guide user to signup/login
-      if (remote?.verification?.required) {
+      const status = err.response?.status;
+
+      if (status === 429) {
+        const retry = remote?.retryAfter || 180;
+        setLockoutSeconds(retry);
+        setErrorMessage(remote?.message || 'Too many login attempts. Please wait 3 minutes before trying again.');
+      } else if (remote?.verification?.required) {
+        setErrorMessage(remote?.message || 'Account not verified. Please check your email.');
         alert(remote?.message || 'Account not verified. Please check your email.');
       } else {
-        alert(remote?.message || 'Login failed');
+        setErrorMessage(remote?.message || 'Invalid email or password. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -94,7 +136,6 @@ const Login = ({ isModal = false }) => {
   };
 
   // Verification UI removed from client; backend may still enforce verification depending on environment.
-
 
   return (
     <div className={`auth-container ${isModal ? 'modal-mode' : ''}`}>
@@ -107,6 +148,16 @@ const Login = ({ isModal = false }) => {
       {!isModal && <h1 className="auth-page-title">Welcome Back</h1>}
 
       <form onSubmit={handleSubmit} className="auth-form">
+        {errorMessage && (
+          <div className={`auth-error-banner ${lockoutSeconds > 0 ? 'lockout' : ''}`}>
+            {lockoutSeconds > 0 ? <Clock size={18} /> : <AlertCircle size={18} />}
+            <span>
+              {lockoutSeconds > 0
+                ? `Too many attempts. Please wait ${formatCountdown(lockoutSeconds)} before trying again.`
+                : errorMessage}
+            </span>
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="email">Email Address</label>
@@ -120,6 +171,7 @@ const Login = ({ isModal = false }) => {
               value={formData.email}
               onChange={handleChange}
               autoComplete="off"
+              disabled={lockoutSeconds > 0}
               required
             />
           </div>
@@ -137,20 +189,26 @@ const Login = ({ isModal = false }) => {
               value={formData.password}
               onChange={handleChange}
               autoComplete="new-password"
+              disabled={lockoutSeconds > 0}
               required
             />
             <button
               type="button"
               className="password-toggle"
               onClick={() => setShowPassword((p) => !p)}
+              disabled={lockoutSeconds > 0}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
         </div>
 
-        <button type="submit" className="auth-submit-btn" disabled={loading}>
-          {loading ? 'Logging in...' : 'Log In'}
+        <button type="submit" className="auth-submit-btn" disabled={loading || lockoutSeconds > 0}>
+          {loading
+            ? 'Logging in...'
+            : lockoutSeconds > 0
+            ? `Please wait (${formatCountdown(lockoutSeconds)})`
+            : 'Log In'}
         </button>
 
       </form>

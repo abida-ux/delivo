@@ -26,8 +26,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: process.env.VITE_BACKEND_URL || 'https://delivo-d5r8.onrender.com',
         changeOrigin: true,
+        secure: false,
       },
     },
     hmr: {

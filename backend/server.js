@@ -115,7 +115,13 @@ const {
 app.use('/api', smartRateLimiter({ limit: 120, windowMs: 60000 }));
 
 // Strict progressive authentication limits
-app.use('/api/users/login', smartRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }));
+app.use('/api/users/login', smartRateLimiter({
+  limit: 5,
+  windowMs: 3 * 60 * 1000, // 3 minutes
+  strict: true,
+  skipSuccessfulRequests: true,
+  message: 'Too many login attempts. Please wait 3 minutes before trying again.',
+}));
 app.use('/api/users/register', smartRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }));
 app.use('/api/users/verify-email', smartRateLimiter({ limit: 10, windowMs: 15 * 60 * 1000 }));
 app.use('/api/users/resend-verification-code', smartRateLimiter({ limit: 15, windowMs: 15 * 60 * 1000 }));

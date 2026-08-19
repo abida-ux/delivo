@@ -2,83 +2,381 @@ const Food = require('../models/Food');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const RestaurantFood = require('../models/RestaurantFood');
+const FoodCategory = require('../models/FoodCategory');
 const {
   normalizeCategorySelection,
   normalizeRestaurantSelection,
   getPrimaryCategoryName,
 } = require('../utils/foodAssignment');
 
+// Mulberry32 deterministic 32-bit PRNG
+function mulberry32(seed) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Convert string/number seed into a 32-bit integer
+function hashSeed(seed) {
+  if (typeof seed === 'number' && Number.isFinite(seed)) {
+    return (seed | 0) || 1;
+  }
+  const str = String(seed || 'delivo_seed');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash === 0 ? 1 : hash;
+}
+
+// Deterministic in-place / copy shuffle based on seed
+function seededShuffle(arr, seed) {
+  const seedNum = hashSeed(seed);
+  const rng = mulberry32(seedNum);
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 // ==================== GET ALL FOODS (Catalogue) ====================
 exports.getAllFoods = async (req, res) => {
   try {
-    let filter = {};
-    if (req.query.category) {
+    const conditions = [];
+
+    // 1. Category Filtering with Grouping & ObjectId / String Name Support
+    if (req.query.category && req.query.category !== 'All' && req.query.category !== 'all') {
       const mongoose = require('mongoose');
-      if (mongoose.Types.ObjectId.isValid(req.query.category)) {
-        filter.categories = req.query.category;
+      const catParam = req.query.category.trim();
+
+      if (mongoose.Types.ObjectId.isValid(catParam)) {
+        conditions.push({
+          $or: [{ categories: catParam }, { category: catParam }],
+        });
       } else {
-        filter.$or = [
-          { category: { $regex: req.query.category, $options: 'i' } },
-          { name: { $regex: req.query.category, $options: 'i' } }
-        ];
+        const catLower = catParam.toLowerCase();
+        if (catLower === 'meals') {
+          // Group Lunch, Dinner, and Meals
+          const mealCatDocs = await FoodCategory.find({
+            name: { $regex: /^(meals|lunch|dinner)$/i },
+          })
+            .select('_id')
+            .lean();
+          const mealCatIds = mealCatDocs.map((c) => c._id);
+
+          conditions.push({
+            $or: [
+              { category: { $regex: /^(meals|lunch|dinner)$/i } },
+              { categories: { $in: mealCatIds } },
+              { tags: { $in: ['meals', 'lunch', 'dinner'] } },
+            ],
+          });
+        } else if (
+          catLower === 'drinks & desserts' ||
+          catLower === 'drinks and desserts' ||
+          catLower === 'drinks & dessert'
+        ) {
+          // Group Drinks and Desserts
+          const drinkCatDocs = await FoodCategory.find({
+            name: { $regex: /^(drinks|desserts|dessert|beverages)$/i },
+          })
+            .select('_id')
+            .lean();
+          const drinkCatIds = drinkCatDocs.map((c) => c._id);
+
+          conditions.push({
+            $or: [
+              { category: { $regex: /^(drinks|desserts|dessert|beverages)$/i } },
+              { categories: { $in: drinkCatIds } },
+              { tags: { $in: ['drinks', 'desserts', 'dessert', 'beverages'] } },
+            ],
+          });
+        } else {
+          // Specific Category Match
+          const escaped = catParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const matchingCatDocs = await FoodCategory.find({
+            name: { $regex: new RegExp(`^${escaped}$`, 'i') },
+          })
+            .select('_id')
+            .lean();
+          const matchingCatIds = matchingCatDocs.map((c) => c._id);
+
+          conditions.push({
+            $or: [
+              { category: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+              { category: { $regex: new RegExp(escaped, 'i') } },
+              { categories: { $in: matchingCatIds } },
+              { tags: { $regex: new RegExp(escaped, 'i') } },
+            ],
+          });
+        }
       }
     }
 
+    // 2. Search Across Name, Description, Tags, Keywords, Category
     if (req.query.search) {
-      filter.name = { $regex: req.query.search, $options: 'i' };
+      const searchParam = req.query.search.trim();
+      const escapedSearch = searchParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i');
+      conditions.push({
+        $or: [
+          { name: searchRegex },
+          { description: searchRegex },
+          { tags: searchRegex },
+          { keywords: searchRegex },
+          { category: searchRegex },
+        ]
+      });
     }
+
+    // 3. Featured Filter
     if (req.query.featured) {
-      filter.featured = req.query.featured === 'true';
+      conditions.push({ featured: req.query.featured === 'true' });
     }
 
-    // Server-side pagination
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 50;
-    const skip = (page - 1) * limit;
+    // 4. Restaurant Filter
+    if (req.query.restaurantId) {
+      const mongoose = require('mongoose');
+      if (mongoose.Types.ObjectId.isValid(req.query.restaurantId)) {
+        conditions.push({
+          $or: [
+            { restaurant: req.query.restaurantId },
+            { restaurants: req.query.restaurantId },
+          ],
+        });
+      }
+    }
 
-    const total = await Food.countDocuments(filter);
-    const foods = await Food.find(filter)
+    const filter = conditions.length > 0 ? { $and: conditions } : {};
+
+    // Server-side pagination parameters
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit, 10) || 24);
+    const skip = (page - 1) * limit;
+    const seed = req.query.seed ? String(req.query.seed).trim() : null;
+    const sortBy = req.query.sortBy;
+
+    let foodsWithStats = [];
+    let total = 0;
+
+    // Use deterministic seeded random pagination when seed is provided without explicit sort
+    if (seed && (!sortBy || sortBy === 'random' || sortBy === 'seed')) {
+      // 1. Fetch matching _ids in stable baseline order
+      const allMatchingDocs = await Food.find(filter).select('_id').sort({ _id: 1 }).lean();
+      total = allMatchingDocs.length;
+
+      // 2. Deterministic Seeded PRNG Shuffle
+      const allIds = allMatchingDocs.map((d) => d._id.toString());
+      const shuffledIds = seededShuffle(allIds, seed);
+
+      // 3. Slice requested page
+      const pageIds = shuffledIds.slice(skip, skip + limit);
+
+      // 4. Fetch full food documents for the sliced IDs
+      const rawFoods = await Food.find({ _id: { $in: pageIds } })
+        .populate('categories', 'name icon image')
+        .populate('restaurant', 'name image address')
+        .lean();
+
+      // 5. Preserve exact seeded ordering of pageIds
+      const foodMap = new Map(rawFoods.map((f) => [f._id.toString(), f]));
+      const orderedFoods = pageIds.map((id) => foodMap.get(id)).filter(Boolean);
+
+      // 6. Map restaurant links and pricing
+      const allLinks = await RestaurantFood.find({ foodId: { $in: pageIds } }).lean();
+      const linksByFood = {};
+      allLinks.forEach((link) => {
+        if (!link.foodId) return;
+        const fId = link.foodId.toString();
+        if (!linksByFood[fId]) linksByFood[fId] = [];
+        linksByFood[fId].push(link);
+      });
+
+      foodsWithStats = orderedFoods.map((food) => {
+        const fId = food._id.toString();
+        const links = linksByFood[fId] || [];
+        return {
+          ...food,
+          restaurantCount: links.length,
+          price: links[0]?.price || food.price || 0,
+          isAvailable: food.defaultAvailability !== false,
+        };
+      });
+    } else {
+      // Standard deterministic database sorting when sortBy is provided
+      let sort = { createdAt: -1, _id: -1 };
+      if (sortBy === 'popular' || sortBy === 'rating') {
+        sort = { rating: -1, createdAt: -1, _id: -1 };
+      } else if (sortBy === 'price_asc') {
+        sort = { price: 1, _id: -1 };
+      } else if (sortBy === 'price_desc') {
+        sort = { price: -1, _id: -1 };
+      } else if (sortBy === 'name_asc') {
+        sort = { name: 1, _id: -1 };
+      }
+
+      total = await Food.countDocuments(filter);
+      const foods = await Food.find(filter)
+        .populate('categories', 'name icon image')
+        .populate('restaurant', 'name image address')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      const foodIds = foods.map((f) => f._id);
+      const allLinks = await RestaurantFood.find({ foodId: { $in: foodIds } }).lean();
+
+      const linksByFood = {};
+      allLinks.forEach((link) => {
+        if (!link.foodId) return;
+        const fId = link.foodId.toString();
+        if (!linksByFood[fId]) linksByFood[fId] = [];
+        linksByFood[fId].push(link);
+      });
+
+      foodsWithStats = foods.map((food) => {
+        const fId = food._id.toString();
+        const links = linksByFood[fId] || [];
+        return {
+          ...food,
+          restaurantCount: links.length,
+          price: links[0]?.price || food.price || 0,
+          isAvailable: food.defaultAvailability !== false,
+        };
+      });
+    }
+
+    const totalPages = Math.ceil(total / limit) || 1;
+    const hasMore = page < totalPages;
+
+    return res.status(200).json({
+      success: true,
+      count: total,
+      page,
+      limit,
+      totalPages,
+      hasMore,
+      seed: seed || undefined,
+      data: foodsWithStats,
+    });
+  } catch (error) {
+    console.error('❌ getAllFoods error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch foods',
+    });
+  }
+};
+
+// ==================== GET DYNAMIC POPULAR FOODS ====================
+exports.getPopularFoods = async (req, res) => {
+  try {
+    const Order = require('../models/Order');
+    const limit = Math.min(12, Math.max(1, parseInt(req.query.limit, 10) || 6));
+
+    // 1. Check Order collection sales aggregation for top ordered foods
+    let popularIds = [];
+    try {
+      const topSales = await Order.aggregate([
+        { $match: { status: { $nin: ['cancelled', 'rejected'] } } },
+        { $unwind: '$items' },
+        { $match: { 'items.foodId': { $exists: true, $ne: null } } },
+        {
+          $group: {
+            _id: '$items.foodId',
+            totalQuantity: { $sum: '$items.quantity' },
+          },
+        },
+        { $sort: { totalQuantity: -1 } },
+        { $limit: limit },
+      ]);
+      popularIds = topSales.map((t) => t._id);
+    } catch (aggErr) {
+      console.warn('⚠️ Order aggregation for popular foods skipped:', aggErr.message);
+    }
+
+    // 2. Backfill with rated or featured dishes if fewer than limit
+    if (popularIds.length < limit) {
+      const needed = limit - popularIds.length;
+      const topRated = await Food.find({
+        _id: { $nin: popularIds },
+        $or: [{ rating: { $gt: 0 } }, { featured: true }],
+      })
+        .sort({ rating: -1, numReviews: -1, createdAt: -1 })
+        .limit(needed)
+        .select('_id')
+        .lean();
+
+      popularIds.push(...topRated.map((f) => f._id));
+    }
+
+    // 3. Fallback to latest foods if catalogue is fresh
+    if (popularIds.length < limit) {
+      const needed = limit - popularIds.length;
+      const fallback = await Food.find({
+        _id: { $nin: popularIds },
+        isAvailable: { $ne: false },
+      })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(needed)
+        .select('_id')
+        .lean();
+
+      popularIds.push(...fallback.map((f) => f._id));
+    }
+
+    if (popularIds.length === 0) {
+      return res.status(200).json({ success: true, count: 0, data: [] });
+    }
+
+    // Fetch full food documents
+    const rawFoods = await Food.find({ _id: { $in: popularIds } })
       .populate('categories', 'name icon image')
-      .skip(skip)
-      .limit(limit)
+      .populate('restaurant', 'name image address')
       .lean();
 
-    // Map counts and populate helper variables in a single bulk query (reduces N+1 network requests)
-    const foodIds = foods.map(f => f._id);
-    const allLinks = await RestaurantFood.find({ foodId: { $in: foodIds } }).lean();
+    // Preserve exact ranking order
+    const foodMap = new Map(rawFoods.map((f) => [f._id.toString(), f]));
+    const orderedFoods = popularIds.map((id) => foodMap.get(id.toString())).filter(Boolean);
 
+    // Resolve restaurant links & prices
+    const allLinks = await RestaurantFood.find({ foodId: { $in: popularIds } }).lean();
     const linksByFood = {};
-    allLinks.forEach(link => {
+    allLinks.forEach((link) => {
       if (!link.foodId) return;
       const fId = link.foodId.toString();
-      if (!linksByFood[fId]) {
-        linksByFood[fId] = [];
-      }
+      if (!linksByFood[fId]) linksByFood[fId] = [];
       linksByFood[fId].push(link);
     });
 
-    const foodsWithStats = foods.map(food => {
+    const data = orderedFoods.map((food) => {
       const fId = food._id.toString();
       const links = linksByFood[fId] || [];
       return {
         ...food,
         restaurantCount: links.length,
         price: links[0]?.price || food.price || 0,
-        isAvailable: food.defaultAvailability,
+        isAvailable: food.defaultAvailability !== false,
       };
     });
 
     return res.status(200).json({
       success: true,
-      count: total,
-      data: foodsWithStats,
+      count: data.length,
+      data,
     });
-
   } catch (error) {
-    console.error('❌ getAllFoods error:', error.message);
+    console.error('❌ getPopularFoods error:', error.message);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to fetch foods',
+      message: error.message || 'Failed to fetch popular foods',
     });
   }
 };

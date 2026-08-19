@@ -103,9 +103,9 @@ const FoodCard = ({ food, onExpired, showVendor = true }) => {
           type="button"
           className={`floating-plus-btn ${isInCart ? 'in-cart' : ''}`}
           onClick={isInCart ? handleOpenCart : handleAddToCart}
-          title={isInCart ? 'In Cart - View Order' : 'Add to Order'}
+          title={isInCart ? 'View Cart' : 'Add to Order'}
         >
-          {isInCart ? <Check size={16} /> : <Plus size={16} />}
+          {isInCart ? <span>View Cart</span> : <Plus size={16} />}
         </button>
       </div>
 
