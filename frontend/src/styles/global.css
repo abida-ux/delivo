@@ -54,16 +54,37 @@ section {
 }
 
 /* =========================
-   RESPONSIVE TYPOGRAPHY
+   RESPONSIVE & SCALE-AWARE TYPOGRAPHY
    ========================= */
 
 html {
-  font-size: 16px;
+  font-size: 15.5px;
   scroll-behavior: smooth;
 }
 
+/* Scaling adaptation: when screen scale is 125% - 150% (typical Windows laptops/monitors) */
+@media screen and (-webkit-min-device-pixel-ratio: 1.25) and (max-width: 1536px),
+       screen and (min-resolution: 120dpi) and (max-width: 1536px) {
+  :root {
+    --content-max: 1140px;
+  }
+  html {
+    font-size: 14px;
+  }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 1.5) and (max-width: 1366px),
+       screen and (min-resolution: 144dpi) and (max-width: 1366px) {
+  :root {
+    --content-max: 1040px;
+  }
+  html {
+    font-size: 13.5px;
+  }
+}
+
 @media (max-width: 1024px) {
-  html { font-size: 15px; }
+  html { font-size: 14.5px; }
 }
 
 @media (max-width: 768px) {
@@ -71,7 +92,7 @@ html {
 }
 
 @media (max-width: 480px) {
-  html { font-size: 14px; }
+  html { font-size: 13.5px; }
 }
 
 /* =========================

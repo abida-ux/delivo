@@ -24,6 +24,14 @@ exports.getCombinations = async (req, res) => {
 
       const data = links.map(link => {
         if (!link.combinationId) return null;
+        let basePrice = link.combinationId.price;
+        if (basePrice == null || basePrice === 0) {
+          basePrice = (link.combinationId.components || []).reduce((sum, c) => {
+            const compPrice = c.customPrice != null ? c.customPrice : (c.foodId?.price || 0);
+            return sum + (compPrice * (c.defaultQuantity || 1));
+          }, 0);
+        }
+        const sellingPrice = link.price != null && link.price > 0 ? link.price : basePrice;
         return {
           _id: link.combinationId._id,
           name: link.combinationId.name,
@@ -31,7 +39,8 @@ exports.getCombinations = async (req, res) => {
           image: link.combinationId.image,
           categories: link.combinationId.categories,
           components: link.combinationId.components,
-          price: link.price,
+          basePrice,
+          price: sellingPrice,
           discountPrice: link.discountPrice,
           isAvailable: link.availability,
           availability: link.availability,
@@ -64,9 +73,9 @@ exports.getCombinations = async (req, res) => {
       const cId = combo._id.toString();
       const links = linksByCombo[cId] || [];
       
-      let price = links[0]?.price;
-      if (price == null) {
-        price = combo.components.reduce((sum, c) => {
+      let basePrice = combo.price;
+      if (basePrice == null || basePrice === 0) {
+        basePrice = (combo.components || []).reduce((sum, c) => {
           const compPrice = c.customPrice != null ? c.customPrice : (c.foodId?.price || 0);
           return sum + (compPrice * (c.defaultQuantity || 1));
         }, 0);
@@ -74,7 +83,8 @@ exports.getCombinations = async (req, res) => {
 
       return {
         ...combo,
-        price,
+        basePrice,
+        price: basePrice,
         isCombination: true,
         restaurantCount: links.length,
       };
@@ -150,8 +160,8 @@ exports.deleteCombination = async (req, res) => {
 exports.assignCombinationToRestaurant = async (req, res) => {
   try {
     const { restaurantId, combinationId, price, availability } = req.body;
-    if (!restaurantId || !combinationId || price === undefined) {
-      return res.status(400).json({ success: false, message: 'Please provide restaurantId, combinationId, and price' });
+    if (!restaurantId || !combinationId) {
+      return res.status(400).json({ success: false, message: 'Please provide restaurantId and combinationId' });
     }
 
     const existing = await RestaurantCombination.findOne({ restaurantId, combinationId });
@@ -159,10 +169,30 @@ exports.assignCombinationToRestaurant = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Combination is already linked to this restaurant' });
     }
 
+    let finalPrice = price;
+    if (finalPrice === undefined || finalPrice === null || finalPrice === '') {
+      const comboDoc = await FoodCombination.findById(combinationId)
+        .populate('components.foodId', 'price')
+        .lean();
+      if (comboDoc) {
+        finalPrice = comboDoc.price;
+        if (finalPrice == null || finalPrice === 0) {
+          finalPrice = (comboDoc.components || []).reduce((sum, c) => {
+            const compPrice = c.customPrice != null ? c.customPrice : (c.foodId?.price || 0);
+            return sum + (compPrice * (c.defaultQuantity || 1));
+          }, 0);
+        }
+      } else {
+        finalPrice = 0;
+      }
+    } else {
+      finalPrice = parseFloat(finalPrice) || 0;
+    }
+
     const link = await RestaurantCombination.create({
       restaurantId,
       combinationId,
-      price,
+      price: finalPrice,
       availability: availability !== undefined ? availability : true,
     });
 

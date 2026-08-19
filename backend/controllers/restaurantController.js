@@ -13,7 +13,16 @@ exports.getAllRestaurants = async (req, res, next) => {
         .populate('foodId')
         .lean();
       
-      const foods = links.map(l => l.foodId).filter(Boolean);
+      const foods = links.map(l => {
+        if (!l.foodId) return null;
+        const basePrice = l.foodId.price || 0;
+        return {
+          ...l.foodId,
+          basePrice,
+          price: l.price != null && l.price > 0 ? l.price : basePrice,
+        };
+      }).filter(Boolean);
+
       return {
         ...rest,
         foods,
@@ -50,9 +59,11 @@ exports.getRestaurantById = async (req, res, next) => {
     
     const foods = links.map(l => {
       if (!l.foodId) return null;
+      const basePrice = l.foodId.price || 0;
       return {
         ...l.foodId,
-        price: l.price,
+        basePrice,
+        price: l.price != null && l.price > 0 ? l.price : basePrice,
         discountPrice: l.discountPrice,
         availability: l.availability
       };

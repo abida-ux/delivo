@@ -38,6 +38,7 @@ const FoodDetailsPage = () => {
   const [food, setFood] = useState(null);
   const [sellingRestaurants, setSellingRestaurants] = useState([]);
   const [similarFoods, setSimilarFoods] = useState([]);
+  const [comboComponents, setComboComponents] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,6 +72,28 @@ const FoodDetailsPage = () => {
           setFood(currentFood);
           if (currentFood.userRating) setUserRating(currentFood.userRating);
           setSellingRestaurants(restRes.data?.data || []);
+
+          // Initialize combo components for interactive portion customization
+          if (currentFood.isCombination || (currentFood.components && currentFood.components.length > 0)) {
+            const initialComponents = (currentFood.components || []).map((comp) => {
+              const fId = comp.foodId?._id || comp.foodId;
+              const name = comp.foodId?.name || comp.name || 'Component Item';
+              const unitPrice = comp.customPrice != null ? comp.customPrice : (comp.foodId?.price || comp.price || 0);
+              const defaultQty = comp.defaultQuantity != null ? comp.defaultQuantity : 1;
+              const minQty = comp.minimumQuantity != null ? comp.minimumQuantity : 0;
+              const maxQty = comp.maximumQuantity != null ? comp.maximumQuantity : 20;
+
+              return {
+                foodId: fId,
+                name,
+                unitPrice,
+                quantity: defaultQty,
+                minimumQuantity: minQty,
+                maximumQuantity: maxQty,
+              };
+            });
+            setComboComponents(initialComponents);
+          }
         }
 
 
@@ -95,6 +118,22 @@ const FoodDetailsPage = () => {
     fetchFoodData();
     return () => { isMounted = false; };
   }, [foodId, location.latitude, location.longitude]);
+
+  // Handle combo component quantity increment / decrement
+  const updateComponentQty = (idx, change) => {
+    setComboComponents((prev) => {
+      const updated = [...prev];
+      const comp = updated[idx];
+      if (!comp) return prev;
+      const minQty = comp.minimumQuantity != null ? comp.minimumQuantity : 0;
+      const maxQty = comp.maximumQuantity != null ? comp.maximumQuantity : 20;
+      const newQty = comp.quantity + change;
+      if (newQty >= minQty && newQty <= maxQty) {
+        updated[idx] = { ...comp, quantity: newQty };
+      }
+      return updated;
+    });
+  };
 
   // Handle 1-Tap Dish Rating
   const handleRateFood = async (starVal) => {
@@ -157,6 +196,8 @@ const FoodDetailsPage = () => {
   }
 
   const categoryName = typeof food.category === 'object' ? food.category?.name : (food.category || 'Specialty');
+  const isCombinationMeal = Boolean(food.isCombination || (food.components && food.components.length > 0));
+
   const primaryVendor = sellingRestaurants[0] || {
     restaurantId: food.restaurant?._id || 'default',
     name: food.restaurant?.name || 'Delivo Kitchen',
@@ -165,11 +206,41 @@ const FoodDetailsPage = () => {
     deliveryTime: '20-30',
   };
 
-  const unitPrice = primaryVendor.price || food.price || 350;
+  // Real-time unit price: for combos, sum of (component unit price * quantity); for single foods, food.price
+  const customizedComboPrice = isCombinationMeal && comboComponents.length > 0
+    ? comboComponents.reduce((sum, c) => sum + (c.unitPrice * c.quantity), 0)
+    : (food.price != null && food.price > 0 ? food.price : (primaryVendor.price || 0));
+
+  const unitPrice = customizedComboPrice;
   const totalPrice = unitPrice * quantity;
 
   const handleAddToCart = () => {
-    addItem({ ...food, price: unitPrice, restaurantId: primaryVendor.restaurantId }, quantity);
+    if (isCombinationMeal) {
+      const customizedItem = {
+        _id: food._id,
+        name: food.name,
+        image: food.image,
+        price: unitPrice,
+        isCombination: true,
+        combinationId: food._id,
+        components: comboComponents.map(c => ({
+          foodId: c.foodId,
+          name: c.name,
+          quantity: c.quantity,
+          price: c.unitPrice,
+        })),
+        restaurantId: primaryVendor?.restaurantId,
+        restaurantName: primaryVendor?.name,
+      };
+
+      addItem(customizedItem, quantity, {
+        restaurantId: primaryVendor?.restaurantId,
+        name: primaryVendor?.name,
+        price: unitPrice,
+      });
+    } else {
+      addItem({ ...food, price: unitPrice, restaurantId: primaryVendor.restaurantId }, quantity);
+    }
     openCart();
   };
 
@@ -216,13 +287,71 @@ const FoodDetailsPage = () => {
           </div>
 
           <div className="food-info-panel">
-            <span className="category-chip">{categoryName}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="category-chip">{categoryName}</span>
+              {isCombinationMeal && (
+                <span className="combo-hero-pill">Combo Bundle</span>
+              )}
+            </div>
             <h1 className="dish-name">{food.name}</h1>
             <p className="dish-description">{food.description || 'Prepared fresh with high quality ingredients.'}</p>
 
             <div className="price-display">
               <span className="price-tag">KES {unitPrice.toLocaleString('en-KE')}</span>
+              {isCombinationMeal && (
+                <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px', fontWeight: 600 }}>
+                  (Adjusted by portions below)
+                </span>
+              )}
             </div>
+
+            {/* COMBO PORTION CUSTOMIZER WIDGET */}
+            {isCombinationMeal && comboComponents.length > 0 && (
+              <div className="combo-customizer-box">
+                <div className="combo-customizer-top">
+                  <span className="combo-customizer-title">Customize Components & Portions</span>
+                  <span className="combo-customizer-hint">Need extra chapatis or sides? Adjust quantities below</span>
+                </div>
+
+                <div className="combo-comp-list">
+                  {comboComponents.map((comp, idx) => {
+                    const minQty = comp.minimumQuantity != null ? comp.minimumQuantity : 0;
+                    const maxQty = comp.maximumQuantity != null ? comp.maximumQuantity : 20;
+
+                    return (
+                      <div key={comp.foodId || idx} className="combo-comp-row">
+                        <div className="comp-meta">
+                          <strong className="comp-name">{comp.name}</strong>
+                          <span className="comp-rate">KES {comp.unitPrice} each</span>
+                        </div>
+
+                        <div className="comp-stepper-wrap">
+                          <button
+                            type="button"
+                            className="comp-btn minus"
+                            onClick={() => updateComponentQty(idx, -1)}
+                            disabled={comp.quantity <= minQty}
+                            title={comp.quantity <= minQty ? 'Minimum portion reached' : 'Reduce portion'}
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="comp-qty-num">{comp.quantity}</span>
+                          <button
+                            type="button"
+                            className="comp-btn plus"
+                            onClick={() => updateComponentQty(idx, 1)}
+                            disabled={comp.quantity >= maxQty}
+                            title={comp.quantity >= maxQty ? 'Maximum portion reached' : 'Add extra portion'}
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* REAL RATING SCORE & 1-TAP STAR RATING WIDGET */}
             <div className="dish-rating-widget-box">
@@ -295,7 +424,7 @@ const FoodDetailsPage = () => {
               </div>
 
               <button className="add-to-cart-btn" onClick={handleAddToCart}>
-                <ShoppingBag size={18} /> Add {quantity} to Cart • KES {totalPrice.toLocaleString()}
+                <ShoppingBag size={18} /> Add {quantity > 1 ? `${quantity} Combos` : 'to Cart'} • KES {totalPrice.toLocaleString()}
               </button>
             </div>
           </div>

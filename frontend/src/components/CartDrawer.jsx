@@ -77,6 +77,16 @@ const CartDrawer = () => {
                         {item.name}
                       </h4>
 
+                      {item.isCombination && item.components && item.components.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: '3px 0 6px' }}>
+                          {item.components.map((comp, idx) => (
+                            <span key={idx} style={{ fontSize: '11px', background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                              • {comp.name} ×{comp.quantity}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
                       {/* IN-PLACE RESTAURANT SELECTION CONTROL */}
                       <div style={{ marginTop: '2px', marginBottom: '4px' }}>
                         {!hasRest ? (

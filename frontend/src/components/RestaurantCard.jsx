@@ -87,16 +87,16 @@ const RestaurantCard = () => {
 
   return (
     <section className="restaurants-section">
-      <div className="section-header-wrapper">
-        <div className="section-title-group">
-          <h2 className="section-main-title">Popular Restaurants</h2>
-          <p className="section-subtitle">Discover top-rated places delivering to your area</p>
+      <div className="rest-section-header">
+        <div className="rest-title-group">
+          <h2 className="rest-main-title">Popular Restaurants</h2>
+          <p className="rest-subtitle">Discover top-rated places delivering to your area</p>
         </div>
 
         {showControls && (
-          <div className="restaurant-scroll-controls">
+          <div className="rest-scroll-controls">
             <button 
-              className="restaurant-arrow-btn" 
+              className="rest-arrow-btn" 
               onClick={scrollLeft} 
               disabled={!canScrollLeft}
               style={{ opacity: canScrollLeft ? 1 : 0.4, cursor: canScrollLeft ? 'pointer' : 'default' }}
@@ -105,7 +105,7 @@ const RestaurantCard = () => {
               <ChevronLeft size={18} />
             </button>
             <button 
-              className="restaurant-arrow-btn" 
+              className="rest-arrow-btn" 
               onClick={scrollRight} 
               disabled={!canScrollRight}
               style={{ opacity: canScrollRight ? 1 : 0.4, cursor: canScrollRight ? 'pointer' : 'default' }}
@@ -120,13 +120,17 @@ const RestaurantCard = () => {
       <div className="carousel-wrapper">
         <div className="restaurants-grid" ref={scrollContainerRef}>
           {loading
-            ? Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+            ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
             : error
             ? <p style={{ padding: '1rem', color: 'var(--color-error)', fontSize: 'var(--text-sm)' }}>{error}</p>
             : restaurants.map((restaurant) => (
               <div
                 key={restaurant._id}
                 className="restaurant-card"
+                onClick={() => handleRestaurantClick(restaurant._id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && handleRestaurantClick(restaurant._id)}
               >
 
                 {/* IMAGE */}
@@ -138,22 +142,17 @@ const RestaurantCard = () => {
                     onError={handleImageError}
                     loading="lazy"
                   />
-                  {/* Status badge on image */}
-                  <span className={`restaurant-status-badge ${restaurant.isOpen === false ? 'closed' : 'open'}`}>
-                    {restaurant.isOpen === false ? 'Closed' : 'Open'}
-                  </span>
+                  {/* Status chip on image */}
+                  <div className={`restaurant-status-chip ${restaurant.isOpen === false ? 'closed' : 'open'}`}>
+                    <span className="status-dot" />
+                    <span>{restaurant.isOpen === false ? 'Closed' : 'Open'}</span>
+                  </div>
                 </div>
 
                 {/* DETAILS */}
                 <div className="card-details">
                   <div className="card-title-row">
                     <h3 className="restaurant-name">{restaurant.name}</h3>
-                    {restaurant.rating > 0 && (
-                      <div className="rating-badge">
-                        <Star className="icon-star" size={11} fill="currentColor" />
-                        <span>{restaurant.rating}</span>
-                      </div>
-                    )}
                   </div>
 
 

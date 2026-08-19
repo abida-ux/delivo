@@ -128,12 +128,12 @@ export const CartProvider = ({ children }) => {
     } else if (food.restaurantId || (food.restaurant && typeof food.restaurant === 'object' && food.restaurant._id)) {
       initialRestaurantId = food.restaurantId || food.restaurant._id;
       initialRestaurantName = food.restaurantName || food.restaurant.name;
-      initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : null;
+      initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : 0;
     } else {
       // Added from global catalogue without a pre-selected restaurant
       initialRestaurantId = null;
       initialRestaurantName = null;
-      initialPrice = null;
+      initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : 0;
     }
 
     const optimisticCart = [...cartItems];

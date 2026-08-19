@@ -201,10 +201,12 @@ exports.getAllFoods = async (req, res) => {
       foodsWithStats = orderedFoods.map((food) => {
         const fId = food._id.toString();
         const links = linksByFood[fId] || [];
+        const basePrice = food.price || 0;
         return {
           ...food,
           restaurantCount: links.length,
-          price: links[0]?.price || food.price || 0,
+          basePrice,
+          price: basePrice,
           isAvailable: food.defaultAvailability !== false,
         };
       });
@@ -244,10 +246,12 @@ exports.getAllFoods = async (req, res) => {
       foodsWithStats = foods.map((food) => {
         const fId = food._id.toString();
         const links = linksByFood[fId] || [];
+        const basePrice = food.price || 0;
         return {
           ...food,
           restaurantCount: links.length,
-          price: links[0]?.price || food.price || 0,
+          basePrice,
+          price: basePrice,
           isAvailable: food.defaultAvailability !== false,
         };
       });
@@ -359,10 +363,12 @@ exports.getPopularFoods = async (req, res) => {
     const data = orderedFoods.map((food) => {
       const fId = food._id.toString();
       const links = linksByFood[fId] || [];
+      const basePrice = food.price || 0;
       return {
         ...food,
         restaurantCount: links.length,
-        price: links[0]?.price || food.price || 0,
+        basePrice,
+        price: basePrice,
         isAvailable: food.defaultAvailability !== false,
       };
     });
@@ -430,7 +436,8 @@ exports.getFoodById = async (req, res) => {
 
       restaurantsSelling = comboLinks.map(link => ({
         restaurant: link.restaurantId,
-        price: link.price,
+        basePrice: food.price || 0,
+        price: link.price != null && link.price > 0 ? link.price : (food.price || 0),
         availability: link.availability !== false,
         prepTime: 20,
         stockStatus: 'in-stock',
@@ -442,7 +449,8 @@ exports.getFoodById = async (req, res) => {
 
       restaurantsSelling = links.map(link => ({
         restaurant: link.restaurantId,
-        price: link.price,
+        basePrice: food.price || 0,
+        price: link.price != null && link.price > 0 ? link.price : (food.price || 0),
         discountPrice: link.discountPrice,
         availability: link.availability,
         prepTime: link.prepTime,
@@ -632,13 +640,16 @@ exports.getRestaurantFoods = async (req, res) => {
 
     const data = links.map(link => {
       if (!link.foodId) return null;
+      const basePrice = link.foodId.price || 0;
+      const sellingPrice = link.price != null && link.price > 0 ? link.price : basePrice;
       return {
         _id: link.foodId._id,
         name: link.foodId.name,
         description: link.foodId.description,
         image: link.foodId.image,
         categories: link.foodId.categories,
-        price: link.price,
+        basePrice,
+        price: sellingPrice,
         discountPrice: link.discountPrice,
         isAvailable: link.availability,
         availability: link.availability,
@@ -664,8 +675,8 @@ exports.getRestaurantFoods = async (req, res) => {
 exports.assignFoodToRestaurant = async (req, res) => {
   try {
     const { restaurantId, foodId, price, prepTime, availability } = req.body;
-    if (!restaurantId || !foodId || price === undefined) {
-      return res.status(400).json({ success: false, message: 'Please provide restaurantId, foodId, and price' });
+    if (!restaurantId || !foodId) {
+      return res.status(400).json({ success: false, message: 'Please provide restaurantId and foodId' });
     }
 
     const existing = await RestaurantFood.findOne({ restaurantId, foodId });
@@ -673,10 +684,18 @@ exports.assignFoodToRestaurant = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Food item is already linked to this restaurant' });
     }
 
+    let finalPrice = price;
+    if (finalPrice === undefined || finalPrice === null || finalPrice === '') {
+      const foodDoc = await Food.findById(foodId).select('price').lean();
+      finalPrice = foodDoc?.price || 0;
+    } else {
+      finalPrice = parseFloat(finalPrice) || 0;
+    }
+
     const link = await RestaurantFood.create({
       restaurantId,
       foodId,
-      price,
+      price: finalPrice,
       prepTime: prepTime || 15,
       availability: availability !== undefined ? availability : true,
     });

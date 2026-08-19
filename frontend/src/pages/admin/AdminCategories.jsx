@@ -109,7 +109,7 @@ const AdminCategories = () => {
   return (
     <AdminDashboardLayout>
       <div className="admin-categories-container">
-        <div className="categories-header">
+        <div className="admin-categories-header">
           <div>
             <h2>Food Categories</h2>
             <p style={{ color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>

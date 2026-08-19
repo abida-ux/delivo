@@ -56,13 +56,19 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
       }
 
       let comboPrice = 0;
-      for (const component of item.components || []) {
-        const restFood = await RestaurantFood.findOne({
-          restaurantId: targetRestaurantId,
-          foodId: component.foodId,
-        });
-        const componentPrice = restFood?.price || 0;
-        comboPrice += componentPrice * (component.quantity || 1);
+      if (item.components && item.components.length > 0) {
+        for (const component of item.components) {
+          const restFood = await RestaurantFood.findOne({
+            restaurantId: targetRestaurantId,
+            foodId: component.foodId,
+          });
+          let componentPrice = (restFood?.price != null && restFood.price > 0) ? restFood.price : null;
+          if (componentPrice == null) {
+            const foodDoc = await foodLookup(component.foodId);
+            componentPrice = (foodDoc?.price != null && foodDoc.price > 0) ? foodDoc.price : (Number(component.price) || 0);
+          }
+          comboPrice += componentPrice * (component.quantity != null ? component.quantity : 1);
+        }
       }
 
       if (comboPrice === 0) {
@@ -70,7 +76,7 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
           restaurantId: targetRestaurantId,
           combinationId: item.foodId || item.combinationId,
         });
-        comboPrice = restCombo?.price || 0;
+        comboPrice = restCombo?.price || item.price || 0;
       }
 
       populatedItems.push({
@@ -114,7 +120,7 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
       'items.foodId': item.foodId,
     });
 
-    let finalPrice = restaurantFood.price;
+    let finalPrice = (restaurantFood.price != null && restaurantFood.price > 0) ? restaurantFood.price : (food.price || 0);
     if (activeFlashSale) {
       const flashItem = activeFlashSale.items.find((i) => i.foodId.toString() === item.foodId.toString());
       if (flashItem) {

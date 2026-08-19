@@ -85,18 +85,18 @@ const Restaurants = () => {
     }
 
     if (food.isCombination) {
-      const mapped = food.components.map(comp => {
+      const mapped = (food.components || []).map(comp => {
         const matchingFood = foods.find(f => f._id === (comp.foodId?._id || comp.foodId));
         const resolvedPrice = comp.customPrice !== undefined && comp.customPrice !== null && comp.customPrice !== ''
           ? comp.customPrice
-          : (matchingFood ? matchingFood.price : 0);
+          : (matchingFood ? matchingFood.price : (comp.foodId?.price || 0));
         return {
           foodId: comp.foodId?._id || comp.foodId,
           name: comp.foodId?.name || matchingFood?.name || 'Component Item',
-          quantity: comp.defaultQuantity,
-          minimumQuantity: comp.minimumQuantity,
-          maximumQuantity: comp.maximumQuantity,
-          price: resolvedPrice,
+          quantity: comp.defaultQuantity != null ? comp.defaultQuantity : 1,
+          minimumQuantity: comp.minimumQuantity != null ? comp.minimumQuantity : 0,
+          maximumQuantity: comp.maximumQuantity != null ? comp.maximumQuantity : 20,
+          price: Number(resolvedPrice) || 0,
         };
       });
       setComboComponents(mapped);
@@ -119,8 +119,11 @@ const Restaurants = () => {
   const updateComponentQty = (idx, change) => {
     const updated = [...comboComponents];
     const comp = updated[idx];
+    if (!comp) return;
+    const minQty = comp.minimumQuantity != null ? comp.minimumQuantity : 0;
+    const maxQty = comp.maximumQuantity != null ? comp.maximumQuantity : 20;
     const newQty = comp.quantity + change;
-    if (newQty >= comp.minimumQuantity && newQty <= comp.maximumQuantity) {
+    if (newQty >= minQty && newQty <= maxQty) {
       comp.quantity = newQty;
       setComboComponents(updated);
     }
@@ -527,61 +530,72 @@ const Restaurants = () => {
               </button>
             </div>
 
-            <div className="cart-modal-items" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px 0' }}>
-              {comboComponents.map((comp, idx) => (
-                <div key={comp.foodId} className="combo-customiser-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                  <div>
-                    <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1f2937' }}>{comp.name}</h4>
-                    <span style={{ fontSize: '12px', color: '#6b7280' }}>KES {comp.price} each</span>
-                  </div>
+            <div className="cart-modal-items" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px 0', maxHeight: '380px', overflowY: 'auto' }}>
+              {comboComponents.map((comp, idx) => {
+                const minQty = comp.minimumQuantity != null ? comp.minimumQuantity : 0;
+                const maxQty = comp.maximumQuantity != null ? comp.maximumQuantity : 20;
+                const lineTotal = (comp.price || 0) * comp.quantity;
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <button
-                      type="button"
-                      onClick={() => updateComponentQty(idx, -1)}
-                      disabled={comp.quantity <= comp.minimumQuantity}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        border: '1.5px solid #d1d5db',
-                        background: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: comp.quantity <= comp.minimumQuantity ? 'not-allowed' : 'pointer',
-                        opacity: comp.quantity <= comp.minimumQuantity ? 0.4 : 1
-                      }}
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <span style={{ fontSize: '16px', fontWeight: '800', width: '20px', textAlign: 'center' }}>{comp.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => updateComponentQty(idx, 1)}
-                      disabled={comp.quantity >= comp.maximumQuantity}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        border: '1.5px solid #d1d5db',
-                        background: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: comp.quantity >= comp.maximumQuantity ? 'not-allowed' : 'pointer',
-                        opacity: comp.quantity >= comp.maximumQuantity ? 0.4 : 1
-                      }}
-                    >
-                      <Plus size={14} />
-                    </button>
+                return (
+                  <div key={comp.foodId || idx} className="combo-customiser-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                    <div>
+                      <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1f2937', margin: 0 }}>{comp.name}</h4>
+                      <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                        KES {comp.price} each • Subtotal: <strong>KES {lineTotal.toLocaleString()}</strong>
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => updateComponentQty(idx, -1)}
+                        disabled={comp.quantity <= minQty}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          border: '1.5px solid #d1d5db',
+                          background: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: comp.quantity <= minQty ? 'not-allowed' : 'pointer',
+                          opacity: comp.quantity <= minQty ? 0.4 : 1
+                        }}
+                        title={comp.quantity <= minQty ? 'Minimum reached' : 'Reduce portion'}
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <span style={{ fontSize: '15px', fontWeight: '800', width: '22px', textAlign: 'center' }}>{comp.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateComponentQty(idx, 1)}
+                        disabled={comp.quantity >= maxQty}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          border: '1.5px solid #d1d5db',
+                          background: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: comp.quantity >= maxQty ? 'not-allowed' : 'pointer',
+                          opacity: comp.quantity >= maxQty ? 0.4 : 1
+                        }}
+                        title={comp.quantity >= maxQty ? 'Maximum reached' : 'Add extra portion'}
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="cart-modal-total" style={{ borderTop: '1px solid #f3f4f6', paddingTop: '16px', marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <strong>Total: KES {getCustomizedComboTotal()}</strong>
+              <span style={{ fontSize: '14px', color: '#4b5563' }}>Total Combo Price:</span>
+              <strong style={{ fontSize: '18px', color: '#111827' }}>KES {getCustomizedComboTotal().toLocaleString()}</strong>
             </div>
 
             <button

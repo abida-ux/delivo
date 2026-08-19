@@ -124,6 +124,119 @@
   border-color: #16a34a;
 }
 
+.base-price-tag {
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+  font-size: 13px;
+  display: inline-block;
+}
+
+.price-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.currency-prefix {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.item-sub-cat {
+  display: inline-block;
+  font-size: 11px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+}
+
+.price-status-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-pill.matches {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-pill.custom {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.reset-pill-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.reset-pill-btn:hover {
+  color: #1d4ed8;
+}
+
+.reset-all-base-btn {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.reset-all-base-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+.base-price-chip {
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+}
+
+.assign-modal-item.selected {
+  background: #f0fdf4;
+}
+
 .menu-save-row {
   display: flex;
   justify-content: flex-end;

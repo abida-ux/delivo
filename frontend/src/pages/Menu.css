@@ -294,31 +294,31 @@
   padding: 18px 20px;
 }
 
-.section-header {
+.menu-popular-section .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }
 
-.section-title-group {
+.menu-popular-section .section-title-group {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.sparkle-icon {
+.menu-popular-section .sparkle-icon {
   color: #f59e0b;
 }
 
-.section-title {
+.menu-popular-section .section-title {
   font-size: 17px;
   font-weight: 700;
   color: var(--delivo-text-primary, #0f172a);
   margin: 0;
 }
 
-.section-subtitle {
+.menu-popular-section .section-subtitle {
   font-size: 12px;
   font-weight: 600;
   color: var(--delivo-text-muted, #94a3b8);

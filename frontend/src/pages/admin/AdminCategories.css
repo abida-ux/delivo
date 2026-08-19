@@ -8,7 +8,7 @@
   margin: 0 auto;
 }
 
-.categories-header {
+.admin-categories-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,7 +17,7 @@
   flex-wrap: wrap;
 }
 
-.categories-header h2 {
+.admin-categories-header h2 {
   font-family: var(--font-heading, 'Poppins', sans-serif);
   font-size: 22px;
   font-weight: 800;
@@ -355,7 +355,7 @@
 }
 
 @media (max-width: 767px) {
-  .categories-header {
+  .admin-categories-header {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;

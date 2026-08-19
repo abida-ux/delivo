@@ -161,14 +161,11 @@ const AllRestaurants = () => {
                   alt={restaurant.name}
                   onError={handleImageError}
                 />
-                {restaurant.rating > 0 && (
-                  <div className="restaurant-badge">
-                    <Star size={14} fill="currentColor" />
-                    <span>{restaurant.rating}</span>
-                  </div>
-                )}
+                <div className={`restaurant-status-chip ${restaurant.isOpen === false ? 'closed' : 'open'}`}>
+                  <span className="status-dot" />
+                  <span>{restaurant.isOpen === false ? 'Closed' : 'Open'}</span>
+                </div>
               </div>
-
 
               <div className="restaurant-info">
                 <h3>{restaurant.name}</h3>

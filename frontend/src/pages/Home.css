@@ -41,21 +41,21 @@
 /* Centered App Container Card */
 .hero-app-card {
   width: 100%;
-  max-width: 680px;
+  max-width: 580px;
   background: #ffffff;
   border: 1px solid rgba(245, 179, 1, 0.12);
-  border-radius: 40px;
-  padding: var(--space-6) var(--space-8) var(--space-6);
+  border-radius: 28px;
+  padding: 22px 28px;
   box-shadow: 
     0 4px 20px rgba(0, 0, 0, 0.02),
-    0 20px 50px rgba(245, 179, 1, 0.06),
+    0 16px 40px rgba(245, 179, 1, 0.05),
     inset 0 0 0 1px rgba(255, 255, 255, 0.6);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   position: relative;
-  margin-bottom: var(--space-5);
+  margin-bottom: 20px;
   z-index: 5;
 }
 
@@ -111,13 +111,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
-  margin-top: var(--space-4);
+  margin-bottom: 12px;
+  margin-top: 4px;
 }
 
 .app-logo-image {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: var(--shadow-sm);
@@ -125,7 +125,7 @@
 
 .app-logo-brand {
   font-family: var(--font-heading);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 800;
   color: #df4b26;
   letter-spacing: -0.5px;
@@ -136,24 +136,24 @@
   align-items: center;
   background: #ffe6dc;
   color: #df4b26;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  margin-bottom: var(--space-4);
+  margin-bottom: 12px;
   letter-spacing: 0.5px;
 }
 
 /* Headline */
 .app-headline {
   font-family: var(--font-heading);
-  font-size: clamp(1.85rem, 5vw, 2.75rem);
+  font-size: clamp(1.45rem, 3.2vw, 2.15rem);
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.15;
   color: var(--color-black);
-  margin-bottom: var(--space-4);
-  letter-spacing: -0.8px;
-  min-height: 7.5rem; /* Lock height to prevent container layout shifting/resizing during typing */
+  margin-bottom: 10px;
+  letter-spacing: -0.6px;
+  min-height: 5.2rem; /* Lock height to prevent container layout shifting/resizing during typing */
 }
 
 .app-headline .highlight-app {
@@ -161,11 +161,11 @@
 }
 
 .app-subparagraph {
-  font-size: var(--text-sm);
+  font-size: 13px;
   color: var(--color-gray-600);
-  line-height: 1.5;
-  max-width: 420px;
-  margin-bottom: var(--space-6);
+  line-height: 1.45;
+  max-width: 440px;
+  margin-bottom: 18px;
 }
 
 /* Buttons */
