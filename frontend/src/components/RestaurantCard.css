@@ -1,5 +1,5 @@
 /* ================================================
-   RESTAURANT CARD — Compact & Responsive
+   RESTAURANT CARD — Compact & Horizontal Carousel
    ================================================ */
 
 .restaurants-section {
@@ -72,7 +72,7 @@
   border-color: var(--color-orange, #FF6B4A);
 }
 
-/* ── Carousel / Grid wrapper ── */
+/* ── Carousel wrapper & Horizontal Track ── */
 .carousel-wrapper {
   position: relative;
   width: min(var(--content-max, 1280px), 100% - 2rem);
@@ -81,23 +81,37 @@
 }
 
 .restaurants-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: flex;
   gap: 16px;
-  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px 2px 14px 2px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.restaurants-grid::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Restaurant Card ── */
-.restaurant-card {
+.restaurant-card,
+.restaurant-skeleton {
   background: var(--color-surface, #ffffff);
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid #eef0f4;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: pointer;
-  width: 100%;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  scroll-snap-align: start;
 }
 
 .restaurant-card:hover {
@@ -238,7 +252,6 @@
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid #eef0f4;
-  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -253,4 +266,65 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ── Responsive Mobile & Tablet Rules ── */
+@media (max-width: 768px) {
+  .rest-section-header {
+    margin-bottom: 12px;
+  }
+
+  .carousel-wrapper {
+    padding: 0 16px;
+    width: 100%;
+  }
+
+  .restaurants-grid {
+    gap: 12px;
+    padding: 4px 0 12px;
+  }
+
+  .restaurant-card,
+  .restaurant-skeleton {
+    width: 230px;
+    min-width: 230px;
+    max-width: 230px;
+  }
+
+  .card-image-container,
+  .restaurant-skeleton .sk-image {
+    height: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-wrapper {
+    padding: 0 12px;
+  }
+
+  .restaurant-card,
+  .restaurant-skeleton {
+    width: 205px;
+    min-width: 205px;
+    max-width: 205px;
+  }
+
+  .card-image-container,
+  .restaurant-skeleton .sk-image {
+    height: 125px;
+  }
+
+  .card-details {
+    padding: 10px 12px;
+    gap: 4px;
+  }
+
+  .restaurant-name {
+    font-size: 13.5px;
+  }
+
+  .cuisine-text,
+  .card-footer-metrics {
+    font-size: 11.5px;
+  }
 }
