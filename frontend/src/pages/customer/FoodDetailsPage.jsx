@@ -14,7 +14,7 @@ import {
   UtensilsCrossed,
   CheckCircle2,
 } from 'lucide-react';
-import api, { rateFood } from '../../services/api';
+import api, { rateFood, getAppSettings } from '../../services/api';
 import { useLocation } from '../../context/LocationContext';
 import { useCart } from '../../context/CartContext';
 import { useCartUI } from '../../context/CartUIContext';
@@ -43,12 +43,21 @@ const FoodDetailsPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deliveryFeeAmount, setDeliveryFeeAmount] = useState(20);
 
   // 1-Tap Rating State
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [ratingMessage, setRatingMessage] = useState(null);
   const [ratingMessageType, setRatingMessageType] = useState('success');
+
+  useEffect(() => {
+    getAppSettings().then(settings => {
+      if (settings && settings.deliveryFeeAmount != null) {
+        setDeliveryFeeAmount(Number(settings.deliveryFeeAmount));
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -221,11 +230,19 @@ const FoodDetailsPage = () => {
 
   let portionsList = [...rawPortions];
 
+  const fallbackRestId = (typeof food.restaurant === 'object' ? food.restaurant?._id : food.restaurant)
+    || (Array.isArray(food.restaurants) && food.restaurants[0] ? (typeof food.restaurants[0] === 'object' ? food.restaurants[0]._id : food.restaurants[0]) : null);
+
+  const fallbackRestName = (typeof food.restaurant === 'object' ? food.restaurant?.name : null)
+    || (Array.isArray(food.restaurants) && food.restaurants[0] && typeof food.restaurants[0] === 'object' ? food.restaurants[0].name : null)
+    || food.restaurantName
+    || 'Delivo Kitchen';
+
   const primaryVendor = sellingRestaurants[0] || {
-    restaurantId: food.restaurant?._id || 'default',
-    name: food.restaurant?.name || 'Delivo Kitchen',
-    rating: food.restaurant?.rating || 4.5,
-    deliveryFee: 50,
+    restaurantId: fallbackRestId,
+    name: fallbackRestName,
+    rating: food.rating || 4.5,
+    deliveryFee: deliveryFeeAmount,
     deliveryTime: '20-30',
   };
 
@@ -485,7 +502,7 @@ const FoodDetailsPage = () => {
               </div>
               <div className="meta-item">
                 <Truck size={14} color="#FF6B4A" />
-                <span>KES {primaryVendor.deliveryFee || 50} delivery</span>
+                <span>KES {deliveryFeeAmount} delivery</span>
               </div>
             </div>
 

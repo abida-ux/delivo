@@ -125,14 +125,33 @@ export const CartProvider = ({ children }) => {
       initialRestaurantId = explicitRestaurant._id || explicitRestaurant.restaurantId || explicitRestaurant.id;
       initialRestaurantName = explicitRestaurant.name || explicitRestaurant.restaurantName;
       initialPrice = explicitRestaurant.price !== undefined ? Number(explicitRestaurant.price) : Number(food.price || 0);
-    } else if (food.restaurantId || (food.restaurant && typeof food.restaurant === 'object' && food.restaurant._id)) {
-      initialRestaurantId = food.restaurantId || food.restaurant._id;
-      initialRestaurantName = food.restaurantName || food.restaurant.name;
-      initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : 0;
     } else {
-      // Added from global catalogue without a pre-selected restaurant
-      initialRestaurantId = null;
-      initialRestaurantName = null;
+      // Resolve restaurant from food object (string ID, object, or array)
+      if (food.restaurantId) {
+        initialRestaurantId = typeof food.restaurantId === 'object' ? food.restaurantId._id : food.restaurantId;
+        initialRestaurantName = food.restaurantName || (typeof food.restaurantId === 'object' ? food.restaurantId.name : null);
+      } else if (food.restaurant) {
+        if (typeof food.restaurant === 'object' && food.restaurant._id) {
+          initialRestaurantId = food.restaurant._id;
+          initialRestaurantName = food.restaurant.name;
+        } else if (typeof food.restaurant === 'string') {
+          initialRestaurantId = food.restaurant;
+          initialRestaurantName = food.restaurantName || null;
+        }
+      } else if (Array.isArray(food.restaurants) && food.restaurants.length > 0) {
+        const firstRest = food.restaurants[0];
+        if (typeof firstRest === 'object' && firstRest._id) {
+          initialRestaurantId = firstRest._id;
+          initialRestaurantName = firstRest.name;
+        } else if (typeof firstRest === 'string') {
+          initialRestaurantId = firstRest;
+        }
+      }
+
+      if (!initialRestaurantName && food.restaurantName) {
+        initialRestaurantName = food.restaurantName;
+      }
+
       initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : 0;
     }
 

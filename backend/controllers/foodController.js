@@ -854,61 +854,86 @@ exports.getFoodRestaurants = async (req, res) => {
     const { foodId } = req.params;
     const { lat, lng } = req.query;
 
-    const FoodCombination = require('../models/FoodCombination');
-    const isCombo = await FoodCombination.findById(foodId).lean();
+    const Restaurant = require('../models/Restaurant');
+    const RestaurantFood = require('../models/RestaurantFood');
 
-    let links = [];
-    if (isCombo) {
-      const RestaurantCombination = require('../models/RestaurantCombination');
-      links = await RestaurantCombination.find({ combinationId: foodId, availability: true })
-        .populate('restaurantId')
-        .lean();
-    } else {
-      const RestaurantFood = require('../models/RestaurantFood');
-      links = await RestaurantFood.find({ foodId, availability: true })
-        .populate('restaurantId')
-        .lean();
+    // 1. Fetch Food document with populated restaurant links
+    const foodDoc = await Food.findById(foodId)
+      .populate('restaurant')
+      .populate('restaurants')
+      .lean();
+
+    let directRestaurants = [];
+
+    if (foodDoc) {
+      if (foodDoc.restaurant) {
+        directRestaurants.push(foodDoc.restaurant);
+      }
+      if (Array.isArray(foodDoc.restaurants) && foodDoc.restaurants.length > 0) {
+        foodDoc.restaurants.forEach((r) => {
+          if (r && r._id && !directRestaurants.some((dr) => dr._id.toString() === r._id.toString())) {
+            directRestaurants.push(r);
+          }
+        });
+      }
     }
 
-    const data = links.map(link => {
-      const rest = link.restaurantId;
-      if (!rest) return null;
+    // 2. Fetch RestaurantFood collection links
+    const links = await RestaurantFood.find({ foodId, availability: true })
+      .populate('restaurantId')
+      .lean();
 
-      let distance = 0;
-      if (lat && lng && rest.latitude && rest.longitude) {
-        const R = 6371; 
-        const dLat = (rest.latitude - lat) * Math.PI / 180;
-        const dLon = (rest.longitude - lng) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat * Math.PI / 180) * Math.cos(rest.latitude * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        distance = R * c; 
-      } else {
-        distance = 3.5; 
+    links.forEach((link) => {
+      const r = link.restaurantId;
+      if (r && r._id && !directRestaurants.some((dr) => dr._id.toString() === r._id.toString())) {
+        directRestaurants.push({
+          ...r,
+          customPrice: link.price,
+        });
       }
+    });
 
-      const baseFee = 20;
-      const perKmFee = 5;
-      const deliveryFee = Math.round(baseFee + (distance * perKmFee));
+    // 3. If no linked restaurant exists yet, fallback to all active restaurants
+    if (directRestaurants.length === 0) {
+      const allActive = await Restaurant.find({ status: { $ne: 'suspended' } }).limit(10).lean();
+      directRestaurants = allActive;
+    }
 
-      const prepTime = link.prepTime || 25;
-      const deliveryTime = Math.round(prepTime + (distance * 3));
+    const data = directRestaurants
+      .map((rest) => {
+        if (!rest || !rest._id) return null;
 
-      return {
-        restaurantId: rest._id,
-        name: rest.name,
-        image: rest.image || 'https://via.placeholder.com/300x160?text=Restaurant',
-        rating: rest.rating || 4.2,
-        isOpen: rest.isOpen !== false,
-        price: link.price,
-        discountPrice: link.discountPrice,
-        prepTime,
-        distance: parseFloat(distance.toFixed(1)),
-        deliveryFee,
-        deliveryTime,
-      };
-    }).filter(Boolean);
+        let distance = 3.5;
+        if (lat && lng && rest.latitude && rest.longitude) {
+          const R = 6371;
+          const dLat = ((rest.latitude - lat) * Math.PI) / 180;
+          const dLon = ((rest.longitude - lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat * Math.PI) / 180) *
+              Math.cos((rest.latitude * Math.PI) / 180) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          distance = R * c;
+        }
+
+        const prepTime = rest.deliveryTime ? parseInt(rest.deliveryTime, 10) || 25 : 25;
+        const deliveryTime = Math.round(prepTime + distance * 3);
+
+        return {
+          restaurantId: rest._id,
+          name: rest.name || 'Delivo Kitchen',
+          image: rest.bannerImage || rest.image || 'https://via.placeholder.com/300x160?text=Restaurant',
+          rating: rest.rating || 4.5,
+          isOpen: rest.isOpen !== false,
+          price: rest.customPrice || foodDoc?.price || 0,
+          prepTime,
+          distance: parseFloat(distance.toFixed(1)),
+          deliveryTime: `${prepTime}-${deliveryTime}`,
+        };
+      })
+      .filter(Boolean);
 
     return res.status(200).json({
       success: true,
@@ -916,6 +941,7 @@ exports.getFoodRestaurants = async (req, res) => {
       data,
     });
   } catch (error) {
+    console.error('❌ getFoodRestaurants error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
