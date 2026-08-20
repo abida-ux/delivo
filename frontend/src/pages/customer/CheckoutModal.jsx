@@ -225,9 +225,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     return { restaurantGroups: groups, uniqueRestaurantCount: count };
   }, [cartItems]);
 
-  const baseDeliveryFee = cartItems.length > 0 && deliverySettings.enabled ? deliverySettings.amount : 0;
-  const isFreeDeliveryEligible = deliverySettings.freeDeliveryEnabled && cartTotal >= deliverySettings.freeDeliveryMinimum;
-  const calculatedDeliveryFee = isFreeDeliveryEligible ? 0 : uniqueRestaurantCount * baseDeliveryFee;
+  const baseDeliveryFee = (cartItems && cartItems.length > 0 && deliverySettings?.enabled) ? Number(deliverySettings.amount || 20) : 0;
+  const isFreeDeliveryEligible = !deliverySettings?.enabled || (deliverySettings?.freeDeliveryEnabled && Number(cartTotal || 0) >= Number(deliverySettings?.freeDeliveryMinimum || 2500));
+  const calculatedDeliveryFee = isFreeDeliveryEligible ? 0 : (Number(uniqueRestaurantCount || 1) * baseDeliveryFee);
   
   // Calculate discount based on applied promo
   let discountAmount = 0;

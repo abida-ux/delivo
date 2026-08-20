@@ -123,7 +123,7 @@ const Cart = () => {
 
   const uniqueRestaurantCount = restaurantGroups.length;
   const cartTotal = getCartTotal();
-  const isFreeDeliveryEligible = deliverySettings.freeDeliveryEnabled && cartTotal >= deliverySettings.freeDeliveryMinimum;
+  const isFreeDeliveryEligible = !deliverySettings.enabled || (deliverySettings.freeDeliveryEnabled && cartTotal >= deliverySettings.freeDeliveryMinimum);
   const baseFee = deliverySettings.enabled ? deliverySettings.amount : 0;
   const deliveryFee = isFreeDeliveryEligible ? 0 : uniqueRestaurantCount * baseFee;
   const grandTotal = (cartTotal + deliveryFee).toFixed(2);

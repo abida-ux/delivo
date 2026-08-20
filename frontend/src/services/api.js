@@ -159,13 +159,33 @@ export const createOrder = async (orderData) => {
 };
 
 export const getAppSettings = async () => {
-  const res = await api.get('/settings');
-  return res.data.data || {};
+  try {
+    const res = await api.get('/settings');
+    const data = res.data?.data || {};
+    if (data && Object.keys(data).length > 0) {
+      try {
+        localStorage.setItem('delivo_app_settings', JSON.stringify(data));
+      } catch (e) {}
+    }
+    return data;
+  } catch (err) {
+    const cached = localStorage.getItem('delivo_app_settings');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return {};
+  }
 };
 
 export const updateAppSettings = async (settings) => {
   const res = await api.put('/settings', settings);
-  return res.data.data;
+  const data = res.data?.data || settings;
+  try {
+    localStorage.setItem('delivo_app_settings', JSON.stringify(data));
+    localStorage.setItem('app_settings_updated', Date.now().toString());
+    window.dispatchEvent(new CustomEvent('app_settings_updated', { detail: data }));
+  } catch (e) {}
+  return data;
 };
 
 export const getUserOrders = async (userId) => {

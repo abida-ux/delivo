@@ -1,6 +1,6 @@
 .admin-settings {
   padding: 24px;
-  max-width: 1000px;
+  max-width: 1080px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -10,17 +10,23 @@
 
 .settings-section {
   background: #ffffff;
-  border: 1px solid #d9ead5;
+  border: 1px solid #dcfce7;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(39, 87, 64, 0.08);
+  box-shadow: 0 12px 36px rgba(22, 163, 74, 0.07);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   animation: slideIn 0.3s ease;
+}
+
+.settings-section:hover {
+  box-shadow: 0 18px 48px rgba(22, 163, 74, 0.12);
+  border-color: #bbf7d0;
 }
 
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -32,21 +38,26 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 22px 24px;
-  background: #f2fbf1;
-  border-bottom: 2px solid #d9ead5;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-bottom: 1.5px solid #bbf7d0;
 }
 
 .admin-settings .section-icon {
-  color: #2f855a;
+  color: #16a34a;
   flex-shrink: 0;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
 }
 
 .admin-settings .section-header h2 {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--admin-foreground, #1f4338);
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .settings-content {
@@ -69,12 +80,13 @@
 }
 
 .toggle-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   cursor: pointer;
-  font-weight: 600;
-  color: var(--admin-foreground, #1f4338);
+  font-weight: 700;
+  font-size: 15px;
+  color: #0f172a;
   user-select: none;
 }
 
@@ -84,18 +96,18 @@
 
 .toggle-switch {
   position: relative;
-  width: 48px;
-  height: 28px;
-  background-color: rgba(72, 187, 120, 0.16);
-  border-radius: 14px;
-  transition: all 0.3s ease;
+  width: 52px;
+  height: 30px;
+  background-color: #e2e8f0;
+  border-radius: 15px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
-  border: 1px solid rgba(72, 187, 120, 0.2);
+  border: 1.5px solid #cbd5e1;
 }
 
 .toggle-label input:checked + .toggle-switch {
-  background-color: #2f855a;
-  border-color: #2f855a;
+  background-color: #16a34a;
+  border-color: #16a34a;
 }
 
 .toggle-switch::before {
@@ -105,19 +117,19 @@
   height: 24px;
   border-radius: 50%;
   background: white;
-  top: 2px;
+  top: 1.5px;
   left: 2px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-label input:checked + .toggle-switch::before {
-  left: 22px;
+  left: 24px;
 }
 
 .setting-desc {
   font-size: 13px;
-  color: var(--admin-muted, #4a6d56);
+  color: #64748b;
   margin: 0;
 }
 

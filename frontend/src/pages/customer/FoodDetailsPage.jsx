@@ -29,7 +29,7 @@ const FoodDetailsPage = () => {
   const { foodId } = useParams();
   const navigate = useNavigate();
   const { location } = useLocation();
-  const { addItem } = useCart();
+  const { addItem, cartItems, updateQuantity } = useCart();
   const { openCart } = useCartUI();
   const { user } = useContext(AuthContext);
   const { openLoginModal } = useContext(AuthModalContext) || {};
@@ -43,7 +43,10 @@ const FoodDetailsPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deliveryFeeAmount, setDeliveryFeeAmount] = useState(20);
+  const [deliverySettings, setDeliverySettings] = useState({
+    enabled: true,
+    amount: 20,
+  });
 
   // 1-Tap Rating State
   const [userRating, setUserRating] = useState(0);
@@ -53,8 +56,11 @@ const FoodDetailsPage = () => {
 
   useEffect(() => {
     getAppSettings().then(settings => {
-      if (settings && settings.deliveryFeeAmount != null) {
-        setDeliveryFeeAmount(Number(settings.deliveryFeeAmount));
+      if (settings) {
+        setDeliverySettings({
+          enabled: settings.deliveryFeeEnabled !== false,
+          amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
+        });
       }
     }).catch(() => {});
   }, []);
@@ -188,6 +194,33 @@ const FoodDetailsPage = () => {
     }
   };
 
+  const targetPortionName = selectedVariation ? selectedVariation.name : null;
+  const existingCartItem = (cartItems || []).find((item) => {
+    const itemFoodId = typeof item.foodId === 'object' && item.foodId !== null ? item.foodId._id : item.foodId;
+    const targetFoodId = food?._id || foodId;
+    if (itemFoodId?.toString() !== targetFoodId?.toString()) return false;
+    if (targetPortionName) {
+      return (item.portionName || null) === targetPortionName;
+    }
+    return true;
+  });
+  const isInCart = Boolean(existingCartItem);
+
+  useEffect(() => {
+    if (existingCartItem && existingCartItem.quantity) {
+      setQuantity(existingCartItem.quantity);
+    }
+  }, [existingCartItem?.quantity, selectedVariation?.name]);
+
+  const handleQuantityChange = (newQty) => {
+    if (newQty < 1) return;
+    setQuantity(newQty);
+    if (isInCart && existingCartItem) {
+      const targetId = food?._id || foodId;
+      updateQuantity(targetId, newQty);
+    }
+  };
+
   if (loading) {
     return (
       <div className="food-details-page-wrap">
@@ -242,7 +275,7 @@ const FoodDetailsPage = () => {
     restaurantId: fallbackRestId,
     name: fallbackRestName,
     rating: food.rating || 4.5,
-    deliveryFee: deliveryFeeAmount,
+    deliveryFee: deliverySettings.amount,
     deliveryTime: '20-30',
   };
 
@@ -502,25 +535,35 @@ const FoodDetailsPage = () => {
               </div>
               <div className="meta-item">
                 <Truck size={14} color="#FF6B4A" />
-                <span>KES {deliveryFeeAmount} delivery</span>
+                <span>{deliverySettings.enabled ? `KES ${deliverySettings.amount} delivery` : 'FREE delivery'}</span>
               </div>
             </div>
 
             {/* Quantity Stepper & Add to Cart */}
             <div className="order-stepper-row">
               <div className="stepper-controls">
-                <button disabled={quantity <= 1} onClick={() => setQuantity((q) => Math.max(1, q - 1))}>
+                <button disabled={quantity <= 1} onClick={() => handleQuantityChange(quantity - 1)}>
                   <Minus size={14} />
                 </button>
                 <span>{quantity}</span>
-                <button onClick={() => setQuantity((q) => q + 1)}>
+                <button onClick={() => handleQuantityChange(quantity + 1)}>
                   <Plus size={14} />
                 </button>
               </div>
 
-              <button className="add-to-cart-btn" onClick={handleAddToCart}>
-                <ShoppingBag size={18} /> Add {quantity > 1 ? `${quantity} Combos` : 'to Cart'} • KES {totalPrice.toLocaleString()}
-              </button>
+              {isInCart ? (
+                <button
+                  className="add-to-cart-btn in-cart-mode"
+                  onClick={openCart}
+                  style={{ backgroundColor: '#16a34a', borderColor: '#16a34a', color: '#ffffff' }}
+                >
+                  <ShoppingBag size={18} /> View Cart ({existingCartItem.quantity} in Cart)
+                </button>
+              ) : (
+                <button className="add-to-cart-btn" onClick={handleAddToCart}>
+                  <ShoppingBag size={18} /> Add {quantity > 1 ? `${quantity} Combos` : 'to Cart'} • KES {totalPrice.toLocaleString()}
+                </button>
+              )}
             </div>
           </div>
         </div>

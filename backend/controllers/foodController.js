@@ -893,7 +893,14 @@ exports.getFoodRestaurants = async (req, res) => {
       }
     });
 
-    // 3. If no linked restaurant exists yet, fallback to all active restaurants
+    // 3. Fetch admin delivery settings
+    const AppSettings = require('../models/AppSettings');
+    const settingsDoc = await AppSettings.findOne().lean();
+    const isFeeEnabled = settingsDoc ? settingsDoc.deliveryFeeEnabled !== false : true;
+    const feeAmount = settingsDoc && settingsDoc.deliveryFeeAmount != null ? Number(settingsDoc.deliveryFeeAmount) : 20;
+    const calculatedDeliveryFee = isFeeEnabled ? feeAmount : 0;
+
+    // 4. If no linked restaurant exists yet, fallback to all active restaurants
     if (directRestaurants.length === 0) {
       const allActive = await Restaurant.find({ status: { $ne: 'suspended' } }).limit(10).lean();
       directRestaurants = allActive;
@@ -930,6 +937,8 @@ exports.getFoodRestaurants = async (req, res) => {
           price: rest.customPrice || foodDoc?.price || 0,
           prepTime,
           distance: parseFloat(distance.toFixed(1)),
+          deliveryFee: calculatedDeliveryFee,
+          deliveryFeeEnabled: isFeeEnabled,
           deliveryTime: `${prepTime}-${deliveryTime}`,
         };
       })

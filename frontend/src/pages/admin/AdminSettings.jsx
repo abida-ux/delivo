@@ -182,14 +182,12 @@ const AdminSettings = () => {
   // Save settings to backend
   const saveSettings = async () => {
     try {
-      await updateAppSettings(settings);
-
+      const data = await updateAppSettings(settings);
       try {
+        localStorage.setItem('delivo_app_settings', JSON.stringify(data));
         localStorage.setItem('app_settings_updated', Date.now().toString());
-        window.dispatchEvent(new Event('app_settings_updated'));
-      } catch (e) {
-        // ignore storage errors
-      }
+        window.dispatchEvent(new CustomEvent('app_settings_updated', { detail: data }));
+      } catch (e) {}
 
       alert('Settings saved successfully!');
     } catch (error) {
@@ -199,11 +197,21 @@ const AdminSettings = () => {
   };
 
   const handleSettingChange = (key, value) => {
-
-    setSettings((prev) => ({
-      ...prev,
+    const updated = {
+      ...settings,
       [key]: value,
-    }));
+    };
+    setSettings(updated);
+
+    try {
+      localStorage.setItem('delivo_app_settings', JSON.stringify(updated));
+      localStorage.setItem('app_settings_updated', Date.now().toString());
+      window.dispatchEvent(new CustomEvent('app_settings_updated', { detail: updated }));
+    } catch (e) {}
+
+    updateAppSettings(updated).catch((err) => {
+      console.error('Error saving setting:', err);
+    });
   };
 
   const handleAddPromo = async (e) => {
