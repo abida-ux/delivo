@@ -305,7 +305,7 @@ export const updateFood = async (id, data) => {
   foodsCache = null;
   foodsPromise = null;
   const res = await api.put(`/foods/${id}`, data);
-  return res.data;
+  return res.data?.data || res.data;
 };
 
 export const createFood = async (data) => {
@@ -313,7 +313,7 @@ export const createFood = async (data) => {
   foodsCache = null;
   foodsPromise = null;
   const res = await api.post('/foods', data);
-  return res.data;
+  return res.data?.data || res.data;
 };
 
 export const updateRestaurant = async (id, data) => {

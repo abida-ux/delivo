@@ -65,7 +65,7 @@ const FoodCard = ({ food, onExpired, showVendor = true }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    addItem(food, 1);
+    navigate(`/food/${food._id}`);
   };
 
   const handleOpenCart = (e) => {

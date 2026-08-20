@@ -60,6 +60,32 @@ const FoodSchema = new mongoose.Schema({
     type: String,
   }],
 
+  portions: [{
+    name: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  }],
+
+  variations: [{
+    name: {
+      type: String,
+      trim: true,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  }],
+
   featured: {
     type: Boolean,
     default: false,

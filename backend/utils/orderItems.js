@@ -121,6 +121,9 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
     });
 
     let finalPrice = (restaurantFood.price != null && restaurantFood.price > 0) ? restaurantFood.price : (food.price || 0);
+    if (item.portionName || (item.price != null && item.price > 0)) {
+      finalPrice = item.price != null ? item.price : finalPrice;
+    }
     if (activeFlashSale) {
       const flashItem = activeFlashSale.items.find((i) => i.foodId.toString() === item.foodId.toString());
       if (flashItem) {
@@ -136,6 +139,7 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
       quantity: item.quantity || 1,
       price: finalPrice,
       name: food.name,
+      portionName: item.portionName || null,
       isCombination: false,
       combinationId: undefined,
       components: undefined,

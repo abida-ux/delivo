@@ -202,8 +202,14 @@ exports.getAllFoods = async (req, res) => {
         const fId = food._id.toString();
         const links = linksByFood[fId] || [];
         const basePrice = food.price || 0;
+        const itemPortions = Array.isArray(food.portions) && food.portions.length > 0
+          ? food.portions
+          : (Array.isArray(food.variations) ? food.variations : []);
+
         return {
           ...food,
+          portions: itemPortions,
+          variations: itemPortions,
           restaurantCount: links.length,
           basePrice,
           price: basePrice,
@@ -247,8 +253,14 @@ exports.getAllFoods = async (req, res) => {
         const fId = food._id.toString();
         const links = linksByFood[fId] || [];
         const basePrice = food.price || 0;
+        const itemPortions = Array.isArray(food.portions) && food.portions.length > 0
+          ? food.portions
+          : (Array.isArray(food.variations) ? food.variations : []);
+
         return {
           ...food,
+          portions: itemPortions,
+          variations: itemPortions,
           restaurantCount: links.length,
           basePrice,
           price: basePrice,
@@ -468,10 +480,16 @@ exports.getFoodById = async (req, res) => {
       if (userRatingRec) userRating = userRatingRec.rating;
     }
 
+    const finalPortions = Array.isArray(food.portions) && food.portions.length > 0 
+      ? food.portions 
+      : (Array.isArray(food.variations) ? food.variations : []);
+
     return res.status(200).json({
       success: true,
       data: {
         ...food,
+        portions: finalPortions,
+        variations: finalPortions,
         userRating,
         restaurantsSelling,
         restaurantCount: restaurantsSelling.length,
@@ -491,9 +509,26 @@ exports.getFoodById = async (req, res) => {
 // ==================== CREATE FOOD (Catalogue template) ====================
 exports.createFood = async (req, res) => {
   try {
-    const { name, description, image, price, restaurants = [], categories = [], category } = req.body;
+    const { name, description, image, price, restaurants = [], categories = [], category, portions = [], variations = [] } = req.body;
     const { ids: normalizedCategoryIds, primaryName } = normalizeCategorySelection(categories);
     const { ids: normalizedRestaurantIds, primaryId } = normalizeRestaurantSelection(restaurants);
+
+    let parsedPortions = portions;
+    if (typeof portions === 'string') {
+      try { parsedPortions = JSON.parse(portions); } catch (e) {}
+    }
+    let parsedVariations = variations;
+    if (typeof variations === 'string') {
+      try { parsedVariations = JSON.parse(variations); } catch (e) {}
+    }
+
+    const rawPortions = Array.isArray(parsedPortions) && parsedPortions.length > 0 
+      ? parsedPortions 
+      : (Array.isArray(parsedVariations) ? parsedVariations : []);
+
+    const finalPortions = rawPortions.map(p => 
+      typeof p === 'string' ? { name: p, price: parseFloat(price) || 0 } : { name: String(p.name || p.title || 'Portion').trim(), price: parseFloat(p.price) || 0 }
+    ).filter(p => p.name);
 
     const food = await Food.create({
       name,
@@ -504,6 +539,8 @@ exports.createFood = async (req, res) => {
       category: category || primaryName || getPrimaryCategoryName(categories),
       restaurant: primaryId || undefined,
       restaurants: normalizedRestaurantIds,
+      portions: finalPortions,
+      variations: finalPortions,
     });
 
     if (normalizedRestaurantIds.length > 0) {
@@ -522,10 +559,14 @@ exports.createFood = async (req, res) => {
       }));
     }
 
+    const foodObj = food.toObject ? food.toObject() : food;
+    foodObj.portions = finalPortions;
+    foodObj.variations = finalPortions;
+
     return res.status(201).json({
       success: true,
       message: 'Food created successfully',
-      data: food,
+      data: foodObj,
     });
   } catch (error) {
     console.error('❌ createFood error:', error.message);
@@ -539,20 +580,28 @@ exports.createFood = async (req, res) => {
 // ==================== UPDATE FOOD ====================
 exports.updateFood = async (req, res) => {
   try {
-    const { name, description, image, price, restaurants = [], categories = [], category } = req.body;
+    const { name, description, image, price, restaurants = [], categories = [], category, portions = [], variations = [] } = req.body;
     const { ids: normalizedCategoryIds, primaryName } = normalizeCategorySelection(categories);
     const { ids: normalizedRestaurantIds, primaryId } = normalizeRestaurantSelection(restaurants);
 
-    const food = await Food.findByIdAndUpdate(req.params.id, {
-      name,
-      description,
-      image,
-      price: parseFloat(price) || 0,
-      categories: normalizedCategoryIds,
-      category: category || primaryName || getPrimaryCategoryName(categories),
-      restaurant: primaryId || undefined,
-      restaurants: normalizedRestaurantIds,
-    }, { new: true, runValidators: true });
+    let parsedPortions = portions;
+    if (typeof portions === 'string') {
+      try { parsedPortions = JSON.parse(portions); } catch (e) {}
+    }
+    let parsedVariations = variations;
+    if (typeof variations === 'string') {
+      try { parsedVariations = JSON.parse(variations); } catch (e) {}
+    }
+
+    const rawPortions = Array.isArray(parsedPortions) && parsedPortions.length > 0 
+      ? parsedPortions 
+      : (Array.isArray(parsedVariations) ? parsedVariations : []);
+
+    const finalPortions = rawPortions.map(p => 
+      typeof p === 'string' ? { name: p, price: parseFloat(price) || 0 } : { name: String(p.name || p.title || 'Portion').trim(), price: parseFloat(p.price) || 0 }
+    ).filter(p => p.name);
+
+    let food = await Food.findById(req.params.id);
 
     if (!food) {
       return res.status(404).json({
@@ -560,6 +609,23 @@ exports.updateFood = async (req, res) => {
         message: 'Food not found',
       });
     }
+
+    if (name) food.name = name;
+    if (description) food.description = description;
+    if (image) food.image = image;
+    if (price !== undefined && price !== null && price !== '') food.price = parseFloat(price) || 0;
+    if (normalizedCategoryIds.length > 0) food.categories = normalizedCategoryIds;
+    if (category || primaryName) food.category = category || primaryName;
+    if (primaryId) food.restaurant = primaryId;
+    if (normalizedRestaurantIds.length > 0) food.restaurants = normalizedRestaurantIds;
+
+    food.portions = finalPortions;
+    food.variations = finalPortions;
+
+    food.markModified('portions');
+    food.markModified('variations');
+
+    await food.save();
 
     if (Array.isArray(restaurants)) {
       await RestaurantFood.deleteMany({
@@ -582,10 +648,14 @@ exports.updateFood = async (req, res) => {
       }));
     }
 
+    const foodObj = food.toObject ? food.toObject() : food;
+    foodObj.portions = finalPortions;
+    foodObj.variations = finalPortions;
+
     return res.status(200).json({
       success: true,
       message: 'Food updated successfully',
-      data: food,
+      data: foodObj,
     });
   } catch (error) {
     console.error('❌ updateFood error:', error.message);

@@ -2,289 +2,277 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.delivo.co.ke</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/restaurants</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/contact</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/about</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/login</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/signup</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/cart</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/profile</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=breakfast</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=lunch</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=dinner</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=fast-food</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=street-food</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=snacks</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=drinks</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=desserts</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=healthy</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=bakery</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=pizza</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/categories?c=burgers</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.delivo.co.ke/restaurants/6a1aa87ffb9848a5afa8c5fa</loc>
-    <lastmod>2026-08-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.delivo.co.ke/restaurants/6a5cd03a2718fbbab5c41a30</loc>
-    <lastmod>2026-08-19</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.delivo.co.ke/restaurants/6a79fe3dda9dcae73c34e057</loc>
-    <lastmod>2026-08-19</lastmod>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771ffb928915019410de30</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e7bdc5a7fc9d3eed5308</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771fb2928915019410ddd8</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e73fc5a7fc9d3eed51e8</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771ccf928915019410da9c</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e6dfc5a7fc9d3eed5133</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771c93928915019410da52</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e645c5a7fc9d3eed5085</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771c4a928915019410d9fa</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e606c5a7fc9d3eed5034</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771b18928915019410d8a9</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e5c7c5a7fc9d3eed4fd7</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771abf928915019410d845</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e56fc5a7fc9d3eed4f6c</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771a87928915019410d803</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e529c5a7fc9d3eed4efb</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7719fa928915019410d71f</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e4d3c5a7fc9d3eed4e93</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7719b3928915019410d6ce</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e456c5a7fc9d3eed4df1</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771954928915019410d65f</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e3fbc5a7fc9d3eed4d8b</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771910928915019410d610</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e3bdc5a7fc9d3eed4d3c</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7718d4928915019410d5c9</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e37dc5a7fc9d3eed4cee</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771888928915019410d573</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e335c5a7fc9d3eed4c98</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771826928915019410d504</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e2cfc5a7fc9d3eed4c0f</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7717c5928915019410d493</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e257c5a7fc9d3eed4b85</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a77176b928915019410d42d</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e20dc5a7fc9d3eed4b15</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7716f4928915019410d370</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e1cbc5a7fc9d3eed4ac2</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a77169d928915019410d309</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e16bc5a7fc9d3eed4a47</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771635928915019410d298</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e113c5a7fc9d3eed49c9</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7715e7928915019410d23d</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e0dac5a7fc9d3eed497f</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a77159e928915019410d1ea</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e08fc5a7fc9d3eed4925</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a771531928915019410d170</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86e045c5a7fc9d3eed48be</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.delivo.co.ke/food/6a7714e8928915019410d11b</loc>
-    <lastmod>2026-08-19</lastmod>
+    <loc>https://www.delivo.co.ke/food/6a86dffbc5a7fc9d3eed4822</loc>
+    <lastmod>2026-08-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

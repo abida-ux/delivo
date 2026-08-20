@@ -20,6 +20,9 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [portions, setPortions] = useState([]);
+  const [portionName, setPortionName] = useState('');
+  const [portionPrice, setPortionPrice] = useState('');
 
   useEffect(() => {
     fetchCategories();
@@ -40,8 +43,43 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
     }
   };
 
+  const resolveCategoryIds = (foodDoc, allCategories) => {
+    const ids = new Set();
+    if (!foodDoc) return [];
+
+    if (Array.isArray(foodDoc.categories)) {
+      foodDoc.categories.forEach(c => {
+        const id = typeof c === 'object' ? c._id : c;
+        if (id) ids.add(String(id));
+      });
+    }
+
+    if (foodDoc.category) {
+      const catVal = typeof foodDoc.category === 'object' ? (foodDoc.category._id || foodDoc.category.name) : foodDoc.category;
+      if (catVal) {
+        const matchById = allCategories.find(c => String(c._id) === String(catVal));
+        if (matchById) {
+          ids.add(String(matchById._id));
+        } else {
+          const matchByName = allCategories.find(c => c.name.toLowerCase() === String(catVal).toLowerCase());
+          if (matchByName) {
+            ids.add(String(matchByName._id));
+          } else {
+            ids.add(String(catVal));
+          }
+        }
+      }
+    }
+
+    return Array.from(ids);
+  };
+
   useEffect(() => {
-    if (food) {
+    let isMounted = true;
+
+    const loadFreshFood = async () => {
+      if (!food?._id || !isOpen) return;
+
       const selectedRestaurants = Array.isArray(food.restaurants)
         ? food.restaurants
             .map((restaurant) => (typeof restaurant === 'object' ? restaurant._id : restaurant))
@@ -50,11 +88,19 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
           ? [typeof food.restaurant === 'object' ? food.restaurant._id : food.restaurant]
           : [];
 
-      const initialCats = Array.isArray(food.categories)
-        ? food.categories.map(c => typeof c === 'object' ? c._id : c).filter(Boolean)
-        : food.category
-          ? [food.category]
-          : [];
+      let availableCats = categoriesList;
+      if (!availableCats.length) {
+        try {
+          const cRes = await api.get('/categories');
+          availableCats = cRes.data?.data || [];
+          if (isMounted) setCategoriesList(availableCats);
+        } catch (cErr) {
+          console.warn('Could not fetch categories in loadFreshFood:', cErr);
+        }
+      }
+
+      const initialCatIds = resolveCategoryIds(food, availableCats);
+      setSelectedCategories(initialCatIds);
 
       setFormData({
         name: food.name || '',
@@ -63,9 +109,55 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
         restaurants: selectedRestaurants,
         description: food.description || '',
       });
-      setSelectedCategories(initialCats);
-    }
-  }, [food, isOpen]);
+
+      let initialPortions = Array.isArray(food.portions) && food.portions.length > 0 
+        ? food.portions 
+        : (Array.isArray(food.variations) ? food.variations : []);
+
+      initialPortions = initialPortions.map(p => 
+        typeof p === 'string' ? { name: p, price: Number(food.price || 0) } : { name: p.name || p.title || 'Portion', price: Number(p.price || 0) }
+      );
+      setPortions(initialPortions);
+      setPortionName('');
+      setPortionPrice('');
+
+      try {
+        const res = await api.get(`/foods/${food._id}`);
+        const freshDoc = res.data?.data;
+        if (freshDoc && isMounted) {
+          const freshPortions = Array.isArray(freshDoc.portions) && freshDoc.portions.length > 0
+            ? freshDoc.portions
+            : (Array.isArray(freshDoc.variations) ? freshDoc.variations : []);
+
+          const cleanPortions = freshPortions.map(p =>
+            typeof p === 'string' ? { name: p, price: Number(freshDoc.price || 0) } : { name: p.name || p.title || 'Portion', price: Number(p.price || 0) }
+          );
+          setPortions(cleanPortions);
+
+          const freshCatIds = resolveCategoryIds(freshDoc, availableCats);
+          if (freshCatIds.length > 0) {
+            setSelectedCategories(freshCatIds);
+          }
+
+          setFormData(prev => ({
+            ...prev,
+            name: freshDoc.name || prev.name,
+            price: freshDoc.price != null ? freshDoc.price : prev.price,
+            image: freshDoc.image || prev.image,
+            description: freshDoc.description || prev.description,
+          }));
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not fetch fresh food details in edit modal:', err.message);
+      }
+    };
+
+    loadFreshFood();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [food?._id, isOpen]);
 
   if (!isOpen) return null;
 
@@ -77,12 +169,38 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
     }));
   };
 
-  const handleCategoryToggle = (categoryId) => {
-    const isSelected = selectedCategories.includes(categoryId);
-    setSelectedCategories(isSelected
-      ? selectedCategories.filter(id => id !== categoryId)
-      : [...selectedCategories, categoryId]
-    );
+  const handleAddPortion = () => {
+    if (!portionName.trim()) {
+      alert('Please enter portion name (e.g. Half, Full, Small, Large)');
+      return;
+    }
+    if (!portionPrice || isNaN(portionPrice)) {
+      alert('Please enter a valid price for the portion');
+      return;
+    }
+    setPortions(prev => [...prev, { name: portionName.trim(), price: parseFloat(portionPrice) }]);
+    setPortionName('');
+    setPortionPrice('');
+  };
+
+  const handleUpdatePortionPrice = (index, newPrice) => {
+    setPortions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], price: parseFloat(newPrice) || 0 };
+      return updated;
+    });
+  };
+
+  const handleUpdatePortionName = (index, newName) => {
+    setPortions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], name: newName };
+      return updated;
+    });
+  };
+
+  const handleRemovePortion = (index) => {
+    setPortions(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -132,12 +250,22 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
         }
       }
 
+      let finalPortions = [...portions];
+      if (portionName.trim()) {
+        const pPrice = parseFloat(portionPrice) || parseFloat(formData.price) || 0;
+        if (!finalPortions.some(p => p.name.toLowerCase() === portionName.trim().toLowerCase())) {
+          finalPortions.push({ name: portionName.trim(), price: pPrice });
+        }
+      }
+
       const updateData = {
         ...formData,
         categories: finalCategories,
         category: firstCategoryName || 'Other',
         restaurant: formData.restaurants[0] || '',
         restaurants: formData.restaurants,
+        portions: finalPortions,
+        variations: finalPortions,
       };
 
       const result = await onSave(updateData);
@@ -218,6 +346,82 @@ const AdminEditFoodModal = ({ isOpen, food, restaurants, onClose, onSave }) => {
               placeholder="Enter price"
               required
             />
+          </div>
+
+          {/* PORTIONS / SIZES SECTION */}
+          <div className="form-group" style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1.5px solid #e2e8f0' }}>
+            <label style={{ fontWeight: '800', fontSize: '14px', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>Portions / Sizes</span>
+              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>ONE FOOD → MANY PORTIONS</span>
+            </label>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px 0' }}>
+              Define portions for this dish (e.g. Half — KES 120, Full — KES 240, Small — KES 10, Large — KES 30).
+            </p>
+
+            {/* Portions Table */}
+            {portions.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px auto', gap: '8px', fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', padding: '0 4px' }}>
+                  <span>Portion Name</span>
+                  <span>Price (KES)</span>
+                  <span>Action</span>
+                </div>
+                {portions.map((p, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 110px auto', gap: '8px', alignItems: 'center', background: '#ffffff', border: '1px solid #cbd5e1', padding: '8px 10px', borderRadius: '8px' }}>
+                    <input
+                      type="text"
+                      value={p.name}
+                      onChange={(e) => handleUpdatePortionName(idx, e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '13px', fontWeight: '700', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                      placeholder="Portion name"
+                    />
+                    <input
+                      type="number"
+                      value={p.price}
+                      onChange={(e) => handleUpdatePortionPrice(idx, e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '13px', fontWeight: '700', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                      placeholder="Price"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePortion(idx)}
+                      style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: '6px', padding: '6px 10px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '12px' }}>
+                No portion options added yet. Uses default base price above.
+              </p>
+            )}
+
+            {/* Add Portion Controls */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px auto', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="New Portion (e.g. Half, Full, Small)"
+                value={portionName}
+                onChange={(e) => setPortionName(e.target.value)}
+                style={{ padding: '8px 10px', fontSize: '13px' }}
+              />
+              <input
+                type="number"
+                placeholder="Price (KES)"
+                value={portionPrice}
+                onChange={(e) => setPortionPrice(e.target.value)}
+                style={{ padding: '8px 10px', fontSize: '13px' }}
+              />
+              <button
+                type="button"
+                onClick={handleAddPortion}
+                style={{ background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', padding: '0 14px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                + Add Portion
+              </button>
+            </div>
           </div>
 
           <div className="form-group">

@@ -36,6 +36,10 @@ const CartSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
+    portionName: {
+      type: String,
+      default: null,
+    },
     price: {
       type: Number,
       default: null,

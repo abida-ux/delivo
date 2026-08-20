@@ -136,10 +136,13 @@ export const CartProvider = ({ children }) => {
       initialPrice = food.price !== undefined && food.price !== null ? Number(food.price) : 0;
     }
 
+    const targetPortionName = food.portionName || food.selectedVariation || null;
+
     const optimisticCart = [...cartItems];
     const existingItem = optimisticCart.find((item) => {
       if (getNormalizedFoodId(item) !== itemId) return false;
       if ((item.productType || 'meal') !== productType) return false;
+      if ((item.portionName || null) !== targetPortionName) return false;
       const existingRestId = getNormalizedRestaurantId(item);
       const targetRestId = initialRestaurantId ? initialRestaurantId.toString() : null;
       return existingRestId === targetRestId;
@@ -156,6 +159,7 @@ export const CartProvider = ({ children }) => {
         restaurantId: initialRestaurantId || null,
         restaurantName: initialRestaurantName || null,
         name: food.name,
+        portionName: targetPortionName,
         price: initialPrice,
         image: food.image || food.images?.[0],
         quantity,
@@ -177,6 +181,7 @@ export const CartProvider = ({ children }) => {
           restaurantId: initialRestaurantId || undefined,
           restaurantName: initialRestaurantName || undefined,
           quantity,
+          portionName: targetPortionName || undefined,
           productType,
           price: initialPrice !== null ? initialPrice : undefined,
           categoryType: food.categoryType || (productType === 'marketplace' ? 'marketplace' : 'meal'),

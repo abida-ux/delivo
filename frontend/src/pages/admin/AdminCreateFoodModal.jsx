@@ -21,6 +21,10 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
 
   const [loading, setLoading] = useState(false);
 
+  const [portions, setPortions] = useState([]);
+  const [portionName, setPortionName] = useState('');
+  const [portionPrice, setPortionPrice] = useState('');
+
   useEffect(() => {
     if (isOpen) {
       fetchCategories();
@@ -44,6 +48,40 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleAddPortion = () => {
+    if (!portionName.trim()) {
+      alert('Please enter portion name (e.g. Half, Full, Small, Large)');
+      return;
+    }
+    if (!portionPrice || isNaN(portionPrice)) {
+      alert('Please enter a valid price for the portion');
+      return;
+    }
+    setPortions(prev => [...prev, { name: portionName.trim(), price: parseFloat(portionPrice) }]);
+    setPortionName('');
+    setPortionPrice('');
+  };
+
+  const handleUpdatePortionPrice = (index, newPrice) => {
+    setPortions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], price: parseFloat(newPrice) || 0 };
+      return updated;
+    });
+  };
+
+  const handleUpdatePortionName = (index, newName) => {
+    setPortions(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], name: newName };
+      return updated;
+    });
+  };
+
+  const handleRemovePortion = (index) => {
+    setPortions(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCategoryToggle = (categoryId) => {
@@ -109,12 +147,22 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
         }
       }
 
+      let finalPortions = [...portions];
+      if (portionName.trim()) {
+        const pPrice = parseFloat(portionPrice) || parseFloat(formData.price) || 0;
+        if (!finalPortions.some(p => p.name.toLowerCase() === portionName.trim().toLowerCase())) {
+          finalPortions.push({ name: portionName.trim(), price: pPrice });
+        }
+      }
+
       const payload = {
         ...formData,
         categories: finalCategories,
         category: firstCategoryName || 'Other',
         restaurant: formData.restaurants[0],
         restaurants: formData.restaurants,
+        portions: finalPortions,
+        variations: finalPortions,
       };
 
       console.log('Submitting food data:', payload);
@@ -131,6 +179,7 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
           restaurants: [],
           description: '',
         });
+        setVariations([]);
         setSelectedCategories([]);
         setCreateNewCategory(false);
         setNewCategoryName('');
@@ -206,6 +255,82 @@ const AdminCreateFoodModal = ({ isOpen, restaurants, onClose, onSave }) => {
               placeholder="Enter price"
               required
             />
+          </div>
+
+          {/* PORTIONS / SIZES SECTION */}
+          <div className="form-group" style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1.5px solid #e2e8f0' }}>
+            <label style={{ fontWeight: '800', fontSize: '14px', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>Portions / Sizes</span>
+              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>ONE FOOD → MANY PORTIONS</span>
+            </label>
+            <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 12px 0' }}>
+              Define portions for this dish (e.g. Half — KES 120, Full — KES 240, Small — KES 10, Large — KES 30).
+            </p>
+
+            {/* Portions Table */}
+            {portions.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px auto', gap: '8px', fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', padding: '0 4px' }}>
+                  <span>Portion Name</span>
+                  <span>Price (KES)</span>
+                  <span>Action</span>
+                </div>
+                {portions.map((p, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 110px auto', gap: '8px', alignItems: 'center', background: '#ffffff', border: '1px solid #cbd5e1', padding: '8px 10px', borderRadius: '8px' }}>
+                    <input
+                      type="text"
+                      value={p.name}
+                      onChange={(e) => handleUpdatePortionName(idx, e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '13px', fontWeight: '700', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                      placeholder="Portion name"
+                    />
+                    <input
+                      type="number"
+                      value={p.price}
+                      onChange={(e) => handleUpdatePortionPrice(idx, e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '13px', fontWeight: '700', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                      placeholder="Price"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePortion(idx)}
+                      style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', borderRadius: '6px', padding: '6px 10px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '12px' }}>
+                No portion options added yet. Uses default base price above.
+              </p>
+            )}
+
+            {/* Add Portion Controls */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px auto', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="New Portion (e.g. Half, Full, Small)"
+                value={portionName}
+                onChange={(e) => setPortionName(e.target.value)}
+                style={{ padding: '8px 10px', fontSize: '13px' }}
+              />
+              <input
+                type="number"
+                placeholder="Price (KES)"
+                value={portionPrice}
+                onChange={(e) => setPortionPrice(e.target.value)}
+                style={{ padding: '8px 10px', fontSize: '13px' }}
+              />
+              <button
+                type="button"
+                onClick={handleAddPortion}
+                style={{ background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', padding: '0 14px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                + Add Portion
+              </button>
+            </div>
           </div>
 
           <div className="form-group">

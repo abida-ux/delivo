@@ -508,8 +508,21 @@
 
 .similar-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 14px;
+}
+
+.similar-cards-grid .food-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 640px) {
+  .similar-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
 
 /* Skeleton Loading */

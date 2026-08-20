@@ -39,6 +39,7 @@ const FoodDetailsPage = () => {
   const [sellingRestaurants, setSellingRestaurants] = useState([]);
   const [similarFoods, setSimilarFoods] = useState([]);
   const [comboComponents, setComboComponents] = useState([]);
+  const [selectedVariation, setSelectedVariation] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,6 +73,20 @@ const FoodDetailsPage = () => {
           setFood(currentFood);
           if (currentFood.userRating) setUserRating(currentFood.userRating);
           setSellingRestaurants(restRes.data?.data || []);
+
+          let rawPortions = Array.isArray(currentFood.portions) && currentFood.portions.length > 0
+            ? currentFood.portions
+            : (Array.isArray(currentFood.variations) ? currentFood.variations : []);
+
+          rawPortions = rawPortions.map(p => typeof p === 'string' ? { name: p, price: Number(currentFood.price || 0) } : p);
+
+          let initialPortions = [...rawPortions];
+
+          if (initialPortions.length > 0) {
+            setSelectedVariation(initialPortions[0]);
+          } else {
+            setSelectedVariation(null);
+          }
 
           // Initialize combo components for interactive portion customization
           if (currentFood.isCombination || (currentFood.components && currentFood.components.length > 0)) {
@@ -198,6 +213,14 @@ const FoodDetailsPage = () => {
   const categoryName = typeof food.category === 'object' ? food.category?.name : (food.category || 'Specialty');
   const isCombinationMeal = Boolean(food.isCombination || (food.components && food.components.length > 0));
 
+  let rawPortions = Array.isArray(food.portions) && food.portions.length > 0
+    ? food.portions
+    : (Array.isArray(food.variations) ? food.variations : []);
+
+  rawPortions = rawPortions.map(p => typeof p === 'string' ? { name: p, price: Number(food.price || 0) } : p);
+
+  let portionsList = [...rawPortions];
+
   const primaryVendor = sellingRestaurants[0] || {
     restaurantId: food.restaurant?._id || 'default',
     name: food.restaurant?.name || 'Delivo Kitchen',
@@ -206,12 +229,15 @@ const FoodDetailsPage = () => {
     deliveryTime: '20-30',
   };
 
-  // Real-time unit price: for combos, sum of (component unit price * quantity); for single foods, food.price
+  // Real-time unit price: combo portions > selected portion > base price
   const customizedComboPrice = isCombinationMeal && comboComponents.length > 0
     ? comboComponents.reduce((sum, c) => sum + (c.unitPrice * c.quantity), 0)
     : (food.price != null && food.price > 0 ? food.price : (primaryVendor.price || 0));
 
-  const unitPrice = customizedComboPrice;
+  const unitPrice = isCombinationMeal
+    ? customizedComboPrice
+    : (selectedVariation ? selectedVariation.price : customizedComboPrice);
+
   const totalPrice = unitPrice * quantity;
 
   const handleAddToCart = () => {
@@ -239,7 +265,19 @@ const FoodDetailsPage = () => {
         price: unitPrice,
       });
     } else {
-      addItem({ ...food, price: unitPrice, restaurantId: primaryVendor.restaurantId }, quantity);
+      const portionName = selectedVariation ? selectedVariation.name : null;
+      addItem({
+        ...food,
+        name: food.name,
+        portionName: portionName,
+        price: unitPrice,
+        restaurantId: primaryVendor?.restaurantId,
+        restaurantName: primaryVendor?.name,
+      }, quantity, {
+        restaurantId: primaryVendor?.restaurantId,
+        name: primaryVendor?.name,
+        price: unitPrice,
+      });
     }
     openCart();
   };
@@ -304,6 +342,46 @@ const FoodDetailsPage = () => {
                 </span>
               )}
             </div>
+
+            {/* PORTION / SIZE SELECTOR */}
+            {!isCombinationMeal && portionsList.length > 0 && (
+              <div style={{ background: '#ffffff', border: '1.5px solid #FF6B4A', padding: '14px 16px', borderRadius: '12px', marginTop: '12px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', margin: '0 0 10px 0' }}>Choose your portion</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {portionsList.map((p, idx) => {
+                    const isSelected = selectedVariation?.name === p.name && selectedVariation?.price === p.price;
+                    return (
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => setSelectedVariation(p)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 14px',
+                          borderRadius: '10px',
+                          fontSize: '14px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          border: isSelected ? '2px solid #FF6B4A' : '1.5px solid #e2e8f0',
+                          background: isSelected ? '#fff5f2' : '#ffffff',
+                          color: isSelected ? '#FF6B4A' : '#334155',
+                          transition: 'all 0.15s ease',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ fontSize: '16px', color: isSelected ? '#FF6B4A' : '#94a3b8' }}>
+                          {isSelected ? '◉' : '○'}
+                        </span>
+                        <span style={{ flex: 1 }}>{p.name}</span>
+                        <span style={{ fontWeight: '800' }}>KES {Number(p.price || 0).toLocaleString()}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* COMBO PORTION CUSTOMIZER WIDGET */}
             {isCombinationMeal && comboComponents.length > 0 && (
@@ -430,10 +508,66 @@ const FoodDetailsPage = () => {
           </div>
         </div>
 
-        {/* Similar Foods */}
-
+        {/* Frequently Ordered Together */}
         {similarFoods.length > 0 && (
-          <section className="similar-foods-section">
+          <section style={{ marginTop: '28px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '12px' }}>
+              Frequently ordered together
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
+              {similarFoods.slice(0, 3).map((freqItem) => (
+                <div
+                  key={`freq-${freqItem._id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justify: 'space-between',
+                    background: '#ffffff',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #e2e8f0',
+                    gap: '12px',
+                  }}
+                >
+                  <img
+                    src={resolveImageUrl(freqItem.image)}
+                    alt={freqItem.name}
+                    style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{ fontSize: '13.5px', fontWeight: '700', color: '#1e293b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {freqItem.name}
+                    </h4>
+                    <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#16a34a' }}>
+                      KES {Number(freqItem.price || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/food/${freqItem._id}`)}
+                    style={{
+                      background: '#fff5f2',
+                      color: '#FF6B4A',
+                      border: '1px solid #ffcfc5',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    + Add
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* You May Also Like */}
+        {similarFoods.length > 0 && (
+          <section className="similar-foods-section" style={{ marginTop: '28px' }}>
             <h3>You May Also Like</h3>
             <div className="similar-cards-grid">
               {similarFoods.map((item) => (

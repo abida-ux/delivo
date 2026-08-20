@@ -9,7 +9,10 @@ const normalizeCategorySelection = (categories = []) => {
       if (typeof entry === 'object') {
         return entry._id || entry.id || null;
       }
-      return null;
+      if (typeof entry === 'string') {
+        return entry.trim() || null;
+      }
+      return String(entry);
     })
     .filter(Boolean);
 

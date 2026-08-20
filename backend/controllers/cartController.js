@@ -32,7 +32,7 @@ exports.getCart = async (req, res) => {
 exports.addToCart = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { foodId, marketplaceProductId, quantity = 1, isCombination = false, components = [], price, productType = 'meal', restaurantId = null, restaurantName = null } = req.body;
+    const { foodId, marketplaceProductId, quantity = 1, isCombination = false, components = [], price, productType = 'meal', restaurantId = null, restaurantName = null, portionName = null } = req.body;
 
     if (!foodId && !marketplaceProductId) {
       return res.status(400).json({
@@ -81,6 +81,7 @@ exports.addToCart = async (req, res) => {
       }
       const itemFoodId = item.foodId?._id ? item.foodId._id.toString() : item.foodId?.toString();
       if (itemFoodId !== foodId) return false;
+      if ((item.portionName || null) !== (portionName || null)) return false;
       if (isCombination) {
         if (item.components?.length !== components.length) return false;
         return item.components.every(c1 => 
@@ -108,6 +109,7 @@ exports.addToCart = async (req, res) => {
         restaurantId: restaurantId || null,
         restaurantName: restaurantName || null,
         name,
+        portionName: portionName || null,
         price: itemPrice,
         image,
         quantity: parseInt(quantity),

@@ -313,7 +313,14 @@ const Cart = () => {
                           className="cart-item-img"
                         />
                         <div className="cart-item-main">
-                          <h4 className="item-title">{item.name}</h4>
+                          <h4 className="item-title">
+                            {item.name}
+                            {item.portionName && (
+                              <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#FF6B4A', background: '#fff5f2', border: '1px solid #ffcfc5', padding: '2px 8px', borderRadius: '6px', marginLeft: '8px', display: 'inline-block' }}>
+                                Portion: {item.portionName}
+                              </span>
+                            )}
+                          </h4>
                           {item.isCombination && item.components && (
                             <div className="combo-sub-components">
                               {item.components.map((comp, idx) => (

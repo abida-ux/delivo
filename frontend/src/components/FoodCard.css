@@ -40,7 +40,7 @@
   border-color: rgba(255, 107, 74, 0.25);
 }
 
-.food-image {
+.food-image-card .food-image {
   position: absolute;
   inset: 0;
   width: 100% !important;
@@ -52,7 +52,7 @@
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.food-card:hover .food-image {
+.food-card:hover .food-image-card .food-image {
   transform: scale(1.04);
 }
 

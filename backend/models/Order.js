@@ -101,6 +101,10 @@ const OrderSchema = new mongoose.Schema({
     name: {
       type: String,
     },
+    portionName: {
+      type: String,
+      default: null,
+    },
     isCombination: {
       type: Boolean,
       default: false,

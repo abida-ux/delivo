@@ -342,7 +342,14 @@ const OrderDetails = () => {
                 return (
                   <div key={key} className="details-item-row">
                     <div className="details-item-info">
-                      <p className="details-item-name">{getOrderItemName(item)}</p>
+                      <p className="details-item-name">
+                        {getOrderItemName(item)}
+                        {item.portionName && (
+                          <span style={{ fontSize: '11px', fontWeight: '800', color: '#FF6B4A', background: '#fff5f2', border: '1px solid #ffcfc5', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px', display: 'inline-block' }}>
+                            ({item.portionName})
+                          </span>
+                        )}
+                      </p>
                       <p className="details-item-sub">
                         Qty: {item.quantity} • {formatCurrency(unitPrice)} each
                       </p>
