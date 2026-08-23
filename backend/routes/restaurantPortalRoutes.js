@@ -46,8 +46,24 @@ const ensureRestaurantOwner = async (req, res, next) => {
 const isItemForRestaurant = (item, restaurantId) => {
   if (!item) return false;
   const restIdStr = restaurantId.toString();
-  if (item.restaurantId?.toString() === restIdStr) return true;
-  if (item.foodId?.restaurant?.toString() === restIdStr) return true;
+  if (item.restaurantId && item.restaurantId.toString() === restIdStr) return true;
+  if (item.foodId?.restaurant && item.foodId.restaurant.toString() === restIdStr) return true;
+  return false;
+};
+
+const isOrderForRestaurant = (order, restaurantId) => {
+  if (!order) return false;
+  const restIdStr = restaurantId.toString();
+  if (order.restaurantId) {
+    const mainRestId = typeof order.restaurantId === 'object' ? order.restaurantId._id?.toString() : order.restaurantId.toString();
+    if (mainRestId === restIdStr) return true;
+  }
+  if (Array.isArray(order.restaurants) && order.restaurants.some((r) => r.restaurantId?.toString() === restIdStr)) {
+    return true;
+  }
+  if (Array.isArray(order.items)) {
+    return order.items.some((item) => isItemForRestaurant(item, restaurantId));
+  }
   return false;
 };
 
@@ -66,28 +82,28 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
       .populate('items.foodId')
       .lean();
 
-    const restaurantOrders = orders.filter((order) =>
-      order.items.some((item) => isItemForRestaurant(item, restaurant._id))
-    );
+    const restaurantOrders = orders.filter((order) => isOrderForRestaurant(order, restaurant._id));
 
     const todayOrders = restaurantOrders.filter((order) => order.createdAt >= today && order.createdAt < tomorrow);
     const completedOrders = restaurantOrders.filter((order) => order.status === 'delivered');
     const pendingOrders = restaurantOrders.filter((order) => ['pending', 'confirmed', 'preparing', 'on-delivery'].includes(order.status));
 
     const revenue = completedOrders.reduce((sum, order) => {
-      const items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+      let items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+      if (items.length === 0) items = order.items;
       const subtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);
 
     const todayRevenue = todayOrders.reduce((sum, order) => {
-      const items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+      let items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+      if (items.length === 0) items = order.items;
       const subtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);
 
     const totalFoodsSold = restaurantOrders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => {
-      return isItemForRestaurant(item, restaurant._id) ? itemSum + Number(item.quantity || 0) : itemSum;
+      return isOrderForRestaurant(order, restaurant._id) ? itemSum + Number(item.quantity || 0) : itemSum;
     }, 0), 0);
 
     const restaurantProfile = restaurant.toObject ? restaurant.toObject() : { ...restaurant };
@@ -131,15 +147,16 @@ router.get('/orders', authenticate, ensureRestaurantOwner, async (req, res) => {
       .lean();
 
     const restaurantOrders = orders
-      .filter((order) => order.items.some((item) => isItemForRestaurant(item, restaurant._id)))
+      .filter((order) => isOrderForRestaurant(order, restaurant._id))
       .map((order) => {
-        const myItems = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+        let myItems = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+        if (myItems.length === 0) myItems = order.items;
         const mySubtotal = myItems.reduce((sum, item) => sum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
         return {
           ...order,
           items: myItems,
           restaurantSubtotal: mySubtotal,
-          totalPrice: mySubtotal,
+          totalPrice: mySubtotal || order.totalPrice,
         };
       });
 

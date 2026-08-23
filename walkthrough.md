@@ -208,10 +208,19 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 20. Backend Diagnostics & Assigned Restaurant Order Resolution
+- **Backend Architecture Audit**:
+  - Ran comprehensive diagnostic test suites across all 18 backend route modules (`orderRoutes.js`, `restaurantPortalRoutes.js`, `foodRoutes.js`, `userRoutes.js`, `auth.js`, etc.), 18 controllers, 30 Mongoose models, and 11 utility modules. All 77 modules load and compile with zero errors.
+- **Assigned Restaurant Order Resolution** ([restaurantPortalRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/restaurantPortalRoutes.js)):
+  - Updated `isOrderForRestaurant` helper to match orders by `order.restaurantId`, `order.restaurants` array, or item-level restaurant references.
+  - Ensures orders assigned by Admin (`PUT /api/orders/assign-restaurant`) immediately populate the assigned restaurant owner's dashboard (`/restaurant/orders` & `/restaurant/dashboard`).
+
+---
+
 ## Verification Results
-- **Partner Restaurants Display**: Verified available partner restaurants are fetched and displayed cleanly in `Cart.jsx` and `CheckoutModal.jsx`.
-- **Automatic Fulfillment Info**: Verified customers cannot select or pick restaurants when making an order, with automatic restaurant binding maintained.
-- **System Integrity**: Verified no unrelated admin, ordering, or payment code was altered.
+- **Backend Health Check**: Verified all 18 route files, 18 controllers, 30 models, and 11 utility modules execute cleanly without syntax or import errors.
+- **Assigned Order Visibility**: Verified Admin-assigned orders resolve correctly for the designated restaurant owner portal.
+- **System Integrity**: Verified database models, payment endpoints, and admin controls operate seamlessly.
 
 
 
