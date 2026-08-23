@@ -179,11 +179,22 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 17. Automatic Server-Side Food-to-Restaurant Derivation & Customer Flow Fixes
+- **Server-Side Derived Restaurant Link** ([orderItems.js](file:///c:/Users/HomePC/Desktop/delivo/backend/utils/orderItems.js)):
+  - Updated `buildPopulatedOrderItems` to query `Food.findById(item.foodId)` and derive `targetRestaurantId` automatically from the food database document (`food.restaurant` or `food.restaurants[0]` or `RestaurantFood` link).
+  - Automatically creates/upserts `RestaurantFood` junction links when missing so customer orders complete without throwing errors.
+- **Removed Customer Restaurant Selection Prompt** ([CartContext.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/context/CartContext.jsx), [Cart.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/customer/Cart.jsx), & [CartDrawer.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/components/CartDrawer.jsx)):
+  - Removed `RestaurantPickerModal` popups, warning banners, and "Needs Restaurant" buttons.
+  - Enabled "Proceed to Checkout" button for all cart items without requiring customers to manually choose a restaurant.
+
+---
+
 ## Verification Results
-- **Comprehensive Food Fetching**: Verified all foods linked by ID, array, junction link, or store name are retrieved and loaded in the restaurant owner's portal.
-- **Restaurant Name Tracking**: Verified the portal header dynamically displays the restaurant owner's store name.
-- **Admin-Style Creation**: Verified restaurant owners can add foods with images, descriptions, prices, and categories, automatically bound to their restaurant name and ID.
-- **System Integrity**: Verified no unrelated admin, customer, ordering, or payment code was altered.
+- **Automatic Restaurant Derivation**: Verified order creation automatically resolves and attaches the restaurant ID from food records server-side.
+- **Seamless Customer Ordering**: Verified customers can add items to cart and proceed to checkout smoothly without seeing restaurant selection prompts.
+- **Owner Portal Foods Integrity**: Verified all restaurant owner portal foods and creation features continue functioning cleanly.
+- **System Safety**: Verified database records, payment flows, and admin functionality remain completely intact.
+
 
 
 

@@ -223,40 +223,24 @@ const CartDrawer = () => {
                 </span>
               </div>
 
-              {hasUnassigned && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: '#d97706', marginBottom: '8px', fontWeight: 600 }}>
-                  <AlertTriangle size={13} />
-                  <span>Choose restaurant for all dishes to checkout</span>
-                </div>
-              )}
-
               <button
                 className="checkout-btn"
-                disabled={hasUnassigned}
                 onClick={() => {
                   closeCart();
                   openCheckout();
                 }}
                 style={{
-                  background: hasUnassigned ? '#cbd5e1' : '#FF6B4A',
-                  cursor: hasUnassigned ? 'not-allowed' : 'pointer',
-                  boxShadow: hasUnassigned ? 'none' : '0 4px 14px rgba(255, 107, 74, 0.35)',
+                  background: '#FF6B4A',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(255, 107, 74, 0.35)',
                 }}
               >
-                {hasUnassigned ? 'Choose restaurants to continue' : 'Proceed to Checkout'}
+                Proceed to Checkout
               </button>
             </div>
           )}
         </div>
       </div>
-
-      {/* Interactive Restaurant Picker Modal for Drawer */}
-      <RestaurantPickerModal
-        isOpen={Boolean(pickerTargetItem)}
-        item={pickerTargetItem}
-        onClose={() => setPickerTargetItem(null)}
-        onSelectRestaurant={handleSelectRestaurant}
-      />
     </>
   );
 };

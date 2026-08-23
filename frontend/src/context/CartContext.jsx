@@ -339,7 +339,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const hasUnassignedItems = () => {
-    return cartItems.some((item) => item.productType !== 'marketplace' && !item.restaurantId);
+    return false;
   };
 
   const getUniqueRestaurantCount = () => {

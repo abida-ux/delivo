@@ -88,19 +88,16 @@ const Cart = () => {
   };
 
   // Group items for display
-  const { unassignedItems, restaurantGroups, marketplaceItems } = useMemo(() => {
-    const unassigned = [];
+  const { restaurantGroups, marketplaceItems } = useMemo(() => {
     const restMap = {};
     const marketplace = [];
 
     cartItems.forEach((item) => {
       if (item.productType === 'marketplace') {
         marketplace.push(item);
-      } else if (!item.restaurantId) {
-        unassigned.push(item);
       } else {
-        const restId = getNormalizedRestaurantId(item);
-        const restName = item.restaurantName || 'Restaurant';
+        const restId = getNormalizedRestaurantId(item) || 'restaurant_general';
+        const restName = item.restaurantName || 'Campus Restaurant';
         if (!restMap[restId]) {
           restMap[restId] = {
             restaurantId: restId,
@@ -115,27 +112,22 @@ const Cart = () => {
     });
 
     return {
-      unassignedItems: unassigned,
       restaurantGroups: Object.values(restMap),
       marketplaceItems: marketplace,
     };
   }, [cartItems]);
 
-  const uniqueRestaurantCount = restaurantGroups.length;
+  const uniqueRestaurantCount = Math.max(1, restaurantGroups.length);
   const cartTotal = getCartTotal();
   const isFreeDeliveryEligible = !deliverySettings.enabled || (deliverySettings.freeDeliveryEnabled && cartTotal >= deliverySettings.freeDeliveryMinimum);
   const baseFee = deliverySettings.enabled ? deliverySettings.amount : 0;
   const deliveryFee = isFreeDeliveryEligible ? 0 : uniqueRestaurantCount * baseFee;
   const grandTotal = (cartTotal + deliveryFee).toFixed(2);
-  const isCheckoutDisabled = cartItems.length === 0 || unassignedItems.length > 0;
+  const isCheckoutDisabled = cartItems.length === 0;
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
       alert('Your cart is empty');
-      return;
-    }
-    if (unassignedItems.length > 0) {
-      alert('Please choose a restaurant for all items in your cart before checking out.');
       return;
     }
     setShowCheckoutModal(true);
@@ -196,92 +188,7 @@ const Cart = () => {
         <div className="cart-content-grid">
           {/* Main Cart Items Column */}
           <div className="cart-items-column">
-            {/* 1. Unassigned Items Warning Banner */}
-            {unassignedItems.length > 0 && (
-              <div className="unassigned-banner">
-                <div className="banner-icon">
-                  <AlertTriangle size={20} />
-                </div>
-                <div className="banner-info">
-                  <h4>Restaurant Selection Needed</h4>
-                  <p>
-                    {unassignedItems.length} {unassignedItems.length === 1 ? 'item requires' : 'items require'} a restaurant selection before you can proceed.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* 2. Unassigned Items Section */}
-            {unassignedItems.length > 0 && (
-              <div className="cart-group-card unassigned-group">
-                <div className="group-header">
-                  <div className="group-title-row">
-                    <span className="group-badge warning">Needs Restaurant</span>
-                    <h3>Select Vendor for these items</h3>
-                  </div>
-                </div>
-
-                <div className="group-items-list">
-                  {unassignedItems.map((item) => {
-                    const itemId = getNormalizedFoodId(item);
-                    return (
-                      <div key={itemId} className="cart-item-card unassigned">
-                        <img
-                          src={resolveImageUrl(item.image)}
-                          alt={item.name}
-                          className="cart-item-img"
-                        />
-                        <div className="cart-item-main">
-                          <h4 className="item-title">{item.name}</h4>
-                          
-                          {/* IN-PLACE RESTAURANT SELECTION CONTROL */}
-                          <div className="cart-item-restaurant-ctrl">
-                            <span className="ctrl-label-unassigned">⚠ Restaurant:</span>
-                            <button
-                              type="button"
-                              className="choose-restaurant-btn unassigned"
-                              onClick={() => setPickerItem(item)}
-                            >
-                              <Store size={13} />
-                              <span>Choose Restaurant</span>
-                              <ChevronDown size={13} />
-                            </button>
-                            <span className="price-prompt-text">Price pending selection</span>
-                          </div>
-                        </div>
-
-                        <div className="cart-item-qty-wrap">
-                          <button
-                            className="qty-stepper-btn"
-                            onClick={() => updateQuantity(itemId, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="qty-val">{item.quantity}</span>
-                          <button
-                            className="qty-stepper-btn"
-                            onClick={() => updateQuantity(itemId, item.quantity + 1)}
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-
-                        <button
-                          className="cart-item-del-btn"
-                          onClick={() => removeItem(itemId)}
-                          title="Remove item"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 3. Grouped Restaurant Sections */}
+            {/* Grouped Restaurant Sections */}
             {restaurantGroups.map((group) => (
               <div key={group.restaurantId} className="cart-group-card assigned-group">
                 <div className="group-header">
@@ -490,28 +397,12 @@ const Cart = () => {
                 onClick={handleCheckout}
                 disabled={isCheckoutDisabled}
               >
-                {unassignedItems.length > 0
-                  ? `Choose restaurants to continue (${unassignedItems.length} pending)`
-                  : 'Proceed to Checkout'}
+                Proceed to Checkout
               </button>
-
-              {unassignedItems.length > 0 && (
-                <p className="checkout-hint-text">
-                  Please pick a restaurant for all dishes directly in your cart to continue.
-                </p>
-              )}
             </div>
           </div>
         </div>
       )}
-
-      {/* Interactive Restaurant Picker Modal for Cart Page */}
-      <RestaurantPickerModal
-        isOpen={Boolean(pickerItem)}
-        item={pickerItem}
-        onClose={() => setPickerItem(null)}
-        onSelectRestaurant={handleSelectRestaurant}
-      />
 
       {/* Checkout Modal (Read-Only Group Summary) */}
       <CheckoutModal

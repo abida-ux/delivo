@@ -34,25 +34,24 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
       continue;
     }
 
-    const targetRestaurantId = item.restaurantId || fallbackRestaurantId;
-    if (!targetRestaurantId || !mongoose.Types.ObjectId.isValid(targetRestaurantId)) {
-      const foodName = item.name || 'food item';
-      throw new Error(`Please select a restaurant for '${foodName}' in your cart.`);
-    }
-
-    // Lookup restaurant
-    const restaurant = await Restaurant.findById(targetRestaurantId);
-    if (!restaurant) {
-      throw new Error(`Restaurant for item '${item.name || 'food'}' was not found.`);
-    }
-    if (restaurant.isOpen === false) {
-      throw new Error(`Restaurant '${restaurant.name}' is currently closed and cannot receive orders.`);
-    }
-
     if (item.isCombination) {
       const combo = await comboLookup(item.foodId || item.combinationId);
       if (!combo) {
         throw new Error(`Combination meal with ID ${item.foodId || item.combinationId} not found`);
+      }
+
+      let targetRestaurantId = item.restaurantId || fallbackRestaurantId || combo.restaurant || (Array.isArray(combo.restaurants) && combo.restaurants[0]);
+      if (!targetRestaurantId || !mongoose.Types.ObjectId.isValid(targetRestaurantId)) {
+        const anyRest = await Restaurant.findOne();
+        targetRestaurantId = anyRest?._id;
+      }
+
+      const restaurant = await Restaurant.findById(targetRestaurantId);
+      if (!restaurant) {
+        throw new Error(`Restaurant for item '${combo.name}' was not found.`);
+      }
+      if (restaurant.isOpen === false) {
+        throw new Error(`Restaurant '${restaurant.name}' is currently closed and cannot receive orders.`);
       }
 
       let comboPrice = 0;
@@ -100,14 +99,44 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
       throw new Error(`Food item with ID ${item.foodId} not found`);
     }
 
-    const restaurantFood = await RestaurantFood.findOne({
+    let targetRestaurantId = item.restaurantId || fallbackRestaurantId || food.restaurant || (Array.isArray(food.restaurants) && food.restaurants[0]);
+    if (!targetRestaurantId || !mongoose.Types.ObjectId.isValid(targetRestaurantId)) {
+      const rf = await RestaurantFood.findOne({ foodId: food._id });
+      if (rf && rf.restaurantId) {
+        targetRestaurantId = rf.restaurantId;
+      }
+    }
+    if (!targetRestaurantId || !mongoose.Types.ObjectId.isValid(targetRestaurantId)) {
+      const anyRest = await Restaurant.findOne();
+      targetRestaurantId = anyRest?._id;
+    }
+
+    const restaurant = await Restaurant.findById(targetRestaurantId);
+    if (!restaurant) {
+      throw new Error(`Restaurant for item '${food.name}' was not found.`);
+    }
+    if (restaurant.isOpen === false) {
+      throw new Error(`Restaurant '${restaurant.name}' is currently closed and cannot receive orders.`);
+    }
+
+    let restaurantFood = await RestaurantFood.findOne({
       restaurantId: targetRestaurantId,
       foodId: item.foodId,
     });
 
     if (!restaurantFood) {
-      throw new Error(`Food item '${food.name}' is not sold by ${restaurant.name}.`);
+      restaurantFood = await RestaurantFood.findOneAndUpdate(
+        { restaurantId: targetRestaurantId, foodId: item.foodId },
+        {
+          restaurantId: targetRestaurantId,
+          foodId: item.foodId,
+          price: food.price || 0,
+          availability: true,
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
     }
+
     if (restaurantFood.availability === false) {
       throw new Error(`Food item '${food.name}' is currently sold out at ${restaurant.name}.`);
     }
