@@ -1,13 +1,14 @@
-import {useState, useEffect} from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, User } from 'lucide-react';
 import './AdminEditRestaurantModal.css';
 
-const AdminEditRestaurantModal = ({ isOpen, restaurant, onClose, onSave }) => {
+const AdminEditRestaurantModal = ({ isOpen, restaurant, users = [], onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     cuisine: '',
     deliveryTime: '',
     bannerImage: '',
+    ownerId: '',
     isOpen: true,
   });
 
@@ -20,6 +21,7 @@ const AdminEditRestaurantModal = ({ isOpen, restaurant, onClose, onSave }) => {
         cuisine: Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine || '',
         deliveryTime: restaurant.deliveryTime || '30 mins',
         bannerImage: restaurant.bannerImage || '',
+        ownerId: restaurant.ownerId || '',
         isOpen: restaurant.isOpen !== undefined ? restaurant.isOpen : true,
       });
     }
@@ -117,6 +119,38 @@ const AdminEditRestaurantModal = ({ isOpen, restaurant, onClose, onSave }) => {
               placeholder="Enter image URL"
               required
             />
+          </div>
+
+          <div className="form-group" style={{ marginTop: '4px' }}>
+            <label htmlFor="ownerId" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <User size={15} color="#16a34a" />
+              <span>Assign Restaurant Owner (Select User)</span>
+            </label>
+            <select
+              id="ownerId"
+              name="ownerId"
+              value={formData.ownerId}
+              onChange={handleChange}
+              style={{
+                borderColor: formData.ownerId ? '#16a34a' : '#cbd5e1',
+                backgroundColor: formData.ownerId ? '#f0fdf4' : '#fff',
+              }}
+            >
+              <option value="">-- No Owner Linked --</option>
+              {users
+                .filter((u) => u.role === 'restaurant' || (restaurant && (restaurant.ownerId === u._id || restaurant.ownerId?._id === u._id)))
+                .map((u) => {
+                  const isCurrent = restaurant && (restaurant.ownerId === u._id || restaurant.ownerId?._id === u._id);
+                  return (
+                    <option key={u._id} value={u._id}>
+                      {u.name || 'Unnamed User'} ({u.email}) {isCurrent ? '✓ (Current Owner)' : ''}
+                    </option>
+                  );
+                })}
+            </select>
+            <p className="field-hint" style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+              Only accounts with role "Restaurant Owner" are listed. Admins can update or reassign owners anytime.
+            </p>
           </div>
 
           {formData.bannerImage && (

@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import './AdminEditUserModal.css';
 
@@ -122,7 +122,7 @@ const AdminCreateUserModal = ({ isOpen, onClose, onSave }) => {
                 required
               >
                 <option value="customer">Customer</option>
-                <option value="restaurant">Restaurant</option>
+                <option value="restaurant">Restaurant Owner</option>
                 <option value="rider">Rider</option>
                 <option value="admin">Admin</option>
               </select>

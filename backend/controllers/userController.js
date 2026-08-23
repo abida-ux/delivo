@@ -815,13 +815,35 @@ exports.updateUserProfile = async (req, res, next) => {
       });
     }
 
-    const { password, ...updateFields } = req.body;
+    const { password, restaurantId, ...updateFields } = req.body;
 
     // Prevent privilege escalation: only admins can update roles and verification status
     const reqUser = await User.findById(req.user.id);
-    if (!reqUser || reqUser.role !== 'admin') {
+    const isAdmin = reqUser && reqUser.role === 'admin';
+    if (!isAdmin) {
       delete updateFields.role;
       delete updateFields.isVerified;
+    }
+
+    const Restaurant = require('../models/Restaurant');
+
+    // Handle linking / unlinking restaurant when updated by Admin
+    if (isAdmin) {
+      if (restaurantId !== undefined) {
+        if (restaurantId && restaurantId !== 'none' && restaurantId !== '') {
+          // Unlink user from any previous restaurant
+          await Restaurant.updateMany({ ownerId: user._id }, { ownerId: null });
+          // Link selected restaurant to this user
+          await Restaurant.findByIdAndUpdate(restaurantId, { ownerId: user._id });
+          updateFields.role = 'restaurant';
+        } else {
+          // Unlink user from any restaurant
+          await Restaurant.updateMany({ ownerId: user._id }, { ownerId: null });
+        }
+      } else if (updateFields.role && updateFields.role !== 'restaurant') {
+        // If role was explicitly changed away from restaurant, unlink any restaurant
+        await Restaurant.updateMany({ ownerId: user._id }, { ownerId: null });
+      }
     }
 
     Object.assign(user, updateFields);
@@ -843,14 +865,27 @@ exports.updateUserProfile = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
+    const Restaurant = require('../models/Restaurant');
+    const restaurants = await Restaurant.find({}, '_id name ownerId').lean();
+
+    const restMap = {};
+    restaurants.forEach((r) => {
+      if (r.ownerId) {
+        restMap[r.ownerId.toString()] = { _id: r._id, name: r.name };
+      }
+    });
+
+    const data = users.map((u) => ({
+      ...u,
+      restaurant: restMap[u._id.toString()] || null,
+    }));
 
     res.status(200).json({
       success: true,
-      count: users.length,
-      data: users,
+      count: data.length,
+      data,
     });
   } catch (error) {
-
     next(error);
   }
 };
@@ -879,7 +914,7 @@ exports.createUser = async (req, res, next) => {
   try {
     console.log('📝 Creating user with data:', req.body);
 
-    const { name, email, password, role, phone } = req.body;
+    const { name, email, password, role, phone, restaurantId } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -889,13 +924,23 @@ exports.createUser = async (req, res, next) => {
       });
     }
 
+    let finalRole = role || 'customer';
+    if (restaurantId && restaurantId !== 'none' && restaurantId !== '') {
+      finalRole = 'restaurant';
+    }
+
     const user = await User.create({
       name,
       email,
       password,
-      role: role || 'customer',
+      role: finalRole,
       phone,
     });
+
+    if (restaurantId && restaurantId !== 'none' && restaurantId !== '') {
+      const Restaurant = require('../models/Restaurant');
+      await Restaurant.findByIdAndUpdate(restaurantId, { ownerId: user._id });
+    }
 
     res.status(201).json({
       success: true,

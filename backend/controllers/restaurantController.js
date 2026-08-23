@@ -5,7 +5,7 @@ const User = require('../models/User');
 // @route GET /api/restaurants
 exports.getAllRestaurants = async (req, res, next) => {
   try {
-    const restaurants = await Restaurant.find().lean();
+    const restaurants = await Restaurant.find().populate('ownerId', 'name email phone').lean();
     const RestaurantFood = require('../models/RestaurantFood');
 
     const data = await Promise.all(restaurants.map(async (rest) => {
@@ -87,6 +87,7 @@ exports.createRestaurant = async (req, res, next) => {
     console.log('📝 Creating restaurant with data:', req.body);
 
     const {
+      ownerId,
       ownerName,
       ownerEmail,
       ownerPassword,
@@ -94,47 +95,28 @@ exports.createRestaurant = async (req, res, next) => {
       ...restaurantData
     } = req.body;
 
-    const normalizedOwnerEmail = ownerEmail ? ownerEmail.toLowerCase() : '';
-
+    let targetOwnerId = ownerId && ownerId !== 'none' && ownerId !== '' ? ownerId : null;
     let ownerUser = null;
-    if (ownerEmail || ownerPassword || ownerConfirmPassword) {
-      if (!normalizedOwnerEmail || !ownerPassword || !ownerConfirmPassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'Restaurant owner email, password, and confirmation are required.',
-        });
-      }
 
-      if (ownerPassword !== ownerConfirmPassword) {
-        return res.status(400).json({
-          success: false,
-          message: 'Password and confirmation password must match.',
-        });
+    if (targetOwnerId) {
+      ownerUser = await User.findById(targetOwnerId);
+      if (ownerUser) {
+        // Unlink user from any previous restaurant
+        await Restaurant.updateMany({ ownerId: ownerUser._id }, { ownerId: null });
+        // Set user role to 'restaurant'
+        if (ownerUser.role !== 'restaurant') {
+          ownerUser.role = 'restaurant';
+          await ownerUser.save();
+        }
       }
-
-      const existingOwner = await User.findOne({ email: normalizedOwnerEmail });
-      if (existingOwner) {
-        return res.status(400).json({
-          success: false,
-          message: 'A restaurant owner already exists with that email.',
-        });
-      }
-
-      ownerUser = await User.create({
-        name: ownerName || restaurantData.name || 'Restaurant Owner',
-        email: normalizedOwnerEmail,
-        password: ownerPassword,
-        role: 'restaurant',
-        phone: restaurantData.phone || '',
-        isVerified: true,
-      });
     }
 
     const restaurantPayload = {
       ...restaurantData,
       name: restaurantData.name?.trim(),
-      email: restaurantData.email || normalizedOwnerEmail || '',
-      ownerId: ownerUser?._id || null,
+      email: restaurantData.email || ownerUser?.email || '',
+      phone: restaurantData.phone || ownerUser?.phone || '',
+      ownerId: ownerUser ? ownerUser._id : null,
     };
 
     const restaurant = await Restaurant.create(restaurantPayload);
@@ -185,6 +167,23 @@ exports.updateRestaurant = async (req, res, next) => {
       delete req.body.status;
       delete req.body.availableBalance;
       delete req.body.withdrawnBalance;
+    } else if (req.body.ownerId !== undefined) {
+      const newOwnerId = req.body.ownerId && req.body.ownerId !== 'none' && req.body.ownerId !== '' ? req.body.ownerId : null;
+      if (newOwnerId) {
+        const ownerUser = await User.findById(newOwnerId);
+        if (ownerUser) {
+          await Restaurant.updateMany({ ownerId: ownerUser._id }, { ownerId: null });
+          if (ownerUser.role !== 'restaurant') {
+            ownerUser.role = 'restaurant';
+            await ownerUser.save();
+          }
+          req.body.ownerId = ownerUser._id;
+          if (!req.body.email && ownerUser.email) req.body.email = ownerUser.email;
+          if (!req.body.phone && ownerUser.phone) req.body.phone = ownerUser.phone;
+        }
+      } else {
+        req.body.ownerId = null;
+      }
     }
 
     Object.assign(restaurant, req.body);

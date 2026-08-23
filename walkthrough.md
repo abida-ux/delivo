@@ -85,9 +85,73 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 8. Restaurant Linking for User Accounts in Admin Page
+- **Backend Role & Owner Assignment** ([userController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/userController.js)):
+  - Updated `getAllUsers` to query the `Restaurant` collection and populate each user's linked restaurant details (`restaurant: { _id, name }`).
+  - Modified `updateUserProfile` and `createUser` to accept `restaurantId`. When an admin links a restaurant to a user (including normal customer accounts):
+    - Any existing ownership on another restaurant is safely unlinked.
+    - Sets `ownerId = user._id` on the target restaurant.
+    - Automatically updates the user's role to `'restaurant'`.
+  - If a user's role is changed away from `'restaurant'` or unlinked, `ownerId` on their previous restaurant is set back to `null`.
+- **Admin Users UI & Modals**:
+  - Modified [AdminUsers.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminUsers.jsx) to fetch restaurants in parallel with users and added a **Linked Restaurant** column tag in desktop table and mobile card views.
+  - Enhanced [AdminEditUserModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditUserModal.jsx) and [AdminCreateUserModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminCreateUserModal.jsx) with a **Link Restaurant (Assign Owner)** dropdown. Selecting a restaurant auto-syncs the role to "Restaurant Owner".
+  - Updated [AdminUsers.css](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminUsers.css) with emerald pill tags for assigned restaurants.
+- **Login Routing Integration**:
+  - Once assigned, when the user logs in with their email and password, `Login.jsx` routes them to `/restaurant`. The restaurant portal endpoints verify `ownerId === req.user.id`, giving them full control over their assigned restaurant.
+
+---
+
+### 9. Simplified Restaurant Creation using Linked User Credentials
+- **Backend Refactoring** ([restaurantController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/restaurantController.js)):
+  - Removed mandatory `ownerEmail`, `ownerPassword`, and `ownerConfirmPassword` validation requirements when creating a restaurant.
+  - Added support for `ownerId` in `createRestaurant` and `updateRestaurant`. When an admin selects an existing user, the controller sets `restaurant.ownerId = user._id`, updates the user's role to `'restaurant'`, and inherits the user's email and phone details.
+- **Frontend Refactoring**:
+  - Modified [AdminCreateRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminCreateRestaurantModal.jsx) to remove required owner password fields and replaced them with an **Assign Restaurant Owner (Select User)** dropdown.
+  - Enhanced [AdminEditRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditRestaurantModal.jsx) to allow updating the assigned owner user directly when editing a restaurant.
+  - Updated [Restaurants.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/Restaurants.jsx) to load users via `getAllUsers()` and pass them to creation and edit modals.
+
+---
+
+### 10. Edit Mode Owner Assignment & Admin Restaurants Owner Display
+- **Edit Mode Scoping**:
+  - Cleaned up [AdminCreateUserModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminCreateUserModal.jsx) and [AdminCreateRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminCreateRestaurantModal.jsx) to remove owner linking dropdowns during item creation, keeping new record setup uncluttered.
+  - Restricted owner assignment and restaurant linking controls exclusively to **Edit Mode** ([AdminEditUserModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditUserModal.jsx) and [AdminEditRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditRestaurantModal.jsx)).
+- **Backend Population** ([restaurantController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/restaurantController.js)):
+  - Updated `getAllRestaurants` query to `.populate('ownerId', 'name email phone')`, ensuring linked owner name and phone details are provided to the frontend.
+- **Admin Restaurants Owner Display** ([Restaurants.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/Restaurants.jsx)):
+  - Rendered an **Owner Details** block on each restaurant card in `/admin/restaurants` displaying the assigned owner's **Name** (with `User` icon) and **Phone Number** (with `Phone` icon).
+
+---
+
+### 11. Immutable Owner Assignment Once Linked
+- **UI Lock Controls**:
+  - In [AdminEditRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditRestaurantModal.jsx), disabled the `ownerId` dropdown when an owner is linked (`disabled={!!restaurant?.ownerId}`) and added a `🔒 Owner assignment is linked and cannot be changed` indicator.
+  - In [AdminEditUserModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditUserModal.jsx), disabled both the `role` and `restaurantId` dropdowns when a user is linked to a restaurant (`disabled={!!user?.restaurant}`) with a `🔒 Linked to [Restaurant Name]. Owner assignment cannot be changed` lock message.
+- **Backend API Protection**:
+  - In [restaurantController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/restaurantController.js), updated `updateRestaurant` to reject attempts to change or disassociate `ownerId` once set, returning `400 Bad Request`.
+  - In [userController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/userController.js), updated `updateUserProfile` to reject attempts to change `restaurantId` or user `role` away from `'restaurant'` once a user is linked to a store.
+
+---
+
+### 12. Restaurant Role Filter & Unlocked Flexible Owner Reassignment
+- **Database Role Filter**:
+  - Modified [AdminEditRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditRestaurantModal.jsx) to filter the "Assign Restaurant Owner" dropdown list so that **only users whose role in the database is `'restaurant'`** (`u.role === 'restaurant'`) are displayed.
+- **Unlocked Owner Reassignment**:
+  - Removed frontend `disabled` locks in [AdminEditRestaurantModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditRestaurantModal.jsx) and [AdminEditUserModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminEditUserModal.jsx), allowing admins to select, change, or reassign store owners freely.
+  - Removed backend rejection locks in [restaurantController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/restaurantController.js) and [userController.js](file:///c:/Users/HomePC/Desktop/delivo/backend/controllers/userController.js), enabling admins to update or transfer restaurant owner assignments whenever necessary.
+
+---
+
 ## Verification Results
-- **Checkout Vouchers**: Tested validation of codes like fixed discount off, percentage off, and free delivery checkout options; verified live grand totals recalculate correctly.
-- **Server Enforcement**: Verified backend order validation successfully secures the pricing on database write.
-- **Offers Preview Page**: Verified anonymous users get presented ONLY the login/signup CTA card without headers and blurred placeholders.
-- **Notification Badge**: Verified new offers correctly illuminate red indicator dots on navbar Offers links, and clear immediately on view.
-- **Outline Removal**: Tested search box focus states on Home and Menu pages and verified they no longer trigger yellow box outlines.
+- **Role-Filtered Owner List**: Verified that only users with role `restaurant` appear in the owner selection dropdown in Edit Restaurant mode.
+- **Unlocked Flexible Reassignment**: Verified admins can reassign, change, or transfer restaurant owners anytime.
+- **Owner Display on Cards**: Verified `/admin/restaurants` displays the owner's Name and Phone Number on each restaurant card.
+- **Simplified Creation**: Verified admins can create a restaurant without having to invent or input inline owner passwords.
+- **Role Auto-Sync**: Verified selecting a restaurant auto-updates user role to `restaurant` and sets `ownerId` on the database document.
+- **Owner Login Flow**: Verified assigned users logging in are directed to `/restaurant` with full access to manage their assigned store.
+
+
+
+
+

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Edit, Search, Plus, Mail, Phone, Calendar, Shield } from 'lucide-react';
+import { Trash2, Edit, Search, Plus, Mail, Phone, Calendar, Shield, Store } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
-import { getAllUsers, deleteUser, updateUser, createUser } from '../../services/api';
+import { getAllUsers, getAllRestaurants, deleteUser, updateUser, createUser } from '../../services/api';
 import AdminEditUserModal from './AdminEditUserModal';
 import AdminCreateUserModal from './AdminCreateUserModal';
 import '../pages.css';
@@ -10,6 +10,7 @@ import './AdminUsers.css';
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingUser, setEditingUser] = useState(null);
@@ -17,17 +18,21 @@ const AdminUsers = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsersAndRestaurants();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsersAndRestaurants = async () => {
     try {
       setLoading(true);
-      const usersData = await getAllUsers();
+      const [usersData, restData] = await Promise.all([
+        getAllUsers(),
+        getAllRestaurants(),
+      ]);
       setUsers(usersData);
       setFilteredUsers(usersData);
+      setRestaurants(Array.isArray(restData) ? restData : restData?.data || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching users and restaurants:', error);
     } finally {
       setLoading(false);
     }
@@ -39,7 +44,8 @@ const AdminUsers = () => {
       (user) =>
         user.name?.toLowerCase().includes(value.toLowerCase()) ||
         user.email?.toLowerCase().includes(value.toLowerCase()) ||
-        user.role?.toLowerCase().includes(value.toLowerCase())
+        user.role?.toLowerCase().includes(value.toLowerCase()) ||
+        user.restaurant?.name?.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredUsers(filtered);
   };
@@ -68,7 +74,7 @@ const AdminUsers = () => {
       await updateUser(editingUser._id, updatedData);
       setIsEditModalOpen(false);
       setEditingUser(null);
-      await fetchUsers();
+      await fetchUsersAndRestaurants();
       alert('User updated successfully');
       return true;
     } catch (error) {
@@ -82,7 +88,7 @@ const AdminUsers = () => {
     try {
       await createUser(newUserData);
       setIsCreateModalOpen(false);
-      await fetchUsers();
+      await fetchUsersAndRestaurants();
       alert('User created successfully');
       return true;
     } catch (error) {
@@ -112,7 +118,7 @@ const AdminUsers = () => {
             <Search size={18} />
             <input
               type="text"
-              placeholder="Search users by name, email or role..."
+              placeholder="Search users by name, email, role or restaurant..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
             />
@@ -142,6 +148,7 @@ const AdminUsers = () => {
                     <th>User</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Linked Restaurant</th>
                     <th>Phone</th>
                     <th>Joined</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
@@ -173,6 +180,16 @@ const AdminUsers = () => {
                         >
                           {user.role}
                         </span>
+                      </td>
+                      <td>
+                        {user.restaurant ? (
+                          <span className="linked-restaurant-badge" title={`Linked to ${user.restaurant.name}`}>
+                            <Store size={13} />
+                            <span>{user.restaurant.name}</span>
+                          </span>
+                        ) : (
+                          <span className="unlinked-restaurant-text">-</span>
+                        )}
                       </td>
                       <td>{user.phone || '-'}</td>
                       <td>{new Date(user.createdAt).toLocaleDateString()}</td>
@@ -230,8 +247,19 @@ const AdminUsers = () => {
                     </span>
                   </div>
 
-                  {/* Card Details: Phone, Joined */}
+                  {/* Card Details: Restaurant, Phone, Joined */}
                   <div className="user-card-body">
+                    {user.restaurant && (
+                      <div className="user-card-field">
+                        <span className="field-label">
+                          <Store size={12} /> Restaurant
+                        </span>
+                        <span className="field-value highlight-restaurant">
+                          {user.restaurant.name}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="user-card-field">
                       <span className="field-label">
                         <Phone size={12} /> Phone
@@ -274,6 +302,7 @@ const AdminUsers = () => {
       <AdminEditUserModal
         isOpen={isEditModalOpen}
         user={editingUser}
+        restaurants={restaurants}
         onClose={() => {
           setIsEditModalOpen(false);
           setEditingUser(null);
@@ -283,6 +312,7 @@ const AdminUsers = () => {
 
       <AdminCreateUserModal
         isOpen={isCreateModalOpen}
+        restaurants={restaurants}
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleCreateUser}
       />

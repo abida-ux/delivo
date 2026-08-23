@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Edit, Search, Plus, Star, Clock, Store } from 'lucide-react';
+import { Trash2, Edit, Search, Plus, Star, Clock, Store, User, Phone } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
-import { getAllRestaurants, deleteRestaurant, updateRestaurant, createRestaurant } from '../../services/api';
+import { getAllRestaurants, getAllUsers, deleteRestaurant, updateRestaurant, createRestaurant } from '../../services/api';
 import AdminEditRestaurantModal from './AdminEditRestaurantModal';
 import AdminCreateRestaurantModal from './AdminCreateRestaurantModal';
 import { resolveImageUrl } from '../../utils/placeholderImage';
@@ -11,6 +11,7 @@ import './Restaurants.css';
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingRestaurant, setEditingRestaurant] = useState(null);
@@ -18,18 +19,22 @@ const Restaurants = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchRestaurants();
+    fetchRestaurantsAndUsers();
   }, []);
 
-  const fetchRestaurants = async () => {
+  const fetchRestaurantsAndUsers = async () => {
     try {
       setLoading(true);
-      const res = await getAllRestaurants();
+      const [res, usersData] = await Promise.all([
+        getAllRestaurants(),
+        getAllUsers(),
+      ]);
       const data = Array.isArray(res) ? res : res.data || [];
       setRestaurants(data);
       setFilteredRestaurants(data);
+      setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error('Error fetching restaurants and users:', error);
     } finally {
       setLoading(false);
     }
@@ -69,7 +74,7 @@ const Restaurants = () => {
       await updateRestaurant(editingRestaurant._id, updatedData);
       setIsEditModalOpen(false);
       setEditingRestaurant(null);
-      await fetchRestaurants();
+      await fetchRestaurantsAndUsers();
       alert('Restaurant updated successfully');
       return true;
     } catch (error) {
@@ -83,7 +88,7 @@ const Restaurants = () => {
     try {
       await createRestaurant(newRestaurantData);
       setIsCreateModalOpen(false);
-      await fetchRestaurants();
+      await fetchRestaurantsAndUsers();
       alert('Restaurant created successfully');
       return true;
     } catch (error) {
@@ -136,59 +141,81 @@ const Restaurants = () => {
 
             <div className="restaurants-grid">
               {filteredRestaurants.length > 0 ? (
-                filteredRestaurants.map((restaurant) => (
-                  <div key={restaurant._id} className="restaurant-card">
-                    <div
-                      className="restaurant-image"
-                      style={{
-                        backgroundImage: `url(${resolveImageUrl(restaurant.bannerImage)})`,
-                      }}
-                    >
-                      <div className="restaurant-status">
-                        {restaurant.isOpen ? (
-                          <span className="status-badge open">Open</span>
-                        ) : (
-                          <span className="status-badge closed">Closed</span>
-                        )}
-                      </div>
-                    </div>
+                filteredRestaurants.map((restaurant) => {
+                  const ownerObj = typeof restaurant.ownerId === 'object' && restaurant.ownerId
+                    ? restaurant.ownerId
+                    : users.find((u) => u._id === restaurant.ownerId);
+                  const ownerName = ownerObj?.name || (restaurant.ownerId ? 'Assigned Owner' : 'Unassigned');
+                  const ownerPhone = ownerObj?.phone || restaurant.phone || 'No phone provided';
 
-                    <div className="restaurant-info">
-                      <div className="restaurant-header-block">
-                        <h3>{restaurant.name}</h3>
-                        <p className="cuisine">{restaurant.cuisine || 'Fast Food'}</p>
-                      </div>
-
-                      <div className="restaurant-meta">
-                        <div className="rating">
-                          <Star size={13} fill="#f59e0b" color="#f59e0b" />
-                          <span>{restaurant.rating || 4.5}</span>
-                        </div>
-                        <div className="delivery-time">
-                          <Clock size={13} />
-                          <span>{formatDeliveryTime(restaurant.deliveryTime)}</span>
+                  return (
+                    <div key={restaurant._id} className="restaurant-card">
+                      <div
+                        className="restaurant-image"
+                        style={{
+                          backgroundImage: `url(${resolveImageUrl(restaurant.bannerImage)})`,
+                        }}
+                      >
+                        <div className="restaurant-status">
+                          {restaurant.isOpen ? (
+                            <span className="status-badge open">Open</span>
+                          ) : (
+                            <span className="status-badge closed">Closed</span>
+                          )}
                         </div>
                       </div>
 
-                      <div className="card-actions">
-                        <button
-                          className="action-btn edit-btn"
-                          onClick={() => handleEdit(restaurant)}
-                        >
-                          <Edit size={14} />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          onClick={() => handleDelete(restaurant._id)}
-                        >
-                          <Trash2 size={14} />
-                          <span>Delete</span>
-                        </button>
+                      <div className="restaurant-info">
+                        <div className="restaurant-header-block">
+                          <h3>{restaurant.name}</h3>
+                          <p className="cuisine">{restaurant.cuisine || 'Fast Food'}</p>
+                        </div>
+
+                        <div className="restaurant-meta">
+                          <div className="rating">
+                            <Star size={13} fill="#f59e0b" color="#f59e0b" />
+                            <span>{restaurant.rating || 4.5}</span>
+                          </div>
+                          <div className="delivery-time">
+                            <Clock size={13} />
+                            <span>{formatDeliveryTime(restaurant.deliveryTime)}</span>
+                          </div>
+                        </div>
+
+                        {/* Owner Details Section */}
+                        <div className="restaurant-owner-block" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f1f5f9', fontSize: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: ownerObj ? '#0f172a' : '#94a3b8' }}>
+                            <User size={13} color={ownerObj ? '#16a34a' : '#94a3b8'} />
+                            <span>Owner: {ownerName}</span>
+                          </div>
+                          {ownerObj && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', marginTop: '3px' }}>
+                              <Phone size={12} color="#64748b" />
+                              <span>{ownerPhone}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="card-actions" style={{ marginTop: '12px' }}>
+                          <button
+                            className="action-btn edit-btn"
+                            onClick={() => handleEdit(restaurant)}
+                          >
+                            <Edit size={14} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            className="action-btn delete-btn"
+                            onClick={() => handleDelete(restaurant._id)}
+                          >
+                            <Trash2 size={14} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="empty-state">
                   <p>No restaurants found</p>
@@ -201,6 +228,7 @@ const Restaurants = () => {
         <AdminEditRestaurantModal
           isOpen={isEditModalOpen}
           restaurant={editingRestaurant}
+          users={users}
           onClose={() => {
             setIsEditModalOpen(false);
             setEditingRestaurant(null);
@@ -210,6 +238,7 @@ const Restaurants = () => {
 
         <AdminCreateRestaurantModal
           isOpen={isCreateModalOpen}
+          users={users}
           onClose={() => setIsCreateModalOpen(false)}
           onSave={handleCreateRestaurant}
         />
