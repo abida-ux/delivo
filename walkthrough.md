@@ -156,22 +156,25 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
-### 14. Mum's Restaurant Resolution & Automatic Food Item Binding
-- **Store Name & Owner Link Resolution** ([restaurantPortalRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/restaurantPortalRoutes.js)):
-  - Updated `ensureRestaurantOwner` to match restaurant documents by `email`, `phone`, or name matching (e.g., `Mum's`) and set the store name to `Mum's` rather than defaulting to generic placeholder names (`My Restaurant`).
-- **Comprehensive Food Resolution & Auto-Binding**:
-  - Enhanced `GET /api/restaurant/foods` to query foods linked via `Food.restaurant`, `Food.restaurants`, `RestaurantFood.restaurantId`, `restaurant.foods`, `store`, and unassigned food documents.
-  - Automatically binds unassigned food items (`restaurant: restaurant._id`) and creates `RestaurantFood` price/availability records so all restaurant foods are immediately visible to Mum's owner upon logging in.
+---
+
+### 15. Clean Relationship-Driven Restaurant Owner Food Retrieval & Creation
+- **Owner Restaurant Resolution** ([restaurantPortalRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/restaurantPortalRoutes.js)):
+  - Refactored `ensureRestaurantOwner` middleware to query `Restaurant.findOne({ ownerId: req.user.id })` strictly based on database relationships without regex patterns or hardcoded name mutations.
+- **Relationship-Based Food Fetching**:
+  - Refactored `GET /api/restaurant/foods` to query foods where `Food.restaurant` matches `req.restaurant._id`, `Food.restaurants` contains `req.restaurant._id`, or linked via `RestaurantFood` / `restaurant.foods`.
+- **Server-Side Meal Binding**:
+  - `POST /api/restaurant/foods` automatically attaches `restaurant: req.restaurant._id` on the server and returns the new meal to the frontend UI immediately.
 
 ---
 
 ## Verification Results
-- **Mum's Foods Resolution**: Verified Mum's restaurant owner logs in to see all restaurant foods loaded and displayed on their portal.
-- **Store Name Auto-Sync**: Verified restaurant name defaults and displays as `Mum's` for Mum's owner account.
-- **Auto-Linked Creation**: Verified foods created by a store owner automatically set `restaurant = req.restaurant._id` and generate a `RestaurantFood` link.
-- **Price Editing**: Verified price updates in `/restaurant/foods` persist to `RestaurantFood` overrides.
-- **Customer Order Routing**: Verified placing a customer order routes the order to the selected restaurant owner's portal and sends owner notifications.
-- **Owner Login Flow**: Verified assigned users logging in are directed to `/restaurant` with full access to manage their assigned store.
+- **Schema-Based Restaurant Resolution**: Verified authenticated restaurant owners retrieve their assigned restaurant document directly via `ownerId`.
+- **Linked Foods Retrieval**: Verified `GET /api/restaurant/foods` returns existing meals matching `Food.restaurant -> Restaurant._id`.
+- **Server-Side Binding**: Verified creating a new meal automatically binds `restaurant = req.restaurant._id` server-side and appends the meal to the portal list.
+- **Data Security**: Verified store owners cannot view, manage, or create meals for another restaurant.
+- **Architecture Integrity**: Verified all existing client-side, admin, and ordering functionality remain 100% intact.
+
 
 
 
