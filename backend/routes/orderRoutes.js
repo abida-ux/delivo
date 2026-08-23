@@ -170,6 +170,61 @@ router.put('/rider/assign', authenticate, async (req, res, next) => {
   }
 });
 
+router.put('/assign-restaurant', authenticate, authorizeRoles('admin'), async (req, res, next) => {
+  try {
+    const { orderId, restaurantId } = req.body;
+    if (!orderId || !restaurantId) {
+      return res.status(400).json({ success: false, message: 'Order ID and restaurant ID are required' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ success: false, message: 'Restaurant not found' });
+    }
+
+    order.restaurantId = restaurant._id;
+    order.restaurantName = restaurant.name;
+    if (Array.isArray(order.items)) {
+      order.items.forEach((item) => {
+        item.restaurantId = restaurant._id;
+        item.restaurantName = restaurant.name;
+      });
+    }
+
+    await order.save();
+
+    const orderIdShort = order._id.toString().slice(-6).toUpperCase();
+    const amountStr = typeof order.totalPrice === 'number' ? `KES ${order.totalPrice}` : '';
+
+    if (restaurant.ownerId) {
+      const ownerMsg = `New order #${orderIdShort} (${amountStr}) assigned to ${restaurant.name} by Admin!`;
+      await createInAppNotification({
+        userId: restaurant.ownerId,
+        title: 'New Assigned Order! 🍽️',
+        message: ownerMsg,
+        type: 'order',
+      });
+      await sendPushToUser({
+        userId: restaurant.ownerId,
+        payload: {
+          title: `New Order Assigned for ${restaurant.name}!`,
+          message: ownerMsg,
+          url: '/restaurant/orders',
+        },
+      });
+    }
+
+    res.status(200).json({ success: true, data: order, message: `Order successfully assigned to ${restaurant.name}` });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/:id', authenticate, getOrderById);
 router.put('/:id', authenticate, updateOrderStatus);
 router.get('/', authenticate, authorizeRoles('admin'), getAllOrders);

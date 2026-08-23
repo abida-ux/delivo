@@ -17,6 +17,7 @@ export default function AdminOrders() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [storesMap, setStoresMap] = useState({});
   const [restaurantsMap, setRestaurantsMap] = useState({});
+  const [allRestaurantsList, setAllRestaurantsList] = useState([]);
   const [availableRiders, setAvailableRiders] = useState([]);
   const [availableRidersLoading, setAvailableRidersLoading] = useState(false);
   const [riderSearchTerm, setRiderSearchTerm] = useState('');
@@ -24,6 +25,12 @@ export default function AdminOrders() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState(null);
   const [selectedRiderId, setSelectedRiderId] = useState('');
+
+  // Assign restaurant state
+  const [isAssignRestModalOpen, setIsAssignRestModalOpen] = useState(false);
+  const [selectedOrderForRestAssign, setSelectedOrderForRestAssign] = useState(null);
+  const [selectedRestaurantAssignId, setSelectedRestaurantAssignId] = useState('');
+  const [assigningRestLoading, setAssigningRestLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -65,6 +72,8 @@ export default function AdminOrders() {
       const ordersList = Array.isArray(data) ? data : [];
       setOrders(ordersList);
       applyFilter(ordersList, searchTerm, activeFilter);
+
+      setAllRestaurantsList(restaurantsList || []);
 
       // Clear unseen order badge count
       try {
@@ -259,6 +268,42 @@ export default function AdminOrders() {
     }
   };
 
+  const openAssignRestModal = (order) => {
+    setSelectedOrderForRestAssign(order);
+    setSelectedRestaurantAssignId(order?.restaurantId?._id || order?.restaurantId || '');
+    setIsAssignRestModalOpen(true);
+  };
+
+  const closeAssignRestModal = () => {
+    setIsAssignRestModalOpen(false);
+    setSelectedOrderForRestAssign(null);
+    setSelectedRestaurantAssignId('');
+  };
+
+  const handleAssignRestaurant = async (orderId, restaurantId = selectedRestaurantAssignId) => {
+    if (!restaurantId) return;
+    try {
+      setAssigningRestLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/orders/assign-restaurant', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ orderId, restaurantId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.message || 'Unable to assign restaurant');
+      }
+      alert('Order assigned to restaurant successfully!');
+      await fetchOrders();
+      closeAssignRestModal();
+    } catch (error) {
+      alert(error.message || 'Unable to assign restaurant');
+    } finally {
+      setAssigningRestLoading(false);
+    }
+  };
+
   return (
     <AdminDashboardLayout pageTitle="Orders Management">
       <div className="admin-orders-page">
@@ -331,15 +376,28 @@ export default function AdminOrders() {
                           <Eye size={16} />
                         </button>
                         {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                          <button
-                            type="button"
-                            className="order-btn-assign"
-                            onClick={() => openAssignModal(order)}
-                            disabled={assigningOrderId === order._id}
-                          >
-                            <UserCheck size={15} />
-                            <span>Assign</span>
-                          </button>
+                          <div style={{ display: 'inline-flex', gap: '6px' }}>
+                            <button
+                              type="button"
+                              className="order-btn-assign"
+                              title="Assign Restaurant"
+                              style={{ backgroundColor: '#16a34a', color: '#fff' }}
+                              onClick={() => openAssignRestModal(order)}
+                            >
+                              <Store size={14} />
+                              <span>Store</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="order-btn-assign"
+                              title="Assign Rider"
+                              onClick={() => openAssignModal(order)}
+                              disabled={assigningOrderId === order._id}
+                            >
+                              <UserCheck size={14} />
+                              <span>Rider</span>
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -414,14 +472,24 @@ export default function AdminOrders() {
                         <Eye size={14} /> View Details
                       </button>
                       {order.status !== 'delivered' && order.status !== 'cancelled' ? (
-                        <button
-                          type="button"
-                          className="order-card-btn assign"
-                          onClick={() => openAssignModal(order)}
-                          disabled={assigningOrderId === order._id}
-                        >
-                          <UserCheck size={14} /> Assign Rider
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            className="order-card-btn assign"
+                            style={{ backgroundColor: '#16a34a', color: '#fff' }}
+                            onClick={() => openAssignRestModal(order)}
+                          >
+                            <Store size={14} /> Assign Store
+                          </button>
+                          <button
+                            type="button"
+                            className="order-card-btn assign"
+                            onClick={() => openAssignModal(order)}
+                            disabled={assigningOrderId === order._id}
+                          >
+                            <UserCheck size={14} /> Assign Rider
+                          </button>
+                        </>
                       ) : (
                         <div className="order-card-status-closed">
                           <span>Complete</span>
@@ -435,6 +503,56 @@ export default function AdminOrders() {
           </div>
         )}
       </div>
+
+      {isAssignRestModalOpen && selectedOrderForRestAssign && (
+        <div className="modal-overlay" onClick={closeAssignRestModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Assign Restaurant to Order</h3>
+              <button className="modal-close" onClick={closeAssignRestModal}>×</button>
+            </div>
+            <p className="assignment-summary">
+              Order #{selectedOrderForRestAssign._id?.slice(-6).toUpperCase()} — Customer: {selectedOrderForRestAssign.customerName || 'Customer'}
+            </p>
+            <div className="assign-form" style={{ marginTop: '12px' }}>
+              <label style={{ fontWeight: 600, display: 'block', marginBottom: '8px', fontSize: '13.5px', color: '#334155' }}>
+                Select Restaurant:
+              </label>
+              <select
+                value={selectedRestaurantAssignId}
+                onChange={(e) => setSelectedRestaurantAssignId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '14px',
+                  backgroundColor: '#f8fafc',
+                  outline: 'none',
+                }}
+              >
+                <option value="">-- Choose Restaurant --</option>
+                {allRestaurantsList.map((r) => (
+                  <option key={r._id} value={r._id}>
+                    {r.name} {r.email ? `(${r.email})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-actions" style={{ marginTop: '20px' }}>
+              <button type="button" className="btn-cancel" onClick={closeAssignRestModal}>Cancel</button>
+              <button
+                type="button"
+                className="btn-save"
+                onClick={() => handleAssignRestaurant(selectedOrderForRestAssign._id)}
+                disabled={!selectedRestaurantAssignId || assigningRestLoading}
+              >
+                {assigningRestLoading ? 'Assigning...' : 'Confirm Assignment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isAssignModalOpen && selectedOrderForAssignment && (
         <div className="modal-overlay" onClick={closeAssignModal}>

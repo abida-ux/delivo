@@ -118,6 +118,27 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     updateLocation(addressItem.latitude, addressItem.longitude, addressItem.formattedAddress, addressItem.landmark);
   };
 
+  const [partnerRestaurants, setPartnerRestaurants] = useState([]);
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      try {
+        const res = await fetch('/api/restaurants');
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.data)) {
+          setPartnerRestaurants(data.data);
+        } else if (Array.isArray(data)) {
+          setPartnerRestaurants(data);
+        }
+      } catch (err) {
+        console.warn('Failed to load partner restaurants:', err);
+      }
+    };
+    if (isOpen) {
+      fetchPartners();
+    }
+  }, [isOpen]);
+
   // Load App Delivery Settings & Profile defaults
   useEffect(() => {
     const loadSettings = async () => {
@@ -991,6 +1012,34 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                       </div>
                     )}
                     {promoError && <span className="chk-promo-error">{promoError}</span>}
+                  </div>
+                </div>
+
+                {/* Partner Restaurants Info Block */}
+                <div className="partner-restaurants-card" style={{ marginTop: '14px' }}>
+                  <div className="partner-card-header">
+                    <Store size={16} className="partner-header-icon" />
+                    <div>
+                      <h4 className="partner-card-title">Partner Restaurants</h4>
+                      <p className="partner-card-sub">Available campus partners</p>
+                    </div>
+                  </div>
+
+                  <div className="partner-restaurants-list">
+                    {partnerRestaurants.length > 0 ? (
+                      partnerRestaurants.map((restaurant) => (
+                        <div key={restaurant._id} className="partner-restaurant-chip">
+                          <span className="partner-chip-dot"></span>
+                          <span className="partner-chip-name">{restaurant.name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="partner-loading-text">Loading partner restaurants...</span>
+                    )}
+                  </div>
+
+                  <div className="partner-info-note">
+                    <span>ℹ️ Restaurant assignment is managed automatically for your order items.</span>
                   </div>
                 </div>
               </div>

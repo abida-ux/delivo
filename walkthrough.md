@@ -189,11 +189,29 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 18. Admin Order Routing & Restaurant Assignment Workflow
+- **Admin-Only Initial Order Alerts** ([pushNotifications.js](file:///c:/Users/HomePC/Desktop/delivo/backend/utils/pushNotifications.js)):
+  - Updated `sendOrderPaymentNotification` to route initial order notifications exclusively to Admin users (`role: 'admin'`).
+  - Restaurant owners no longer receive automated push alerts upon initial customer order placement.
+- **Admin Restaurant Assignment API** ([orderRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/orderRoutes.js)):
+  - Added `PUT /api/orders/assign-restaurant` endpoint for Admin users to assign or reassign an order to any registered restaurant.
+  - Automatically updates `order.restaurantId`, `order.restaurantName`, and item-level restaurant references, and dispatches in-app & push alerts ("New Assigned Order! 🍽️") directly to the assigned restaurant owner (`restaurant.ownerId`).
+- **Admin Orders Interface** ([AdminOrders.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/admin/AdminOrders.jsx)):
+  - Added "Assign Store" action button and interactive modal to the desktop table and mobile cards view on the Admin Orders dashboard.
+
+---
+
+### 19. Partner Restaurants Display & No Customer Selection
+- **Partner Restaurants Component** ([Cart.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/customer/Cart.jsx), [Cart.css](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/customer/Cart.css), & [CheckoutModal.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/customer/CheckoutModal.jsx)):
+  - Dynamically fetches available campus restaurants (`GET /api/restaurants`) and displays a dedicated **Partner Restaurants** section in both the Cart summary column and Checkout modal.
+  - Displays partner restaurant chips/badges informing customers of verified campus partners without asking or requiring customers to choose a restaurant.
+
+---
+
 ## Verification Results
-- **Automatic Restaurant Derivation**: Verified order creation automatically resolves and attaches the restaurant ID from food records server-side.
-- **Seamless Customer Ordering**: Verified customers can add items to cart and proceed to checkout smoothly without seeing restaurant selection prompts.
-- **Owner Portal Foods Integrity**: Verified all restaurant owner portal foods and creation features continue functioning cleanly.
-- **System Safety**: Verified database records, payment flows, and admin functionality remain completely intact.
+- **Partner Restaurants Display**: Verified available partner restaurants are fetched and displayed cleanly in `Cart.jsx` and `CheckoutModal.jsx`.
+- **Automatic Fulfillment Info**: Verified customers cannot select or pick restaurants when making an order, with automatic restaurant binding maintained.
+- **System Integrity**: Verified no unrelated admin, ordering, or payment code was altered.
 
 
 

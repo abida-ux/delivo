@@ -230,42 +230,27 @@ const sendOrderPaymentNotification = async (order, status) => {
       console.log('Skipping push notification for guest checkout order');
     }
 
-    // Notify Restaurant Owner when an order is placed/confirmed
+    // Notify Administrators when an order is placed/confirmed
     if (status === 'completed' || status === 'confirmed' || status === 'pending') {
-      const Restaurant = require('../models/Restaurant');
-      const restIds = new Set();
-      if (order.restaurantId) {
-        restIds.add(typeof order.restaurantId === 'object' ? order.restaurantId._id.toString() : order.restaurantId.toString());
-      }
-      if (Array.isArray(order.restaurants)) {
-        order.restaurants.forEach((r) => { if (r.restaurantId) restIds.add(r.restaurantId.toString()); });
-      }
-      if (Array.isArray(order.items)) {
-        order.items.forEach((i) => {
-          if (i.restaurantId) restIds.add(i.restaurantId.toString());
-          if (i.foodId?.restaurant) restIds.add(i.foodId.restaurant.toString());
-        });
-      }
+      const User = require('../models/User');
+      const adminUsers = await User.find({ role: 'admin' }).select('_id');
 
-      for (const rId of restIds) {
-        const restDoc = await Restaurant.findById(rId);
-        if (restDoc && restDoc.ownerId) {
-          const ownerMsg = `New order #${orderIdShort} (${amountStr}) received for ${restDoc.name}!`;
-          await createInAppNotification({
-            userId: restDoc.ownerId,
-            title: 'New Order Received! 🍽️',
-            message: ownerMsg,
-            type: 'order',
-          });
-          await sendPushToUser({
-            userId: restDoc.ownerId,
-            payload: {
-              title: `New Order for ${restDoc.name}!`,
-              message: ownerMsg,
-              url: '/restaurant/orders',
-            },
-          });
-        }
+      for (const admin of adminUsers) {
+        const adminMsg = `New order #${orderIdShort} (${amountStr}) received. Pending restaurant assignment.`;
+        await createInAppNotification({
+          userId: admin._id,
+          title: 'New Order Received! 🛒',
+          message: adminMsg,
+          type: 'order',
+        });
+        await sendPushToUser({
+          userId: admin._id,
+          payload: {
+            title: 'New Order Received!',
+            message: adminMsg,
+            url: '/admin/orders',
+          },
+        });
       }
     }
   } catch (err) {
