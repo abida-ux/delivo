@@ -156,15 +156,23 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 14. Mum's Restaurant Resolution & Automatic Food Item Binding
+- **Store Name & Owner Link Resolution** ([restaurantPortalRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/restaurantPortalRoutes.js)):
+  - Updated `ensureRestaurantOwner` to match restaurant documents by `email`, `phone`, or name matching (e.g., `Mum's`) and set the store name to `Mum's` rather than defaulting to generic placeholder names (`My Restaurant`).
+- **Comprehensive Food Resolution & Auto-Binding**:
+  - Enhanced `GET /api/restaurant/foods` to query foods linked via `Food.restaurant`, `Food.restaurants`, `RestaurantFood.restaurantId`, `restaurant.foods`, `store`, and unassigned food documents.
+  - Automatically binds unassigned food items (`restaurant: restaurant._id`) and creates `RestaurantFood` price/availability records so all restaurant foods are immediately visible to Mum's owner upon logging in.
+
+---
+
 ## Verification Results
-- **Linked Foods Display**: Verified all foods linked to a restaurant appear on the restaurant owner's menu dashboard.
+- **Mum's Foods Resolution**: Verified Mum's restaurant owner logs in to see all restaurant foods loaded and displayed on their portal.
+- **Store Name Auto-Sync**: Verified restaurant name defaults and displays as `Mum's` for Mum's owner account.
 - **Auto-Linked Creation**: Verified foods created by a store owner automatically set `restaurant = req.restaurant._id` and generate a `RestaurantFood` link.
 - **Price Editing**: Verified price updates in `/restaurant/foods` persist to `RestaurantFood` overrides.
 - **Customer Order Routing**: Verified placing a customer order routes the order to the selected restaurant owner's portal and sends owner notifications.
-- **Role-Filtered Owner List**: Verified that only users with role `restaurant` appear in the owner selection dropdown in Edit Restaurant mode.
-- **Unlocked Flexible Reassignment**: Verified admins can reassign, change, or transfer restaurant owners anytime.
-- **Owner Display on Cards**: Verified `/admin/restaurants` displays the owner's Name and Phone Number on each restaurant card.
 - **Owner Login Flow**: Verified assigned users logging in are directed to `/restaurant` with full access to manage their assigned store.
+
 
 
 

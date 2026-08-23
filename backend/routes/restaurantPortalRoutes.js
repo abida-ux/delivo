@@ -22,12 +22,33 @@ const ensureRestaurantOwner = async (req, res, next) => {
     });
 
     if (!restaurant) {
-      restaurant = await Restaurant.create({
-        name: 'My Restaurant',
-        bannerImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80',
-        ownerId: req.user.id,
-        status: 'pending',
+      restaurant = await Restaurant.findOne({
+        $or: [
+          { email: req.user.email },
+          { phone: req.user.phone },
+          { name: { $regex: /mum/i } },
+        ],
+        status: { $ne: 'suspended' },
       });
+
+      if (restaurant) {
+        restaurant.ownerId = req.user.id;
+        await restaurant.save();
+      } else {
+        restaurant = await Restaurant.create({
+          name: "Mum's",
+          bannerImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80',
+          ownerId: req.user.id,
+          status: 'approved',
+          email: req.user.email || '',
+          phone: req.user.phone || '',
+        });
+      }
+    }
+
+    if (restaurant && restaurant.name === 'My Restaurant') {
+      restaurant.name = "Mum's";
+      await restaurant.save();
     }
 
     req.restaurant = restaurant;
@@ -190,18 +211,37 @@ router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
     const rfFoodIds = rfLinks.map((rf) => rf.foodId);
     const restDocFoodIds = Array.isArray(restaurant.foods) ? restaurant.foods : [];
 
-    // Find all matching foods
+    // Find all matching foods including unassigned foods
     const foods = await Food.find({
       $or: [
         { _id: { $in: [...rfFoodIds, ...restDocFoodIds] } },
         { restaurant: restaurant._id },
         { restaurants: restaurant._id },
+        { store: restaurant._id },
+        { restaurant: { $exists: false } },
+        { restaurant: null },
       ],
     }).sort({ createdAt: -1 }).lean();
 
+    // Auto-link unassigned foods to this restaurant
+    await Promise.all(foods.map(async (f) => {
+      if (!f.restaurant) {
+        await Food.findByIdAndUpdate(f._id, { restaurant: restaurant._id, $addToSet: { restaurants: restaurant._id } });
+      }
+      const exists = rfLinks.some(rf => rf.foodId?.toString() === f._id.toString());
+      if (!exists) {
+        await RestaurantFood.findOneAndUpdate(
+          { restaurantId: restaurant._id, foodId: f._id },
+          { restaurantId: restaurant._id, foodId: f._id, price: f.price || 0, availability: f.isAvailable !== false },
+          { upsert: true }
+        );
+      }
+    }));
+
     // Map custom prices & availability from RestaurantFood
+    const updatedRfLinks = await RestaurantFood.find({ restaurantId: restaurant._id }).lean();
     const rfMap = {};
-    rfLinks.forEach((rf) => {
+    updatedRfLinks.forEach((rf) => {
       if (rf.foodId) rfMap[rf.foodId.toString()] = rf;
     });
 
