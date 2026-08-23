@@ -7,7 +7,8 @@ const RestaurantFoods = () => {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const [restaurantName, setRestaurantName] = useState('');
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -40,6 +41,9 @@ const RestaurantFoods = () => {
       const json = await res.json();
       if (json.success) {
         setFoods(json.data || []);
+        if (json.restaurantName) {
+          setRestaurantName(json.restaurantName);
+        }
       }
     } catch (error) {
       console.error('Error fetching foods:', error);
@@ -198,8 +202,8 @@ const RestaurantFoods = () => {
       {/* Header */}
       <div className="restaurant-header glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1>Menu Management</h1>
-          <p>Manage food items, prices, and availability for your restaurant</p>
+          <h1>Menu Management{restaurantName ? ` — ${restaurantName}` : ''}</h1>
+          <p>Manage food items, prices, and availability for {restaurantName || 'your restaurant'}</p>
         </div>
         <button
           onClick={handleOpenAdd}

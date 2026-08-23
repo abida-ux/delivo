@@ -189,23 +189,38 @@ router.get('/completed', authenticate, ensureRestaurantOwner, async (req, res) =
 
 router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
-    const restaurantId = req.restaurant._id;
+    const restaurant = req.restaurant;
+    const restaurantId = restaurant._id;
 
-    // 1. Find all RestaurantFood junction links for this restaurant
-    const rfLinks = await RestaurantFood.find({ restaurantId }).lean();
+    // 1. Find all RestaurantFood junction links for this restaurant ID
+    const rfLinks = await RestaurantFood.find({
+      $or: [
+        { restaurantId: restaurantId },
+        { restaurantId: restaurantId.toString() },
+      ],
+    }).lean();
     const rfFoodIds = rfLinks.map((rf) => rf.foodId).filter(Boolean);
 
     // 2. Get food IDs listed in restaurant.foods array
-    const restDocFoodIds = Array.isArray(req.restaurant.foods) ? req.restaurant.foods.filter(Boolean) : [];
+    const restDocFoodIds = Array.isArray(restaurant.foods) ? restaurant.foods.filter(Boolean) : [];
 
-    // 3. Query Food collection for foods belonging to this restaurant
-    const foods = await Food.find({
-      $or: [
-        { restaurant: restaurantId },
-        { restaurants: restaurantId },
-        { _id: { $in: [...rfFoodIds, ...restDocFoodIds] } },
-      ],
-    }).sort({ createdAt: -1 }).lean();
+    // 3. Match conditions for Food collection
+    const matchConditions = [
+      { restaurant: restaurantId },
+      { restaurant: restaurantId.toString() },
+      { restaurants: restaurantId },
+      { restaurants: restaurantId.toString() },
+      { _id: { $in: [...rfFoodIds, ...restDocFoodIds] } },
+    ];
+
+    if (restaurant.name) {
+      const escapedName = restaurant.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      matchConditions.push({ restaurantName: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+      matchConditions.push({ store: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
+    }
+
+    // Query Food collection for foods belonging to this restaurant
+    const foods = await Food.find({ $or: matchConditions }).sort({ createdAt: -1 }).lean();
 
     // Map custom prices & availability from RestaurantFood
     const rfMap = {};
@@ -217,14 +232,22 @@ router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
       const rf = rfMap[f._id.toString()];
       return {
         ...f,
+        image: f.image || f.imageUrl,
+        imageUrl: f.imageUrl || f.image,
         price: rf && rf.price != null ? rf.price : f.price,
         discountPrice: rf && rf.discountPrice != null ? rf.discountPrice : f.discountPrice,
         isAvailable: rf && rf.availability != null ? rf.availability : (f.isAvailable !== false),
         restaurantFoodId: rf ? rf._id : null,
+        restaurantName: restaurant.name,
       };
     });
 
-    res.status(200).json({ success: true, data: finalFoods });
+    res.status(200).json({
+      success: true,
+      restaurantName: restaurant.name,
+      count: finalFoods.length,
+      data: finalFoods,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -233,16 +256,29 @@ router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
 router.post('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
     const restaurant = req.restaurant;
+    const { name, description, image, imageUrl, price, discountPrice, category, isAvailable, portions, variations } = req.body;
+
+    const foodImage = image || imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
+
     const foodPayload = {
-      ...req.body,
+      name,
+      description: description || name,
+      image: foodImage,
+      imageUrl: foodImage,
+      price: parseFloat(price) || 0,
+      discountPrice: discountPrice ? parseFloat(discountPrice) : undefined,
+      category: category || 'General',
       restaurant: restaurant._id,
       restaurants: [restaurant._id],
-      isAvailable: req.body.isAvailable !== undefined ? req.body.isAvailable : true,
+      restaurantName: restaurant.name,
+      isAvailable: isAvailable !== undefined ? isAvailable : true,
+      portions: Array.isArray(portions) ? portions : [],
+      variations: Array.isArray(variations) ? variations : [],
     };
 
     const food = await Food.create(foodPayload);
 
-    // Also create RestaurantFood junction record
+    // Create RestaurantFood junction record
     await RestaurantFood.findOneAndUpdate(
       { restaurantId: restaurant._id, foodId: food._id },
       {
@@ -252,16 +288,21 @@ router.post('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
         discountPrice: food.discountPrice || null,
         availability: food.isAvailable !== false,
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    // Also append to restaurant.foods array
+    // Append to restaurant.foods array
     if (!restaurant.foods.includes(food._id)) {
       restaurant.foods.push(food._id);
       await restaurant.save();
     }
 
-    res.status(201).json({ success: true, data: food });
+    const foodObj = food.toObject ? food.toObject() : food;
+    foodObj.image = foodImage;
+    foodObj.imageUrl = foodImage;
+    foodObj.restaurantName = restaurant.name;
+
+    res.status(201).json({ success: true, data: foodObj });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

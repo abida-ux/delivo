@@ -168,12 +168,23 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 16. Comprehensive Restaurant Food Fetching & Portal Restaurant Name Sync
+- **Comprehensive Database Query Matching** ([restaurantPortalRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/restaurantPortalRoutes.js)):
+  - Updated `GET /api/restaurant/foods` to query foods matching `restaurant` ID (ObjectId or String), `restaurants` array (ObjectId or String), `RestaurantFood` links, `restaurant.foods` array, `restaurantName`, and `store` fields.
+  - Returns `restaurantName` alongside food items so the portal header displays the owner's exact restaurant name.
+- **Admin-Style Meal Creation for Restaurant Owners**:
+  - `POST /api/restaurant/foods` automatically binds `restaurant: restaurant._id`, `restaurants: [restaurant._id]`, `restaurantName: restaurant.name`, and handles portions/variations and images identical to admin creation.
+- **UI Store Name Display** ([RestaurantFoods.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/restaurant/RestaurantFoods.jsx)):
+  - Updated portal header to dynamically display `Menu Management — [Restaurant Name]`.
+
+---
+
 ## Verification Results
-- **Schema-Based Restaurant Resolution**: Verified authenticated restaurant owners retrieve their assigned restaurant document directly via `ownerId`.
-- **Linked Foods Retrieval**: Verified `GET /api/restaurant/foods` returns existing meals matching `Food.restaurant -> Restaurant._id`.
-- **Server-Side Binding**: Verified creating a new meal automatically binds `restaurant = req.restaurant._id` server-side and appends the meal to the portal list.
-- **Data Security**: Verified store owners cannot view, manage, or create meals for another restaurant.
-- **Architecture Integrity**: Verified all existing client-side, admin, and ordering functionality remain 100% intact.
+- **Comprehensive Food Fetching**: Verified all foods linked by ID, array, junction link, or store name are retrieved and loaded in the restaurant owner's portal.
+- **Restaurant Name Tracking**: Verified the portal header dynamically displays the restaurant owner's store name.
+- **Admin-Style Creation**: Verified restaurant owners can add foods with images, descriptions, prices, and categories, automatically bound to their restaurant name and ID.
+- **System Integrity**: Verified no unrelated admin, customer, ordering, or payment code was altered.
+
 
 
 
