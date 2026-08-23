@@ -143,13 +143,29 @@ This document details the completed implementation steps for checkout promo code
 
 ---
 
+### 13. Restaurant Owner Food Menu Management & Customer Order Routing
+- **Linked Foods & Price Editing** ([restaurantPortalRoutes.js](file:///c:/Users/HomePC/Desktop/delivo/backend/routes/restaurantPortalRoutes.js)):
+  - Updated `GET /api/restaurant/foods` to query all foods linked via `Food.restaurant`, `Food.restaurants`, `RestaurantFood.restaurantId`, and `restaurant.foods`, merging store price overrides from `RestaurantFood`.
+  - Updated `POST /api/restaurant/foods` so newly added food items automatically bind `restaurant: req.restaurant._id`, create a `RestaurantFood` junction link, and append to `restaurant.foods`.
+  - Updated `PUT /api/restaurant/foods/:id` to allow store owners to edit prices, descriptions, and stock availability overrides.
+- **Interactive Menu Portal UI** ([RestaurantFoods.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/restaurant/RestaurantFoods.jsx)):
+  - Built a comprehensive food menu management interface featuring **Add New Food**, **Edit Price & Info**, **Availability Toggle**, and **Delete Food Item** modals.
+- **Customer Order Routing & Alerts** ([pushNotifications.js](file:///c:/Users/HomePC/Desktop/delivo/backend/utils/pushNotifications.js) & [RestaurantOrders.jsx](file:///c:/Users/HomePC/Desktop/delivo/frontend/src/pages/restaurant/RestaurantOrders.jsx)):
+  - Configured order payment notification triggers to dispatch in-app and browser push alerts to the linked restaurant owner (`ownerId`).
+  - Upgraded `RestaurantOrders.jsx` with detailed order cards, customer contact info, item breakdown, and status progression controls (Confirm, Mark Preparing).
+
+---
+
 ## Verification Results
+- **Linked Foods Display**: Verified all foods linked to a restaurant appear on the restaurant owner's menu dashboard.
+- **Auto-Linked Creation**: Verified foods created by a store owner automatically set `restaurant = req.restaurant._id` and generate a `RestaurantFood` link.
+- **Price Editing**: Verified price updates in `/restaurant/foods` persist to `RestaurantFood` overrides.
+- **Customer Order Routing**: Verified placing a customer order routes the order to the selected restaurant owner's portal and sends owner notifications.
 - **Role-Filtered Owner List**: Verified that only users with role `restaurant` appear in the owner selection dropdown in Edit Restaurant mode.
 - **Unlocked Flexible Reassignment**: Verified admins can reassign, change, or transfer restaurant owners anytime.
 - **Owner Display on Cards**: Verified `/admin/restaurants` displays the owner's Name and Phone Number on each restaurant card.
-- **Simplified Creation**: Verified admins can create a restaurant without having to invent or input inline owner passwords.
-- **Role Auto-Sync**: Verified selecting a restaurant auto-updates user role to `restaurant` and sets `ownerId` on the database document.
 - **Owner Login Flow**: Verified assigned users logging in are directed to `/restaurant` with full access to manage their assigned store.
+
 
 
 

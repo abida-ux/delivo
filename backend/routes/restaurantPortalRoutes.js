@@ -4,6 +4,7 @@ const { authenticate } = require('../middleware/authMiddleware');
 const Restaurant = require('../models/Restaurant');
 const Food = require('../models/Food');
 const Order = require('../models/Order');
+const RestaurantFood = require('../models/RestaurantFood');
 const { calculateRestaurantEarnings, buildRestaurantFilter, buildRestaurantDashboardData } = require('../utils/restaurantPortal');
 
 const ensureRestaurantOwner = async (req, res, next) => {
@@ -183,10 +184,39 @@ router.get('/completed', authenticate, ensureRestaurantOwner, async (req, res) =
 router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
     const restaurant = req.restaurant;
+
+    // Find all links in RestaurantFood collection
+    const rfLinks = await RestaurantFood.find({ restaurantId: restaurant._id }).lean();
+    const rfFoodIds = rfLinks.map((rf) => rf.foodId);
+    const restDocFoodIds = Array.isArray(restaurant.foods) ? restaurant.foods : [];
+
+    // Find all matching foods
     const foods = await Food.find({
-      $or: [{ restaurant: restaurant._id }, { restaurants: restaurant._id }],
+      $or: [
+        { _id: { $in: [...rfFoodIds, ...restDocFoodIds] } },
+        { restaurant: restaurant._id },
+        { restaurants: restaurant._id },
+      ],
     }).sort({ createdAt: -1 }).lean();
-    res.status(200).json({ success: true, data: foods });
+
+    // Map custom prices & availability from RestaurantFood
+    const rfMap = {};
+    rfLinks.forEach((rf) => {
+      if (rf.foodId) rfMap[rf.foodId.toString()] = rf;
+    });
+
+    const finalFoods = foods.map((f) => {
+      const rf = rfMap[f._id.toString()];
+      return {
+        ...f,
+        price: rf && rf.price != null ? rf.price : f.price,
+        discountPrice: rf && rf.discountPrice != null ? rf.discountPrice : f.discountPrice,
+        isAvailable: rf && rf.availability != null ? rf.availability : (f.isAvailable !== false),
+        restaurantFoodId: rf ? rf._id : null,
+      };
+    });
+
+    res.status(200).json({ success: true, data: finalFoods });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -195,27 +225,34 @@ router.get('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
 router.post('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
     const restaurant = req.restaurant;
-    const restaurantIds = Array.isArray(req.body.restaurants) ? req.body.restaurants : [restaurant._id];
-    const normalizedRestaurants = restaurantIds.includes(restaurant._id.toString()) || restaurantIds.includes(restaurant._id)
-      ? restaurantIds
-      : [restaurant._id];
-
     const foodPayload = {
       ...req.body,
       restaurant: restaurant._id,
-      restaurants: normalizedRestaurants,
-      store: req.body.store || null,
+      restaurants: [restaurant._id],
+      isAvailable: req.body.isAvailable !== undefined ? req.body.isAvailable : true,
     };
 
     const food = await Food.create(foodPayload);
-    const restaurantIdsToLink = [...new Set(normalizedRestaurants.filter(Boolean))];
-    await Promise.all(restaurantIdsToLink.map(async (restaurantId) => {
-      const restaurantDoc = await Restaurant.findById(restaurantId);
-      if (restaurantDoc && !restaurantDoc.foods.includes(food._id)) {
-        restaurantDoc.foods.push(food._id);
-        await restaurantDoc.save();
-      }
-    }));
+
+    // Also create RestaurantFood junction record
+    await RestaurantFood.findOneAndUpdate(
+      { restaurantId: restaurant._id, foodId: food._id },
+      {
+        restaurantId: restaurant._id,
+        foodId: food._id,
+        price: food.price,
+        discountPrice: food.discountPrice || null,
+        availability: food.isAvailable !== false,
+      },
+      { upsert: true, new: true }
+    );
+
+    // Also append to restaurant.foods array
+    if (!restaurant.foods.includes(food._id)) {
+      restaurant.foods.push(food._id);
+      await restaurant.save();
+    }
+
     res.status(201).json({ success: true, data: food });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -224,13 +261,41 @@ router.post('/foods', authenticate, ensureRestaurantOwner, async (req, res) => {
 
 router.put('/foods/:id', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
-    const food = await Food.findOne({
-      _id: req.params.id,
-      $or: [{ restaurant: req.restaurant._id }, { restaurants: req.restaurant._id }],
-    });
-    if (!food) return res.status(404).json({ success: false, message: 'Food not found' });
-    Object.assign(food, req.body);
-    await food.save();
+    const restaurant = req.restaurant;
+    const foodId = req.params.id;
+
+    const food = await Food.findById(foodId);
+    if (!food) {
+      return res.status(404).json({ success: false, message: 'Food item not found' });
+    }
+
+    const isOwner = food.restaurant?.toString() === restaurant._id.toString() ||
+      (Array.isArray(food.restaurants) && food.restaurants.some((r) => r.toString() === restaurant._id.toString()));
+
+    if (isOwner) {
+      Object.assign(food, req.body);
+      await food.save();
+    }
+
+    // Update/upsert RestaurantFood price & availability override
+    const rfUpdate = {};
+    if (req.body.price != null) rfUpdate.price = Number(req.body.price);
+    if (req.body.discountPrice != null) rfUpdate.discountPrice = Number(req.body.discountPrice);
+    if (req.body.isAvailable !== undefined) rfUpdate.availability = Boolean(req.body.isAvailable);
+
+    if (Object.keys(rfUpdate).length > 0) {
+      await RestaurantFood.findOneAndUpdate(
+        { restaurantId: restaurant._id, foodId: food._id },
+        {
+          restaurantId: restaurant._id,
+          foodId: food._id,
+          price: req.body.price != null ? Number(req.body.price) : food.price,
+          ...rfUpdate,
+        },
+        { upsert: true, new: true }
+      );
+    }
+
     res.status(200).json({ success: true, data: food });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -239,11 +304,18 @@ router.put('/foods/:id', authenticate, ensureRestaurantOwner, async (req, res) =
 
 router.delete('/foods/:id', authenticate, ensureRestaurantOwner, async (req, res) => {
   try {
-    const food = await Food.findOne({ _id: req.params.id, restaurant: req.restaurant._id });
-    if (!food) return res.status(404).json({ success: false, message: 'Food not found' });
-    await food.deleteOne();
-    await Restaurant.findByIdAndUpdate(req.restaurant._id, { $pull: { foods: food._id } });
-    res.status(200).json({ success: true, message: 'Food deleted' });
+    const restaurant = req.restaurant;
+    const foodId = req.params.id;
+
+    await RestaurantFood.deleteMany({ restaurantId: restaurant._id, foodId });
+    await Restaurant.findByIdAndUpdate(restaurant._id, { $pull: { foods: foodId } });
+
+    const food = await Food.findById(foodId);
+    if (food && food.restaurant?.toString() === restaurant._id.toString()) {
+      await food.deleteOne();
+    }
+
+    res.status(200).json({ success: true, message: 'Food item removed from restaurant' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

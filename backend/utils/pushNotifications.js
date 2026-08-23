@@ -229,6 +229,45 @@ const sendOrderPaymentNotification = async (order, status) => {
     } else {
       console.log('Skipping push notification for guest checkout order');
     }
+
+    // Notify Restaurant Owner when an order is placed/confirmed
+    if (status === 'completed' || status === 'confirmed' || status === 'pending') {
+      const Restaurant = require('../models/Restaurant');
+      const restIds = new Set();
+      if (order.restaurantId) {
+        restIds.add(typeof order.restaurantId === 'object' ? order.restaurantId._id.toString() : order.restaurantId.toString());
+      }
+      if (Array.isArray(order.restaurants)) {
+        order.restaurants.forEach((r) => { if (r.restaurantId) restIds.add(r.restaurantId.toString()); });
+      }
+      if (Array.isArray(order.items)) {
+        order.items.forEach((i) => {
+          if (i.restaurantId) restIds.add(i.restaurantId.toString());
+          if (i.foodId?.restaurant) restIds.add(i.foodId.restaurant.toString());
+        });
+      }
+
+      for (const rId of restIds) {
+        const restDoc = await Restaurant.findById(rId);
+        if (restDoc && restDoc.ownerId) {
+          const ownerMsg = `New order #${orderIdShort} (${amountStr}) received for ${restDoc.name}!`;
+          await createInAppNotification({
+            userId: restDoc.ownerId,
+            title: 'New Order Received! 🍽️',
+            message: ownerMsg,
+            type: 'order',
+          });
+          await sendPushToUser({
+            userId: restDoc.ownerId,
+            payload: {
+              title: `New Order for ${restDoc.name}!`,
+              message: ownerMsg,
+              url: '/restaurant/orders',
+            },
+          });
+        }
+      }
+    }
   } catch (err) {
     console.error('❌ Error sending order payment notification:', err.message);
   }
