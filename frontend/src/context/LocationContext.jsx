@@ -23,8 +23,17 @@ export const LocationProvider = ({ children }) => {
       try {
         const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
         if (stored) {
-          setLocation(JSON.parse(stored));
-          return;
+          const parsedLocation = JSON.parse(stored);
+          if (parsedLocation && typeof parsedLocation === 'object' && !Array.isArray(parsedLocation)) {
+            setLocation({
+              latitude: Number.isFinite(Number(parsedLocation.latitude)) ? Number(parsedLocation.latitude) : null,
+              longitude: Number.isFinite(Number(parsedLocation.longitude)) ? Number(parsedLocation.longitude) : null,
+              formattedAddress: typeof parsedLocation.formattedAddress === 'string' ? parsedLocation.formattedAddress : '',
+              nearbyLandmark: typeof parsedLocation.nearbyLandmark === 'string' ? parsedLocation.nearbyLandmark : '',
+            });
+            return;
+          }
+          localStorage.removeItem(LOCATION_STORAGE_KEY);
         }
       } catch (err) {
         console.error('Error reading location from storage:', err);

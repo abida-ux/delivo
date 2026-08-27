@@ -33,7 +33,9 @@ export const CartProvider = ({ children }) => {
     const guestCart = localStorage.getItem(GUEST_CART_KEY);
     if (guestCart) {
       try {
-        setCartItems(JSON.parse(guestCart));
+        const parsedCart = JSON.parse(guestCart);
+        if (!Array.isArray(parsedCart)) throw new Error('Persisted guest cart is not an array');
+        setCartItems(parsedCart);
         console.log('📦 Guest cart loaded from localStorage');
       } catch (error) {
         console.error('❌ Error parsing guest cart:', error);

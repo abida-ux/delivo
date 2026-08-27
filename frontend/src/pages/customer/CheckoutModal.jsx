@@ -5,7 +5,6 @@ import {
   AlertCircle,
   Check,
   MapPin,
-  Map,
   User,
   Phone,
   Store,
@@ -23,7 +22,6 @@ import {
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../context/LocationContext';
-import LocationPickerModal from '../../components/LocationPickerModal';
 import api, { createOrder, getAppSettings, getMpesaStatus, getOrderById } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
@@ -44,11 +42,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     freeDeliveryMinimum: 2500,
   });
 
-  const { location, updateLocation } = useLocation();
-  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
+  const { updateLocation } = useLocation();
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [specialInstructions, setSpecialInstructions] = useState('');
-  const [landmarkInput, setLandmarkInput] = useState('');
 
   const [deliveryInfo, setDeliveryInfo] = useState({
     fullName: '',
@@ -72,19 +68,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
 
-  // Sync landmark input and formatted address from LocationContext
-  useEffect(() => {
-    if (location.nearbyLandmark) {
-      setLandmarkInput(location.nearbyLandmark);
-    }
-    if (location.formattedAddress) {
-      setDeliveryInfo(prev => ({
-        ...prev,
-        address: location.formattedAddress,
-      }));
-    }
-  }, [location.formattedAddress, location.nearbyLandmark]);
-
   // Load saved addresses for logged-in user
   useEffect(() => {
     const fetchSavedAddresses = async () => {
@@ -98,7 +81,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
               ...prev,
               address: def.formattedAddress,
             }));
-            setLandmarkInput(def.landmark || '');
             updateLocation(def.latitude, def.longitude, def.formattedAddress, def.landmark);
           }
         } catch (err) {
@@ -114,7 +96,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       ...prev,
       address: addressItem.formattedAddress,
     }));
-    setLandmarkInput(addressItem.landmark || '');
     updateLocation(addressItem.latitude, addressItem.longitude, addressItem.formattedAddress, addressItem.landmark);
   };
 
@@ -320,12 +301,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       newErrors.fullName = 'Please enter your full name';
     }
 
-    if (!location.latitude || !location.longitude) {
-      newErrors.address = 'Please pin your exact delivery location on the map';
-    } else if (!landmarkInput.trim() || landmarkInput.trim().length < 2) {
-      newErrors.landmark = 'Please enter your hostel name, house, or room number';
-    } else if (!deliveryInfo.address.trim()) {
-      newErrors.address = 'Precise delivery address is required';
+    if (!deliveryInfo.address.trim()) {
+      newErrors.address = 'Please enter your delivery location';
     }
 
     if (!deliveryInfo.whatsapp.trim()) {
@@ -429,15 +406,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
 
     setIsProcessing(true);
     try {
-      // Sync landmark into context
-      if (location.latitude && location.longitude) {
-        updateLocation(location.latitude, location.longitude, deliveryInfo.address, landmarkInput.trim());
-      }
-
-      const fullDeliveryAddress = landmarkInput.trim()
-        ? `${deliveryInfo.address} [${landmarkInput.trim()}]`
-        : deliveryInfo.address;
-
       const items = cartItems.map(item => {
         const itemFoodId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;
         const marketplaceProductId = typeof item.marketplaceProductId === 'object' ? item.marketplaceProductId._id : item.marketplaceProductId;
@@ -460,9 +428,9 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       const orderData = {
         items,
         customerName: deliveryInfo.fullName,
-        deliveryAddress: fullDeliveryAddress,
-        deliveryLatitude: location.latitude || 0,
-        deliveryLongitude: location.longitude || 0,
+        deliveryAddress: deliveryInfo.address.trim(),
+        deliveryLatitude: 0,
+        deliveryLongitude: 0,
         paymentMethod: 'mpesa',
         whatsappNumber: deliveryInfo.whatsapp,
         mpesaNumber: deliveryInfo.mpesaNumber,
@@ -506,8 +474,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   };
 
   if (!isOpen) return null;
-
-  const hasPinnedCoordinates = Boolean(location.latitude && location.longitude);
 
   return (
     <>
@@ -739,54 +705,24 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                     </div>
                   )}
 
-                  {/* Address Display & Map Action */}
-                  <div className={`chk-location-card ${hasPinnedCoordinates ? 'is-pinned' : 'needs-pin'}`}>
-                    <div className="chk-location-card-main">
-                      <div className="chk-loc-badge-row">
-                        {hasPinnedCoordinates ? (
-                          <span className="chk-loc-status pinned">
-                            <Check size={13} /> Exact location pinned
-                          </span>
-                        ) : (
-                          <span className="chk-loc-status unpinned">
-                            <AlertCircle size={13} /> Pin your exact delivery location
-                          </span>
-                        )}
-                      </div>
-                      <p className="chk-address-text">
-                        {deliveryInfo.address || 'No location selected yet. Tap adjust on map.'}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="chk-map-btn"
-                      onClick={() => setIsLocationPickerOpen(true)}
+                  <div className="chk-field-group">
+                    <label htmlFor="chk-delivery-location">Delivery Location</label>
+                    <input
+                      id="chk-delivery-location"
+                      type="text"
+                      value={deliveryInfo.address}
+                      onChange={(e) => {
+                        setDeliveryInfo({ ...deliveryInfo, address: e.target.value });
+                        if (errors.address) setErrors({ ...errors, address: '' });
+                      }}
+                      placeholder="e.g. Nyabundi Room 4-3B"
+                      autoComplete="street-address"
                       disabled={isProcessing}
-                    >
-                      <Map size={14} />
-                      <span>{hasPinnedCoordinates ? 'Adjust on map' : 'Pin location on map'}</span>
-                    </button>
+                      className={errors.address ? 'has-error' : ''}
+                    />
+                    <span className="chk-field-hint">Enter the exact room, building, landmark, or delivery instructions.</span>
                   </div>
                   {errors.address && <span className="chk-field-error">{errors.address}</span>}
-
-                  {/* Landmark / Building info */}
-                  <div className="chk-field-group" style={{ marginTop: '12px' }}>
-                    <label htmlFor="chk-landmark">Landmark / Building directions</label>
-                    <input
-                      id="chk-landmark"
-                      type="text"
-                      value={landmarkInput}
-                      onChange={(e) => {
-                        setLandmarkInput(e.target.value);
-                        if (errors.landmark) setErrors({ ...errors, landmark: '' });
-                      }}
-                      placeholder="e.g. Nile 32 B, near the main gate"
-                      disabled={isProcessing}
-                      className={errors.landmark ? 'has-error' : ''}
-                    />
-                    {errors.landmark && <span className="chk-field-error">{errors.landmark}</span>}
-                  </div>
 
                   {/* Special delivery instructions */}
                   <div className="chk-field-group" style={{ marginTop: '10px' }}>
@@ -843,13 +779,12 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                   </div>
 
                   {/* Order Confidence Recap */}
-                  {deliveryInfo.address && hasPinnedCoordinates && (
+                  {deliveryInfo.address && (
                     <div className="chk-confidence-box">
                       <div className="chk-confidence-line">
                         <MapPin size={13} />
                         <span>
                           Delivering to: <strong>{deliveryInfo.address}</strong>
-                          {landmarkInput ? ` (${landmarkInput})` : ''}
                         </span>
                       </div>
                       {deliveryInfo.mpesaNumber && (
@@ -1066,23 +1001,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         </div>
       </div>
 
-      {/* Existing Location Map Modal */}
-      <LocationPickerModal
-        isOpen={isLocationPickerOpen}
-        onClose={() => setIsLocationPickerOpen(false)}
-        onLocationSelect={(selectedLoc) => {
-          updateLocation(
-            selectedLoc.latitude,
-            selectedLoc.longitude,
-            selectedLoc.formattedAddress,
-            selectedLoc.nearbyLandmark || landmarkInput
-          );
-          if (selectedLoc.nearbyLandmark) {
-            setLandmarkInput(selectedLoc.nearbyLandmark);
-          }
-          if (errors.address) setErrors((prev) => ({ ...prev, address: '' }));
-        }}
-      />
     </>
   );
 };

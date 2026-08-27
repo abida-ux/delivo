@@ -16,7 +16,11 @@ export const AuthProvider = ({ children }) => {
 
     if (savedUser && savedToken) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        if (!parsedUser || typeof parsedUser !== 'object' || Array.isArray(parsedUser)) {
+          throw new Error('Persisted user is not an object');
+        }
+        setUser(parsedUser);
         setToken(savedToken);
       } catch (err) {
         console.error('Failed to parse saved auth:', err);
