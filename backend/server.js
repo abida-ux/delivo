@@ -35,7 +35,9 @@ const combinationRoutes = require('./routes/combinationRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const adminLogRoutes = require('./routes/adminLogRoutes');
 const payoutRoutes = require('./routes/payoutRoutes');
+const scheduledAnnouncementRoutes = require('./routes/scheduledAnnouncementRoutes');
 const adminAuditLogger = require('./middleware/adminAuditLogger');
+const { processDueAnnouncements } = require('./services/scheduledAnnouncementService');
 
 
 // Initialize Express app
@@ -173,6 +175,7 @@ app.use('/api/combinations', combinationRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/admin-logs', adminLogRoutes);
 app.use('/api/payouts', payoutRoutes);
+app.use('/api/admin/scheduled-announcements', scheduledAnnouncementRoutes);
 
 
 
@@ -290,6 +293,19 @@ const cleanupExpiredOrders = async () => {
 };
 
 setInterval(cleanupExpiredOrders, 30 * 1000);
+
+// Process persisted announcements on the server so scheduling continues without an open dashboard.
+const processScheduledAnnouncements = async () => {
+  try {
+    const processed = await processDueAnnouncements();
+    if (processed > 0) console.log(`📢 Processed ${processed} scheduled announcement(s)`);
+  } catch (error) {
+    console.error('❌ Error processing scheduled announcements:', error);
+  }
+};
+
+processScheduledAnnouncements();
+setInterval(processScheduledAnnouncements, 30 * 1000);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

@@ -19,6 +19,15 @@ const NotificationSchema = new mongoose.Schema({
     enum: ['order', 'promotion', 'system', 'delivery', 'admin_broadcast'],
     default: 'system',
   },
+  announcementId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ScheduledAnnouncement',
+    sparse: true,
+  },
+  announcementOccurrenceKey: {
+    type: String,
+    sparse: true,
+  },
   isRead: {
     type: Boolean,
     default: false,
@@ -38,5 +47,9 @@ const NotificationSchema = new mongoose.Schema({
 
 // Auto-delete expired notifications
 NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+NotificationSchema.index(
+  { userId: 1, announcementId: 1, announcementOccurrenceKey: 1 },
+  { unique: true, sparse: true }
+);
 
 module.exports = mongoose.model('Notification', NotificationSchema);

@@ -1,0 +1,40 @@
+.scheduled-announcements { display: flex; flex-direction: column; gap: 18px; }
+.scheduled-heading, .scheduled-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.scheduled-heading h2 { display: flex; align-items: center; gap: 8px; margin: 0; color: #0f172a; font-size: 20px; }
+.scheduled-heading p { margin: 5px 0 0; color: #64748b; font-size: 13px; }
+.scheduled-form, .scheduled-list { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; }
+.scheduled-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.scheduled-form label { display: flex; flex-direction: column; gap: 6px; color: #334155; font-size: 12px; font-weight: 700; }
+.scheduled-form input:not([type="checkbox"]), .scheduled-form textarea, .scheduled-form select { width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 7px; padding: 10px; color: #0f172a; background: #fff; font: inherit; font-weight: 400; }
+.scheduled-form textarea { resize: vertical; }
+.scheduled-wide { grid-column: 1 / -1; }
+.scheduled-enabled { flex-direction: row !important; align-items: center; justify-content: flex-end; padding-top: 23px; }
+.scheduled-enabled input, .scheduled-days input { accent-color: #f97316; }
+.scheduled-days { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+.scheduled-days label { flex-direction: row; align-items: center; font-weight: 600; }
+.scheduled-presets { display: flex; gap: 5px; margin-top: 2px; }
+.scheduled-presets button { border: 1px solid #fed7aa; border-radius: 5px; padding: 4px 7px; color: #c2410c; background: #fff7ed; cursor: pointer; font-size: 11px; }
+.scheduled-primary-btn, .scheduled-muted-btn { display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 7px; padding: 10px 14px; cursor: pointer; font-weight: 700; }
+.scheduled-primary-btn { margin-top: 16px; color: #fff; background: #f97316; }
+.scheduled-muted-btn { color: #475569; background: #f1f5f9; }
+.scheduled-primary-btn:disabled { opacity: .6; cursor: wait; }
+.scheduled-alert { border-radius: 7px; padding: 10px 12px; font-size: 13px; }
+.scheduled-alert.error { color: #991b1b; background: #fef2f2; }
+.scheduled-alert.success { color: #166534; background: #f0fdf4; }
+.scheduled-list-heading h3 { margin: 0; color: #0f172a; font-size: 16px; }
+.scheduled-list-heading span { color: #64748b; font-size: 12px; }
+.scheduled-table-wrap { overflow-x: auto; }
+.scheduled-list table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+.scheduled-list th { text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; padding: 10px 8px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+.scheduled-list td { padding: 12px 8px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: top; min-width: 105px; }
+.scheduled-list td:first-child { min-width: 190px; }
+.scheduled-list td strong, .scheduled-list td span { display: block; }
+.scheduled-list td span { margin-top: 4px; color: #64748b; line-height: 1.4; }
+.scheduled-status { display: inline-block !important; border-radius: 999px; padding: 4px 8px; font-weight: 700; font-size: 11px; }
+.scheduled-status.active { color: #166534 !important; background: #dcfce7; }
+.scheduled-status.disabled { color: #64748b !important; background: #f1f5f9; }
+.scheduled-actions { display: flex; gap: 5px; }
+.scheduled-actions button { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569; background: #fff; cursor: pointer; }
+.scheduled-actions button:hover { color: #f97316; border-color: #fdba74; }
+.scheduled-empty { color: #64748b; font-size: 13px; margin: 14px 0 0; }
+@media (max-width: 700px) { .scheduled-form-grid { grid-template-columns: 1fr; } .scheduled-wide { grid-column: auto; } .scheduled-enabled { justify-content: flex-start; padding-top: 0; } .scheduled-form, .scheduled-list { padding: 15px; } .scheduled-heading { align-items: flex-start; flex-direction: column; } }

@@ -264,6 +264,31 @@ export const sendAdminNotification = async (data) => {
   return res.data;
 };
 
+export const getScheduledAnnouncements = async () => {
+  const res = await api.get('/admin/scheduled-announcements');
+  return res.data;
+};
+
+export const createScheduledAnnouncement = async (data) => {
+  const res = await api.post('/admin/scheduled-announcements', data);
+  return res.data;
+};
+
+export const updateScheduledAnnouncement = async (id, data) => {
+  const res = await api.put(`/admin/scheduled-announcements/${id}`, data);
+  return res.data;
+};
+
+export const toggleScheduledAnnouncement = async (id) => {
+  const res = await api.patch(`/admin/scheduled-announcements/${id}/toggle`);
+  return res.data;
+};
+
+export const deleteScheduledAnnouncement = async (id) => {
+  const res = await api.delete(`/admin/scheduled-announcements/${id}`);
+  return res.data;
+};
+
 export const getNotifications = async () => {
   const res = await api.get('/notifications');
   return res.data;
@@ -705,4 +730,4 @@ export default api;
 
 
 
-
+
