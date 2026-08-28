@@ -44,11 +44,14 @@ router.put('/mark-all-read', markAllAsRead);
 // Mark notification as read
 router.put('/:notificationId/read', markAsRead);
 
+// Delete all notifications for current user
+router.delete('/user/all', deleteAllNotifications);
+
+// Delete all notifications (compatibility alias)
+router.delete('/', deleteAllNotifications);
+
 // Delete specific notification
 router.delete('/:notificationId', deleteNotification);
-
-// Delete all notifications
-router.delete('/', deleteAllNotifications);
 
 // Browser push subscription management
 router.post('/push/subscribe', savePushSubscription);

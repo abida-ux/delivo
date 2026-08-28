@@ -51,6 +51,7 @@ const AdminSettings = () => {
   });
   const [notificationLoading, setNotificationLoading] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [historyMessage, setHistoryMessage] = useState({ type: '', text: '' });
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -118,23 +119,44 @@ const AdminSettings = () => {
   };
 
   const handleClearAllNotifications = async () => {
-    if (!window.confirm('Clear all notification history?')) return;
+    if (!window.confirm('Are you sure you want to clear all notification history?')) return;
+
     try {
-      await api.delete('/notifications/user/all');
+      const response = await api.delete('/notifications');
       setNotifications([]);
+      setHistoryMessage({
+        type: 'success',
+        text: response?.data?.message || 'Notification history cleared successfully.',
+      });
+      setTimeout(() => setHistoryMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       console.error('Error clearing notifications:', error);
+      setHistoryMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to clear notification history. Please try again.',
+      });
     }
   };
 
   const handleDeleteNotification = async (notificationId) => {
     if (!window.confirm('Delete this notification?')) return;
-    
+
     try {
-      await api.delete(`/notifications/${notificationId}`);
-      fetchNotifications();
+      const response = await api.delete(`/notifications/${notificationId}`);
+      setNotifications((current) =>
+        current.filter((notif) => String(notif._id) !== String(notificationId))
+      );
+      setHistoryMessage({
+        type: 'success',
+        text: response?.data?.message || 'Notification deleted successfully.',
+      });
+      setTimeout(() => setHistoryMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       console.error('Error deleting notification:', error);
+      setHistoryMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete notification. Please try again.',
+      });
     }
   };
 
@@ -374,6 +396,11 @@ const AdminSettings = () => {
                     Clear All History
                   </button>
                 </div>
+                {historyMessage.text && (
+                  <div className={`message ${historyMessage.type === 'success' ? 'success' : 'error'}`}>
+                    {historyMessage.text}
+                  </div>
+                )}
                 <div className="notifications-list">
                   {notifications.map((notif) => (
                     <div key={notif._id} className="notification-item">
