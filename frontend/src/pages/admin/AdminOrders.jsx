@@ -152,6 +152,20 @@ export default function AdminOrders() {
     return 'N/A';
   };
 
+  const formatOrderMade = (dateValue) => {
+    if (!dateValue) return 'Date unavailable';
+    try {
+      const d = new Date(dateValue);
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Africa/Nairobi',
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true,
+      }).format(d);
+    } catch (e) {
+      return 'Date unavailable';
+    }
+  };
+
   const applyFilter = (list, searchVal, filterVal, dateVal = selectedDate) => {
     let result = list;
     if (dateVal) {
@@ -402,12 +416,12 @@ export default function AdminOrders() {
                 <tbody>
                   {filteredOrders.map((order) => (
                     <tr key={order._id}>
-                      <td className="order-id-cell">#{order._id?.slice(-6).toUpperCase()}</td>
+                      <td className="order-id-cell">#{order._id?.slice(-6).toUpperCase()}<div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>Made: {formatOrderMade(order?.createdAt)}</div></td>
                       <td className="customer-cell">{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer'}</td>
                       <td>{resolveRestaurantName(order)}</td>
                       <td className="amount-cell">{formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}</td>
                       <td>{renderStatusBadge(order.status)}</td>
-                      <td className="date-cell">{order?.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}</td>
+                      <td className="date-cell">{formatOrderMade(order?.createdAt)}</td>
                       <td className="actions-cell">
                         <button
                           type="button"
@@ -454,7 +468,7 @@ export default function AdminOrders() {
                 const customerName = (order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer';
                 const customerInitial = customerName.charAt(0).toUpperCase() || 'O';
                 const restaurantName = resolveRestaurantName(order);
-                const orderDate = order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A';
+                const orderDate = formatOrderMade(order?.createdAt);
                 const itemCount = (order.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0);
 
                 return (
@@ -493,7 +507,7 @@ export default function AdminOrders() {
                         <span className="field-label">
                           <Calendar size={12} /> Date
                         </span>
-                        <span className="field-value">{orderDate}</span>
+                          <span className="field-value">{orderDate}</span>
                       </div>
 
                       <div className="order-card-field">
