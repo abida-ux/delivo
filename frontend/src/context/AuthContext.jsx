@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import { initializeFirebase, requestFcmToken, saveFcmToken } from '../services/firebaseMessaging';
+import { safeGetParsedItem, safeGetItem } from '../utils/storageUtils';
 
 export const AuthContext = createContext();
 
@@ -12,28 +13,23 @@ export const AuthProvider = ({ children }) => {
   // ✅ LOAD AUTH FROM STORAGE ON MOUNT
   useEffect(() => {
     try {
-      const savedUser = localStorage.getItem('user');
-      const savedToken = localStorage.getItem('token');
+      const parsed = safeGetParsedItem('user', null);
+      const savedToken = safeGetItem('token');
 
-      if (savedUser && savedToken) {
-        const parsed = JSON.parse(savedUser);
+      if (parsed && savedToken) {
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && (parsed._id || parsed.id || parsed.email)) {
           setUser(parsed);
           setToken(savedToken);
         } else {
           console.warn('Saved user data is missing required user fields, clearing auth storage...');
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
+          try { localStorage.removeItem('user'); localStorage.removeItem('token'); } catch (e) {}
           setUser(null);
           setToken(null);
         }
       }
     } catch (err) {
-      console.error('Failed to parse saved auth:', err);
-      try {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      } catch (e) {}
+      console.error('Failed to restore saved auth safely:', err);
+      try { localStorage.removeItem('user'); localStorage.removeItem('token'); } catch (e) {}
       setUser(null);
       setToken(null);
     }

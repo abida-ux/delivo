@@ -61,6 +61,15 @@ export const safeParseJson = (jsonString, fallback = null) => {
 };
 
 /**
+ * Safely get and parse a storage key (localStorage/sessionStorage). Returns fallback on error.
+ */
+export const safeGetParsedItem = (key, fallback = null, storage = typeof window !== 'undefined' ? window.localStorage : null) => {
+  const raw = safeGetItem(key, storage);
+  if (!raw) return fallback;
+  return safeParseJson(raw, fallback);
+};
+
+/**
  * Sanitize a single cart item to ensure it has all required properties and valid data types.
  */
 export const sanitizeCartItem = (item) => {

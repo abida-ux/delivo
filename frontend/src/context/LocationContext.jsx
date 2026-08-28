@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import api from '../services/api';
+import { safeGetParsedItem, safeGetItem } from '../utils/storageUtils';
 
 const LocationContext = createContext();
 
@@ -21,24 +22,19 @@ export const LocationProvider = ({ children }) => {
     const restoreLocation = async () => {
       // 1. Try local storage first
       try {
-        const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            setLocation({
-              latitude: Number.isFinite(Number(parsed.latitude)) ? Number(parsed.latitude) : null,
-              longitude: Number.isFinite(Number(parsed.longitude)) ? Number(parsed.longitude) : null,
-              formattedAddress: typeof parsed.formattedAddress === 'string' ? parsed.formattedAddress : '',
-              nearbyLandmark: typeof parsed.nearbyLandmark === 'string' ? parsed.nearbyLandmark : '',
-            });
-            return;
-          }
+        const parsed = safeGetParsedItem(LOCATION_STORAGE_KEY, null);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          setLocation({
+            latitude: Number.isFinite(Number(parsed.latitude)) ? Number(parsed.latitude) : null,
+            longitude: Number.isFinite(Number(parsed.longitude)) ? Number(parsed.longitude) : null,
+            formattedAddress: typeof parsed.formattedAddress === 'string' ? parsed.formattedAddress : '',
+            nearbyLandmark: typeof parsed.nearbyLandmark === 'string' ? parsed.nearbyLandmark : '',
+          });
+          return;
         }
       } catch (err) {
         console.error('Error reading location from storage:', err);
-        try {
-          localStorage.removeItem(LOCATION_STORAGE_KEY);
-        } catch (e) {}
+        try { localStorage.removeItem(LOCATION_STORAGE_KEY); } catch (e) {}
       }
 
       // 2. Fallback: If logged in, fetch last profile coordinates
@@ -88,7 +84,7 @@ export const LocationProvider = ({ children }) => {
     localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(newLoc));
 
     // If authenticated, sync with the database profile
-    const token = localStorage.getItem('token');
+    const token = safeGetItem('token');
     if (token) {
       try {
         await api.put('/users/me/location', {

@@ -25,6 +25,7 @@ import { AuthContext } from '../context/AuthContext';
 import { getAllOrders } from '../services/api';
 import AdminSwitchModal from './admin/AdminSwitchModal';
 import './AdminSidebar.css';
+import { safeGetParsedItem } from '../utils/storageUtils';
 
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
@@ -37,8 +38,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
     const fetchNewOrdersCount = async () => {
       try {
         const orders = await getAllOrders();
-        const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
-        const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
+        const viewedIds = safeGetParsedItem('delivo_admin_viewed_orders', []) || [];
         // Count orders that are 'placed', 'pending' or 'confirmed' and have not been viewed
         const count = orders.filter(
           (o) => (o.status === 'placed' || o.status === 'pending' || o.status === 'confirmed') && !viewedIds.includes(o._id)

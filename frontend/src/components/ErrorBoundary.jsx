@@ -1,4 +1,5 @@
 import React from 'react';
+import { safeGetParsedItem, loadSanitizedCart } from '../utils/storageUtils';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -13,18 +14,19 @@ export default class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     console.error('Uncaught error in component tree:', error, info);
 
-    // Safety fallback: if error involves storage or parsing, ensure guest cart key is safely checked
+    // Safety fallback: if error involves storage or parsing, attempt to repair guest cart
     try {
       const msg = String(error?.message || error);
       if (msg.includes('JSON') || msg.includes('cart') || msg.includes('storage')) {
-        const guestCart = localStorage.getItem('delivo_guest_cart');
-        if (guestCart) {
-          try {
-            JSON.parse(guestCart);
-          } catch (e) {
-            console.warn('[ErrorBoundary] Removing corrupted guest cart from storage...');
-            localStorage.removeItem('delivo_guest_cart');
+        // Attempt to load and sanitize the guest cart; this will remove or repair corrupted data
+        try {
+          const repaired = loadSanitizedCart('delivo_guest_cart');
+          if (!repaired || repaired.length === 0) {
+            // ensure removal if unrecoverable
+            try { localStorage.removeItem('delivo_guest_cart'); } catch (e) {}
           }
+        } catch (e) {
+          try { localStorage.removeItem('delivo_guest_cart'); } catch (e) {}
         }
       }
     } catch (e) {}

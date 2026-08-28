@@ -7,6 +7,7 @@ import { useLocation } from '../context/LocationContext';
 import LocationPickerModal from '../components/LocationPickerModal';
 import './Settings.css';
 import SEO from '../components/SEO';
+import { safeGetParsedItem } from '../utils/storageUtils';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -17,27 +18,24 @@ const Settings = () => {
 
   const [settings, setSettings] = useState(() => {
     try {
-      const savedSettings = localStorage.getItem(settingsKey);
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          return {
-            notifications: true,
-            emailNotifications: true,
-            privacyMode: false,
-            language: 'en',
-            theme: 'light',
-            location: true,
-            darkMode: false,
-            checkoutProfile: {
-              fullName: '',
-              phone: '',
-              address: '',
-              nearbyLandmark: '',
-            },
-            ...parsed,
-          };
-        }
+      const parsed = safeGetParsedItem(settingsKey, null);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return {
+          notifications: true,
+          emailNotifications: true,
+          privacyMode: false,
+          language: 'en',
+          theme: 'light',
+          location: true,
+          darkMode: false,
+          checkoutProfile: {
+            fullName: '',
+            phone: '',
+            address: '',
+            nearbyLandmark: '',
+          },
+          ...parsed,
+        };
       }
     } catch (e) {}
     return {
@@ -88,12 +86,9 @@ const Settings = () => {
 
   useEffect(() => {
     try {
-      const savedSettings = localStorage.getItem(settingsKey);
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          setSettings((prev) => ({ ...prev, ...parsed }));
-        }
+      const parsed = safeGetParsedItem(settingsKey, null);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        setSettings((prev) => ({ ...prev, ...parsed }));
       }
     } catch (e) {}
   }, [settingsKey]);

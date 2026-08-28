@@ -25,6 +25,7 @@ import { useLocation } from '../../context/LocationContext';
 import api, { createOrder, getAppSettings, getMpesaStatus, getOrderById } from '../../services/api';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
+import { safeGetParsedItem, safeGetItem } from '../../utils/storageUtils';
 
 const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, inline = false }) => {
   const { user } = useContext(AuthContext);
@@ -40,17 +41,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(() => {
     try {
-      const cached = localStorage.getItem('delivo_app_settings');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && typeof parsed === 'object') {
-          return {
-            enabled: parsed.deliveryFeeEnabled !== false,
-            amount: parsed.deliveryFeeAmount != null ? Number(parsed.deliveryFeeAmount) : 20,
-            freeDeliveryEnabled: parsed.freeDeliveryEnabled === true,
-            freeDeliveryMinimum: parsed.freeDeliveryMinimum != null ? Number(parsed.freeDeliveryMinimum) : 2500,
-          };
-        }
+      const parsed = safeGetParsedItem('delivo_app_settings', null);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          enabled: parsed.deliveryFeeEnabled !== false,
+          amount: parsed.deliveryFeeAmount != null ? Number(parsed.deliveryFeeAmount) : 20,
+          freeDeliveryEnabled: parsed.freeDeliveryEnabled === true,
+          freeDeliveryMinimum: parsed.freeDeliveryMinimum != null ? Number(parsed.freeDeliveryMinimum) : 2500,
+        };
       }
     } catch (e) {}
     return {
@@ -162,20 +160,17 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       let loadedFromLocal = false;
       if (settingsKey) {
         try {
-          const savedSettings = localStorage.getItem(settingsKey);
-          if (savedSettings) {
-            const parsed = JSON.parse(savedSettings);
-            const profile = parsed?.checkoutProfile;
-            if (profile) {
-              setDeliveryInfo((prev) => ({
-                ...prev,
-                fullName: profile.fullName || prev.fullName || user?.name || '',
-                address: profile.address || prev.address || user?.location || '',
-                whatsapp: profile.whatsapp || prev.whatsapp || user?.phone || '',
-                mpesaNumber: profile.mpesaNumber || prev.mpesaNumber || user?.phone || '',
-              }));
-              loadedFromLocal = true;
-            }
+          const parsed = settingsKey ? safeGetParsedItem(settingsKey, null) : null;
+          const profile = parsed?.checkoutProfile;
+          if (profile) {
+            setDeliveryInfo((prev) => ({
+              ...prev,
+              fullName: profile.fullName || prev.fullName || user?.name || '',
+              address: profile.address || prev.address || user?.location || '',
+              whatsapp: profile.whatsapp || prev.whatsapp || user?.phone || '',
+              mpesaNumber: profile.mpesaNumber || prev.mpesaNumber || user?.phone || '',
+            }));
+            loadedFromLocal = true;
           }
         } catch (error) {
           console.error('Failed to load saved checkout profile:', error);

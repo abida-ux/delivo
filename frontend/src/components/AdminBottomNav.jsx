@@ -14,6 +14,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 import { getAllOrders } from '../services/api';
 import './AdminBottomNav.css';
+import { safeGetParsedItem } from '../utils/storageUtils';
 
 const AdminBottomNav = () => {
   const navigate = useNavigate();
@@ -25,8 +26,7 @@ const AdminBottomNav = () => {
     const fetchNewOrdersCount = async () => {
       try {
         const orders = await getAllOrders();
-        const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
-        const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
+        const viewedIds = safeGetParsedItem('delivo_admin_viewed_orders', []) || [];
         const count = orders.filter(
           (o) => (o.status === 'placed' || o.status === 'pending' || o.status === 'confirmed') && !viewedIds.includes(o._id)
         ).length;
