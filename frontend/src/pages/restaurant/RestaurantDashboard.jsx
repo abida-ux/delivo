@@ -55,7 +55,6 @@ const RestaurantDashboard = () => {
   const quickLinks = [
     { label: 'Orders', desc: 'Track orders and status', path: '/restaurant/orders' },
     { label: 'Completed', desc: 'Review delivered orders', path: '/restaurant/completed-orders' },
-    { label: 'Foods', desc: 'Manage menu items', path: '/restaurant/foods' },
     { label: 'Revenue', desc: 'View earnings and reports', path: '/restaurant/revenue' },
     { label: 'Withdrawals', desc: 'Submit payout requests', path: '/restaurant/withdrawals' },
     { label: 'Profile', desc: 'Update restaurant info', path: '/restaurant/profile' },

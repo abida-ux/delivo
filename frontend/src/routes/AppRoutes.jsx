@@ -68,7 +68,6 @@ const RiderEarnings = lazy(() => import("../pages/rider/Earnings"));
 const RestaurantDashboard = lazy(() => import("../pages/restaurant/RestaurantDashboard"));
 const RestaurantOrders = lazy(() => import("../pages/restaurant/RestaurantOrders"));
 const RestaurantCompletedOrders = lazy(() => import("../pages/restaurant/RestaurantCompletedOrders"));
-const RestaurantFoods = lazy(() => import("../pages/restaurant/RestaurantFoods"));
 const RestaurantRevenue = lazy(() => import("../pages/restaurant/RestaurantRevenue"));
 const RestaurantWithdrawals = lazy(() => import("../pages/restaurant/RestaurantWithdrawals"));
 const RestaurantTransactions = lazy(() => import("../pages/restaurant/RestaurantTransactions"));
@@ -351,16 +350,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/restaurant/foods"
-        element={
-          <ProtectedRoute requiredRole="restaurant">
-            <RestaurantDashboardLayout pageTitle="Foods">
-              <RestaurantFoods />
-            </RestaurantDashboardLayout>
-          </ProtectedRoute>
-        }
-      />
+      {/* Menu management removed from Restaurant Portal - preserved for admin only */}
       <Route
         path="/restaurant/revenue"
         element={
