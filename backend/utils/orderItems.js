@@ -57,15 +57,28 @@ async function buildPopulatedOrderItems(items = [], deps = {}, fallbackRestauran
       let comboPrice = 0;
       if (item.components && item.components.length > 0) {
         for (const component of item.components) {
-          const restFood = await RestaurantFood.findOne({
-            restaurantId: targetRestaurantId,
-            foodId: component.foodId,
-          });
-          let componentPrice = (restFood?.price != null && restFood.price > 0) ? restFood.price : null;
-          if (componentPrice == null) {
-            const foodDoc = await foodLookup(component.foodId);
-            componentPrice = (foodDoc?.price != null && foodDoc.price > 0) ? foodDoc.price : (Number(component.price) || 0);
+          // Prefer client-provided component price when available (frontend sends component.price)
+          // This keeps the server total consistent with the client's displayed combo total while
+          // still falling back to authoritative restaurant/master prices when the client price
+          // is not provided.
+          const providedPrice = (component.price != null && !Number.isNaN(Number(component.price))) ? Number(component.price) : null;
+
+          let componentPrice = null;
+          if (providedPrice != null) {
+            componentPrice = providedPrice;
+          } else {
+            const restFood = await RestaurantFood.findOne({
+              restaurantId: targetRestaurantId,
+              foodId: component.foodId,
+            });
+            if (restFood?.price != null && restFood.price > 0) {
+              componentPrice = restFood.price;
+            } else {
+              const foodDoc = await foodLookup(component.foodId);
+              componentPrice = (foodDoc?.price != null && foodDoc.price > 0) ? foodDoc.price : (Number(component.price) || 0);
+            }
           }
+
           comboPrice += componentPrice * (component.quantity != null ? component.quantity : 1);
         }
       }
