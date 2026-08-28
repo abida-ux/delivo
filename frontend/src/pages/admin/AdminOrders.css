@@ -60,6 +60,25 @@
   color: #94a3b8;
 }
 
+.orders-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 7px 12px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.orders-date-filter svg { color: #16a34a; flex-shrink: 0; }
+.orders-date-filter input { border: 0; outline: 0; color: #0f172a; font: inherit; font-weight: 600; }
+.orders-date-filter button { margin-left: auto; border: 0; background: transparent; color: #16a34a; cursor: pointer; font: inherit; font-size: 11px; }
+.orders-date-filter button:disabled { color: #94a3b8; cursor: default; }
+
 .orders-filter-pills {
   display: flex;
   gap: 6px;
