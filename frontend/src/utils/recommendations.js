@@ -71,7 +71,10 @@ export function selectFreshPicksRecommendations(allFoods, options = {}) {
   try {
     const raw = sessionStorage.getItem(RECENT_PICKS_KEY);
     if (raw) {
-      recentIds = new Set(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        recentIds = new Set(parsed);
+      }
     }
   } catch {
     recentIds = new Set();

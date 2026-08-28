@@ -16,10 +16,31 @@ const Settings = () => {
   const settingsKey = userId ? `delivo_settings_${userId}` : 'delivo_settings';
 
   const [settings, setSettings] = useState(() => {
-    const savedSettings = localStorage.getItem(settingsKey);
-    return savedSettings
-      ? JSON.parse(savedSettings)
-      : {
+    try {
+      const savedSettings = localStorage.getItem(settingsKey);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return {
+            notifications: true,
+            emailNotifications: true,
+            privacyMode: false,
+            language: 'en',
+            theme: 'light',
+            location: true,
+            darkMode: false,
+            checkoutProfile: {
+              fullName: '',
+              phone: '',
+              address: '',
+              nearbyLandmark: '',
+            },
+            ...parsed,
+          };
+        }
+      }
+    } catch (e) {}
+    return {
           notifications: true,
           emailNotifications: true,
           privacyMode: false,
@@ -66,10 +87,15 @@ const Settings = () => {
   }, [location?.formattedAddress, location?.nearbyLandmark]);
 
   useEffect(() => {
-    const savedSettings = localStorage.getItem(settingsKey);
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
+    try {
+      const savedSettings = localStorage.getItem(settingsKey);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          setSettings((prev) => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch (e) {}
   }, [settingsKey]);
 
   const urlBase64ToUint8Array = (base64String) => {

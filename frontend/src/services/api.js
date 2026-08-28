@@ -169,10 +169,15 @@ export const getAppSettings = async () => {
     }
     return data;
   } catch (err) {
-    const cached = localStorage.getItem('delivo_app_settings');
-    if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
-    }
+    try {
+      const cached = localStorage.getItem('delivo_app_settings');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
     return {};
   }
 };

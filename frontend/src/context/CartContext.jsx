@@ -1,6 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { AuthContext } from './AuthContext';
 import api from '../services/api';
+import {
+  loadSanitizedCart,
+  saveSanitizedCart,
+  safeRemoveItem,
+  sanitizeCartItems,
+} from '../utils/storageUtils';
 
 const CartContext = createContext();
 const GUEST_CART_KEY = 'delivo_guest_cart';
@@ -9,10 +15,12 @@ export const CartProvider = ({ children }) => {
   const { user, token, isLoading: authLoading } = useContext(AuthContext);
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const isGuestCartInitialized = useRef(false);
+  const prevUserRef = useRef(user);
 
   // Helper to reliably extract food ID string across guest and backend objects
   const getNormalizedFoodId = (item) => {
-    if (!item) return null;
+    if (!item || typeof item !== 'object') return null;
     if (item.productType === 'marketplace') {
       return item.marketplaceProductId || item.foodId || item._id;
     }
@@ -21,52 +29,51 @@ export const CartProvider = ({ children }) => {
 
   // Helper to get item restaurant ID string
   const getNormalizedRestaurantId = (item) => {
-    if (!item || !item.restaurantId) return null;
+    if (!item || typeof item !== 'object' || !item.restaurantId) return null;
     return typeof item.restaurantId === 'object' ? item.restaurantId._id : item.restaurantId;
   };
 
-  // Load guest cart from localStorage only when the user is not signed in
+  // Load guest cart from storage only when the user is not signed in and cart has not been initialized
   useEffect(() => {
     if (authLoading) return;
     if (user && token) return;
+    if (isGuestCartInitialized.current) return;
 
-    const guestCart = localStorage.getItem(GUEST_CART_KEY);
-    if (guestCart) {
-      try {
-        setCartItems(JSON.parse(guestCart));
-        console.log('📦 Guest cart loaded from localStorage');
-      } catch (error) {
-        console.error('❌ Error parsing guest cart:', error);
-        localStorage.removeItem(GUEST_CART_KEY);
-      }
-    } else {
+    try {
+      const restored = loadSanitizedCart(GUEST_CART_KEY);
+      setCartItems(restored);
+      console.log(`📦 Guest cart loaded from storage: ${restored.length} items`);
+    } catch (error) {
+      console.error('❌ Error restoring guest cart:', error);
       setCartItems([]);
+    } finally {
+      isGuestCartInitialized.current = true;
     }
   }, [user, token, authLoading]);
 
-  // Persist the current cart locally when the user is signed out
+  // Persist the current cart locally when user is signed out (ONLY after initial restoration is complete)
   useEffect(() => {
     if (authLoading) return;
     if (user && token) return;
+    if (!isGuestCartInitialized.current) return;
 
-    if (cartItems.length > 0) {
-      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cartItems));
-    } else {
-      localStorage.removeItem(GUEST_CART_KEY);
-    }
+    saveSanitizedCart(GUEST_CART_KEY, cartItems);
   }, [cartItems, user, token, authLoading]);
 
-  // Fetch cart from database when user logs in, and clear cart when user logs out
+  // Fetch cart from database when user logs in, and clear state on explicit logout
   useEffect(() => {
     if (authLoading) return;
-    
+
+    const prevUser = prevUserRef.current;
+    prevUserRef.current = user;
+
     if (user && token) {
       console.log('👤 User logged in, syncing cart with database...');
       fetchCartFromDatabase();
-    } else {
+    } else if (prevUser && !user) {
       console.log('👤 User logged out, clearing state & guest cart...');
       setCartItems([]);
-      localStorage.removeItem(GUEST_CART_KEY);
+      safeRemoveItem(GUEST_CART_KEY);
     }
   }, [user?._id, token, authLoading]);
 
@@ -77,19 +84,16 @@ export const CartProvider = ({ children }) => {
     try {
       setLoading(true);
       const { data } = await api.get('/cart');
-      let dbCartItems = data.cart?.items || [];
+      let dbCartItems = sanitizeCartItems(data.cart?.items || []);
 
       // Check if there's a guest cart to merge
-      const guestCart = localStorage.getItem(GUEST_CART_KEY);
-      if (guestCart) {
+      const guestItems = loadSanitizedCart(GUEST_CART_KEY);
+      if (guestItems.length > 0) {
         try {
-          const guestItems = JSON.parse(guestCart);
-          if (guestItems.length > 0) {
-            console.log(`📦 Found guest cart with ${guestItems.length} items, merging via /cart/merge...`);
-            const mergeRes = await api.post('/cart/merge', { items: guestItems });
-            dbCartItems = mergeRes.data.cart?.items || [];
-          }
-          localStorage.removeItem(GUEST_CART_KEY);
+          console.log(`📦 Found guest cart with ${guestItems.length} items, merging via /cart/merge...`);
+          const mergeRes = await api.post('/cart/merge', { items: guestItems });
+          dbCartItems = sanitizeCartItems(mergeRes.data.cart?.items || dbCartItems);
+          safeRemoveItem(GUEST_CART_KEY);
           console.log('✅ Guest cart merged and cleared');
         } catch (error) {
           console.error('❌ Error merging guest cart:', error);
@@ -157,7 +161,8 @@ export const CartProvider = ({ children }) => {
 
     const targetPortionName = food.portionName || food.selectedVariation || null;
 
-    const optimisticCart = [...cartItems];
+    const currentItems = Array.isArray(cartItems) ? cartItems : [];
+    const optimisticCart = [...currentItems];
     const existingItem = optimisticCart.find((item) => {
       if (getNormalizedFoodId(item) !== itemId) return false;
       if ((item.productType || 'meal') !== productType) return false;
@@ -189,8 +194,11 @@ export const CartProvider = ({ children }) => {
       });
     }
 
-    setCartItems(optimisticCart);
-    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(optimisticCart));
+    const cleanedOptimistic = sanitizeCartItems(optimisticCart);
+    setCartItems(cleanedOptimistic);
+    if (!user || !token) {
+      saveSanitizedCart(GUEST_CART_KEY, cleanedOptimistic);
+    }
 
     if (user && token) {
       try {
@@ -208,11 +216,12 @@ export const CartProvider = ({ children }) => {
           components: food.components || undefined,
         });
 
-        setCartItems(data.cart?.items || optimisticCart);
+        const synced = sanitizeCartItems(data.cart?.items || cleanedOptimistic);
+        setCartItems(synced);
         console.log('✅ Item added to account cart:', food.name);
       } catch (error) {
         console.error('❌ Error adding to cart:', error);
-        setCartItems(optimisticCart);
+        setCartItems(cleanedOptimistic);
       }
       return;
     }
@@ -222,7 +231,8 @@ export const CartProvider = ({ children }) => {
 
   // Update item's chosen restaurant and price
   const updateItemRestaurant = async (foodId, restaurantId, restaurantName, price) => {
-    const updated = cartItems.map((item) => {
+    const currentItems = Array.isArray(cartItems) ? cartItems : [];
+    const updated = currentItems.map((item) => {
       if (getNormalizedFoodId(item) === foodId) {
         return {
           ...item,
@@ -234,8 +244,11 @@ export const CartProvider = ({ children }) => {
       return item;
     });
 
-    setCartItems(updated);
-    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updated));
+    const cleanedUpdated = sanitizeCartItems(updated);
+    setCartItems(cleanedUpdated);
+    if (!user || !token) {
+      saveSanitizedCart(GUEST_CART_KEY, cleanedUpdated);
+    }
 
     if (user && token) {
       try {
@@ -246,7 +259,7 @@ export const CartProvider = ({ children }) => {
           price,
         });
         if (data?.cart?.items) {
-          setCartItems(data.cart.items);
+          setCartItems(sanitizeCartItems(data.cart.items));
         }
       } catch (error) {
         console.error('❌ Error updating cart item restaurant:', error);
@@ -257,15 +270,18 @@ export const CartProvider = ({ children }) => {
   // Remove item from cart (works for both authenticated and guest users)
   const removeItem = async (foodId) => {
     try {
+      const currentItems = Array.isArray(cartItems) ? cartItems : [];
       if (user && token) {
-        setCartItems((prevItems) => prevItems.filter((item) => getNormalizedFoodId(item) !== foodId));
+        setCartItems((prevItems) =>
+          sanitizeCartItems((Array.isArray(prevItems) ? prevItems : []).filter((item) => getNormalizedFoodId(item) !== foodId))
+        );
         const { data } = await api.delete(`/cart/remove/${foodId}`);
-        setCartItems(data.cart?.items || []);
+        setCartItems(sanitizeCartItems(data.cart?.items || []));
         console.log('🗑️ Item removed from cart');
       } else {
-        const updatedCart = cartItems.filter((item) => getNormalizedFoodId(item) !== foodId);
+        const updatedCart = sanitizeCartItems(currentItems.filter((item) => getNormalizedFoodId(item) !== foodId));
         setCartItems(updatedCart);
-        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updatedCart));
+        saveSanitizedCart(GUEST_CART_KEY, updatedCart);
         console.log('🗑️ Item removed from cart (guest)');
       }
     } catch (error) {
@@ -281,22 +297,27 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
+      const currentItems = Array.isArray(cartItems) ? cartItems : [];
       if (user && token) {
         setCartItems((prevItems) =>
-          prevItems.map((item) =>
-            getNormalizedFoodId(item) === foodId ? { ...item, quantity } : item
+          sanitizeCartItems(
+            (Array.isArray(prevItems) ? prevItems : []).map((item) =>
+              getNormalizedFoodId(item) === foodId ? { ...item, quantity } : item
+            )
           )
         );
 
         const { data } = await api.put(`/cart/update/${foodId}`, { quantity });
-        setCartItems(data.cart?.items || []);
+        setCartItems(sanitizeCartItems(data.cart?.items || []));
         console.log('📝 Cart updated in database');
       } else {
-        const updatedCart = cartItems.map((item) =>
-          getNormalizedFoodId(item) === foodId ? { ...item, quantity } : item
+        const updatedCart = sanitizeCartItems(
+          currentItems.map((item) =>
+            getNormalizedFoodId(item) === foodId ? { ...item, quantity } : item
+          )
         );
         setCartItems(updatedCart);
-        localStorage.setItem(GUEST_CART_KEY, JSON.stringify(updatedCart));
+        saveSanitizedCart(GUEST_CART_KEY, updatedCart);
         console.log('📝 Cart updated (guest)');
       }
     } catch (error) {
@@ -313,7 +334,7 @@ export const CartProvider = ({ children }) => {
         console.log('🧹 Cart cleared in database');
       } else {
         setCartItems([]);
-        localStorage.removeItem(GUEST_CART_KEY);
+        safeRemoveItem(GUEST_CART_KEY);
         console.log('🧹 Cart cleared (guest)');
       }
     } catch (error) {
@@ -322,19 +343,25 @@ export const CartProvider = ({ children }) => {
   };
 
   const getCartItems = () => {
-    return cartItems;
+    return Array.isArray(cartItems) ? cartItems : [];
   };
 
   const getCartTotal = () => {
+    if (!Array.isArray(cartItems)) return 0;
     return cartItems.reduce((total, item) => {
-      const p = item.price !== null && item.price !== undefined ? Number(item.price) : 0;
-      return total + p * (item.quantity || 0);
+      if (!item) return total;
+      const p = Number.isFinite(Number(item.price)) ? Number(item.price) : 0;
+      const q = Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 0;
+      return total + p * q;
     }, 0);
   };
 
   const getCartItemCount = () => {
+    if (!Array.isArray(cartItems)) return 0;
     return cartItems.reduce((count, item) => {
-      return count + (item.quantity || 0);
+      if (!item) return count;
+      const q = Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 0;
+      return count + q;
     }, 0);
   };
 
@@ -343,9 +370,10 @@ export const CartProvider = ({ children }) => {
   };
 
   const getUniqueRestaurantCount = () => {
+    if (!Array.isArray(cartItems)) return 0;
     const ids = new Set();
     cartItems.forEach((item) => {
-      if (item.restaurantId) {
+      if (item && item.restaurantId) {
         const rId = typeof item.restaurantId === 'object' ? item.restaurantId._id : item.restaurantId;
         if (rId) ids.add(rId.toString());
       }
@@ -354,7 +382,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const value = {
-    cartItems,
+    cartItems: Array.isArray(cartItems) ? cartItems : [],
     loading,
     addItem,
     updateItemRestaurant,

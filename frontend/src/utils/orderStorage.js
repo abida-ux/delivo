@@ -21,9 +21,11 @@ export const getGuestOrders = () => {
     if (!raw) return [];
 
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => item && typeof item === 'object' && item._id);
   } catch (error) {
     console.warn('Unable to read guest orders from storage:', error);
+    try { storage.removeItem(GUEST_ORDERS_KEY); } catch (e) {}
     return [];
   }
 };

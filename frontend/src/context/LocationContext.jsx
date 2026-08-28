@@ -23,11 +23,22 @@ export const LocationProvider = ({ children }) => {
       try {
         const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
         if (stored) {
-          setLocation(JSON.parse(stored));
-          return;
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            setLocation({
+              latitude: Number.isFinite(Number(parsed.latitude)) ? Number(parsed.latitude) : null,
+              longitude: Number.isFinite(Number(parsed.longitude)) ? Number(parsed.longitude) : null,
+              formattedAddress: typeof parsed.formattedAddress === 'string' ? parsed.formattedAddress : '',
+              nearbyLandmark: typeof parsed.nearbyLandmark === 'string' ? parsed.nearbyLandmark : '',
+            });
+            return;
+          }
         }
       } catch (err) {
         console.error('Error reading location from storage:', err);
+        try {
+          localStorage.removeItem(LOCATION_STORAGE_KEY);
+        } catch (e) {}
       }
 
       // 2. Fallback: If logged in, fetch last profile coordinates

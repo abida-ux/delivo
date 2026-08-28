@@ -11,20 +11,31 @@ export const AuthProvider = ({ children }) => {
 
   // ✅ LOAD AUTH FROM STORAGE ON MOUNT
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedToken = localStorage.getItem('token');
+    try {
+      const savedUser = localStorage.getItem('user');
+      const savedToken = localStorage.getItem('token');
 
-    if (savedUser && savedToken) {
+      if (savedUser && savedToken) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && (parsed._id || parsed.id || parsed.email)) {
+          setUser(parsed);
+          setToken(savedToken);
+        } else {
+          console.warn('Saved user data is missing required user fields, clearing auth storage...');
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          setUser(null);
+          setToken(null);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to parse saved auth:', err);
       try {
-        setUser(JSON.parse(savedUser));
-        setToken(savedToken);
-      } catch (err) {
-        console.error('Failed to parse saved auth:', err);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        setUser(null);
-        setToken(null);
-      }
+      } catch (e) {}
+      setUser(null);
+      setToken(null);
     }
     setIsLoading(false); // ✅ DONE LOADING
   }, []);

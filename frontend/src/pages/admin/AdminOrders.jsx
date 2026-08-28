@@ -78,7 +78,8 @@ export default function AdminOrders() {
       // Clear unseen order badge count
       try {
         const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
-        const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
+        const parsedViewed = viewedStr ? JSON.parse(viewedStr) : [];
+        const viewedIds = Array.isArray(parsedViewed) ? parsedViewed : [];
         let updated = false;
         ordersList.forEach((o) => {
           if (o._id && !viewedIds.includes(o._id)) {
@@ -197,7 +198,8 @@ export default function AdminOrders() {
 
     try {
       const viewedStr = localStorage.getItem('delivo_admin_viewed_orders');
-      const viewedIds = viewedStr ? JSON.parse(viewedStr) : [];
+      const parsedViewed = viewedStr ? JSON.parse(viewedStr) : [];
+      const viewedIds = Array.isArray(parsedViewed) ? parsedViewed : [];
       if (order?._id && !viewedIds.includes(order._id)) {
         viewedIds.push(order._id);
         localStorage.setItem('delivo_admin_viewed_orders', JSON.stringify(viewedIds));
