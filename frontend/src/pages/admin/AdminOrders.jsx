@@ -13,6 +13,15 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Nairobi', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(new Date()).reduce((result, part) => {
+      if (part.type !== 'literal') result[part.type] = part.value;
+      return result;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  });
   const [editingOrder, setEditingOrder] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [storesMap, setStoresMap] = useState({});
@@ -71,7 +80,7 @@ export default function AdminOrders() {
 
       const ordersList = Array.isArray(data) ? data : [];
       setOrders(ordersList);
-      applyFilter(ordersList, searchTerm, activeFilter);
+      applyFilter(ordersList, searchTerm, activeFilter, selectedDate);
 
       setAllRestaurantsList(restaurantsList || []);
 
@@ -143,8 +152,20 @@ export default function AdminOrders() {
     return 'N/A';
   };
 
-  const applyFilter = (list, searchVal, filterVal) => {
+  const applyFilter = (list, searchVal, filterVal, dateVal = selectedDate) => {
     let result = list;
+    if (dateVal) {
+      result = result.filter((order) => {
+        if (!order?.createdAt) return false;
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Africa/Nairobi', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).formatToParts(new Date(order.createdAt)).reduce((values, part) => {
+          if (part.type !== 'literal') values[part.type] = part.value;
+          return values;
+        }, {});
+        return `${parts.year}-${parts.month}-${parts.day}` === dateVal;
+      });
+    }
     const q = String(searchVal || '').trim().toLowerCase();
     if (q) {
       result = result.filter((order) => {
@@ -175,7 +196,12 @@ export default function AdminOrders() {
 
   const handleFilterClick = (filter) => {
     setActiveFilter(filter);
-    applyFilter(orders, searchTerm, filter);
+    applyFilter(orders, searchTerm, filter, selectedDate);
+  };
+
+  const handleDateChange = (value) => {
+    setSelectedDate(value);
+    applyFilter(orders, searchTerm, activeFilter, value);
   };
 
   const renderStatusBadge = (statusStr) => {
@@ -319,6 +345,20 @@ export default function AdminOrders() {
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
             />
+          </div>
+
+          <div className="orders-date-filter">
+            <Calendar size={17} />
+            <label htmlFor="admin-orders-date">Orders for</label>
+            <input
+              id="admin-orders-date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+            />
+            <button type="button" onClick={() => handleDateChange('')} disabled={!selectedDate}>
+              All dates
+            </button>
           </div>
 
           <div className="orders-filter-pills">

@@ -100,7 +100,8 @@ exports.createOrder = async (req, res, next) => {
     // Group items by restaurant
     const restaurantGroups = {};
     for (const item of populatedItems) {
-      subtotal += (item.price || 0) * (item.quantity || 1);
+      const itemSubtotal = (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      subtotal += itemSubtotal;
       if (item.restaurantId) {
         const rIdStr = item.restaurantId.toString();
         if (!restaurantGroups[rIdStr]) {
@@ -112,24 +113,27 @@ exports.createOrder = async (req, res, next) => {
             deliveryFee: 0,
           };
         }
-        restaurantGroups[rIdStr].subtotal += (item.price || 0) * (item.quantity || 1);
+        restaurantGroups[rIdStr].subtotal += itemSubtotal;
       }
     }
 
+    subtotal = Math.round(subtotal * 100) / 100;
     const uniqueRestaurantIds = Object.keys(restaurantGroups);
     const uniqueRestaurantCount = Math.max(1, uniqueRestaurantIds.length);
     const finalRestaurantId = uniqueRestaurantIds[0] || restaurantId || null;
 
     const appSettings = (await AppSettings.findOne()) || {};
 
-    const baseDeliveryFee = appSettings.deliveryFeeEnabled !== false ? Number(appSettings.deliveryFeeAmount) || 20 : 0;
-    let expectedDeliveryFee = uniqueRestaurantCount * baseDeliveryFee;
+    const isDeliveryEnabled = appSettings.deliveryFeeEnabled !== false;
+    const baseDeliveryFee = isDeliveryEnabled ? Number(appSettings.deliveryFeeAmount ?? 20) : 0;
+    const isFreeDeliveryThresholdMet = appSettings.freeDeliveryEnabled && appSettings.freeDeliveryMinimum != null && subtotal >= Number(appSettings.freeDeliveryMinimum);
+    const calculatedServerDeliveryFee = (!isDeliveryEnabled || isFreeDeliveryThresholdMet) ? 0 : (uniqueRestaurantCount * baseDeliveryFee);
 
-    let parsedDeliveryFee = Number(deliveryFee);
-    let finalDeliveryFee = !Number.isNaN(parsedDeliveryFee) && parsedDeliveryFee >= 0 ? parsedDeliveryFee : expectedDeliveryFee;
+    let finalDeliveryFee = calculatedServerDeliveryFee;
 
-    // Check free delivery threshold from settings
-    if (appSettings.freeDeliveryEnabled && appSettings.freeDeliveryMinimum && subtotal >= Number(appSettings.freeDeliveryMinimum)) {
+    // Check if client passed a valid numeric delivery fee matching server logic
+    const parsedClientFee = Number(deliveryFee);
+    if (!Number.isNaN(parsedClientFee) && parsedClientFee >= 0 && (!isDeliveryEnabled || isFreeDeliveryThresholdMet)) {
       finalDeliveryFee = 0;
     }
 
@@ -151,30 +155,31 @@ exports.createOrder = async (req, res, next) => {
             finalDeliveryFee = 0;
           } else if (discountStr.includes('%')) {
             const percentage = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
-            discountAmount = (subtotal * (percentage / 100));
+            discountAmount = Math.round((subtotal * (percentage / 100)) * 100) / 100;
           } else {
             const fixed = parseFloat(discountStr.replace(/[^0-9.]/g, '')) || 0;
-            discountAmount = fixed;
+            discountAmount = Math.round(fixed * 100) / 100;
           }
         }
       }
     }
 
     // Distribute delivery fee equally among restaurant groups for accounting
-    const feePerRest = uniqueRestaurantCount > 0 ? Math.round(finalDeliveryFee / uniqueRestaurantCount) : 0;
+    const feePerRest = uniqueRestaurantCount > 0 ? Math.round((finalDeliveryFee / uniqueRestaurantCount) * 100) / 100 : 0;
     Object.values(restaurantGroups).forEach((rg) => {
       rg.deliveryFee = feePerRest;
     });
 
-    const totalPrice = Math.max(0, subtotal + finalDeliveryFee - discountAmount);
+    const totalPrice = Math.max(0, Math.round((subtotal + finalDeliveryFee - discountAmount) * 100) / 100);
     const isFreeDelivery = finalDeliveryFee === 0;
 
-    if (expectedTotal && Math.abs(totalPrice - parseFloat(expectedTotal)) > 1.0) {
+    if (expectedTotal != null && Math.abs(totalPrice - parseFloat(expectedTotal)) > 1.0) {
       return res.status(400).json({
         success: false,
-        message: `Prices or delivery fee have changed since you opened checkout. Expected KES ${expectedTotal}, but current total is KES ${totalPrice.toFixed(2)}. Please review and try again.`,
+        message: `Prices or delivery fee have changed since you opened checkout. Expected KES ${parseFloat(expectedTotal).toFixed(2)}, but current total is KES ${totalPrice.toFixed(2)}. Please review and try again.`,
         priceChange: true,
         currentTotal: totalPrice,
+        expectedTotal: parseFloat(expectedTotal),
       });
     }
 

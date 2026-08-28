@@ -136,11 +136,12 @@ const Cart = () => {
     };
   }, [cartItems]);
 
-  const uniqueRestaurantCount = Math.max(1, restaurantGroups.length);
+  const mealGroups = restaurantGroups.filter(g => g.restaurantId !== 'restaurant_general');
+  const uniqueRestaurantCount = mealGroups.length > 0 ? mealGroups.length : 1;
   const cartTotal = getCartTotal();
   const isFreeDeliveryEligible = !deliverySettings.enabled || (deliverySettings.freeDeliveryEnabled && cartTotal >= deliverySettings.freeDeliveryMinimum);
-  const baseFee = deliverySettings.enabled ? deliverySettings.amount : 0;
-  const deliveryFee = isFreeDeliveryEligible ? 0 : uniqueRestaurantCount * baseFee;
+  const baseFee = deliverySettings.enabled ? Number(deliverySettings.amount ?? 20) : 0;
+  const deliveryFee = isFreeDeliveryEligible ? 0 : (uniqueRestaurantCount * baseFee);
   const grandTotal = (cartTotal + deliveryFee).toFixed(2);
   const isCheckoutDisabled = cartItems.length === 0;
 

@@ -7,3 +7,8 @@
   margin: 0 auto;
   max-width: 580px;
 }
+
+.admin-notifications-page > .scheduled-announcements {
+  margin: 28px auto 0;
+  max-width: 1180px;
+}
