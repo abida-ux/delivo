@@ -332,11 +332,25 @@ export default function AdminOrders() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ orderId, restaurantId }),
       });
-      const data = await response.json();
-      if (!response.ok || !data?.success) {
-        throw new Error(data?.message || 'Unable to assign restaurant');
+      const text = await response.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (err) {
+        // Non-JSON response
+        data = null;
       }
-      alert('Order assigned to restaurant successfully!');
+
+      if (!response.ok) {
+        const serverMsg = data?.message || text || `Server responded with status ${response.status}`;
+        throw new Error(serverMsg);
+      }
+
+      if (data && data.success === false) {
+        throw new Error(data.message || 'Unable to assign restaurant');
+      }
+
+      alert((data && data.message) || 'Order assigned to restaurant successfully!');
       await fetchOrders();
       closeAssignRestModal();
     } catch (error) {
