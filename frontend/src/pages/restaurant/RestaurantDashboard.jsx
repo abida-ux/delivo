@@ -13,6 +13,7 @@ const RestaurantDashboard = () => {
     completedOrders: 0,
     todayRevenue: 0,
     totalRevenue: 0,
+    totalFoodSalesExclDelivery: 0,
     availableBalance: 0,
     withdrawnAmount: 0,
     totalFoodsSold: 0,
@@ -47,6 +48,7 @@ const RestaurantDashboard = () => {
     { label: 'Completed Orders', value: stats.completedOrders, icon: BarChart3 },
     { label: "Today's Revenue", value: `KES ${stats.todayRevenue.toLocaleString()}`, icon: DollarSign },
     { label: 'Total Revenue', value: `KES ${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp },
+    { label: 'Food Sales (excl. delivery)', value: `KES ${Number(stats.totalFoodSalesExclDelivery || 0).toLocaleString()}`, icon: DollarSign },
     { label: 'Available Balance', value: `KES ${stats.availableBalance.toLocaleString()}`, icon: Wallet },
   ];
 

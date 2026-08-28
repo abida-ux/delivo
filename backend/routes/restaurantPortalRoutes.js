@@ -95,6 +95,33 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);
 
+    // Total food sales excluding delivery fees (sum of restaurant item subtotals minus assigned delivery fee)
+    const totalFoodSalesExclDelivery = restaurantOrders.reduce((sum, order) => {
+      let items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+      if (items.length === 0) items = order.items;
+      const mySubtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
+
+      // Determine delivery fee portion for this restaurant
+      let deliveryForThis = 0;
+      if (Array.isArray(order.restaurants) && order.restaurants.length > 0) {
+        const rEntry = order.restaurants.find((r) => r.restaurantId && r.restaurantId.toString() === restaurant._id.toString());
+        if (rEntry && typeof rEntry.deliveryFee === 'number') {
+          deliveryForThis = Number(rEntry.deliveryFee || 0);
+        } else {
+          // fallback: proportionally split order.deliveryFee by subtotal share
+          const orderSubtotal = Array.isArray(order.items) ? order.items.reduce((s, it) => s + (Number(it.price) || 0) * Number(it.quantity || 0), 0) : 0;
+          if (orderSubtotal > 0 && order.deliveryFee) {
+            deliveryForThis = (mySubtotal / orderSubtotal) * Number(order.deliveryFee || 0);
+          }
+        }
+      } else if (order.deliveryFee) {
+        // fallback when restaurants array absent
+        deliveryForThis = Number(order.deliveryFee || 0);
+      }
+
+      return sum + (mySubtotal - deliveryForThis);
+    }, 0);
+
     const todayRevenue = todayOrders.reduce((sum, order) => {
       let items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
       if (items.length === 0) items = order.items;
@@ -121,6 +148,7 @@ router.get('/dashboard', authenticate, ensureRestaurantOwner, async (req, res) =
           completedOrders: completedOrders.length,
           todayRevenue,
           totalRevenue: revenue,
+          totalFoodSalesExclDelivery,
           availableBalance: restaurant.availableBalance || 0,
           withdrawnAmount: restaurant.withdrawnBalance || 0,
           totalFoodsSold,
@@ -401,7 +429,30 @@ router.get('/revenue', authenticate, ensureRestaurantOwner, async (req, res) => 
       return sum + calculateRestaurantEarnings(subtotal, 100).restaurantEarnings;
     }, 0);
 
-    res.status(200).json({ success: true, data: { totalRevenue, availableBalance: restaurant.availableBalance || 0, pendingBalance: restaurant.pendingBalance || 0, withdrawnBalance: restaurant.withdrawnBalance || 0 } });
+    // compute total food sales excluding delivery fees
+    const totalFoodSalesExclDelivery = restaurantOrders.reduce((sum, order) => {
+      const items = order.items.filter((item) => isItemForRestaurant(item, restaurant._id));
+      const mySubtotal = items.reduce((itemSum, item) => itemSum + (Number(item.price) || 0) * Number(item.quantity || 0), 0);
+
+      let deliveryForThis = 0;
+      if (Array.isArray(order.restaurants) && order.restaurants.length > 0) {
+        const rEntry = order.restaurants.find((r) => r.restaurantId && r.restaurantId.toString() === restaurant._id.toString());
+        if (rEntry && typeof rEntry.deliveryFee === 'number') {
+          deliveryForThis = Number(rEntry.deliveryFee || 0);
+        } else {
+          const orderSubtotal = Array.isArray(order.items) ? order.items.reduce((s, it) => s + (Number(it.price) || 0) * Number(it.quantity || 0), 0) : 0;
+          if (orderSubtotal > 0 && order.deliveryFee) {
+            deliveryForThis = (mySubtotal / orderSubtotal) * Number(order.deliveryFee || 0);
+          }
+        }
+      } else if (order.deliveryFee) {
+        deliveryForThis = Number(order.deliveryFee || 0);
+      }
+
+      return sum + (mySubtotal - deliveryForThis);
+    }, 0);
+
+    res.status(200).json({ success: true, data: { totalRevenue, totalFoodSalesExclDelivery, availableBalance: restaurant.availableBalance || 0, pendingBalance: restaurant.pendingBalance || 0, withdrawnBalance: restaurant.withdrawnBalance || 0 } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

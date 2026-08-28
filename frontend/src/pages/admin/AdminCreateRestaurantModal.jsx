@@ -12,6 +12,10 @@ const AdminCreateRestaurantModal = ({ isOpen, users = [], onClose, onSave }) => 
     phone: '',
     email: '',
     ownerId: '',
+    ownerName: '',
+    ownerEmail: '',
+    ownerPassword: '',
+    ownerConfirmPassword: '',
     isOpen: true,
   });
 
@@ -59,6 +63,20 @@ const AdminCreateRestaurantModal = ({ isOpen, users = [], onClose, onSave }) => 
         return;
       }
       
+      // Validate owner fields: if creating new owner (ownerId empty) and ownerName provided, require passwords
+      if (!formData.ownerId && formData.ownerName) {
+        if (!formData.ownerPassword || formData.ownerPassword.length < 6) {
+          alert('Owner password must be at least 6 characters');
+          setLoading(false);
+          return;
+        }
+        if (formData.ownerPassword !== formData.ownerConfirmPassword) {
+          alert('Owner password and confirm password do not match');
+          setLoading(false);
+          return;
+        }
+      }
+
       const newData = {
         ...formData,
         cuisine: cuisineArray,
@@ -138,6 +156,54 @@ const AdminCreateRestaurantModal = ({ isOpen, users = [], onClose, onSave }) => 
                 placeholder="e.g. 30 mins, 45 mins"
                 required
               />
+            </div>
+          </div>
+
+          <div className="form-group" style={{ marginTop: '8px' }}>
+            <label htmlFor="ownerId" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <User size={15} color="#16a34a" />
+              <span>Assign / Create Restaurant Owner</span>
+            </label>
+            <select
+              id="ownerId"
+              name="ownerId"
+              value={formData.ownerId}
+              onChange={handleChange}
+              style={{ borderColor: formData.ownerId ? '#16a34a' : '#cbd5e1', backgroundColor: formData.ownerId ? '#f0fdf4' : '#fff' }}
+            >
+              <option value="">-- Create New Owner --</option>
+              {users
+                .filter((u) => u.role === 'restaurant')
+                .map((u) => (
+                  <option key={u._id} value={u._id}>{u.name || u.email || 'Unnamed'} ({u.email})</option>
+                ))}
+            </select>
+            <p className="field-hint" style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+              Choose an existing owner account or create a new owner by filling the fields below.
+            </p>
+          </div>
+
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '8px', marginTop: '8px' }}>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="ownerName">Owner Name</label>
+                <input type="text" id="ownerName" name="ownerName" value={formData.ownerName} onChange={handleChange} placeholder="Owner full name" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="ownerEmail">Owner Email</label>
+                <input type="email" id="ownerEmail" name="ownerEmail" value={formData.ownerEmail} onChange={handleChange} placeholder="owner@example.com (optional)" />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="ownerPassword">Password</label>
+                <input type="password" id="ownerPassword" name="ownerPassword" value={formData.ownerPassword} onChange={handleChange} placeholder="Create password (min 6)" />
+              </div>
+              <div className="form-group">
+                <label htmlFor="ownerConfirmPassword">Confirm Password</label>
+                <input type="password" id="ownerConfirmPassword" name="ownerConfirmPassword" value={formData.ownerConfirmPassword} onChange={handleChange} placeholder="Confirm password" />
+              </div>
             </div>
           </div>
 

@@ -111,6 +111,52 @@ exports.createRestaurant = async (req, res, next) => {
       }
     }
 
+    // If no existing owner selected, but owner creation fields provided, create new owner account
+    if (!ownerUser && ownerName && ownerPassword) {
+      // validate passwords
+      if (!ownerConfirmPassword || ownerPassword !== ownerConfirmPassword) {
+        return res.status(400).json({ success: false, message: 'Owner password and confirm password do not match' });
+      }
+      if (String(ownerPassword).length < 6) {
+        return res.status(400).json({ success: false, message: 'Owner password must be at least 6 characters' });
+      }
+
+      // If email provided and already exists, link that user
+      let existing = null;
+      if (ownerEmail) existing = await User.findOne({ email: ownerEmail.toLowerCase() });
+
+      if (existing) {
+        ownerUser = existing;
+        // Unlink previous restaurant and set role
+        await Restaurant.updateMany({ ownerId: ownerUser._id }, { ownerId: null });
+        if (ownerUser.role !== 'restaurant') {
+          ownerUser.role = 'restaurant';
+          await ownerUser.save();
+        }
+      } else {
+        // Generate fallback unique email if none provided
+        let emailToUse = ownerEmail && ownerEmail.trim() ? ownerEmail.toLowerCase() : null;
+        if (!emailToUse) {
+          const base = ownerName.replace(/\s+/g, '').toLowerCase() || 'owner';
+          emailToUse = `${base}@restaurant.local`;
+          // ensure uniqueness
+          let idx = 0;
+          while (await User.findOne({ email: emailToUse })) {
+            idx += 1;
+            emailToUse = `${base}${idx}@restaurant.local`;
+          }
+        }
+
+        ownerUser = await User.create({
+          name: ownerName,
+          email: emailToUse,
+          password: ownerPassword,
+          role: 'restaurant',
+          isVerified: true,
+        });
+      }
+    }
+
     const restaurantPayload = {
       ...restaurantData,
       name: restaurantData.name?.trim(),
