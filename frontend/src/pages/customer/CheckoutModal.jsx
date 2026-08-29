@@ -71,6 +71,30 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const { updateLocation } = useLocation();
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [specialInstructions, setSpecialInstructions] = useState('');
+  const VAT_AMOUNT = 5;
+  const TIP_PRESETS = [0, 5, 10, 15, 20, 25, 30];
+
+  const [tipSelection, setTipSelection] = useState({
+    type: 'none',
+    presetAmount: 0,
+    customValue: '',
+  });
+
+  const riderTip = useMemo(() => {
+    if (tipSelection.type === 'custom') {
+      const customTip = Number(tipSelection.customValue);
+      if (!tipSelection.customValue || !Number.isFinite(customTip) || customTip < 0) {
+        return 0;
+      }
+      return customTip;
+    }
+
+    if (tipSelection.type === 'preset') {
+      return Number(tipSelection.presetAmount || 0);
+    }
+
+    return 0;
+  }, [tipSelection]);
 
   const [deliveryInfo, setDeliveryInfo] = useState({
     fullName: '',
@@ -279,7 +303,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     }
   }
 
-  const calculatedGrandTotal = Math.max(0, (parseFloat(cartTotal) + finalDeliveryFee - discountAmount)).toFixed(2);
+  const calculatedGrandTotal = Math.max(0, (parseFloat(cartTotal) + finalDeliveryFee + VAT_AMOUNT + riderTip - discountAmount)).toFixed(2);
   const grandTotal = overriddenExpectedTotal || calculatedGrandTotal;
 
   const handleApplyPromo = async () => {
@@ -465,7 +489,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         paymentMethod: 'mpesa',
         whatsappNumber: deliveryInfo.whatsapp,
         mpesaNumber: deliveryInfo.mpesaNumber,
+        subtotal: Number(cartTotal || 0),
         deliveryFee: Number(finalDeliveryFee),
+        vat: VAT_AMOUNT,
+        riderTip,
+        discountAmount: Number(discountAmount || 0),
         specialInstructions: specialInstructions.trim() || (appliedPromo ? `Promo: ${appliedPromo.code}` : ''),
         promoCode: appliedPromo ? appliedPromo.code : undefined,
         expectedTotal: grandTotal,
@@ -782,7 +810,65 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                   </div>
                 </section>
 
-                {/* Section 3: M-Pesa Payment */}
+                {/* Section 3: Tip Rider */}
+                <section className="chk-section">
+                  <h3 className="chk-section-title">Tip Rider</h3>
+
+                  <div className="chk-tip-selector">
+                    <button
+                      type="button"
+                      className={`chk-tip-option ${tipSelection.type === 'none' ? 'is-selected' : ''}`}
+                      onClick={() => setTipSelection({ type: 'none', presetAmount: 0, customValue: '' })}
+                    >
+                      No Tip
+                    </button>
+                    {TIP_PRESETS.filter((value) => value > 0).map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        className={`chk-tip-option ${tipSelection.type === 'preset' && tipSelection.presetAmount === preset ? 'is-selected' : ''}`}
+                        onClick={() => setTipSelection({ type: 'preset', presetAmount: preset, customValue: '' })}
+                      >
+                        KSh {preset}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className={`chk-tip-option ${tipSelection.type === 'custom' ? 'is-selected' : ''}`}
+                      onClick={() => setTipSelection((prev) => ({ ...prev, type: 'custom' }))}
+                    >
+                      Custom
+                    </button>
+                  </div>
+
+                  {tipSelection.type === 'custom' && (
+                    <div className="chk-custom-tip-wrap">
+                      <label htmlFor="chk-custom-tip">Custom tip amount</label>
+                      <input
+                        id="chk-custom-tip"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={tipSelection.customValue}
+                        onChange={(e) => {
+                          const sanitized = e.target.value;
+                          if (sanitized === '' || Number(sanitized) >= 0) {
+                            setTipSelection((prev) => ({ ...prev, type: 'custom', customValue: sanitized }));
+                          }
+                        }}
+                        placeholder="Enter amount"
+                        disabled={isProcessing}
+                      />
+                    </div>
+                  )}
+
+                  <div className="chk-tip-summary">
+                    <span>Rider Tip</span>
+                    <strong>KSh {Number(riderTip).toLocaleString()}</strong>
+                  </div>
+                </section>
+
+                {/* Section 4: M-Pesa Payment */}
                 <section className="chk-section">
                   <h3 className="chk-section-title">Payment</h3>
 
@@ -951,6 +1037,16 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                           `KES ${Number(finalDeliveryFee).toLocaleString()}`
                         )}
                       </strong>
+                    </div>
+
+                    <div className="chk-cost-line">
+                      <span>VAT</span>
+                      <strong>KES {VAT_AMOUNT}</strong>
+                    </div>
+
+                    <div className="chk-cost-line">
+                      <span>Rider Tip</span>
+                      <strong>KES {Number(riderTip).toLocaleString()}</strong>
                     </div>
 
                     {appliedPromo && (

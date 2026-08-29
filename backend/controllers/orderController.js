@@ -29,6 +29,9 @@ exports.createOrder = async (req, res, next) => {
       whatsappNumber,
       mpesaNumber,
       deliveryFee = 20,
+      riderTip = 0,
+      vat = 5,
+      discountAmount = 0,
       restaurantId,
       expectedTotal,
     } = req.body;
@@ -177,7 +180,25 @@ exports.createOrder = async (req, res, next) => {
       rg.deliveryFee = feePerRest;
     });
 
-    const totalPrice = Math.max(0, Math.round((subtotal + finalDeliveryFee - discountAmount) * 100) / 100);
+    const parsedRiderTip = Number(riderTip);
+    const parsedVat = Number(vat ?? 5);
+
+    if (!Number.isFinite(parsedRiderTip) || parsedRiderTip < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rider tip must be a valid non-negative number.',
+      });
+    }
+
+    if (!Number.isFinite(parsedVat) || parsedVat < 0 || Math.abs(parsedVat - 5) > 0.01) {
+      return res.status(400).json({
+        success: false,
+        message: 'VAT is fixed at KSh 5 for every order.',
+      });
+    }
+
+    const serverVat = 5;
+    const totalPrice = Math.max(0, Math.round((subtotal + finalDeliveryFee + serverVat + parsedRiderTip - discountAmount) * 100) / 100);
     const isFreeDelivery = finalDeliveryFee === 0;
 
     if (expectedTotal != null && Math.abs(totalPrice - parseFloat(expectedTotal)) > 1.0) {
@@ -219,9 +240,13 @@ exports.createOrder = async (req, res, next) => {
       deliveryLatitude: deliveryLatitude ? parseFloat(deliveryLatitude) : 0,
       deliveryLongitude: deliveryLongitude ? parseFloat(deliveryLongitude) : 0,
       items: populatedItems,
+      subtotal,
       totalPrice,
       deliveryFee: finalDeliveryFee,
-      tax: 0,
+      tax: serverVat,
+      vat: serverVat,
+      riderTip: parsedRiderTip,
+      discountAmount: Number(discountAmount || 0),
       deliveryAddress,
       paymentMethod: 'mpesa',
       whatsappNumber,

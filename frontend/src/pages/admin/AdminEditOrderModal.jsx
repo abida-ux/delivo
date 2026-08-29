@@ -241,8 +241,9 @@ const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
               <div className="summary-list">
                 <div className="summary-row"><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
                 <div className="summary-row"><span>Delivery fee</span><strong>{Number(deliveryFee) === 0 ? 'Free' : formatCurrency(deliveryFee)}</strong></div>
+                <div className="summary-row"><span>VAT</span><strong>{formatCurrency(Number(order?.vat ?? order?.tax ?? 5))}</strong></div>
+                <div className="summary-row"><span>Rider tip</span><strong>{formatCurrency(Number(order?.riderTip || 0))}</strong></div>
                 <div className="summary-row"><span>Discount</span><strong>{formatCurrency(discountAmount)}</strong></div>
-                <div className="summary-row"><span>Tax</span><strong>{formatCurrency(Number(order?.tax || 0))}</strong></div>
                 <div className="summary-divider"></div>
                 <div className="summary-row total-row"><span>Total</span><strong>{formatCurrency(finalTotal)}</strong></div>
                 <div className="info-row"><span>Payment method</span><strong>{order?.paymentMethod?.toUpperCase() || 'MPESA'}</strong></div>

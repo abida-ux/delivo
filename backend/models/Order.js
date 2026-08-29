@@ -129,10 +129,22 @@ const OrderSchema = new mongoose.Schema({
       },
     }],
   }],
+  subtotal: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0,
+  },
   totalPrice: {
     type: Number,
     required: true,
     min: 0,
+  },
+  discountAmount: {
+    type: Number,
+    required: false,
+    min: 0,
+    default: 0,
   },
   status: {
     type: String,
@@ -191,6 +203,18 @@ const OrderSchema = new mongoose.Schema({
     default: 20,
   },
   tax: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 5,
+  },
+  vat: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 5,
+  },
+  riderTip: {
     type: Number,
     required: true,
     min: 0,
