@@ -5,7 +5,8 @@ import { useCart } from '../../context/CartContext';
 import { AuthContext } from '../../context/AuthContext';
 import CheckoutModal from './CheckoutModal';
 import RestaurantPickerModal from '../../components/RestaurantPickerModal';
-import { getAppSettings } from '../../services/api';
+import { getAppSettings, normalizeDeliveryFeeSettings } from '../../services/api';
+import { calculateDeliveryFee } from '../../utils/deliveryFeeRules';
 import { resolveImageUrl } from '../../utils/placeholderImage';
 import '../pages.css';
 import './Cart.css';
@@ -32,6 +33,12 @@ const Cart = () => {
   const [deliverySettings, setDeliverySettings] = useState({
     enabled: true,
     amount: 20,
+    rules: {
+      below100: 120,
+      above199: 80,
+      above299: 50,
+      above500: 20,
+    },
     freeDeliveryEnabled: false,
     freeDeliveryMinimum: 2500,
   });
@@ -59,11 +66,13 @@ const Cart = () => {
     const loadSettings = async () => {
       try {
         const settings = await getAppSettings();
+        const normalized = normalizeDeliveryFeeSettings(settings);
         setDeliverySettings({
-          enabled: settings.deliveryFeeEnabled !== false,
-          amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
-          freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
-          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
+          enabled: normalized.deliveryFeeEnabled,
+          amount: normalized.deliveryFeeAmount,
+          rules: normalized.deliveryFeeRules,
+          freeDeliveryEnabled: normalized.freeDeliveryEnabled,
+          freeDeliveryMinimum: normalized.freeDeliveryMinimum,
         });
       } catch (error) {
         console.error('Error loading delivery settings:', error);
@@ -137,11 +146,9 @@ const Cart = () => {
   }, [cartItems]);
 
   const mealGroups = restaurantGroups.filter(g => g.restaurantId !== 'restaurant_general');
-  const uniqueRestaurantCount = mealGroups.length > 0 ? mealGroups.length : 1;
   const cartTotal = getCartTotal();
   const isFreeDeliveryEligible = !deliverySettings.enabled || (deliverySettings.freeDeliveryEnabled && cartTotal >= deliverySettings.freeDeliveryMinimum);
-  const baseFee = deliverySettings.enabled ? Number(deliverySettings.amount ?? 20) : 0;
-  const deliveryFee = isFreeDeliveryEligible ? 0 : (uniqueRestaurantCount * baseFee);
+  const deliveryFee = !deliverySettings.enabled || isFreeDeliveryEligible ? 0 : calculateDeliveryFee(cartTotal, deliverySettings.rules || {});
   const grandTotal = (cartTotal + deliveryFee).toFixed(2);
   const isCheckoutDisabled = cartItems.length === 0;
 

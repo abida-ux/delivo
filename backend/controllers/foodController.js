@@ -895,10 +895,11 @@ exports.getFoodRestaurants = async (req, res) => {
 
     // 3. Fetch admin delivery settings
     const AppSettings = require('../models/AppSettings');
+    const { calculateDeliveryFee, normalizeDeliveryFeeRules } = require('../utils/deliveryFeeRules');
     const settingsDoc = await AppSettings.findOne().lean();
     const isFeeEnabled = settingsDoc ? settingsDoc.deliveryFeeEnabled !== false : true;
-    const feeAmount = settingsDoc && settingsDoc.deliveryFeeAmount != null ? Number(settingsDoc.deliveryFeeAmount) : 20;
-    const calculatedDeliveryFee = isFeeEnabled ? feeAmount : 0;
+    const feeRules = normalizeDeliveryFeeRules(settingsDoc?.deliveryFeeRules || { deliveryFeeAmount: settingsDoc?.deliveryFeeAmount });
+    const calculatedDeliveryFee = isFeeEnabled ? calculateDeliveryFee(0, feeRules) : 0;
 
     // 4. If no linked restaurant exists yet, fallback to all active restaurants
     if (directRestaurants.length === 0) {
@@ -1014,4 +1015,4 @@ exports.rateFood = async (req, res) => {
       message: error.message || 'Failed to submit rating',
     });
   }
-};
+};

@@ -22,7 +22,8 @@ import {
 import { AuthContext } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLocation } from '../../context/LocationContext';
-import api, { createOrder, getAppSettings, getMpesaStatus, getOrderById } from '../../services/api';
+import api, { createOrder, getAppSettings, getMpesaStatus, getOrderById, normalizeDeliveryFeeSettings } from '../../services/api';
+import { calculateDeliveryFee } from '../../utils/deliveryFeeRules';
 import { saveGuestOrder } from '../../utils/orderStorage';
 import './CheckoutModal.css';
 import { safeGetParsedItem, safeGetItem } from '../../utils/storageUtils';
@@ -43,17 +44,25 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     try {
       const parsed = safeGetParsedItem('delivo_app_settings', null);
       if (parsed && typeof parsed === 'object') {
+        const normalized = normalizeDeliveryFeeSettings(parsed);
         return {
-          enabled: parsed.deliveryFeeEnabled !== false,
-          amount: parsed.deliveryFeeAmount != null ? Number(parsed.deliveryFeeAmount) : 20,
-          freeDeliveryEnabled: parsed.freeDeliveryEnabled === true,
-          freeDeliveryMinimum: parsed.freeDeliveryMinimum != null ? Number(parsed.freeDeliveryMinimum) : 2500,
+          enabled: normalized.deliveryFeeEnabled,
+          amount: normalized.deliveryFeeAmount,
+          rules: normalized.deliveryFeeRules,
+          freeDeliveryEnabled: normalized.freeDeliveryEnabled,
+          freeDeliveryMinimum: normalized.freeDeliveryMinimum,
         };
       }
     } catch (e) {}
     return {
       enabled: true,
       amount: 20,
+      rules: {
+        below100: 120,
+        above199: 80,
+        above299: 50,
+        above500: 20,
+      },
       freeDeliveryEnabled: false,
       freeDeliveryMinimum: 2500,
     };
@@ -143,11 +152,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
       setIsSettingsLoading(true);
       try {
         const settings = await getAppSettings();
+        const normalized = normalizeDeliveryFeeSettings(settings);
         setDeliverySettings({
-          enabled: settings.deliveryFeeEnabled !== false,
-          amount: settings.deliveryFeeAmount != null ? Number(settings.deliveryFeeAmount) : 20,
-          freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
-          freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
+          enabled: normalized.deliveryFeeEnabled,
+          amount: normalized.deliveryFeeAmount,
+          rules: normalized.deliveryFeeRules,
+          freeDeliveryEnabled: normalized.freeDeliveryEnabled,
+          freeDeliveryMinimum: normalized.freeDeliveryMinimum,
         });
       } catch (error) {
         console.error('Error loading app settings:', error);
@@ -247,9 +258,8 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
     return { restaurantGroups: groups, uniqueRestaurantCount: count };
   }, [cartItems]);
 
-  const baseDeliveryFee = (cartItems && cartItems.length > 0 && deliverySettings?.enabled) ? Number(deliverySettings.amount ?? 20) : 0;
   const isFreeDeliveryEligible = !deliverySettings?.enabled || (deliverySettings?.freeDeliveryEnabled && Number(cartTotal || 0) >= Number(deliverySettings?.freeDeliveryMinimum || 2500));
-  const calculatedDeliveryFee = isFreeDeliveryEligible ? 0 : (Number(uniqueRestaurantCount || 1) * baseDeliveryFee);
+  const calculatedDeliveryFee = isFreeDeliveryEligible ? 0 : calculateDeliveryFee(Number(cartTotal || 0), deliverySettings?.rules || {});
   
   // Calculate discount based on applied promo
   let discountAmount = 0;

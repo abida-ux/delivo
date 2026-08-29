@@ -5,6 +5,7 @@ const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const RiderLedger = require('../models/RiderLedger');
 const AppSettings = require('../models/AppSettings');
+const { calculateDeliveryFee, normalizeDeliveryFeeRules } = require('../utils/deliveryFeeRules');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
 const { isActiveDeliveryStatus, isRiderAssignable, getRiderAvailabilityStatus } = require('../utils/riderWorkflow');
@@ -123,18 +124,24 @@ exports.createOrder = async (req, res, next) => {
     const finalRestaurantId = uniqueRestaurantIds[0] || restaurantId || null;
 
     const appSettings = (await AppSettings.findOne()) || {};
+    const rules = normalizeDeliveryFeeRules(appSettings.deliveryFeeRules || { deliveryFeeAmount: appSettings.deliveryFeeAmount });
 
     const isDeliveryEnabled = appSettings.deliveryFeeEnabled !== false;
-    const baseDeliveryFee = isDeliveryEnabled ? Number(appSettings.deliveryFeeAmount ?? 20) : 0;
     const isFreeDeliveryThresholdMet = appSettings.freeDeliveryEnabled && appSettings.freeDeliveryMinimum != null && subtotal >= Number(appSettings.freeDeliveryMinimum);
-    const calculatedServerDeliveryFee = (!isDeliveryEnabled || isFreeDeliveryThresholdMet) ? 0 : (uniqueRestaurantCount * baseDeliveryFee);
+    const serverFeeForSubtotal = !isDeliveryEnabled ? 0 : calculateDeliveryFee(subtotal, rules);
+    const calculatedServerDeliveryFee = isFreeDeliveryThresholdMet ? 0 : serverFeeForSubtotal;
 
     let finalDeliveryFee = calculatedServerDeliveryFee;
 
-    // Check if client passed a valid numeric delivery fee matching server logic
     const parsedClientFee = Number(deliveryFee);
-    if (!Number.isNaN(parsedClientFee) && parsedClientFee >= 0 && (!isDeliveryEnabled || isFreeDeliveryThresholdMet)) {
-      finalDeliveryFee = 0;
+    if (!Number.isNaN(parsedClientFee) && parsedClientFee >= 0 && Math.abs(parsedClientFee - finalDeliveryFee) > 0.01) {
+      return res.status(400).json({
+        success: false,
+        message: 'Delivery fee mismatch. Please refresh checkout and try again.',
+        priceChange: true,
+        currentTotal: Math.max(0, Math.round((subtotal + finalDeliveryFee) * 100) / 100),
+        expectedTotal: Math.max(0, Math.round((subtotal + parsedClientFee) * 100) / 100),
+      });
     }
 
     // Apply promo code discount securely on the server

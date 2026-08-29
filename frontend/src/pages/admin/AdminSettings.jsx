@@ -25,6 +25,12 @@ const AdminSettings = () => {
     freeDeliveryMinimum: 2500,
     deliveryFeeEnabled: true,
     deliveryFeeAmount: 20,
+    deliveryFeeRules: {
+      below100: 120,
+      above199: 80,
+      above299: 50,
+      above500: 20,
+    },
     notificationMessage: 'Free delivery for orders above Ksh 2,500!',
   });
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -58,12 +64,19 @@ const AdminSettings = () => {
     const loadSettings = async () => {
       try {
         const appSettings = await getAppSettings();
+        const rules = appSettings.deliveryFeeRules || {};
         setSettings({
           promoNotifications: appSettings.promoNotifications ?? true,
           freeDeliveryEnabled: appSettings.freeDeliveryEnabled ?? false,
           freeDeliveryMinimum: appSettings.freeDeliveryMinimum ?? 2500,
           deliveryFeeEnabled: appSettings.deliveryFeeEnabled ?? true,
-          deliveryFeeAmount: appSettings.deliveryFeeAmount ?? 20,
+          deliveryFeeAmount: appSettings.deliveryFeeAmount ?? Number(rules.above500 ?? 20),
+          deliveryFeeRules: {
+            below100: Number(rules.below100 ?? 120),
+            above199: Number(rules.above199 ?? 80),
+            above299: Number(rules.above299 ?? 50),
+            above500: Number(rules.above500 ?? appSettings.deliveryFeeAmount ?? 20),
+          },
           notificationMessage: appSettings.notificationMessage || 'Free delivery for orders above Ksh 2,500!',
         });
 
@@ -223,6 +236,15 @@ const AdminSettings = () => {
       ...settings,
       [key]: value,
     };
+    if (key === 'deliveryFeeAmount') {
+      updated.deliveryFeeRules = {
+        ...updated.deliveryFeeRules,
+        above500: Number(value) || 0,
+      };
+    }
+    if (key === 'deliveryFeeRules') {
+      updated.deliveryFeeAmount = Number(value.above500 ?? settings.deliveryFeeAmount ?? 20);
+    }
     setSettings(updated);
 
     try {
@@ -518,20 +540,70 @@ const AdminSettings = () => {
 
             {settings.deliveryFeeEnabled && (
               <div className="setting-item">
-                <label htmlFor="delivery-fee-amount">Delivery Fee Amount (Ksh)</label>
-                <input
-                  type="number"
-                  id="delivery-fee-amount"
-                  value={settings.deliveryFeeAmount}
-                  onChange={(e) =>
-                    handleSettingChange('deliveryFeeAmount', parseFloat(e.target.value))
-                  }
-                  placeholder="20"
-                  min="0"
-                  step="1"
-                />
+                <div style={{ display: 'grid', gap: '14px' }}>
+                  <div>
+                    <label htmlFor="fee-below-100">Below KSh 100</label>
+                    <input
+                      id="fee-below-100"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={settings.deliveryFeeRules?.below100 ?? 120}
+                      onChange={(e) => handleSettingChange('deliveryFeeRules', {
+                        ...settings.deliveryFeeRules,
+                        below100: Number(e.target.value) || 0,
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="fee-above-199">KSh 100 - 199</label>
+                    <input
+                      id="fee-above-199"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={settings.deliveryFeeRules?.above199 ?? 80}
+                      onChange={(e) => handleSettingChange('deliveryFeeRules', {
+                        ...settings.deliveryFeeRules,
+                        above199: Number(e.target.value) || 0,
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="fee-above-299">KSh 200 - 299</label>
+                    <input
+                      id="fee-above-299"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={settings.deliveryFeeRules?.above299 ?? 50}
+                      onChange={(e) => handleSettingChange('deliveryFeeRules', {
+                        ...settings.deliveryFeeRules,
+                        above299: Number(e.target.value) || 0,
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="fee-above-500">KSh 300 and above</label>
+                    <input
+                      id="fee-above-500"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={settings.deliveryFeeRules?.above500 ?? settings.deliveryFeeAmount ?? 20}
+                      onChange={(e) => {
+                        const value = Number(e.target.value) || 0;
+                        handleSettingChange('deliveryFeeRules', {
+                          ...settings.deliveryFeeRules,
+                          above500: value,
+                        });
+                        handleSettingChange('deliveryFeeAmount', value);
+                      }}
+                    />
+                  </div>
+                </div>
                 <p className="setting-desc">
-                  Current delivery fee applied at checkout: Ksh {settings.deliveryFeeAmount}
+                  Checkout applies the matching subtotal tier automatically using the latest admin values.
                 </p>
               </div>
             )}

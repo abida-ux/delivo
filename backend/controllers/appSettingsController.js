@@ -1,5 +1,6 @@
 const AppSettings = require('../models/AppSettings');
 const User = require('../models/User');
+const { normalizeDeliveryFeeRules } = require('../utils/deliveryFeeRules');
 
 // Ensure a singleton app settings document exists
 const getSingletonSettings = async () => {
@@ -8,6 +9,26 @@ const getSingletonSettings = async () => {
     settings = await AppSettings.create({});
   }
   return settings;
+};
+
+const prepareSettingsPayload = (body = {}) => {
+  const incomingRules = body.deliveryFeeRules && typeof body.deliveryFeeRules === 'object'
+    ? body.deliveryFeeRules
+    : {};
+  const legacyFee = Number(body.deliveryFeeAmount ?? incomingRules.above500 ?? 20);
+  const defaultRules = normalizeDeliveryFeeRules({ deliveryFeeAmount: legacyFee });
+  const normalizedRules = normalizeDeliveryFeeRules({ ...defaultRules, ...incomingRules, deliveryFeeAmount: legacyFee });
+
+  return {
+    deliveryFeeEnabled: body.deliveryFeeEnabled,
+    deliveryFeeAmount: Number.isFinite(normalizedRules.above500) ? normalizedRules.above500 : 20,
+    deliveryFeeRules: normalizedRules,
+    freeDeliveryEnabled: body.freeDeliveryEnabled,
+    freeDeliveryMinimum: body.freeDeliveryMinimum,
+    promoNotifications: body.promoNotifications,
+    notificationMessage: body.notificationMessage,
+    updatedAt: Date.now(),
+  };
 };
 
 exports.getSettings = async (req, res) => {
@@ -98,15 +119,7 @@ exports.updateSettings = async (req, res) => {
     const prevEnabled = previousSettings ? previousSettings.deliveryFeeEnabled : true;
     const currentEnabled = req.body.deliveryFeeEnabled;
 
-    const update = {
-      deliveryFeeEnabled: req.body.deliveryFeeEnabled,
-      deliveryFeeAmount: req.body.deliveryFeeAmount,
-      freeDeliveryEnabled: req.body.freeDeliveryEnabled,
-      freeDeliveryMinimum: req.body.freeDeliveryMinimum,
-      promoNotifications: req.body.promoNotifications,
-      notificationMessage: req.body.notificationMessage,
-      updatedAt: Date.now(),
-    };
+    const update = prepareSettingsPayload(req.body);
 
     const settings = await AppSettings.findOneAndUpdate({}, update, {
       new: true,

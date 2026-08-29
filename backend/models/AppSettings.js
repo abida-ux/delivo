@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+const deliveryFeeRulesSchema = new mongoose.Schema({
+  below100: { type: Number, default: 120, min: 0 },
+  above199: { type: Number, default: 80, min: 0 },
+  above299: { type: Number, default: 50, min: 0 },
+  above500: { type: Number, default: 20, min: 0 },
+}, { _id: false });
+
 const AppSettingsSchema = new mongoose.Schema({
   deliveryFeeEnabled: {
     type: Boolean,
@@ -9,6 +16,15 @@ const AppSettingsSchema = new mongoose.Schema({
     type: Number,
     default: 20,
     min: 0,
+  },
+  deliveryFeeRules: {
+    type: deliveryFeeRulesSchema,
+    default: () => ({
+      below100: 120,
+      above199: 80,
+      above299: 50,
+      above500: 20,
+    }),
   },
   freeDeliveryEnabled: {
     type: Boolean,

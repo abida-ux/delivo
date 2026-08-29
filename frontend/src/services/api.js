@@ -182,6 +182,24 @@ export const getAppSettings = async () => {
   }
 };
 
+export const normalizeDeliveryFeeSettings = (settings = {}) => {
+  const rules = settings.deliveryFeeRules || {};
+  const fallbackAmount = Number(settings.deliveryFeeAmount ?? rules.above500 ?? 20);
+
+  return {
+    deliveryFeeEnabled: settings.deliveryFeeEnabled !== false,
+    deliveryFeeAmount: Number.isFinite(fallbackAmount) ? fallbackAmount : 20,
+    deliveryFeeRules: {
+      below100: Number.isFinite(Number(rules.below100)) ? Number(rules.below100) : 120,
+      above199: Number.isFinite(Number(rules.above199)) ? Number(rules.above199) : 80,
+      above299: Number.isFinite(Number(rules.above299)) ? Number(rules.above299) : 50,
+      above500: Number.isFinite(Number(rules.above500)) ? Number(rules.above500) : fallbackAmount,
+    },
+    freeDeliveryEnabled: settings.freeDeliveryEnabled === true,
+    freeDeliveryMinimum: settings.freeDeliveryMinimum != null ? Number(settings.freeDeliveryMinimum) : 2500,
+  };
+};
+
 export const updateAppSettings = async (settings) => {
   const res = await api.put('/settings', settings);
   const data = res.data?.data || settings;
