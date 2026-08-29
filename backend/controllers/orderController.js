@@ -6,6 +6,7 @@ const User = require('../models/User');
 const RiderLedger = require('../models/RiderLedger');
 const AppSettings = require('../models/AppSettings');
 const { calculateDeliveryFee, normalizeDeliveryFeeRules } = require('../utils/deliveryFeeRules');
+const { calculateOrderTotals } = require('../utils/orderTotals');
 const { sendMpesaStkPush } = require('../utils/mpesaService');
 const { buildNotificationPayload, createInAppNotification, sendPushToUser, sendOrderPaymentNotification } = require('../utils/pushNotifications');
 const { isActiveDeliveryStatus, isRiderAssignable, getRiderAvailabilityStatus } = require('../utils/riderWorkflow');
@@ -138,12 +139,27 @@ exports.createOrder = async (req, res, next) => {
 
     const parsedClientFee = Number(deliveryFee);
     if (!Number.isNaN(parsedClientFee) && parsedClientFee >= 0 && Math.abs(parsedClientFee - finalDeliveryFee) > 0.01) {
+      const clientTotals = calculateOrderTotals({
+        subtotal,
+        deliveryFee: parsedClientFee,
+        discountAmount: 0,
+        riderTip: Number(riderTip || 0),
+        vat: 5,
+      });
+      const serverTotals = calculateOrderTotals({
+        subtotal,
+        deliveryFee: finalDeliveryFee,
+        discountAmount: 0,
+        riderTip: Number(riderTip || 0),
+        vat: 5,
+      });
+
       return res.status(400).json({
         success: false,
         message: 'Delivery fee mismatch. Please refresh checkout and try again.',
         priceChange: true,
-        currentTotal: Math.max(0, Math.round((subtotal + finalDeliveryFee) * 100) / 100),
-        expectedTotal: Math.max(0, Math.round((subtotal + parsedClientFee) * 100) / 100),
+        currentTotal: serverTotals.finalTotal,
+        expectedTotal: clientTotals.finalTotal,
       });
     }
 
@@ -198,7 +214,14 @@ exports.createOrder = async (req, res, next) => {
     }
 
     const serverVat = 5;
-    const totalPrice = Math.max(0, Math.round((subtotal + finalDeliveryFee + serverVat + parsedRiderTip - discountAmount) * 100) / 100);
+    const serverTotals = calculateOrderTotals({
+      subtotal,
+      deliveryFee: finalDeliveryFee,
+      discountAmount,
+      riderTip: parsedRiderTip,
+      vat: serverVat,
+    });
+    const totalPrice = serverTotals.finalTotal;
     const isFreeDelivery = finalDeliveryFee === 0;
 
     if (expectedTotal != null && Math.abs(totalPrice - parseFloat(expectedTotal)) > 1.0) {

@@ -39,6 +39,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const [errors, setErrors] = useState({});
   const [overriddenExpectedTotal, setOverriddenExpectedTotal] = useState(null);
   const [priceChangeNotice, setPriceChangeNotice] = useState('');
+  const [checkoutSnapshot, setCheckoutSnapshot] = useState(null);
   const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(() => {
     try {
@@ -306,6 +307,19 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
   const calculatedGrandTotal = Math.max(0, (parseFloat(cartTotal) + finalDeliveryFee + VAT_AMOUNT + riderTip - discountAmount)).toFixed(2);
   const grandTotal = overriddenExpectedTotal || calculatedGrandTotal;
 
+  useEffect(() => {
+    if (paymentStage === 'idle') {
+      setCheckoutSnapshot({
+        subtotal: Number(cartTotal || 0),
+        deliveryFee: Number(finalDeliveryFee),
+        vat: VAT_AMOUNT,
+        riderTip,
+        discountAmount: Number(discountAmount || 0),
+        finalTotal: Number(grandTotal),
+      });
+    }
+  }, [cartTotal, finalDeliveryFee, VAT_AMOUNT, riderTip, discountAmount, grandTotal, paymentStage]);
+
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) {
       setPromoError('Please enter a promo code');
@@ -480,6 +494,15 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         };
       });
 
+      const authoritativeTotals = checkoutSnapshot || {
+        subtotal: Number(cartTotal || 0),
+        deliveryFee: Number(finalDeliveryFee),
+        vat: VAT_AMOUNT,
+        riderTip,
+        discountAmount: Number(discountAmount || 0),
+        finalTotal: Number(grandTotal),
+      };
+
       const orderData = {
         items,
         customerName: deliveryInfo.fullName,
@@ -489,14 +512,14 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
         paymentMethod: 'mpesa',
         whatsappNumber: deliveryInfo.whatsapp,
         mpesaNumber: deliveryInfo.mpesaNumber,
-        subtotal: Number(cartTotal || 0),
-        deliveryFee: Number(finalDeliveryFee),
-        vat: VAT_AMOUNT,
-        riderTip,
-        discountAmount: Number(discountAmount || 0),
+        subtotal: authoritativeTotals.subtotal,
+        deliveryFee: authoritativeTotals.deliveryFee,
+        vat: authoritativeTotals.vat,
+        riderTip: authoritativeTotals.riderTip,
+        discountAmount: authoritativeTotals.discountAmount,
         specialInstructions: specialInstructions.trim() || (appliedPromo ? `Promo: ${appliedPromo.code}` : ''),
         promoCode: appliedPromo ? appliedPromo.code : undefined,
-        expectedTotal: grandTotal,
+        expectedTotal: authoritativeTotals.finalTotal,
       };
 
       if (user) {
