@@ -32,7 +32,7 @@ exports.createOrder = async (req, res, next) => {
       deliveryFee = 20,
       riderTip = 0,
       vat = 5,
-      discountAmount = 0,
+      discountAmount: clientDiscountAmount = 0,
       restaurantId,
       expectedTotal,
     } = req.body;
@@ -163,11 +163,13 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    // Apply promo code discount securely on the server
-    let discountAmount = 0;
+    // Preserve the checkout snapshot discount when it is already known; otherwise apply the promo securely on the server.
+    let discountAmount = Number.isFinite(Number(clientDiscountAmount)) && Number(clientDiscountAmount) >= 0
+      ? Number(clientDiscountAmount)
+      : 0;
     const { promoCode } = req.body;
 
-    if (promoCode) {
+    if (promoCode && discountAmount === 0) {
       const Offer = require('../models/Offer');
       const matchingOffer = await Offer.findOne({ code: promoCode.trim().toUpperCase() });
       if (matchingOffer) {

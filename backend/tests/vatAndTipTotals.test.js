@@ -41,3 +41,17 @@ test('applies discount before final total calculation', () => {
 
   assert.equal(breakdown.finalTotal, 340);
 });
+
+test('keeps the full checkout total intact with VAT and rider tip included', () => {
+  const breakdown = calculateOrderTotals({
+    subtotal: 520,
+    deliveryFee: 70,
+    discountAmount: 30,
+    riderTip: 25,
+    vat: 5,
+  });
+
+  assert.equal(breakdown.finalTotal, 590);
+  assert.equal(breakdown.vat, 5);
+  assert.equal(breakdown.riderTip, 25);
+});
