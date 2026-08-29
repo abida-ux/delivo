@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, Fragment} from 'react';
 import { X } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import './AdminEditOrderModal.css';
@@ -62,6 +62,56 @@ const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
     return unitPrice * quantity;
   };
 
+  const getOrderSubtotal = () => (order?.items || []).reduce((sum, item) => sum + getOrderItemPrice(item), 0);
+  const getOrderDiscount = () => {
+    const subtotal = getOrderSubtotal();
+    const deliveryFee = Number(order?.deliveryFee || 0);
+    const finalTotal = Number(order?.totalPrice || 0);
+    return Math.max(0, subtotal + deliveryFee - finalTotal);
+  };
+
+  const getStatusBadgeLabel = (status) => {
+    const normalized = (status || 'pending').toLowerCase();
+    if (['delivered', 'completed', 'ready'].includes(normalized)) return 'Delivered';
+    if (['confirmed', 'processing'].includes(normalized)) return 'Confirmed';
+    if (['preparing'].includes(normalized)) return 'Preparing';
+    if (['on-delivery', 'out-for-delivery', 'assigned'].includes(normalized)) return 'On Delivery';
+    if (['cancelled'].includes(normalized)) return 'Cancelled';
+    return 'Pending';
+  };
+
+  const getStatusBadgeClassName = (status) => {
+    const normalized = (status || 'pending').toLowerCase();
+    if (['delivered', 'completed', 'ready'].includes(normalized)) return 'status-badge success';
+    if (['confirmed', 'processing'].includes(normalized)) return 'status-badge info';
+    if (['preparing'].includes(normalized)) return 'status-badge warning';
+    if (['on-delivery', 'out-for-delivery', 'assigned'].includes(normalized)) return 'status-badge primary';
+    if (['cancelled'].includes(normalized)) return 'status-badge danger';
+    return 'status-badge neutral';
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return 'Not available';
+    try {
+      const formatted = new Date(value);
+      return new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(formatted);
+    } catch (error) {
+      return 'Not available';
+    }
+  };
+
+  const restaurantNames = (order?.restaurants || []).map((rest) => rest?.name).filter(Boolean);
+  const subtotal = getOrderSubtotal();
+  const discountAmount = getOrderDiscount();
+  const deliveryFee = Number(order?.deliveryFee || 0);
+  const finalTotal = Number(order?.totalPrice || 0);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -73,53 +123,131 @@ const AdminEditOrderModal = ({ isOpen, order, onClose, onSave }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="edit-form">
-          <div className="order-info">
-            <p><strong>Order ID:</strong> {order?._id}</p>
-            <p><strong>Customer:</strong> {order?.customerName || order?.customer?.name || 'N/A'}</p>
-            <p><strong>Total Price:</strong> {formatCurrency(order?.totalPrice || 0)}</p>
+          <div className="order-modal-header">
+            <div>
+              <p className="eyebrow-text">Order overview</p>
+              <h3>#{String(order?._id || '').slice(-8).toUpperCase()}</h3>
+            </div>
+            <span className={getStatusBadgeClassName(formData.status)}>{getStatusBadgeLabel(formData.status)}</span>
           </div>
 
-          <div className="details-grid">
-            <div className="detail-card">
-              <h3>Delivery</h3>
-              <p><strong>Address:</strong> {order?.deliveryAddress || 'Not provided'}</p>
-              <p><strong>Instructions:</strong> {order?.specialInstructions || 'None'}</p>
+          <div className="details-panel-group">
+            <div className="detail-card order-meta-card">
+              <div className="section-heading-row">
+                <h4>Order Information</h4>
+              </div>
+              <div className="info-list compact-list">
+                <div className="info-row"><span>Order ID</span><strong>{order?._id || 'N/A'}</strong></div>
+                <div className="info-row"><span>Placed</span><strong>{formatDateTime(order?.createdAt)}</strong></div>
+                <div className="info-row"><span>Status</span><strong>{order?.status || 'pending'}</strong></div>
+              </div>
             </div>
+
             <div className="detail-card">
-              <h3>Contact</h3>
-              <p><strong>Name:</strong> {order?.customerName || 'Not provided'}</p>
-              <p><strong>Phone:</strong> {order?.guestPhone || order?.whatsappNumber || 'Not provided'}</p>
-              <p><strong>Email:</strong> {order?.guestEmail || 'Not provided'}</p>
-              <p><strong>WhatsApp:</strong> {order?.whatsappNumber || 'Not provided'}</p>
+              <div className="section-heading-row">
+                <h4>Customer Information</h4>
+              </div>
+              <div className="info-list compact-list">
+                <div className="info-row"><span>Name</span><strong>{order?.customerName || order?.customer?.name || 'N/A'}</strong></div>
+                <div className="info-row"><span>Phone</span><strong>{order?.guestPhone || order?.whatsappNumber || 'N/A'}</strong></div>
+                <div className="info-row"><span>Email</span><strong>{order?.guestEmail || 'N/A'}</strong></div>
+                <div className="info-row address-row"><span>Address</span><strong>{order?.deliveryAddress || 'Not provided'}</strong></div>
+              </div>
             </div>
+
             <div className="detail-card">
-              <h3>Payment</h3>
-              <p><strong>Method:</strong> {order?.paymentMethod?.toUpperCase() || 'MPESA'}</p>
-              <p><strong>Status:</strong> {order?.paymentStatus || 'Pending'}</p>
-              <p><strong>Receipt:</strong> {order?.mpesaReceiptNumber || 'Not provided'}</p>
+              <div className="section-heading-row">
+                <h4>Restaurant Information</h4>
+              </div>
+              <div className="info-list compact-list">
+                <div className="info-row"><span>Restaurant</span><strong>{restaurantNames.length > 0 ? restaurantNames.join(', ') : 'N/A'}</strong></div>
+                <div className="info-row"><span>Assigned rider</span><strong>{order?.riderId?.name || order?.riderName || 'Not assigned'}</strong></div>
+                <div className="info-row"><span>Delivery status</span><strong>{order?.deliveryStatus || 'Pending'}</strong></div>
+              </div>
             </div>
-            <div className="detail-card">
-              <h3>Breakdown</h3>
-              <p><strong>Items:</strong> {order?.items?.length || 0}</p>
-              <p><strong>Delivery Fee:</strong> {formatCurrency(order?.deliveryFee || 0)}</p>
-              <p><strong>Tax:</strong> {formatCurrency(order?.tax || 0)}</p>
-            </div>
+
             <div className="detail-card full-width">
-              <h3>Food Items</h3>
-              <div className="item-list">
-                {(order?.items || []).length > 0 ? (
-                  order.items.map((item, index) => (
-                    <div key={`${item?.foodId || item?.food || index}`} className="item-row">
-                      <div>
-                        <p className="item-name">{getOrderItemName(item)}</p>
-                        <p className="item-meta">Qty: {item?.quantity || 1}</p>
-                      </div>
-                      <p className="item-total">{formatCurrency(getOrderItemPrice(item))}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="item-meta">No items recorded</p>
-                )}
+              <div className="section-heading-row">
+                <h4>Ordered Items</h4>
+              </div>
+              <div className="item-table-wrap">
+                <table className="item-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Unit Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(order?.items || []).length > 0 ? (
+                      order.items.map((item, index) => {
+                        const isCombo = Boolean(item?.isCombination);
+                        const unitPrice = Number(item?.price ?? item?.unitPrice ?? 0);
+                        const total = getOrderItemPrice(item);
+                        const comboChildren = Array.isArray(item?.components) ? item.components : [];
+                        return (
+                          <Fragment key={`${item?._id || item?.foodId || item?.name || index}`}>
+                            <tr className={isCombo ? 'item-row-parent' : ''}>
+                              <td>
+                                <div className="item-name-cell">
+                                  <span className={isCombo ? 'combo-parent-name' : ''}>{getOrderItemName(item)}</span>
+                                  {isCombo && <small className="combo-badge">Combo</small>}
+                                </div>
+                              </td>
+                              <td>{item?.quantity || 1}</td>
+                              <td>{formatCurrency(unitPrice)}</td>
+                              <td>{formatCurrency(total)}</td>
+                            </tr>
+                            {isCombo && comboChildren.length > 0 && comboChildren.map((component, compIndex) => (
+                              <tr key={`${item?._id || item?.foodId || item?.name || index}-child-${compIndex}`} className="item-row-child">
+                                <td>
+                                  <div className="combo-child-name">{component?.name || component?.foodId?.name || 'Item'} </div>
+                                </td>
+                                <td>{Number(component?.quantity || 0) * Number(item?.quantity || 1)}</td>
+                                <td>{formatCurrency(Number(component?.price || 0))}</td>
+                                <td>{formatCurrency(Number(component?.price || 0) * Number(component?.quantity || 0) * Number(item?.quantity || 1))}</td>
+                              </tr>
+                            ))}
+                          </Fragment>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="empty-table-cell">No items recorded</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="detail-card">
+              <div className="section-heading-row">
+                <h4>Delivery Information</h4>
+              </div>
+              <div className="info-list compact-list">
+                <div className="info-row"><span>Delivery fee</span><strong>{Number(order?.deliveryFee || 0) === 0 ? 'Free' : formatCurrency(order?.deliveryFee || 0)}</strong></div>
+                <div className="info-row"><span>Rider</span><strong>{order?.riderId?.name || order?.riderName || 'Not assigned'}</strong></div>
+                <div className="info-row"><span>Instructions</span><strong>{order?.specialInstructions || 'None'}</strong></div>
+              </div>
+            </div>
+
+            <div className="detail-card">
+              <div className="section-heading-row">
+                <h4>Payment & Summary</h4>
+              </div>
+              <div className="summary-list">
+                <div className="summary-row"><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+                <div className="summary-row"><span>Delivery fee</span><strong>{Number(deliveryFee) === 0 ? 'Free' : formatCurrency(deliveryFee)}</strong></div>
+                <div className="summary-row"><span>Discount</span><strong>{formatCurrency(discountAmount)}</strong></div>
+                <div className="summary-row"><span>Tax</span><strong>{formatCurrency(Number(order?.tax || 0))}</strong></div>
+                <div className="summary-divider"></div>
+                <div className="summary-row total-row"><span>Total</span><strong>{formatCurrency(finalTotal)}</strong></div>
+                <div className="info-row"><span>Payment method</span><strong>{order?.paymentMethod?.toUpperCase() || 'MPESA'}</strong></div>
+                <div className="info-row"><span>Payment status</span><strong>{order?.paymentStatus || 'Pending'}</strong></div>
+                <div className="info-row"><span>Receipt</span><strong>{order?.mpesaReceiptNumber || 'Not provided'}</strong></div>
               </div>
             </div>
           </div>

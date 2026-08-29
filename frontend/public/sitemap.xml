@@ -133,6 +133,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.delivo.co.ke/food/6a934705c91c0730153035e2</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.delivo.co.ke/food/6a934624c91c0730153033a7</loc>
+    <lastmod>2026-08-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.delivo.co.ke/food/6a92e0298d8836642409b0fc</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
@@ -260,18 +272,6 @@
   </url>
   <url>
     <loc>https://www.delivo.co.ke/food/6a86e113c5a7fc9d3eed49c9</loc>
-    <lastmod>2026-08-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.delivo.co.ke/food/6a86e0dac5a7fc9d3eed497f</loc>
-    <lastmod>2026-08-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.delivo.co.ke/food/6a86e08fc5a7fc9d3eed4925</loc>
     <lastmod>2026-08-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
