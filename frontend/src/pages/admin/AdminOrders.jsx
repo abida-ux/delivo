@@ -419,8 +419,6 @@ export default function AdminOrders() {
                 <thead>
                   <tr>
                     <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Restaurant</th>
                     <th>Amount</th>
                     <th>Status</th>
                     <th>Date</th>
@@ -431,8 +429,6 @@ export default function AdminOrders() {
                   {filteredOrders.map((order) => (
                     <tr key={order._id}>
                       <td className="order-id-cell">#{order._id?.slice(-6).toUpperCase()}<div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>Made: {formatOrderMade(order?.createdAt)}</div></td>
-                      <td className="customer-cell">{(order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer'}</td>
-                      <td>{resolveRestaurantName(order)}</td>
                       <td className="amount-cell">{formatCurrency(order.totalPrice || order.totalAmount || 0, 'KSh ')}</td>
                       <td>{renderStatusBadge(order.status)}</td>
                       <td className="date-cell">{formatOrderMade(order?.createdAt)}</td>
@@ -479,37 +475,27 @@ export default function AdminOrders() {
             {/* Mobile Cards View (< 768px) Matching Admin Users & Foods Design System */}
             <div className="orders-mobile-cards-wrap">
               {filteredOrders.map((order) => {
-                const customerName = (order.customer && order.customer.name) || order.customerName || order.guestEmail || 'Customer';
-                const customerInitial = customerName.charAt(0).toUpperCase() || 'O';
-                const restaurantName = resolveRestaurantName(order);
                 const orderDate = formatOrderMade(order?.createdAt);
                 const itemCount = (order.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0);
 
                 return (
                   <div key={order._id} className="admin-order-card">
-                    {/* Card Header: Initial, Order ID, Customer, and Status Badge */}
+                    {/* Card Header: Order ID and Status Badge; customer details remain hidden in list view */}
                     <div className="order-card-top">
                       <div className="order-card-identity">
                         <div className="order-avatar">
-                          {customerInitial}
+                          O
                         </div>
                         <div className="order-card-name-block">
-                          <h4>#{order._id?.slice(-6).toUpperCase()} • {customerName}</h4>
-                          <span className="order-card-email-sub">{order.customer?.email || order.guestEmail || order.customerPhone || 'Customer Order'}</span>
+                          <h4>#{order._id?.slice(-6).toUpperCase()}</h4>
+                          <span className="order-card-email-sub">Customer details hidden</span>
                         </div>
                       </div>
                       {renderStatusBadge(order.status)}
                     </div>
 
-                    {/* Card Details: Restaurant, Amount, Date, Items */}
+                    {/* Card Details: General order information only */}
                     <div className="order-card-body">
-                      <div className="order-card-field">
-                        <span className="field-label">
-                          <Store size={12} /> Restaurant
-                        </span>
-                        <span className="field-value" title={restaurantName}>{restaurantName}</span>
-                      </div>
-
                       <div className="order-card-field">
                         <span className="field-label">
                           <DollarSign size={12} /> Amount
