@@ -545,6 +545,7 @@ exports.updateOrderStatus = async (req, res, next) => {
     const nextStatus = status || order.status;
     const nextPaymentStatus = paymentStatus || order.paymentStatus;
     const nextRiderId = riderId || order.riderId;
+    const DELIVERY_EARNINGS_PER_COMPLETED_ORDER = 10;
 
     order.status = nextStatus;
     order.paymentStatus = nextPaymentStatus;
@@ -580,13 +581,16 @@ exports.updateOrderStatus = async (req, res, next) => {
         riderUser.riderStatus = 'available';
         riderUser.isOnline = true;
         riderUser.currentOrderId = null;
-        if (nextStatus === 'delivered' && !wasAlreadyDelivered) {
-          const earnedFee = Number(order.deliveryFee) || 20;
+
+        if (nextStatus === 'delivered' && !wasAlreadyDelivered && !order.riderEarningPaid) {
+          const earnedFee = DELIVERY_EARNINGS_PER_COMPLETED_ORDER;
           riderUser.totalDeliveries = (riderUser.totalDeliveries || 0) + 1;
           riderUser.totalEarnings = Number(riderUser.totalEarnings || 0) + earnedFee;
           riderUser.availableBalance = Number(riderUser.availableBalance || 0) + earnedFee;
 
-          // Record in RiderLedger
+          order.riderEarningPaid = true;
+          order.riderEarningAmount = earnedFee;
+
           try {
             await RiderLedger.create({
               riderId: riderUser._id,
@@ -598,7 +602,7 @@ exports.updateOrderStatus = async (req, res, next) => {
               description: `Earnings for delivering Order #${order._id.toString().slice(-6).toUpperCase()}`,
               metadata: {
                 orderId: order._id,
-                deliveryFee: order.deliveryFee,
+                completedDeliveryEarned: earnedFee,
                 totalPrice: order.totalPrice,
               },
             });

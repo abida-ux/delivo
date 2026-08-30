@@ -239,6 +239,7 @@ test('Order Delivery: Legitimate first delivery credits fee and writes RiderLedg
     riderId: 'rider123',
     deliveryFee: 60,
     totalPrice: 500,
+    riderEarningPaid: false,
     save: async () => {},
     populate: async () => mockOrder,
   };
@@ -260,12 +261,12 @@ test('Order Delivery: Legitimate first delivery credits fee and writes RiderLedg
 
     await orderController.updateOrderStatus(req, res, () => {});
 
-    assert.equal(mockRider.totalEarnings, 260);
-    assert.equal(mockRider.availableBalance, 260);
+    assert.equal(mockRider.totalEarnings, 210);
+    assert.equal(mockRider.availableBalance, 210);
     assert.equal(mockRider.totalDeliveries, 3);
     assert.equal(createdLedger.type, 'delivery_earning');
-    assert.equal(createdLedger.amount, 60);
-    assert.equal(createdLedger.balanceAfter, 260);
+    assert.equal(createdLedger.amount, 10);
+    assert.equal(createdLedger.balanceAfter, 210);
   } finally {
     User.findById = originalFindById;
     User.find = originalFind;

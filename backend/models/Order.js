@@ -248,6 +248,15 @@ const OrderSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  riderEarningPaid: {
+    type: Boolean,
+    default: false,
+  },
+  riderEarningAmount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
   currentRiderStatus: {
     type: String,
     enum: ['available', 'on-delivery', 'offline', 'assigned'],
