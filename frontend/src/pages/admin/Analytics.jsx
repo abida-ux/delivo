@@ -1,9 +1,49 @@
 import {useState, useEffect} from 'react';
 import { BarChart3, TrendingUp, Users, ShoppingCart, DollarSign } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
-import { getAllOrders, getAllFoods, getAllRestaurants, getAllUsers } from '../../services/api';
+import { getAdminStats, getAllOrders, getAllFoods, getAllRestaurants, getAllUsers } from '../../services/api';
 import '../pages.css';
 import './Analytics.css';
+
+const filterByDateRange = (records = [], range = 'month') => {
+  if (!Array.isArray(records) || records.length === 0) return [];
+
+  const now = new Date();
+  const cutoff = new Date();
+
+  if (range === 'week') {
+    cutoff.setDate(now.getDate() - 7);
+  } else if (range === 'month') {
+    cutoff.setMonth(now.getMonth() - 1);
+  } else if (range === 'year') {
+    cutoff.setFullYear(now.getFullYear() - 1);
+  } else {
+    return records;
+  }
+
+  return records.filter((record) => {
+    const createdAt = record.createdAt ? new Date(record.createdAt) : null;
+    return createdAt && !Number.isNaN(createdAt.getTime()) && createdAt >= cutoff;
+  });
+};
+
+const buildWeeklyChart = (orders = []) => {
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const map = labels.reduce((acc, label) => {
+    acc[label] = { label, orders: 0, revenue: 0 };
+    return acc;
+  }, {});
+
+  orders.forEach((order) => {
+    const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+    if (!createdAt || Number.isNaN(createdAt.getTime())) return;
+    const label = labels[(createdAt.getDay() + 6) % 7];
+    map[label].orders += 1;
+    map[label].revenue += Number(order.totalPrice || 0);
+  });
+
+  return labels.map((label) => map[label]);
+};
 
 const Analytics = () => {
   const [dateRange, setDateRange] = useState('month');
@@ -17,95 +57,96 @@ const Analytics = () => {
   });
   const [topFoods, setTopFoods] = useState([]);
   const [topRestaurants, setTopRestaurants] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [dateRange]);
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const [ordersRes, foodsRes, restaurantsRes, usersRes] = await Promise.all([
+      const [statsRes, ordersRes, foodsRes, restaurantsRes, usersRes] = await Promise.all([
+        getAdminStats(),
         getAllOrders(),
         getAllFoods(),
         getAllRestaurants(),
         getAllUsers(),
       ]);
 
-      const orders = Array.isArray(ordersRes) ? ordersRes : ordersRes.data || [];
-      const foods = Array.isArray(foodsRes) ? foodsRes : foodsRes.data || [];
-      const restaurants = Array.isArray(restaurantsRes) ? restaurantsRes : restaurantsRes.data || [];
-      const users = Array.isArray(usersRes) ? usersRes : usersRes.data || [];
+      const allOrders = Array.isArray(ordersRes) ? ordersRes : ordersRes?.data || [];
+      const allUsers = Array.isArray(usersRes) ? usersRes : usersRes?.data || [];
+      const visibleOrders = filterByDateRange(allOrders, dateRange);
+      const visibleUsers = filterByDateRange(allUsers, dateRange);
 
-      // Calculate stats
-      const totalRevenue = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-      const averageOrderValue = orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : 0;
+      const totalRevenue = visibleOrders.reduce((sum, order) => sum + (Number(order.totalPrice) || 0), 0);
+      const totalOrders = visibleOrders.length;
+      const totalUsers = visibleUsers.length || allUsers.length;
+      const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
       setStats({
-        totalRevenue: totalRevenue,
-        totalOrders: orders.length,
-        totalUsers: users.length,
-        averageOrderValue: parseFloat(averageOrderValue),
-        monthlyGrowth: 12,
-        userGrowth: 8,
+        totalRevenue,
+        totalOrders,
+        totalUsers,
+        averageOrderValue,
+        monthlyGrowth: Number(statsRes?.revenueChangePct || 0),
+        userGrowth: Number(statsRes?.usersChangePct || 0),
       });
 
-      // Calculate top foods by counting items in orders
+      setChartData(buildWeeklyChart(visibleOrders));
+
       const foodCounts = {};
-      orders.forEach(order => {
-        if (order.items) {
-          order.items.forEach(item => {
-            const foodId = item.foodId?._id || item.foodId;
-            const foodName = item.foodId?.name || 'Unknown';
-            if (!foodCounts[foodId]) {
-              foodCounts[foodId] = { name: foodName, orders: 0, revenue: 0 };
-            }
-            foodCounts[foodId].orders += item.quantity || 1;
-            foodCounts[foodId].revenue += (item.price || 0) * (item.quantity || 1);
-          });
-        }
+      visibleOrders.forEach((order) => {
+        if (!Array.isArray(order.items)) return;
+        order.items.forEach((item) => {
+          const foodId = item.foodId?._id || item.foodId;
+          const foodName = item.foodId?.name || item.name || 'Unknown';
+          if (!foodCounts[foodId]) {
+            foodCounts[foodId] = { name: foodName, orders: 0, revenue: 0 };
+          }
+          foodCounts[foodId].orders += Number(item.quantity || 1);
+          foodCounts[foodId].revenue += (Number(item.price || 0) * Number(item.quantity || 1));
+        });
       });
 
       const topFoodsList = Object.values(foodCounts)
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5);
-
       setTopFoods(topFoodsList.length > 0 ? topFoodsList : []);
 
-      // Calculate top restaurants by order count
       const restaurantCounts = {};
-      orders.forEach(order => {
+      visibleOrders.forEach((order) => {
         const restId = order.restaurantId?._id || order.restaurantId;
-        const restName = order.restaurantId?.name || 'Unknown';
+        const restName = order.restaurantId?.name || order.restaurantName || 'Unknown';
         if (!restaurantCounts[restId]) {
           restaurantCounts[restId] = { name: restName, orders: 0, revenue: 0 };
         }
         restaurantCounts[restId].orders += 1;
-        restaurantCounts[restId].revenue += order.totalPrice || 0;
+        restaurantCounts[restId].revenue += Number(order.totalPrice || 0);
       });
 
       const topRestaurantsList = Object.values(restaurantCounts)
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5);
-
       setTopRestaurants(topRestaurantsList.length > 0 ? topRestaurantsList : []);
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      setTopFoods([]);
+      setTopRestaurants([]);
+      setChartData([]);
+      setStats({
+        totalRevenue: 0,
+        totalOrders: 0,
+        totalUsers: 0,
+        averageOrderValue: 0,
+        monthlyGrowth: 0,
+        userGrowth: 0,
+      });
     } finally {
       setLoading(false);
     }
   };
-
-  const chartData = [
-    { label: 'Mon', orders: 125, revenue: 1250 },
-    { label: 'Tue', orders: 150, revenue: 1650 },
-    { label: 'Wed', orders: 145, revenue: 1580 },
-    { label: 'Thu', orders: 175, revenue: 1920 },
-    { label: 'Fri', orders: 200, revenue: 2200 },
-    { label: 'Sat', orders: 220, revenue: 2420 },
-    { label: 'Sun', orders: 180, revenue: 1980 },
-  ];
 
   if (loading) {
     return (

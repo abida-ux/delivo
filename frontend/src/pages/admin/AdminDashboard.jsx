@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
-import { getAdminStats, getMarketplaceAdminOverview } from '../../services/api';
+import { getAdminStats, getAllOrders, getMarketplaceAdminOverview } from '../../services/api';
 
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
@@ -36,7 +36,13 @@ const AdminDashboard = () => {
     orders: 0,
     foods: 0,
     revenue: 0,
+    averageOrderValue: 0,
+    revenueChangePct: 0,
+    ordersChangePct: 0,
+    usersChangePct: 0,
+    restaurantsChangePct: 0,
   });
+  const [weeklyOrderTrend, setWeeklyOrderTrend] = useState([]);
   const [marketplaceOverview, setMarketplaceOverview] = useState({ categories: 0, products: 0, lowStockProducts: [] });
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +53,30 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [data, marketplaceData] = await Promise.all([getAdminStats(), getMarketplaceAdminOverview()]);
+      const [data, marketplaceData, ordersRes] = await Promise.all([
+        getAdminStats(),
+        getMarketplaceAdminOverview(),
+        getAllOrders(),
+      ]);
+
+      const orders = Array.isArray(ordersRes) ? ordersRes : ordersRes?.data || [];
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const trendMap = days.reduce((acc, day) => {
+        acc[day] = 0;
+        return acc;
+      }, {});
+
+      orders.forEach((order) => {
+        const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+        if (!createdAt || Number.isNaN(createdAt.getTime())) return;
+        const day = days[createdAt.getDay()];
+        if (trendMap[day] !== undefined) {
+          trendMap[day] += 1;
+        }
+      });
+
+      setWeeklyOrderTrend(days.map((day) => ({ day, value: trendMap[day] })));
+
       if (data) {
         setStats({
           users: data.users || 0,
@@ -55,6 +84,11 @@ const AdminDashboard = () => {
           orders: data.orders || 0,
           foods: data.foods || 0,
           revenue: data.revenue || 0,
+          averageOrderValue: data.averageOrderValue || 0,
+          revenueChangePct: data.revenueChangePct || 0,
+          ordersChangePct: data.ordersChangePct || 0,
+          usersChangePct: data.usersChangePct || 0,
+          restaurantsChangePct: data.restaurantsChangePct || 0,
         });
       }
       if (marketplaceData) {
@@ -85,8 +119,8 @@ const AdminDashboard = () => {
       value: stats.users,
       icon: Users,
       color: '#16a34a',
-      change: '+12%',
-      isPositive: true,
+      change: `${stats.usersChangePct >= 0 ? '+' : ''}${stats.usersChangePct}%`,
+      isPositive: stats.usersChangePct >= 0,
       desc: 'Active customer registry'
     },
     {
@@ -94,8 +128,8 @@ const AdminDashboard = () => {
       value: stats.restaurants,
       icon: Store,
       color: '#16a34a',
-      change: '+5%',
-      isPositive: true,
+      change: `${stats.restaurantsChangePct >= 0 ? '+' : ''}${stats.restaurantsChangePct}%`,
+      isPositive: stats.restaurantsChangePct >= 0,
       desc: 'Onboarded merchants'
     },
     {
@@ -103,8 +137,8 @@ const AdminDashboard = () => {
       value: stats.orders,
       icon: ShoppingCart,
       color: '#16a34a',
-      change: '+23%',
-      isPositive: true,
+      change: `${stats.ordersChangePct >= 0 ? '+' : ''}${stats.ordersChangePct}%`,
+      isPositive: stats.ordersChangePct >= 0,
       desc: 'Total lifetime deliveries'
     },
     {
@@ -112,8 +146,8 @@ const AdminDashboard = () => {
       value: formatCurrency(stats.revenue),
       icon: DollarSign,
       color: '#22c55e',
-      change: '+18%',
-      isPositive: true,
+      change: `${stats.revenueChangePct >= 0 ? '+' : ''}${stats.revenueChangePct}%`,
+      isPositive: stats.revenueChangePct >= 0,
       desc: 'Gross marketplace revenue'
     },
     {
@@ -121,7 +155,7 @@ const AdminDashboard = () => {
       value: marketplaceOverview.products || 0,
       icon: ShoppingBasket,
       color: '#16a34a',
-      change: '+14%',
+      change: 'Live',
       isPositive: true,
       desc: 'Total active products'
     },
@@ -130,7 +164,7 @@ const AdminDashboard = () => {
       value: stats.foods,
       icon: UtensilsCrossed,
       color: '#16a34a',
-      change: '+8%',
+      change: `${stats.averageOrderValue ? 'Avg' : '0%'}`,
       isPositive: true,
       desc: 'Available dishes listed'
     },
@@ -160,73 +194,54 @@ const AdminDashboard = () => {
 
             {/* ── FIRST ROW: Revenue & Orders Chart ── */}
             <div className="layout-row-one">
-              {/* Revenue Large Card */}
               <div className="large-kpi-card revenue-card">
                 <div className="kpi-header">
                   <div className="kpi-title-block">
                     <span className="kpi-badge-label">Gross Revenue</span>
                     <h3>{formatCurrency(stats.revenue)}</h3>
                   </div>
-                  <div className="kpi-trend positive">
-                    <ArrowUpRight size={18} />
-                    <span>+18.4%</span>
+                  <div className={`kpi-trend ${stats.revenueChangePct >= 0 ? 'positive' : 'negative'}`}>
+                    {stats.revenueChangePct >= 0 ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
+                    <span>{stats.revenueChangePct >= 0 ? '+' : ''}{stats.revenueChangePct}%</span>
                   </div>
                 </div>
                 <div className="kpi-chart-preview">
-                  {/* CSS-based classy sparkline/chart effect */}
-                  <div className="sparkline-bar" style={{ height: '30%' }} />
-                  <div className="sparkline-bar" style={{ height: '45%' }} />
-                  <div className="sparkline-bar" style={{ height: '35%' }} />
-                  <div className="sparkline-bar" style={{ height: '55%' }} />
-                  <div className="sparkline-bar" style={{ height: '70%' }} />
-                  <div className="sparkline-bar" style={{ height: '65%' }} />
-                  <div className="sparkline-bar" style={{ height: '85%' }} />
+                  {weeklyOrderTrend.length > 0 ? weeklyOrderTrend.map((day, index) => (
+                    <div
+                      key={`${day.day}-${index}`}
+                      className="sparkline-bar"
+                      style={{ height: `${Math.max((day.value / Math.max(...weeklyOrderTrend.map((item) => item.value), 1)) * 100, 8)}%` }}
+                    />
+                  )) : [1,2,3,4,5,6,7].map((item) => (
+                    <div key={item} className="sparkline-bar" style={{ height: '8%' }} />
+                  ))}
                 </div>
-                <p className="kpi-footer-text">Average order basket value is currently Ksh 1.00</p>
+                <p className="kpi-footer-text">Average order basket value is {formatCurrency(stats.averageOrderValue || 0)}</p>
               </div>
 
-              {/* Orders Trend Large Card */}
               <div className="large-kpi-card orders-chart-card">
                 <div className="kpi-header">
                   <div className="kpi-title-block">
                     <span className="kpi-badge-label">Orders Trend</span>
                     <h3>{stats.orders} Total</h3>
                   </div>
-                  <div className="kpi-trend positive">
-                    <ArrowUpRight size={18} />
-                    <span>+23%</span>
+                  <div className={`kpi-trend ${stats.ordersChangePct >= 0 ? 'positive' : 'negative'}`}>
+                    {stats.ordersChangePct >= 0 ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
+                    <span>{stats.ordersChangePct >= 0 ? '+' : ''}{stats.ordersChangePct}%</span>
                   </div>
                 </div>
                 <div className="mini-bar-chart">
-                  {/* Visual CSS-based elegant bar chart */}
-                  <div className="chart-bar-col">
-                    <div className="bar-fill" style={{ height: '40%' }} />
-                    <span className="bar-label">Mon</span>
-                  </div>
-                  <div className="chart-bar-col">
-                    <div className="bar-fill" style={{ height: '55%' }} />
-                    <span className="bar-label">Tue</span>
-                  </div>
-                  <div className="chart-bar-col">
-                    <div className="bar-fill animate-grow" style={{ height: '75%' }} />
-                    <span className="bar-label">Wed</span>
-                  </div>
-                  <div className="chart-bar-col">
-                    <div className="bar-fill" style={{ height: '60%' }} />
-                    <span className="bar-label">Thu</span>
-                  </div>
-                  <div className="chart-bar-col">
-                    <div className="bar-fill" style={{ height: '80%' }} />
-                    <span className="bar-label">Fri</span>
-                  </div>
-                  <div className="chart-bar-col">
-                    <div className="bar-fill highlight" style={{ height: '95%' }} />
-                    <span className="bar-label">Sat</span>
-                  </div>
-                  <div className="chart-bar-col">
-                    <div className="bar-fill" style={{ height: '70%' }} />
-                    <span className="bar-label">Sun</span>
-                  </div>
+                  {weeklyOrderTrend.length > 0 ? weeklyOrderTrend.map((day, index) => (
+                    <div key={`${day.day}-${index}`} className="chart-bar-col">
+                      <div className="bar-fill" style={{ height: `${Math.max((day.value / Math.max(...weeklyOrderTrend.map((item) => item.value), 1)) * 100, 8)}%` }} />
+                      <span className="bar-label">{day.day.slice(0, 3)}</span>
+                    </div>
+                  )) : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => (
+                    <div key={day} className="chart-bar-col">
+                      <div className="bar-fill" style={{ height: '8%' }} />
+                      <span className="bar-label">{day}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

@@ -956,6 +956,49 @@ exports.createUser = async (req, res, next) => {
   }
 };
 
+const buildAdminAnalyticsSummary = ({
+  userCount = 0,
+  restaurantCount = 0,
+  foodCount = 0,
+  totalOrders = 0,
+  deliveredOrders = 0,
+  cancelledOrders = 0,
+  failedPayments = 0,
+  paidOrdersCount = 0,
+  totalRevenue = 0,
+  averageOrderValue = 0,
+  customers = 0,
+  riders = 0,
+  riderEarnings = 0,
+  ordersChangePct = 0,
+  revenueChangePct = 0,
+  usersChangePct = 0,
+  restaurantsChangePct = 0,
+  ridersChangePct = 0,
+} = {}) => ({
+  users: userCount,
+  customers,
+  riders,
+  restaurants: restaurantCount,
+  foods: foodCount,
+  orders: totalOrders,
+  deliveredOrders,
+  cancelledOrders,
+  failedPayments,
+  paidOrdersCount,
+  revenue: totalRevenue,
+  totalRevenue,
+  averageOrderValue,
+  riderEarnings,
+  ordersChangePct,
+  revenueChangePct,
+  usersChangePct,
+  restaurantsChangePct,
+  ridersChangePct,
+});
+
+exports.buildAdminAnalyticsSummary = buildAdminAnalyticsSummary;
+
 // @desc Get fast aggregated admin stats
 // @route GET /api/users/admin/stats
 exports.getAdminStats = async (req, res, next) => {
@@ -964,28 +1007,113 @@ exports.getAdminStats = async (req, res, next) => {
     const Order = require('../models/Order');
     const Restaurant = require('../models/Restaurant');
 
-    const [userCount, restaurantCount, foodCount, orderCount, revenueAgg] = await Promise.all([
-      User.countDocuments(),
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [
+      userMetrics,
+      restaurantCount,
+      foodCount,
+      orderMetrics,
+      riderEarningsAgg,
+      thisMonthOrders,
+      previousMonthOrders,
+      thisMonthRevenueAgg,
+      previousMonthRevenueAgg,
+      thisMonthUserGrowth,
+      previousMonthUserGrowth,
+      thisMonthRestaurantGrowth,
+      previousMonthRestaurantGrowth,
+      thisMonthRiderGrowth,
+      previousMonthRiderGrowth,
+    ] = await Promise.all([
+      User.aggregate([
+        {
+          $group: {
+            _id: null,
+            userCount: { $sum: 1 },
+            customers: { $sum: { $cond: [{ $eq: ['$role', 'customer'] }, 1, 0] } },
+            riders: { $sum: { $cond: [{ $eq: ['$role', 'rider'] }, 1, 0] } },
+          },
+        },
+      ]),
       Restaurant.countDocuments(),
       Food.countDocuments(),
-      Order.countDocuments(),
       Order.aggregate([
-        { $match: { paymentStatus: { $ne: 'failed' } } },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            deliveredOrders: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } },
+            cancelledOrders: { $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] } },
+            failedPayments: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'failed'] }, 1, 0] } },
+            paidOrdersCount: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'completed'] }, 1, 0] } },
+            totalRevenue: {
+              $sum: { $cond: [{ $ne: ['$paymentStatus', 'failed'] }, '$totalPrice', 0] },
+            },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: { riderEarningAmount: { $gt: 0 } } },
+        { $group: { _id: null, total: { $sum: '$riderEarningAmount' } } },
+      ]),
+      Order.countDocuments({ createdAt: { $gte: monthStart } }),
+      Order.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: monthStart }, paymentStatus: { $ne: 'failed' } } },
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: previousMonthStart, $lt: monthStart }, paymentStatus: { $ne: 'failed' } } },
+        { $group: { _id: null, total: { $sum: '$totalPrice' } } },
+      ]),
+      User.countDocuments({ createdAt: { $gte: monthStart } }),
+      User.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      Restaurant.countDocuments({ createdAt: { $gte: monthStart } }),
+      Restaurant.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      User.countDocuments({ role: 'rider', createdAt: { $gte: monthStart } }),
+      User.countDocuments({ role: 'rider', createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
     ]);
 
-    const revenue = revenueAgg[0]?.total || 0;
+    const userSummary = userMetrics[0] || {};
+    const orderSummary = orderMetrics[0] || {};
+    const totalOrders = Number(orderSummary.totalOrders || 0);
+    const totalRevenue = Number(orderSummary.totalRevenue || 0);
+    const averageOrderValue = totalOrders > 0 ? Number((totalRevenue / totalOrders).toFixed(2)) : 0;
+    const riderEarnings = Number(riderEarningsAgg[0]?.total || 0);
+
+    const percentChange = (current, previous) => {
+      if (!previous && current > 0) return 100;
+      if (!previous) return 0;
+      return Number((((current - previous) / previous) * 100).toFixed(2));
+    };
+
+    const summary = buildAdminAnalyticsSummary({
+      userCount: Number(userSummary.userCount || 0),
+      restaurantCount,
+      foodCount,
+      totalOrders,
+      deliveredOrders: Number(orderSummary.deliveredOrders || 0),
+      cancelledOrders: Number(orderSummary.cancelledOrders || 0),
+      failedPayments: Number(orderSummary.failedPayments || 0),
+      paidOrdersCount: Number(orderSummary.paidOrdersCount || 0),
+      totalRevenue,
+      averageOrderValue,
+      customers: Number(userSummary.customers || 0),
+      riders: Number(userSummary.riders || 0),
+      riderEarnings,
+      ordersChangePct: percentChange(thisMonthOrders, previousMonthOrders),
+      revenueChangePct: percentChange(Number(thisMonthRevenueAgg[0]?.total || 0), Number(previousMonthRevenueAgg[0]?.total || 0)),
+      usersChangePct: percentChange(thisMonthUserGrowth, previousMonthUserGrowth),
+      restaurantsChangePct: percentChange(thisMonthRestaurantGrowth, previousMonthRestaurantGrowth),
+      ridersChangePct: percentChange(thisMonthRiderGrowth, previousMonthRiderGrowth),
+    });
 
     res.status(200).json({
       success: true,
-      data: {
-        users: userCount,
-        restaurants: restaurantCount,
-        foods: foodCount,
-        orders: orderCount,
-        revenue,
-      },
+      data: summary,
     });
   } catch (error) {
     next(error);
