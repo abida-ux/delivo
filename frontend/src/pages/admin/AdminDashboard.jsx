@@ -22,7 +22,14 @@ import {
 } from 'lucide-react';
 import AdminDashboardLayout from '../../layouts/AdminDashboardLayout';
 import { AuthContext } from '../../context/AuthContext';
-import { getAdminStats, getAllOrders, getMarketplaceAdminOverview } from '../../services/api';
+import {
+  getAdminStats,
+  getAllOrders,
+  getAllUsers,
+  getAllRestaurants,
+  getAllFoods,
+  getMarketplaceAdminOverview,
+} from '../../services/api';
 
 import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
@@ -57,6 +64,10 @@ const AdminDashboard = () => {
   });
   const [weeklyOrderTrend, setWeeklyOrderTrend] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [latestUsers, setLatestUsers] = useState([]);
+  const [topRestaurantsList, setTopRestaurantsList] = useState([]);
+  const [topFoodsList, setTopFoodsList] = useState([]);
   const [marketplaceOverview, setMarketplaceOverview] = useState({ categories: 0, products: 0, lowStockProducts: [] });
   const [loading, setLoading] = useState(true);
 
@@ -67,13 +78,19 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [data, marketplaceData, ordersRes] = await Promise.all([
+      const [data, marketplaceData, ordersRes, usersRes, restaurantsRes, foodsRes] = await Promise.all([
         getAdminStats(),
         getMarketplaceAdminOverview(),
         getAllOrders(),
+        getAllUsers(),
+        getAllRestaurants(),
+        getAllFoods(),
       ]);
 
       const orders = Array.isArray(ordersRes) ? ordersRes : ordersRes?.data || [];
+      const users = Array.isArray(usersRes) ? usersRes : usersRes?.data || [];
+      const restaurants = Array.isArray(restaurantsRes) ? restaurantsRes : restaurantsRes?.data || [];
+      const foods = Array.isArray(foodsRes) ? foodsRes : foodsRes?.data || [];
       const { start, end } = getCurrentWeekWindow();
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const trendMap = days.reduce((acc, day) => {
@@ -105,8 +122,74 @@ const AdminDashboard = () => {
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         .slice(0, 5);
 
+      const restaurantRevenueMap = {};
+      validOrders.forEach((order) => {
+        const restaurantNames = [
+          order.restaurantId?.name,
+          order.restaurantName,
+          ...(Array.isArray(order.restaurants) ? order.restaurants.map((res) => res?.name) : []),
+          ...(Array.isArray(order.items) ? order.items.map((item) => item?.restaurantName || item?.foodId?.restaurant?.name) : []),
+        ].filter(Boolean);
+
+        const restaurantName = restaurantNames[0] || 'Unknown Restaurant';
+        if (!restaurantRevenueMap[restaurantName]) {
+          restaurantRevenueMap[restaurantName] = { name: restaurantName, orders: 0, revenue: 0 };
+        }
+        restaurantRevenueMap[restaurantName].orders += 1;
+        restaurantRevenueMap[restaurantName].revenue += Number(order.totalPrice || 0);
+      });
+
+      const foodRevenueMap = {};
+      validOrders.forEach((order) => {
+        if (!Array.isArray(order.items)) return;
+        order.items.forEach((item) => {
+          const itemName = item.name || item.foodId?.name || 'Unknown Item';
+          if (!foodRevenueMap[itemName]) {
+            foodRevenueMap[itemName] = { name: itemName, orders: 0, revenue: 0 };
+          }
+          foodRevenueMap[itemName].orders += Number(item.quantity || 1);
+          foodRevenueMap[itemName].revenue += Number(item.price || 0) * Number(item.quantity || 1);
+        });
+      });
+
+      const sortedUsers = [...users]
+        .filter((user) => user?.createdAt)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 3);
+
+      const recentEvents = [
+        ...restaurants
+          .filter((restaurant) => restaurant?.createdAt)
+          .slice(0, 2)
+          .map((restaurant) => ({
+            type: 'restaurant',
+            label: `New restaurant onboarded: ${restaurant.name || 'Partner restaurant'}`,
+            time: restaurant.createdAt,
+          })),
+        ...sortedUsers
+          .slice(0, 2)
+          .map((user) => ({
+            type: 'user',
+            label: `New customer registered: ${user.name || user.email || 'Customer'}`,
+            time: user.createdAt,
+          })),
+        ...recentValidOrders
+          .slice(0, 2)
+          .map((order) => ({
+            type: 'order',
+            label: `Order #${String(order._id || order.id || '').slice(-6) || 'n/a'} ${String(order.status || '').toLowerCase() === 'delivered' ? 'delivered successfully' : 'updated'}${String(order.status || '').toLowerCase() === 'delivered' ? '' : ' recently'}`,
+            time: order.createdAt,
+          })),
+      ]
+        .sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0))
+        .slice(0, 3);
+
       setWeeklyOrderTrend(days.map((day) => ({ day, value: trendMap[day] })));
       setRecentOrders(recentValidOrders);
+      setRecentActivity(recentEvents);
+      setLatestUsers(sortedUsers);
+      setTopRestaurantsList(Object.values(restaurantRevenueMap).sort((a, b) => b.revenue - a.revenue).slice(0, 3));
+      setTopFoodsList(Object.values(foodRevenueMap).sort((a, b) => b.revenue - a.revenue).slice(0, 3));
 
       if (data) {
         setStats({
@@ -401,27 +484,24 @@ const AdminDashboard = () => {
               <div className="widget-card">
                 <h3>Recent Activity</h3>
                 <div className="activity-list">
-                  <div className="activity-item">
-                    <span className="activity-dot dot-orange" />
-                    <div className="activity-content">
-                      <p>New restaurant onboarded: <strong>Mama Oliech Kitchen</strong></p>
-                      <span className="activity-time">2 hours ago</span>
+                  {recentActivity.length > 0 ? recentActivity.map((item, index) => {
+                    const dotClass = item.type === 'restaurant' ? 'dot-orange' : item.type === 'user' ? 'dot-green' : 'dot-blue';
+                    return (
+                      <div key={`${item.type}-${item.label}-${index}`} className="activity-item">
+                        <span className={`activity-dot ${dotClass}`} />
+                        <div className="activity-content">
+                          <p>{item.label}</p>
+                          <span className="activity-time">{formatRelativeTime(item.time)}</span>
+                        </div>
+                      </div>
+                    );
+                  }) : (
+                    <div className="activity-item">
+                      <div className="activity-content">
+                        <p>No recent activity found.</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="activity-item">
-                    <span className="activity-dot dot-green" />
-                    <div className="activity-content">
-                      <p>Rider <strong>John Doe</strong> logged online</p>
-                      <span className="activity-time">3 hours ago</span>
-                    </div>
-                  </div>
-                  <div className="activity-item">
-                    <span className="activity-dot dot-blue" />
-                    <div className="activity-content">
-                      <p>Order <strong>#6a1aa</strong> delivered successfully</p>
-                      <span className="activity-time">4 hours ago</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -457,27 +537,24 @@ const AdminDashboard = () => {
               <div className="widget-card">
                 <h3>Latest Registrations</h3>
                 <div className="latest-users-list">
-                  <div className="user-profile-item">
-                    <div className="avatar-circle">J</div>
-                    <div className="user-profile-details">
-                      <span className="user-profile-name">Julius Caesar</span>
-                      <span className="user-profile-email">julius@rome.org</span>
+                  {latestUsers.length > 0 ? latestUsers.map((user, index) => {
+                    const initials = (user.name || user.email || 'U').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+                    return (
+                      <div key={`${user._id || user.email || index}`} className="user-profile-item">
+                        <div className="avatar-circle">{initials}</div>
+                        <div className="user-profile-details">
+                          <span className="user-profile-name">{user.name || 'New User'}</span>
+                          <span className="user-profile-email">{user.email || 'No email provided'}</span>
+                        </div>
+                      </div>
+                    );
+                  }) : (
+                    <div className="user-profile-item">
+                      <div className="user-profile-details">
+                        <span className="user-profile-name">No registrations yet</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="user-profile-item">
-                    <div className="avatar-circle">M</div>
-                    <div className="user-profile-details">
-                      <span className="user-profile-name">Marie Antoinette</span>
-                      <span className="user-profile-email">marie@cake.fr</span>
-                    </div>
-                  </div>
-                  <div className="user-profile-item">
-                    <div className="avatar-circle">A</div>
-                    <div className="user-profile-details">
-                      <span className="user-profile-name">Abeda Nyakundi</span>
-                      <span className="user-profile-email">abeda@delivo.buzz</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -488,27 +565,21 @@ const AdminDashboard = () => {
               <div className="widget-card">
                 <h3>Top Restaurants</h3>
                 <div className="list-widget">
-                  <div className="list-item-ranked">
-                    <span className="rank-num">1</span>
-                    <div className="list-item-details">
-                      <span>Mama Oliech Kitchen</span>
-                      <span className="sub">42 orders this week</span>
+                  {topRestaurantsList.length > 0 ? topRestaurantsList.map((restaurant, index) => (
+                    <div key={`${restaurant.name}-${index}`} className="list-item-ranked">
+                      <span className="rank-num">{index + 1}</span>
+                      <div className="list-item-details">
+                        <span>{restaurant.name}</span>
+                        <span className="sub">{restaurant.orders} orders this week</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="list-item-ranked">
-                    <span className="rank-num">2</span>
-                    <div className="list-item-details">
-                      <span>Lakeside Dishes</span>
-                      <span className="sub">38 orders this week</span>
+                  )) : (
+                    <div className="list-item-ranked">
+                      <div className="list-item-details">
+                        <span>No restaurant data available</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="list-item-ranked">
-                    <span className="rank-num">3</span>
-                    <div className="list-item-details">
-                      <span>Local Delights</span>
-                      <span className="sub">29 orders this week</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -516,27 +587,21 @@ const AdminDashboard = () => {
               <div className="widget-card">
                 <h3>Top Menu Items</h3>
                 <div className="list-widget">
-                  <div className="list-item-ranked">
-                    <span className="rank-num">1</span>
-                    <div className="list-item-details">
-                      <span>Ugali &amp; Sukuma Wiki</span>
-                      <span className="sub">55 orders</span>
+                  {topFoodsList.length > 0 ? topFoodsList.map((food, index) => (
+                    <div key={`${food.name}-${index}`} className="list-item-ranked">
+                      <span className="rank-num">{index + 1}</span>
+                      <div className="list-item-details">
+                        <span>{food.name}</span>
+                        <span className="sub">{food.orders} orders</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="list-item-ranked">
-                    <span className="rank-num">2</span>
-                    <div className="list-item-details">
-                      <span>Coconut Fish Curry</span>
-                      <span className="sub">48 orders</span>
+                  )) : (
+                    <div className="list-item-ranked">
+                      <div className="list-item-details">
+                        <span>No menu data available</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="list-item-ranked">
-                    <span className="rank-num">3</span>
-                    <div className="list-item-details">
-                      <span>Chapati Beans</span>
-                      <span className="sub">41 orders</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
