@@ -956,26 +956,92 @@ exports.createUser = async (req, res, next) => {
   }
 };
 
+const TIME_ZONE = 'Africa/Nairobi';
+
+const getTimeZoneOffsetMinutes = (date = new Date(), timeZone = TIME_ZONE) => {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      map[part.type] = part.value;
+    }
+  }
+
+  const zonedUtcMs = Date.UTC(
+    Number(map.year),
+    Number(map.month) - 1,
+    Number(map.day),
+    Number(map.hour),
+    Number(map.minute),
+    Number(map.second),
+  );
+
+  return (zonedUtcMs - date.getTime()) / 60000;
+};
+
 const getRollingWeekWindow = (referenceDate = new Date()) => {
   const current = new Date(referenceDate);
-  const day = current.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIME_ZONE,
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
 
-  const start = new Date(current);
-  start.setDate(current.getDate() + diffToMonday);
-  start.setHours(0, 0, 0, 0);
+  const parts = formatter.formatToParts(current);
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      map[part.type] = part.value;
+    }
+  }
 
-  const end = new Date(start);
-  end.setDate(start.getDate() + 7);
+  const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const localWeekday = weekdayNames.indexOf(map.weekday);
+  const diffToMonday = localWeekday === 0 ? -6 : 1 - localWeekday;
 
-  const previousStart = new Date(start);
-  previousStart.setDate(start.getDate() - 7);
+  const localDate = new Date(Date.UTC(
+    Number(map.year),
+    Number(map.month) - 1,
+    Number(map.day),
+  ));
 
-  const previousEnd = new Date(start);
+  const offsetMinutes = getTimeZoneOffsetMinutes(current, TIME_ZONE);
+  const localMondayUtc = Date.UTC(
+    localDate.getUTCFullYear(),
+    localDate.getUTCMonth(),
+    localDate.getUTCDate() + diffToMonday,
+    0,
+    0,
+    0,
+    0,
+  ) - (offsetMinutes * 60 * 1000);
+
+  const currentStart = new Date(localMondayUtc);
+  const currentEnd = new Date(currentStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const previousStart = new Date(currentStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const previousEnd = new Date(currentStart.getTime());
 
   return {
-    currentStart: start,
-    currentEnd: end,
+    currentStart,
+    currentEnd,
     previousStart,
     previousEnd,
   };
@@ -997,6 +1063,7 @@ const buildAdminAnalyticsSummary = ({
   customers = 0,
   riders = 0,
   riderEarnings = 0,
+  totalDeliveryFees = 0,
   ordersChangePct = 0,
   revenueChangePct = 0,
   usersChangePct = 0,
@@ -1017,6 +1084,8 @@ const buildAdminAnalyticsSummary = ({
   totalRevenue,
   averageOrderValue,
   riderEarnings,
+  totalDeliveryFees,
+  deliveryFees: totalDeliveryFees,
   ordersChangePct,
   revenueChangePct,
   usersChangePct,
@@ -1042,6 +1111,7 @@ exports.getAdminStats = async (req, res, next) => {
       foodCount,
       orderMetrics,
       riderEarningsAgg,
+      thisWeekDeliveryFeesAgg,
       thisWeekOrders,
       previousWeekOrders,
       thisWeekRevenueAgg,
@@ -1084,6 +1154,10 @@ exports.getAdminStats = async (req, res, next) => {
         { $match: { riderEarningAmount: { $gt: 0 } } },
         { $group: { _id: null, total: { $sum: '$riderEarningAmount' } } },
       ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd }, status: 'delivered' } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$deliveryFee', 0] } } } },
+      ]),
       Order.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
       Order.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
       Order.aggregate([
@@ -1108,6 +1182,7 @@ exports.getAdminStats = async (req, res, next) => {
     const totalRevenue = Number(orderSummary.totalRevenue || 0);
     const averageOrderValue = totalOrders > 0 ? Number((totalRevenue / totalOrders).toFixed(2)) : 0;
     const riderEarnings = Number(riderEarningsAgg[0]?.total || 0);
+    const totalDeliveryFees = Number(thisWeekDeliveryFeesAgg[0]?.total || 0);
 
     const percentChange = (current, previous) => {
       if (!previous && current > 0) return 100;
@@ -1129,6 +1204,7 @@ exports.getAdminStats = async (req, res, next) => {
       customers: Number(userSummary.customers || 0),
       riders: Number(userSummary.riders || 0),
       riderEarnings,
+      totalDeliveryFees,
       ordersChangePct: percentChange(thisWeekOrders, previousWeekOrders),
       revenueChangePct: percentChange(Number(thisWeekRevenueAgg[0]?.total || 0), Number(previousWeekRevenueAgg[0]?.total || 0)),
       usersChangePct: percentChange(thisWeekUserGrowth, previousWeekUserGrowth),

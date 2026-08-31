@@ -5,16 +5,37 @@ import { getAdminStats, getAllOrders, getAllFoods, getAllRestaurants, getAllUser
 import '../pages.css';
 import './Analytics.css';
 
+const TIME_ZONE = 'Africa/Nairobi';
+
 const getWeekWindow = (referenceDate = new Date()) => {
-  const start = new Date(referenceDate);
-  const day = start.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  start.setDate(start.getDate() + diffToMonday);
-  start.setHours(0, 0, 0, 0);
+  const current = new Date(referenceDate);
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIME_ZONE,
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
 
-  const end = new Date(start);
-  end.setDate(start.getDate() + 7);
+  const parts = formatter.formatToParts(current);
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') map[part.type] = part.value;
+  }
 
+  const weekdayMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const localWeekday = weekdayMap.indexOf(map.weekday);
+  const diffToMonday = localWeekday === 0 ? -6 : 1 - localWeekday;
+
+  const localDate = Date.UTC(Number(map.year), Number(map.month) - 1, Number(map.day));
+  const start = new Date(localDate + (diffToMonday * 24 * 60 * 60 * 1000));
+  start.setUTCHours(0, 0, 0, 0);
+
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
   return { start, end };
 };
 
@@ -75,6 +96,7 @@ const Analytics = () => {
     totalOrders: 0,
     totalUsers: 0,
     averageOrderValue: 0,
+    totalDeliveryFees: 0,
     monthlyGrowth: 0,
     userGrowth: 0,
   });
@@ -107,12 +129,16 @@ const Analytics = () => {
       const totalOrders = visibleOrders.length;
       const totalUsers = visibleUsers.length || allUsers.length;
       const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const totalDeliveryFees = visibleOrders
+        .filter((order) => order.status === 'delivered')
+        .reduce((sum, order) => sum + (Number(order.deliveryFee) || 0), 0);
 
       setStats({
         totalRevenue,
         totalOrders,
         totalUsers,
         averageOrderValue,
+        totalDeliveryFees,
         monthlyGrowth: Number(statsRes?.revenueChangePct || 0),
         userGrowth: Number(statsRes?.usersChangePct || 0),
       });
@@ -163,6 +189,7 @@ const Analytics = () => {
         totalOrders: 0,
         totalUsers: 0,
         averageOrderValue: 0,
+        totalDeliveryFees: 0,
         monthlyGrowth: 0,
         userGrowth: 0,
       });
@@ -247,6 +274,17 @@ const Analytics = () => {
               <p className="metric-label">Avg Order Value</p>
               <h3 className="metric-value">Ksh {stats.averageOrderValue?.toFixed(2) || '0'}</h3>
               <p className="metric-change">Per transaction</p>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-icon" style={{ background: '#a78bfa20' }}>
+              <DollarSign size={24} color="#8b5cf6" />
+            </div>
+            <div className="metric-content">
+              <p className="metric-label">Total Delivery Fees</p>
+              <h3 className="metric-value">Ksh {stats.totalDeliveryFees?.toLocaleString() || '0'}</h3>
+              <p className="metric-change">Delivered this week</p>
             </div>
           </div>
         </div>
