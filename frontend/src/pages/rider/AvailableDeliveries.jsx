@@ -100,7 +100,7 @@ const AvailableDeliveries = () => {
               <div className="delivery-header">
                 <span className="order-id">#{order._id?.slice(-6).toUpperCase()}</span>
                 <span className="earning-badge">
-                  <DollarSign size={13} /> +KSh {order.deliveryFee || 20}
+                  <DollarSign size={13} /> +KSh {order.deliveryFee || 0}
                 </span>
               </div>
 

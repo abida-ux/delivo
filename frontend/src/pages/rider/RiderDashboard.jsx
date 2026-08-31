@@ -165,14 +165,14 @@ const RiderDashboard = () => {
       .filter(
         (order) => new Date(order.deliveryCompletedAt || order.updatedAt || order.createdAt).toDateString() === todayStr
       )
-      .reduce((sum, order) => sum + (Number(order.deliveryFee) || 20), 0);
+      .reduce((sum, order) => sum + (Number(order.deliveryFee) || 0), 0);
   }, [completedDeliveries]);
 
   const totalEarningsCalculated = useMemo(() => {
     if (profile?.totalEarnings !== undefined && profile?.totalEarnings !== null) {
       return Number(profile.totalEarnings);
     }
-    return completedDeliveries.reduce((sum, order) => sum + (Number(order.deliveryFee) || 20), 0);
+    return completedDeliveries.reduce((sum, order) => sum + (Number(order.deliveryFee) || 0), 0);
   }, [profile, completedDeliveries]);
 
   const handleGrabOrder = async (orderId) => {

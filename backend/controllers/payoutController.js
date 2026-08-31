@@ -247,7 +247,7 @@ exports.getRiderEarningsSummary = async (req, res, next) => {
     // If availableBalance has never been set and rider has delivered orders, compute & sync
     if (availableBalance === 0 && totalWithdrawn === 0 && pendingPayoutBalance === 0) {
       const deliveredOrders = await Order.find({ riderId: rider._id, status: 'delivered' });
-      const calculatedEarnings = deliveredOrders.reduce((sum, ord) => sum + (Number(ord.deliveryFee) || 20), 0);
+      const calculatedEarnings = deliveredOrders.reduce((sum, ord) => sum + (Number(ord.deliveryFee) || 0), 0);
 
       const completedPayouts = await Payout.find({ riderId: rider._id, status: 'completed' });
       const calculatedWithdrawn = completedPayouts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);

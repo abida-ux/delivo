@@ -990,6 +990,51 @@ const getTimeZoneOffsetMinutes = (date = new Date(), timeZone = TIME_ZONE) => {
   return (zonedUtcMs - date.getTime()) / 60000;
 };
 
+// Get today's date range in the specified timezone (midnight to midnight)
+const getTodayDateRange = (referenceDate = new Date(), timeZone = TIME_ZONE) => {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(referenceDate);
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      map[part.type] = part.value;
+    }
+  }
+
+  const localDate = new Date(Date.UTC(
+    Number(map.year),
+    Number(map.month) - 1,
+    Number(map.day),
+  ));
+
+  const offsetMinutes = getTimeZoneOffsetMinutes(referenceDate, timeZone);
+  const todayStartUtc = Date.UTC(
+    localDate.getUTCFullYear(),
+    localDate.getUTCMonth(),
+    localDate.getUTCDate(),
+    0,
+    0,
+    0,
+    0,
+  ) - (offsetMinutes * 60 * 1000);
+
+  const todayStart = new Date(todayStartUtc);
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  return { todayStart, todayEnd };
+};
+
 const getRollingWeekWindow = (referenceDate = new Date()) => {
   const current = new Date(referenceDate);
   const formatter = new Intl.DateTimeFormat('en-US', {
@@ -1048,6 +1093,7 @@ const getRollingWeekWindow = (referenceDate = new Date()) => {
 };
 
 exports.getRollingWeekWindow = getRollingWeekWindow;
+exports.getTodayDateRange = getTodayDateRange;
 
 const buildAdminAnalyticsSummary = ({
   userCount = 0,
@@ -1064,6 +1110,7 @@ const buildAdminAnalyticsSummary = ({
   riders = 0,
   riderEarnings = 0,
   totalDeliveryFees = 0,
+  dailyDeliveryFees = 0,
   ordersChangePct = 0,
   revenueChangePct = 0,
   usersChangePct = 0,
@@ -1085,6 +1132,7 @@ const buildAdminAnalyticsSummary = ({
   averageOrderValue,
   riderEarnings,
   totalDeliveryFees,
+  dailyDeliveryFees,
   deliveryFees: totalDeliveryFees,
   ordersChangePct,
   revenueChangePct,
@@ -1104,6 +1152,7 @@ exports.getAdminStats = async (req, res, next) => {
     const Restaurant = require('../models/Restaurant');
 
     const { currentStart: currentWeekStart, currentEnd: currentWeekEnd, previousStart: previousWeekStart, previousEnd: previousWeekEnd } = getRollingWeekWindow();
+    const { todayStart, todayEnd } = getTodayDateRange();
 
     const [
       userMetrics,
@@ -1112,6 +1161,7 @@ exports.getAdminStats = async (req, res, next) => {
       orderMetrics,
       riderEarningsAgg,
       thisWeekDeliveryFeesAgg,
+      todayDeliveryFeesAgg,
       thisWeekOrders,
       previousWeekOrders,
       thisWeekRevenueAgg,
@@ -1158,6 +1208,10 @@ exports.getAdminStats = async (req, res, next) => {
         { $match: { createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd }, status: 'delivered' } },
         { $group: { _id: null, total: { $sum: { $ifNull: ['$deliveryFee', 0] } } } },
       ]),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: todayStart, $lt: todayEnd }, status: 'delivered' } },
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$deliveryFee', 0] } } } },
+      ]),
       Order.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
       Order.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
       Order.aggregate([
@@ -1183,6 +1237,7 @@ exports.getAdminStats = async (req, res, next) => {
     const averageOrderValue = totalOrders > 0 ? Number((totalRevenue / totalOrders).toFixed(2)) : 0;
     const riderEarnings = Number(riderEarningsAgg[0]?.total || 0);
     const totalDeliveryFees = Number(thisWeekDeliveryFeesAgg[0]?.total || 0);
+    const dailyDeliveryFees = Number(todayDeliveryFeesAgg[0]?.total || 0);
 
     const percentChange = (current, previous) => {
       if (!previous && current > 0) return 100;
@@ -1205,6 +1260,7 @@ exports.getAdminStats = async (req, res, next) => {
       riders: Number(userSummary.riders || 0),
       riderEarnings,
       totalDeliveryFees,
+      dailyDeliveryFees,
       ordersChangePct: percentChange(thisWeekOrders, previousWeekOrders),
       revenueChangePct: percentChange(Number(thisWeekRevenueAgg[0]?.total || 0), Number(previousWeekRevenueAgg[0]?.total || 0)),
       usersChangePct: percentChange(thisWeekUserGrowth, previousWeekUserGrowth),

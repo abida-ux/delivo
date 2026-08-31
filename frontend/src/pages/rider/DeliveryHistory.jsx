@@ -33,7 +33,7 @@ const DeliveryHistory = () => {
   }, []);
 
   const completed = deliveries.filter((d) => d.status === 'delivered');
-  const totalEarnings = completed.reduce((sum, d) => sum + (Number(d.deliveryFee) || 20), 0);
+  const totalEarnings = completed.reduce((sum, d) => sum + (Number(d.deliveryFee) || 0), 0);
 
   const filteredDeliveries = completed.filter((d) => {
     if (filterDate === 'all') return true;
