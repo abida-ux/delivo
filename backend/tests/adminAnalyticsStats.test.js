@@ -19,6 +19,7 @@ test('builds analytics summary from real order and user totals without placehold
     riders: 12,
     riderEarnings: 1320,
     totalDeliveryFees: 1250,
+    dailyOrders: 2,
     ordersChangePct: 12,
     revenueChangePct: 9,
     usersChangePct: 8,
@@ -36,6 +37,7 @@ test('builds analytics summary from real order and user totals without placehold
   assert.equal(summary.revenue, 25000);
   assert.equal(summary.riderEarnings, 1320);
   assert.equal(summary.totalDeliveryFees, 1250);
+  assert.equal(summary.dailyOrders, 2);
   assert.equal(summary.deliveryFees, 1250);
   assert.equal(summary.ordersChangePct, 12);
   assert.equal(summary.revenueChangePct, 9);

@@ -122,7 +122,9 @@ const Analytics = () => {
 
       const allOrders = Array.isArray(ordersRes) ? ordersRes : ordersRes?.data || [];
       const allUsers = Array.isArray(usersRes) ? usersRes : usersRes?.data || [];
-      const visibleOrders = filterByDateRange(allOrders, dateRange);
+          const visibleOrders = filterByDateRange(allOrders, dateRange)
+        .filter((order) => String(order.status || '').toLowerCase() !== 'cancelled')
+        .filter((order) => Number(order.totalPrice || 0) >= 40);
       const visibleUsers = filterByDateRange(allUsers, dateRange);
 
       const totalRevenue = visibleOrders.reduce((sum, order) => sum + (Number(order.totalPrice) || 0), 0);
@@ -130,7 +132,7 @@ const Analytics = () => {
       const totalUsers = visibleUsers.length || allUsers.length;
       const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
       const totalDeliveryFees = visibleOrders
-        .filter((order) => order.status === 'delivered')
+        .filter((order) => String(order.status || '').toLowerCase() === 'delivered')
         .reduce((sum, order) => sum + (Number(order.deliveryFee) || 0), 0);
 
       setStats({

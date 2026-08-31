@@ -84,6 +84,8 @@ const AdminDashboard = () => {
         const createdAt = order.createdAt ? new Date(order.createdAt) : null;
         if (!createdAt || Number.isNaN(createdAt.getTime())) return;
         if (createdAt < start || createdAt >= end) return;
+        if (String(order.status || '').toLowerCase() === 'cancelled') return;
+        if (Number(order.totalPrice || 0) < 40) return;
         const day = days[(createdAt.getDay() + 6) % 7];
         if (trendMap[day] !== undefined) {
           trendMap[day] += 1;

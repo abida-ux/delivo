@@ -1111,6 +1111,7 @@ const buildAdminAnalyticsSummary = ({
   riderEarnings = 0,
   totalDeliveryFees = 0,
   dailyDeliveryFees = 0,
+  dailyOrders = 0,
   ordersChangePct = 0,
   revenueChangePct = 0,
   usersChangePct = 0,
@@ -1133,6 +1134,7 @@ const buildAdminAnalyticsSummary = ({
   riderEarnings,
   totalDeliveryFees,
   dailyDeliveryFees,
+  dailyOrders,
   deliveryFees: totalDeliveryFees,
   ordersChangePct,
   revenueChangePct,
@@ -1162,6 +1164,7 @@ exports.getAdminStats = async (req, res, next) => {
       riderEarningsAgg,
       thisWeekDeliveryFeesAgg,
       todayDeliveryFeesAgg,
+      todayOrderCountAgg,
       thisWeekOrders,
       previousWeekOrders,
       thisWeekRevenueAgg,
@@ -1187,6 +1190,12 @@ exports.getAdminStats = async (req, res, next) => {
       Food.countDocuments(),
       Order.aggregate([
         {
+          $match: {
+            status: { $ne: 'cancelled' },
+            totalPrice: { $gte: 40 },
+          },
+        },
+        {
           $group: {
             _id: null,
             totalOrders: { $sum: 1 },
@@ -1209,17 +1218,33 @@ exports.getAdminStats = async (req, res, next) => {
         { $group: { _id: null, total: { $sum: { $ifNull: ['$deliveryFee', 0] } } } },
       ]),
       Order.aggregate([
-        { $match: { createdAt: { $gte: todayStart, $lt: todayEnd }, status: 'delivered' } },
+        {
+          $match: {
+            createdAt: { $gte: todayStart, $lt: todayEnd },
+            status: 'delivered',
+            totalPrice: { $gte: 40 },
+          },
+        },
         { $group: { _id: null, total: { $sum: { $ifNull: ['$deliveryFee', 0] } } } },
       ]),
-      Order.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
-      Order.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
       Order.aggregate([
-        { $match: { createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd }, paymentStatus: { $ne: 'failed' } } },
+        {
+          $match: {
+            createdAt: { $gte: todayStart, $lt: todayEnd },
+            status: { $ne: 'cancelled' },
+            totalPrice: { $gte: 40 },
+          },
+        },
+        { $group: { _id: null, count: { $sum: 1 } } },
+      ]),
+      Order.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd }, status: { $ne: 'cancelled' }, totalPrice: { $gte: 40 } }),
+      Order.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd }, status: { $ne: 'cancelled' }, totalPrice: { $gte: 40 } }),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd }, paymentStatus: { $ne: 'failed' }, status: { $ne: 'cancelled' }, totalPrice: { $gte: 40 } } },
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]),
       Order.aggregate([
-        { $match: { createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd }, paymentStatus: { $ne: 'failed' } } },
+        { $match: { createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd }, paymentStatus: { $ne: 'failed' }, status: { $ne: 'cancelled' }, totalPrice: { $gte: 40 } } },
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]),
       User.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
@@ -1238,6 +1263,7 @@ exports.getAdminStats = async (req, res, next) => {
     const riderEarnings = Number(riderEarningsAgg[0]?.total || 0);
     const totalDeliveryFees = Number(thisWeekDeliveryFeesAgg[0]?.total || 0);
     const dailyDeliveryFees = Number(todayDeliveryFeesAgg[0]?.total || 0);
+    const dailyOrders = Number(todayOrderCountAgg[0]?.count || 0);
 
     const percentChange = (current, previous) => {
       if (!previous && current > 0) return 100;
@@ -1261,6 +1287,7 @@ exports.getAdminStats = async (req, res, next) => {
       riderEarnings,
       totalDeliveryFees,
       dailyDeliveryFees,
+      dailyOrders,
       ordersChangePct: percentChange(thisWeekOrders, previousWeekOrders),
       revenueChangePct: percentChange(Number(thisWeekRevenueAgg[0]?.total || 0), Number(previousWeekRevenueAgg[0]?.total || 0)),
       usersChangePct: percentChange(thisWeekUserGrowth, previousWeekUserGrowth),
