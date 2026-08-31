@@ -1000,15 +1000,10 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotal, onOrderSuccess, 
                     </span>
                   </div>
 
-                  {/* Read-Only Items Grouped by Supplying Restaurant */}
+                  {/* Read-Only Items Summary */}
                   <div className="chk-groups-list">
                     {restaurantGroups.map((group) => (
                       <div key={group.restaurantId} className="chk-rest-group">
-                        <div className="chk-group-header">
-                          <Store size={13} className="chk-store-icon" />
-                          <span className="chk-group-name">{group.restaurantName}</span>
-                        </div>
-
                         <div className="chk-group-items">
                           {group.items.map((item) => {
                             const itemId = typeof item.foodId === 'object' ? item.foodId._id : item.foodId;

@@ -218,16 +218,7 @@ const Cart = () => {
             {/* Grouped Restaurant Sections */}
             {restaurantGroups.map((group) => (
               <div key={group.restaurantId} className="cart-group-card assigned-group">
-                <div className="group-header">
-                  <div className="group-title-row">
-                    <div className="store-avatar">
-                      <Store size={16} />
-                    </div>
-                    <div>
-                      <span className="group-vendor-label">FROM RESTAURANT</span>
-                      <h3 className="group-restaurant-name">{group.restaurantName}</h3>
-                    </div>
-                  </div>
+                <div className="group-header" style={{ justifyContent: 'flex-end' }}>
                   <span className="group-subtotal-badge">
                     Subtotal: KES {group.subtotal.toLocaleString()}
                   </span>
@@ -263,21 +254,7 @@ const Cart = () => {
                             </div>
                           )}
 
-                          {/* IN-PLACE RESTAURANT SELECTION CONTROL */}
-                          <div className="cart-item-restaurant-ctrl">
-                            <div className="assigned-restaurant-chip-row">
-                              <span className="ctrl-label-assigned">Restaurant:</span>
-                              <button
-                                type="button"
-                                className="choose-restaurant-btn assigned"
-                                onClick={() => setPickerItem(item)}
-                                title="Click to change restaurant"
-                              >
-                                <Store size={12} />
-                                <span>{item.restaurantName || 'Restaurant'}</span>
-                                <ChevronDown size={13} />
-                              </button>
-                            </div>
+                          <div className="cart-item-restaurant-ctrl" style={{ display: 'none' }}>
                             <span className="item-unit-price">KES {unitPrice.toLocaleString()} each</span>
                           </div>
                         </div>
