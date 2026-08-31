@@ -56,6 +56,7 @@ const AdminDashboard = () => {
     restaurantsChangePct: 0,
   });
   const [weeklyOrderTrend, setWeeklyOrderTrend] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
   const [marketplaceOverview, setMarketplaceOverview] = useState({ categories: 0, products: 0, lowStockProducts: [] });
   const [loading, setLoading] = useState(true);
 
@@ -80,19 +81,32 @@ const AdminDashboard = () => {
         return acc;
       }, {});
 
-      orders.forEach((order) => {
+      const validOrders = orders.filter((order) => {
         const createdAt = order.createdAt ? new Date(order.createdAt) : null;
-        if (!createdAt || Number.isNaN(createdAt.getTime())) return;
-        if (createdAt < start || createdAt >= end) return;
-        if (String(order.status || '').toLowerCase() === 'cancelled') return;
-        if (Number(order.totalPrice || 0) < 40) return;
+        if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
+        if (String(order.status || '').toLowerCase() === 'cancelled') return false;
+        if (Number(order.totalPrice || 0) < 40) return false;
+        return createdAt >= start && createdAt < end;
+      });
+
+      validOrders.forEach((order) => {
+        const createdAt = new Date(order.createdAt);
         const day = days[(createdAt.getDay() + 6) % 7];
         if (trendMap[day] !== undefined) {
           trendMap[day] += 1;
         }
       });
 
+      const recentValidOrders = [...orders]
+        .filter((order) => {
+          const status = String(order.status || '').toLowerCase();
+          return status !== 'cancelled' && Number(order.totalPrice || 0) >= 40;
+        })
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 5);
+
       setWeeklyOrderTrend(days.map((day) => ({ day, value: trendMap[day] })));
+      setRecentOrders(recentValidOrders);
 
       if (data) {
         setStats({
@@ -129,6 +143,53 @@ const AdminDashboard = () => {
     month: 'long',
     day: 'numeric',
   });
+
+  const formatOrderId = (order) => {
+    const id = order?._id || order?.id || '';
+    return id ? `#${String(id).slice(-8)}` : '#n/a';
+  };
+
+  const getRestaurantName = (order) => {
+    const restaurantFromArray = order?.restaurants?.find((entry) => entry?.name)?.name;
+    if (restaurantFromArray) return restaurantFromArray;
+    if (order?.restaurantName) return order.restaurantName;
+    if (order?.items?.[0]?.restaurantName) return order.items[0].restaurantName;
+    return 'Restaurant';
+  };
+
+  const getOrderBadgeClass = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    if (normalized === 'cancelled') return 'badge badge-danger';
+    if (['delivered', 'completed'].includes(normalized)) return 'badge badge-success';
+    if (['pending', 'confirmed', 'preparing', 'on-delivery', 'out-for-delivery', 'assigned'].includes(normalized)) return 'badge badge-warning';
+    return 'badge badge-secondary';
+  };
+
+  const getStatusLabel = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    if (normalized === 'cancelled') return 'Cancelled';
+    if (normalized === 'delivered') return 'Delivered';
+    if (normalized === 'completed') return 'Completed';
+    if (normalized === 'pending') return 'Pending';
+    if (normalized === 'confirmed') return 'Confirmed';
+    if (normalized === 'preparing') return 'Preparing';
+    if (normalized === 'on-delivery' || normalized === 'out-for-delivery' || normalized === 'assigned') return 'In Transit';
+    return status || 'Pending';
+  };
+
+  const formatRelativeTime = (dateValue) => {
+    if (!dateValue) return 'Recently';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return 'Recently';
+    const diffMs = Date.now() - date.getTime();
+    const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} mins ago`;
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
 
   const statCards = [
     {
@@ -309,34 +370,25 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="font-mono text-xs">#6a1aa87ffb...</td>
-                        <td>Local Delights</td>
-                        <td className="font-semibold">KES 4.34</td>
-                        <td><span className="badge badge-success">Completed</span></td>
-                        <td>Just now</td>
-                      </tr>
-                      <tr>
-                        <td className="font-mono text-xs">#6a1aa92eef...</td>
-                        <td>Lakeside Dishes</td>
-                        <td className="font-semibold">KES 13.99</td>
-                        <td><span className="badge badge-warning">Processing</span></td>
-                        <td>5 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td className="font-mono text-xs">#6a1aa10ffa...</td>
-                        <td>Street Roasts</td>
-                        <td className="font-semibold">KES 5.49</td>
-                        <td><span className="badge badge-success">Completed</span></td>
-                        <td>12 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td className="font-mono text-xs">#6a1aa48cce...</td>
-                        <td>Healthy Bowl</td>
-                        <td className="font-semibold">KES 8.96</td>
-                        <td><span className="badge badge-danger">Cancelled</span></td>
-                        <td>45 mins ago</td>
-                      </tr>
+                      {recentOrders.length > 0 ? recentOrders.map((order) => (
+                        <tr key={order._id || order.id || `${order.createdAt}-${order.totalPrice}`}>
+                          <td className="font-mono text-xs">{formatOrderId(order)}</td>
+                          <td>{getRestaurantName(order)}</td>
+                          <td className="font-semibold">{formatCurrency(Number(order.totalPrice || 0))}</td>
+                          <td>
+                            <span className={getOrderBadgeClass(order.status)}>
+                              {getStatusLabel(order.status)}
+                            </span>
+                          </td>
+                          <td>{formatRelativeTime(order.createdAt)}</td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '1rem', color: '#6b7280' }}>
+                            No valid recent orders available.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
