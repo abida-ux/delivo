@@ -956,6 +956,33 @@ exports.createUser = async (req, res, next) => {
   }
 };
 
+const getRollingWeekWindow = (referenceDate = new Date()) => {
+  const current = new Date(referenceDate);
+  const day = current.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const start = new Date(current);
+  start.setDate(current.getDate() + diffToMonday);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 7);
+
+  const previousStart = new Date(start);
+  previousStart.setDate(start.getDate() - 7);
+
+  const previousEnd = new Date(start);
+
+  return {
+    currentStart: start,
+    currentEnd: end,
+    previousStart,
+    previousEnd,
+  };
+};
+
+exports.getRollingWeekWindow = getRollingWeekWindow;
+
 const buildAdminAnalyticsSummary = ({
   userCount = 0,
   restaurantCount = 0,
@@ -1007,9 +1034,7 @@ exports.getAdminStats = async (req, res, next) => {
     const Order = require('../models/Order');
     const Restaurant = require('../models/Restaurant');
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const { currentStart: currentWeekStart, currentEnd: currentWeekEnd, previousStart: previousWeekStart, previousEnd: previousWeekEnd } = getRollingWeekWindow();
 
     const [
       userMetrics,
@@ -1017,16 +1042,16 @@ exports.getAdminStats = async (req, res, next) => {
       foodCount,
       orderMetrics,
       riderEarningsAgg,
-      thisMonthOrders,
-      previousMonthOrders,
-      thisMonthRevenueAgg,
-      previousMonthRevenueAgg,
-      thisMonthUserGrowth,
-      previousMonthUserGrowth,
-      thisMonthRestaurantGrowth,
-      previousMonthRestaurantGrowth,
-      thisMonthRiderGrowth,
-      previousMonthRiderGrowth,
+      thisWeekOrders,
+      previousWeekOrders,
+      thisWeekRevenueAgg,
+      previousWeekRevenueAgg,
+      thisWeekUserGrowth,
+      previousWeekUserGrowth,
+      thisWeekRestaurantGrowth,
+      previousWeekRestaurantGrowth,
+      thisWeekRiderGrowth,
+      previousWeekRiderGrowth,
     ] = await Promise.all([
       User.aggregate([
         {
@@ -1059,22 +1084,22 @@ exports.getAdminStats = async (req, res, next) => {
         { $match: { riderEarningAmount: { $gt: 0 } } },
         { $group: { _id: null, total: { $sum: '$riderEarningAmount' } } },
       ]),
-      Order.countDocuments({ createdAt: { $gte: monthStart } }),
-      Order.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      Order.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
+      Order.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
       Order.aggregate([
-        { $match: { createdAt: { $gte: monthStart }, paymentStatus: { $ne: 'failed' } } },
+        { $match: { createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd }, paymentStatus: { $ne: 'failed' } } },
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]),
       Order.aggregate([
-        { $match: { createdAt: { $gte: previousMonthStart, $lt: monthStart }, paymentStatus: { $ne: 'failed' } } },
+        { $match: { createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd }, paymentStatus: { $ne: 'failed' } } },
         { $group: { _id: null, total: { $sum: '$totalPrice' } } },
       ]),
-      User.countDocuments({ createdAt: { $gte: monthStart } }),
-      User.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
-      Restaurant.countDocuments({ createdAt: { $gte: monthStart } }),
-      Restaurant.countDocuments({ createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
-      User.countDocuments({ role: 'rider', createdAt: { $gte: monthStart } }),
-      User.countDocuments({ role: 'rider', createdAt: { $gte: previousMonthStart, $lt: monthStart } }),
+      User.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
+      User.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
+      Restaurant.countDocuments({ createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
+      Restaurant.countDocuments({ createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
+      User.countDocuments({ role: 'rider', createdAt: { $gte: currentWeekStart, $lt: currentWeekEnd } }),
+      User.countDocuments({ role: 'rider', createdAt: { $gte: previousWeekStart, $lt: previousWeekEnd } }),
     ]);
 
     const userSummary = userMetrics[0] || {};
@@ -1104,11 +1129,11 @@ exports.getAdminStats = async (req, res, next) => {
       customers: Number(userSummary.customers || 0),
       riders: Number(userSummary.riders || 0),
       riderEarnings,
-      ordersChangePct: percentChange(thisMonthOrders, previousMonthOrders),
-      revenueChangePct: percentChange(Number(thisMonthRevenueAgg[0]?.total || 0), Number(previousMonthRevenueAgg[0]?.total || 0)),
-      usersChangePct: percentChange(thisMonthUserGrowth, previousMonthUserGrowth),
-      restaurantsChangePct: percentChange(thisMonthRestaurantGrowth, previousMonthRestaurantGrowth),
-      ridersChangePct: percentChange(thisMonthRiderGrowth, previousMonthRiderGrowth),
+      ordersChangePct: percentChange(thisWeekOrders, previousWeekOrders),
+      revenueChangePct: percentChange(Number(thisWeekRevenueAgg[0]?.total || 0), Number(previousWeekRevenueAgg[0]?.total || 0)),
+      usersChangePct: percentChange(thisWeekUserGrowth, previousWeekUserGrowth),
+      restaurantsChangePct: percentChange(thisWeekRestaurantGrowth, previousWeekRestaurantGrowth),
+      ridersChangePct: percentChange(thisWeekRiderGrowth, previousWeekRiderGrowth),
     });
 
     res.status(200).json({

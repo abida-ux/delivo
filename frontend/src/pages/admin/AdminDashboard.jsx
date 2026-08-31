@@ -28,6 +28,19 @@ import { formatCurrency } from '../../utils/currency';
 import '../pages.css';
 import './AdminDashboard.css';
 
+const getCurrentWeekWindow = () => {
+  const start = new Date();
+  const day = start.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  start.setDate(start.getDate() + diffToMonday);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 7);
+
+  return { start, end };
+};
+
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
   const [stats, setStats] = useState({
@@ -60,7 +73,8 @@ const AdminDashboard = () => {
       ]);
 
       const orders = Array.isArray(ordersRes) ? ordersRes : ordersRes?.data || [];
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const { start, end } = getCurrentWeekWindow();
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const trendMap = days.reduce((acc, day) => {
         acc[day] = 0;
         return acc;
@@ -69,7 +83,8 @@ const AdminDashboard = () => {
       orders.forEach((order) => {
         const createdAt = order.createdAt ? new Date(order.createdAt) : null;
         if (!createdAt || Number.isNaN(createdAt.getTime())) return;
-        const day = days[createdAt.getDay()];
+        if (createdAt < start || createdAt >= end) return;
+        const day = days[(createdAt.getDay() + 6) % 7];
         if (trendMap[day] !== undefined) {
           trendMap[day] += 1;
         }

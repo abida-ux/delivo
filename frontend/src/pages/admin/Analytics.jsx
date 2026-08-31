@@ -5,26 +5,49 @@ import { getAdminStats, getAllOrders, getAllFoods, getAllRestaurants, getAllUser
 import '../pages.css';
 import './Analytics.css';
 
-const filterByDateRange = (records = [], range = 'month') => {
+const getWeekWindow = (referenceDate = new Date()) => {
+  const start = new Date(referenceDate);
+  const day = start.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  start.setDate(start.getDate() + diffToMonday);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 7);
+
+  return { start, end };
+};
+
+const filterByDateRange = (records = [], range = 'week') => {
   if (!Array.isArray(records) || records.length === 0) return [];
 
-  const now = new Date();
-  const cutoff = new Date();
-
   if (range === 'week') {
-    cutoff.setDate(now.getDate() - 7);
-  } else if (range === 'month') {
-    cutoff.setMonth(now.getMonth() - 1);
-  } else if (range === 'year') {
-    cutoff.setFullYear(now.getFullYear() - 1);
-  } else {
-    return records;
+    const { start, end } = getWeekWindow();
+    return records.filter((record) => {
+      const createdAt = record.createdAt ? new Date(record.createdAt) : null;
+      return createdAt && !Number.isNaN(createdAt.getTime()) && createdAt >= start && createdAt < end;
+    });
   }
 
-  return records.filter((record) => {
-    const createdAt = record.createdAt ? new Date(record.createdAt) : null;
-    return createdAt && !Number.isNaN(createdAt.getTime()) && createdAt >= cutoff;
-  });
+  if (range === 'month') {
+    const now = new Date();
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+    return records.filter((record) => {
+      const createdAt = record.createdAt ? new Date(record.createdAt) : null;
+      return createdAt && !Number.isNaN(createdAt.getTime()) && createdAt >= cutoff;
+    });
+  }
+
+  if (range === 'year') {
+    const now = new Date();
+    const cutoff = new Date(now.getFullYear(), 0, 1);
+    return records.filter((record) => {
+      const createdAt = record.createdAt ? new Date(record.createdAt) : null;
+      return createdAt && !Number.isNaN(createdAt.getTime()) && createdAt >= cutoff;
+    });
+  }
+
+  return records;
 };
 
 const buildWeeklyChart = (orders = []) => {
@@ -46,7 +69,7 @@ const buildWeeklyChart = (orders = []) => {
 };
 
 const Analytics = () => {
-  const [dateRange, setDateRange] = useState('month');
+  const [dateRange, setDateRange] = useState('week');
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
