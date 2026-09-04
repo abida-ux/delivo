@@ -315,7 +315,7 @@ const AdminSettings = () => {
   return (
     <AdminDashboardLayout pageTitle="Admin Settings">
       <div className="admin-settings">
-        {/* Notifications Section */}
+        {/* Maintenance Mode Section */}
         <section className="settings-section maintenance-settings-section">
           <div className="section-header">
             <Wrench size={24} className="section-icon" />
@@ -324,18 +324,21 @@ const AdminSettings = () => {
 
           <div className="settings-content">
             <div className="setting-item">
-              <div className="setting-label">
-                <label className="toggle-label">
-                  <input
-                    type="checkbox"
-                    checked={settings.maintenanceMode}
-                    onChange={(e) =>
-                      handleSettingChange('maintenanceMode', e.target.checked)
-                    }
-                  />
-                  <span className="toggle-switch"></span>
-                  {settings.maintenanceMode ? 'Maintenance Mode ON' : 'Maintenance Mode OFF'}
-                </label>
+              <div className="maintenance-control">
+                <button
+                  type="button"
+                  className={`maintenance-toggle ${settings.maintenanceMode ? 'is-on' : 'is-off'}`}
+                  aria-pressed={settings.maintenanceMode}
+                  onClick={() =>
+                    handleSettingChange('maintenanceMode', !settings.maintenanceMode)
+                  }
+                >
+                  <span className="maintenance-toggle-track" aria-hidden="true">
+                    <span className="maintenance-toggle-thumb"></span>
+                  </span>
+                  <span>{settings.maintenanceMode ? 'ON' : 'OFF'}</span>
+                </button>
+                <strong>{settings.maintenanceMode ? 'Maintenance Mode is ON' : 'Maintenance Mode is OFF'}</strong>
                 <p className="setting-desc">
                   When enabled, public visitors see the maintenance page. Admin dashboard access remains available.
                 </p>
