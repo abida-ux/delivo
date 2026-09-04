@@ -197,6 +197,7 @@ function App() {
   const isRiderRoute = location.pathname.startsWith('/rider') || location.pathname === '/rider-dashboard';
   const isMarketplaceRoute = location.pathname.startsWith('/marketplace');
   const isPublicRoute = !isAdminRoute;
+  const isLoginRoute = location.pathname === '/login';
 
   useEffect(() => {
     if (!isPublicRoute) {
@@ -233,11 +234,11 @@ function App() {
     };
   }, [isPublicRoute]);
 
-  if (isPublicRoute && maintenanceMode === true) {
+  if (isPublicRoute && !isLoginRoute && maintenanceMode === true) {
     return <MaintenancePage />;
   }
 
-  if (isPublicRoute && maintenanceMode === null) {
+  if (isPublicRoute && !isLoginRoute && maintenanceMode === null) {
     return <Loader />;
   }
 

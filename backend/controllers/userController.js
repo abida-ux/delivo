@@ -362,6 +362,18 @@ exports.loginUser = async (req, res, next) => {
       });
     }
 
+    if (user.role !== 'admin') {
+      const AppSettings = require('../models/AppSettings');
+      const appSettings = await AppSettings.findOne().select('maintenanceMode').lean();
+      if (appSettings?.maintenanceMode === true) {
+        return res.status(503).json({
+          success: false,
+          message: 'System Currently Under Maintenance. We will inform you when we are back. Stay updated by joining our official channel.',
+          maintenanceMode: true,
+        });
+      }
+    }
+
     const token = generateToken(user._id);
 
     res.status(200).json({
