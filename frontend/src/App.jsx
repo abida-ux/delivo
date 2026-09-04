@@ -7,13 +7,14 @@ import AuthModal from "./components/AuthModal";
 
 import { LoaderContext } from "./context/LoaderContext";
 import { AuthContext } from "./context/AuthContext";
-import { savePushSubscription } from './services/api';
+import { getAppSettings, savePushSubscription } from './services/api';
 import {
   initializeFirebase,
   listenForFcmMessages,
 } from './services/firebaseMessaging';
 import './styles/global.css';
 import './components/Loader.css';
+import MaintenancePage from './pages/MaintenancePage';
 
 const RELOAD_HINT_KEY = 'delivo_refresh_pending';
 
@@ -135,6 +136,7 @@ function App() {
   const { isLoading } = useContext(LoaderContext);
   const { user, token } = useContext(AuthContext);
   const location = useLocation();
+  const [maintenanceMode, setMaintenanceMode] = useState(null);
 
   // Handle service worker controller change (new SW activated)
   useEffect(() => {
@@ -194,6 +196,50 @@ function App() {
   const isRestaurantRoute = location.pathname.startsWith('/restaurant');
   const isRiderRoute = location.pathname.startsWith('/rider') || location.pathname === '/rider-dashboard';
   const isMarketplaceRoute = location.pathname.startsWith('/marketplace');
+  const isPublicRoute = !isAdminRoute;
+
+  useEffect(() => {
+    if (!isPublicRoute) {
+      setMaintenanceMode(false);
+      return undefined;
+    }
+
+    let active = true;
+    const checkMaintenanceMode = async () => {
+      const settings = await getAppSettings();
+      if (active) {
+        setMaintenanceMode(settings.maintenanceMode === true);
+      }
+    };
+    const handleSettingsUpdate = (event) => {
+      const updatedSettings = event.detail;
+      if (updatedSettings && typeof updatedSettings.maintenanceMode === 'boolean') {
+        setMaintenanceMode(updatedSettings.maintenanceMode);
+      } else {
+        checkMaintenanceMode();
+      }
+    };
+
+    checkMaintenanceMode();
+    const intervalId = window.setInterval(checkMaintenanceMode, 5000);
+    window.addEventListener('app_settings_updated', handleSettingsUpdate);
+    window.addEventListener('storage', handleSettingsUpdate);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('app_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('storage', handleSettingsUpdate);
+    };
+  }, [isPublicRoute]);
+
+  if (isPublicRoute && maintenanceMode === true) {
+    return <MaintenancePage />;
+  }
+
+  if (isPublicRoute && maintenanceMode === null) {
+    return <Loader />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>

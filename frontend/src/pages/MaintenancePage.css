@@ -1,0 +1,81 @@
+.maintenance-page {
+  min-height: 100vh;
+  padding: 32px 20px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 52%, #fff7ed 100%);
+  color: #17251d;
+}
+
+.maintenance-panel {
+  width: min(100%, 620px);
+  padding: 56px 48px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(22, 101, 52, 0.12);
+}
+
+.maintenance-mark {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f5b301;
+  color: #17251d;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.maintenance-eyebrow {
+  margin: 0 0 12px;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.maintenance-panel h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.08;
+}
+
+.maintenance-message {
+  max-width: 480px;
+  margin: 22px auto 28px;
+  color: #526158;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.maintenance-channel-link {
+  display: inline-block;
+  padding: 13px 20px;
+  border-radius: 8px;
+  background: #15803d;
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.maintenance-channel-link:hover {
+  background: #166534;
+}
+
+.maintenance-url {
+  margin: 18px 0 0;
+  overflow-wrap: anywhere;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .maintenance-panel {
+    padding: 40px 24px;
+  }
+}

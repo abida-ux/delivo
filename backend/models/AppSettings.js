@@ -8,6 +8,10 @@ const deliveryFeeRulesSchema = new mongoose.Schema({
 }, { _id: false });
 
 const AppSettingsSchema = new mongoose.Schema({
+  maintenanceMode: {
+    type: Boolean,
+    default: false,
+  },
   deliveryFeeEnabled: {
     type: Boolean,
     default: true,

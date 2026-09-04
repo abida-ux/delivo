@@ -3,6 +3,7 @@ import {
   Bell,
   Gift,
   Truck,
+  Wrench,
   Save,
   Plus,
   Trash2,
@@ -20,6 +21,7 @@ const AdminSettings = () => {
   const { user, token } = useContext(AuthContext);
   
   const [settings, setSettings] = useState({
+    maintenanceMode: false,
     promoNotifications: true,
     freeDeliveryEnabled: false,
     freeDeliveryMinimum: 2500,
@@ -66,6 +68,7 @@ const AdminSettings = () => {
         const appSettings = await getAppSettings();
         const rules = appSettings.deliveryFeeRules || {};
         setSettings({
+          maintenanceMode: appSettings.maintenanceMode ?? false,
           promoNotifications: appSettings.promoNotifications ?? true,
           freeDeliveryEnabled: appSettings.freeDeliveryEnabled ?? false,
           freeDeliveryMinimum: appSettings.freeDeliveryMinimum ?? 2500,
@@ -312,6 +315,35 @@ const AdminSettings = () => {
   return (
     <AdminDashboardLayout pageTitle="Admin Settings">
       <div className="admin-settings">
+        {/* Notifications Section */}
+        <section className="settings-section maintenance-settings-section">
+          <div className="section-header">
+            <Wrench size={24} className="section-icon" />
+            <h2>Maintenance Mode</h2>
+          </div>
+
+          <div className="settings-content">
+            <div className="setting-item">
+              <div className="setting-label">
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.maintenanceMode}
+                    onChange={(e) =>
+                      handleSettingChange('maintenanceMode', e.target.checked)
+                    }
+                  />
+                  <span className="toggle-switch"></span>
+                  {settings.maintenanceMode ? 'Maintenance Mode ON' : 'Maintenance Mode OFF'}
+                </label>
+                <p className="setting-desc">
+                  When enabled, public visitors see the maintenance page. Admin dashboard access remains available.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Notifications Section */}
         <section className="settings-section">
           <div className="section-header">

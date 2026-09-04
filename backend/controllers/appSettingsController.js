@@ -20,6 +20,7 @@ const prepareSettingsPayload = (body = {}) => {
   const normalizedRules = normalizeDeliveryFeeRules({ ...defaultRules, ...incomingRules, deliveryFeeAmount: legacyFee });
 
   return {
+    maintenanceMode: body.maintenanceMode,
     deliveryFeeEnabled: body.deliveryFeeEnabled,
     deliveryFeeAmount: Number.isFinite(normalizedRules.above500) ? normalizedRules.above500 : 20,
     deliveryFeeRules: normalizedRules,
